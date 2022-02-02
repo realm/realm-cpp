@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Controller</class>
+ <widget class="QWidget" name="Controller">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>270</width>
+    <height>212</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Controller</string>
+  </property>
+  <layout class="QGridLayout">
+   <item row="1" column="2">
+    <widget class="QPushButton" name="right">
+     <property name="text">
+      <string>Right</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QPushButton" name="red">
+     <property name="styleSheet">
+      <string notr="true">background-color: red</string>
+     </property>
+     <property name="text">
+      <string>red</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QPushButton" name="left">
+     <property name="text">
+      <string>Left</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QPushButton" name="accelerate">
+     <property name="text">
+      <string>Accelerate</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QPushButton" name="decelerate">
+     <property name="text">
+      <string>Decelerate</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Controller</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QPushButton" name="green">
+     <property name="styleSheet">
+      <string notr="true">background: green</string>
+     </property>
+     <property name="text">
+      <string>green</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="2">
+    <widget class="QPushButton" name="blue">
+     <property name="styleSheet">
+      <string notr="true">background: blue</string>
+     </property>
+     <property name="text">
+      <string>blue</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
