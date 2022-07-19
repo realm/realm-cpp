@@ -97,6 +97,9 @@ TEST(query) {
     CHECK_EQUALS(results.size(), 0);
     results = realm.objects<Person>().where("age = $0", {42});
     CHECK_EQUALS(results.size(), 1);
+    std::unique_ptr<Person> john = results[0];
+    CHECK_EQUALS(john->age, 42);
+    CHECK_EQUALS(john->name, "John");
     co_return;
 }
 

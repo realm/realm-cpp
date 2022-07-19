@@ -166,8 +166,8 @@ app::Response do_http_request(const app::Request& request)
 }
 class DefaultTransport : public app::GenericNetworkTransport {
 public:
-    void send_request_to_server(const app::Request request,
-                                std::function<void(const app::Response)> completion_block) override
+    void send_request_to_server(app::Request&& request,
+                                util::UniqueFunction<void(const app::Response&)>&& completion_block)
     {
         completion_block(do_http_request(request));
     }
@@ -266,7 +266,7 @@ public:
 
         m_app = app::App::get_shared_app(app::App::Config{
             .app_id=app_id,
-	    .transport = std::make_shared<DefaultTransport>(),
+	        .transport = std::make_shared<DefaultTransport>(),
             .platform="Realm Cpp",
             .platform_version="?",
             .sdk_version="0.0.1"
