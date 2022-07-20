@@ -609,9 +609,9 @@ persisted_base<T>::~persisted_base()
         if (!m_obj) {
             unmanaged.clear();
         }
-    } else if constexpr (realm::type_info::property_type<T>() == PropertyType::String) {
-        using std::string;
+    } else if constexpr (std::is_same_v<T, std::string>) {
         if (!m_obj) {
+            using std::string;
             unmanaged.~string();
         }
     }
