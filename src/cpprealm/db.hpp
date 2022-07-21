@@ -89,8 +89,6 @@ static std::shared_ptr<realm::util::Scheduler> make_qt()
 #endif
 
 struct db_config {
-//    db_config() = default;
-//    db_config(std::string path) : path(std::move(path)) {}
 
     std::string path = std::filesystem::current_path().append("default.realm");
 
@@ -106,6 +104,123 @@ static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::make
 #else
 static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::Scheduler::make_default;
 #endif
+
+struct sync_subscription_set {
+public:
+
+    struct subscription {
+        const std::string identifier() const {
+            return m_subscription->id().to_string();
+        }
+
+        std::string_view name() const {
+            return m_subscription->name();
+        }
+
+        const std::chrono::time_point<std::chrono::system_clock> created_at() const {
+            return m_subscription->created_at().get_time_point();
+        }
+
+        const std::chrono::time_point<std::chrono::system_clock> updated_at() const {
+            return m_subscription->updated_at().get_time_point();
+        }
+
+        std::string_view query_string() const {
+            return m_subscription->query_string();
+        }
+
+        std::string_view object_class_name() const {
+            return m_subscription->object_class_name();
+        }
+
+        std::unique_ptr<sync::Subscription> m_subscription;
+    };
+
+    struct mutable_sync_subscription_set {
+    public:
+        template <type_info::ObjectPersistable T>
+        void add(const std::string& name, std::function<rbool(T&)> query_fn) {
+            auto schema = *m_realm->schema().find(T::schema::name);
+            auto& group = m_realm->read_group();
+            auto table_ref = group.get_table(schema.table_key);
+            auto builder = Query(table_ref);
+            auto q = query<T>(builder, std::move(schema));
+            auto full_query = query_fn(q).q;
+            m_subscription_set.insert_or_assign(name, full_query);
+        }
+
+        void remove(const std::string& name) {
+            auto it = m_subscription_set.find(name);
+            if (it != m_subscription_set.end()) {
+                m_subscription_set.erase(it);
+            }
+            throw std::logic_error("Subscription cannot be found");
+        }
+
+        std::optional<subscription> find(const std::string& name) {
+            auto it = m_subscription_set.find(name);
+            if (it != m_subscription_set.end()) {
+                return subscription {std::make_unique<realm::sync::Subscription>(*it)};
+            }
+            return std::nullopt;
+        }
+
+        template <type_info::ObjectPersistable T>
+        void update_subscription(const std::string& name, std::function<rbool(T&)> query_fn) {
+            remove(name);
+            add(name, query_fn);
+        }
+
+        void clear() {
+            m_subscription_set.clear();
+        }
+
+        sync::MutableSubscriptionSet get_subscription_set()
+        {
+            return m_subscription_set;
+        }
+
+        mutable_sync_subscription_set(sync::MutableSubscriptionSet subscription_set, SharedRealm realm) :
+        m_subscription_set(subscription_set)
+        , m_realm(realm) {}
+    private:
+        sync::MutableSubscriptionSet m_subscription_set;
+        SharedRealm m_realm;
+    };
+
+    size_t size() const {
+        return m_subscription_set.size();
+    }
+
+    std::optional<subscription> find(const std::string& name) {
+        auto it = m_subscription_set.find(name);
+        if (it != m_subscription_set.end()) {
+            return subscription {std::make_unique<realm::sync::Subscription>(*it)};
+        }
+        return std::nullopt;
+    }
+
+    task<bool> update(std::function<void(mutable_sync_subscription_set&)> fn) {
+        auto mutable_set = mutable_sync_subscription_set(m_subscription_set.make_mutable_copy(), m_realm);
+        fn(mutable_set);
+        m_subscription_set = mutable_set.get_subscription_set().commit();
+
+        auto success = co_await make_awaitable<bool>([&] (auto cb) {
+            m_subscription_set
+                .get_state_change_notification(realm::sync::SubscriptionSet::State::Complete)
+                .get_async([cb = std::move(cb)](realm::StatusWith<realm::sync::SubscriptionSet::State> state) mutable noexcept {
+                    cb(state == sync::SubscriptionSet::State::Complete);
+            });
+        });
+        co_return success;
+    }
+private:
+    template <type_info::ObjectPersistable ...Ts>
+    friend struct db;
+    sync_subscription_set(sync::SubscriptionSet&& subscription_set, SharedRealm realm) : m_subscription_set(std::move(subscription_set)), m_realm(realm) {}
+    sync::SubscriptionSet m_subscription_set;
+    SharedRealm m_realm;
+};
 
 template <type_info::ObjectPersistable ...Ts>
 struct db {
@@ -123,6 +238,11 @@ struct db {
             .sync_config = this->config.sync_config,
             .scheduler = scheduler()
         });
+    }
+
+    sync_subscription_set subscriptions()
+    {
+        return sync_subscription_set(m_realm->get_active_subscription_set(), m_realm);
     }
 
     void write(std::function<void()>&& block) const

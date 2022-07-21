@@ -224,6 +224,20 @@ struct User {
      */
     template <type_info::ObjectPersistable ...Ts, typename T>
     task<thread_safe_reference<db<Ts...>>> realm(const T& partition_value) const requires (type_info::StringPersistable<T> || type_info::IntPersistable<T>);
+
+    db_config flexible_sync_configuration() const
+    {
+        db_config config;
+        config.sync_config = std::make_shared<SyncConfig>(m_user, SyncConfig::FLXSyncEnabled{});
+        config.sync_config->error_handler = [](std::shared_ptr<SyncSession> session, SyncError error) {
+            std::cerr<<"sync error: "<<error.message<<std::endl;
+        };
+        config.path = m_user->sync_manager()->path_for_realm(*config.sync_config);
+        config.sync_config->client_resync_mode = realm::ClientResyncMode::Manual;
+        config.sync_config->stop_policy = SyncSessionStopPolicy::AfterChangesUploaded;
+        return config;
+    }
+    
     std::shared_ptr<SyncUser> m_user;
 };
 
@@ -317,7 +331,6 @@ task<thread_safe_reference<db<Ts...>>> User::realm(const T& partition_value) con
     auto tsr = co_await async_open<Ts...>(std::move(config));
     co_return tsr;
 }
-
 
 }
 #endif /* Header_h */

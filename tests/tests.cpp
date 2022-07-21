@@ -61,6 +61,90 @@ TEST(all) {
     co_return;
 }
 
+TEST(flx_sync) {
+    auto realm = realm::open<Person, Dog>({.path=path});
+
+    auto person = Person();
+    person.name = "John";
+    person.age = 17;
+    person.dog = Dog{.name = "Fido"};
+
+    realm.write([&realm, &person] {
+        realm.add(person);
+    });
+
+    CHECK_EQUALS(*person.name, "John");
+    CHECK_EQUALS(*person.age, 17);
+    auto dog = **person.dog;
+    CHECK_EQUALS(*dog.name, "Fido");
+
+    bool did_run = false;
+    auto token = person.observe<Person>([&did_run](auto&& change) {
+        CHECK_EQUALS(change.property.name, "age");
+        CHECK_EQUALS(std::any_cast<int>(*change.property.new_value), 19);
+        did_run = true;
+    });
+
+    realm.write([&person] {
+        person.age += 2;
+    });
+
+    CHECK_EQUALS(*person.age, 19);
+
+    auto persons = realm.objects<Person>();
+    CHECK_EQUALS(persons.size(), 1);
+
+    std::vector<Person> people;
+    std::copy(persons.begin(), persons.end(), std::back_inserter(people));
+    for (auto& person:people) {
+        realm.write([&person, &realm]{
+            realm.remove(person);
+        });
+    }
+    CHECK_EQUALS(did_run, true);
+
+    CHECK_EQUALS(persons.size(), 0);
+    auto app = realm::App("cpp-sdk-vbfxo");
+    auto user = co_await app.login(realm::App::Credentials::anonymous());
+    auto flx_sync_config = user.flexible_sync_configuration();
+
+    auto tsr = co_await realm::async_open<AllTypesObject, AllTypesObjectLink>(flx_sync_config);
+    auto synced_realm = tsr.resolve();
+
+    auto update_success = co_await synced_realm.subscriptions().update([](realm::sync_subscription_set::mutable_sync_subscription_set& subs) {
+        subs.clear();
+    });
+    CHECK_EQUALS(update_success, true);
+    CHECK_EQUALS(synced_realm.subscriptions().size(), 0);
+
+    update_success = co_await synced_realm.subscriptions().update([](realm::sync_subscription_set::mutable_sync_subscription_set& subs) {
+        subs.add<AllTypesObject>("foo-strings", [](auto& obj) {
+            return obj.str_col == "foo";
+        });
+    });
+    CHECK_EQUALS(update_success, true);
+    CHECK_EQUALS(synced_realm.subscriptions().size(), 1);
+
+    auto sub = *synced_realm.subscriptions().find("foo-strings");
+    auto y = sub.query_string();
+
+    CHECK_EQUALS(sub.name(), "foo-strings");
+    CHECK_EQUALS(sub.object_class_name(), "AllTypesObject");
+    CHECK_EQUALS(sub.query_string(), "str_col == \"foo\"");
+
+    auto non_existent_sub = synced_realm.subscriptions().find("non-existent");
+    CHECK_EQUALS((non_existent_sub == std::nullopt), true);
+
+
+    synced_realm.write([&synced_realm]() {
+        synced_realm.add(AllTypesObject{._id=1, .str_col="foo"});
+    });
+
+    CHECK_EQUALS(*synced_realm.object<AllTypesObject>(1)._id, 1);
+
+    co_return;
+}
+
 TEST(thread_safe_reference) {
     auto realm = realm::open<Person, Dog>({.path=path});
 

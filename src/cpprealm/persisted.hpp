@@ -734,10 +734,6 @@ T persisted_base<T>::operator *() const
 
 // MARK: rbool
 class rbool {
-    union {
-        bool b;
-        mutable Query q;
-    };
     bool is_for_queries = false;
     rbool(Query&& q) : q(std::move(q)), is_for_queries(true) {}
     rbool(bool b) : b(b) {}
@@ -778,6 +774,10 @@ public:
     operator bool() {
         return b;
     }
+    union {
+        bool b;
+        mutable Query q;
+    };
 };
 
 // MARK: Equatable
