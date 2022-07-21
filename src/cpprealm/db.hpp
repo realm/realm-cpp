@@ -153,6 +153,7 @@ public:
             auto it = m_subscription_set.find(name);
             if (it != m_subscription_set.end()) {
                 m_subscription_set.erase(it);
+                return;
             }
             throw std::logic_error("Subscription cannot be found");
         }
