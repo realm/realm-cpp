@@ -1,8 +1,8 @@
 #include "test_utils.hpp"
 #include "test_objects.hpp"
+#include "sync_test_utils.hpp"
 
 #include <realm/object-store/impl/realm_coordinator.hpp>
-#include <realm/object-store/sync/sync_session.hpp>
 
 
 TEST(all) {
@@ -92,12 +92,16 @@ TEST(flx_sync) {
     auto non_existent_sub = synced_realm.subscriptions().find("non-existent");
     CHECK_EQUALS((non_existent_sub == std::nullopt), true);
 
-
     synced_realm.write([&synced_realm]() {
         synced_realm.add(AllTypesObject{._id=1, .str_col="foo"});
     });
 
-    CHECK_EQUALS(*synced_realm.object<AllTypesObject>(1)._id, 1);
+    co_await test::wait_for_sync_uploads(user);
+    co_await test::wait_for_sync_downloads(user);
+    synced_realm.write([]() { }); // refresh realm
+    auto objs = synced_realm.objects<AllTypesObject>();
+
+    CHECK_EQUALS(objs[0]->_id, 1);
 
     update_success = co_await synced_realm.subscriptions().update([](realm::sync_subscription_set::mutable_sync_subscription_set& subs) {
         subs.update_subscription<AllTypesObject>("foo-strings", [](auto& obj) {
@@ -114,22 +118,28 @@ TEST(flx_sync) {
         synced_realm.add(AllTypesObject{._id=123, .str_col="bar"});
     });
 
-    auto sync_sessions = user.m_user->sync_manager()->get_all_sessions();
-    CHECK_EQUALS(sync_sessions.size(), 1);
-    auto session = sync_sessions[0];
+    co_await test::wait_for_sync_uploads(user);
+    co_await test::wait_for_sync_downloads(user);
 
-    auto uploaded = co_await realm::make_awaitable<std::error_code>([&] (auto cb) {
-        session->wait_for_upload_completion(cb);
-    });
-
-    auto downloaded = co_await realm::make_awaitable<std::error_code>([&] (auto cb) {
-        session->wait_for_download_completion(cb);
-    });
-
-    auto objs = synced_realm.objects<AllTypesObject>();
+    synced_realm.write([]() { }); // refresh realm
+    objs = synced_realm.objects<AllTypesObject>();
     CHECK_EQUALS(objs.size(), 1);
-    CHECK_EQUALS(uploaded.value(), 0);
-    CHECK_EQUALS(downloaded.value(), 0);
+
+    update_success = co_await synced_realm.subscriptions().update([](realm::sync_subscription_set::mutable_sync_subscription_set& subs) {
+        subs.update_subscription<AllTypesObject>("foo-strings");
+    });
+
+    sub = *synced_realm.subscriptions().find("foo-strings");
+    CHECK_EQUALS(sub.name(), "foo-strings");
+    CHECK_EQUALS(sub.object_class_name(), "AllTypesObject");
+    CHECK_EQUALS(sub.query_string(), "TRUEPREDICATE");
+
+    co_await test::wait_for_sync_uploads(user);
+    co_await test::wait_for_sync_downloads(user);
+
+    synced_realm.write([]() { }); // refresh realm
+    objs = synced_realm.objects<AllTypesObject>();
+    CHECK_EQUALS(objs.size(), 2);
 
     co_return;
 }

@@ -139,14 +139,19 @@ public:
     struct mutable_sync_subscription_set {
     public:
         template <type_info::ObjectPersistable T>
-        void add(const std::string& name, std::function<rbool(T&)> query_fn) {
+        void add(const std::string& name, std::optional<std::function<rbool(T&)>> query_fn = std::nullopt) {
             auto schema = *m_realm->schema().find(T::schema::name);
             auto& group = m_realm->read_group();
             auto table_ref = group.get_table(schema.table_key);
             auto builder = Query(table_ref);
-            auto q = query<T>(builder, std::move(schema));
-            auto full_query = query_fn(q).q;
-            m_subscription_set.insert_or_assign(name, full_query);
+
+            if (query_fn) {
+                auto q = query<T>(builder, std::move(schema));
+                auto full_query = (*query_fn)(q).q;
+                m_subscription_set.insert_or_assign(name, full_query);
+            } else {
+                m_subscription_set.insert_or_assign(name, builder);
+            }
         }
 
         void remove(const std::string& name) {
@@ -167,7 +172,7 @@ public:
         }
 
         template <type_info::ObjectPersistable T>
-        void update_subscription(const std::string& name, std::function<rbool(T&)> query_fn) {
+        void update_subscription(const std::string& name, std::optional<std::function<rbool(T&)>> query_fn = std::nullopt) {
             remove(name);
             add(name, query_fn);
         }
