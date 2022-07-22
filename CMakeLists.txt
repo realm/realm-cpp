@@ -44,6 +44,7 @@ set(HEADERS
     src/cpprealm/task.hpp
     src/cpprealm/thread_safe_reference.hpp
     src/cpprealm/type_info.hpp
+    src/cpprealm/flex_sync.hpp
 ) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm STATIC ${SOURCES} ${HEADERS})
