@@ -70,13 +70,13 @@ TEST(flx_sync) {
     auto tsr = co_await realm::async_open<AllTypesObject, AllTypesObjectLink>(flx_sync_config);
     auto synced_realm = tsr.resolve();
 
-    auto update_success = co_await synced_realm.subscriptions().update([](realm::SyncSubscriptionSet::MutableSyncSubscriptionSet& subs) {
+    auto update_success = co_await synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet& subs) {
         subs.clear();
     });
     CHECK_EQUALS(update_success, true);
     CHECK_EQUALS(synced_realm.subscriptions().size(), 0);
 
-    update_success = co_await synced_realm.subscriptions().update([](realm::SyncSubscriptionSet::MutableSyncSubscriptionSet& subs) {
+    update_success = co_await synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet& subs) {
         subs.add<AllTypesObject>("foo-strings", [](auto& obj) {
             return obj.str_col == "foo";
         });
@@ -103,7 +103,7 @@ TEST(flx_sync) {
 
     CHECK_EQUALS(objs[0]->_id, 1);
 
-    update_success = co_await synced_realm.subscriptions().update([](realm::SyncSubscriptionSet::MutableSyncSubscriptionSet& subs) {
+    update_success = co_await synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet& subs) {
         subs.update_subscription<AllTypesObject>("foo-strings", [](auto& obj) {
             return obj.str_col == "bar" && obj._id == 123;
         });
@@ -125,7 +125,7 @@ TEST(flx_sync) {
     objs = synced_realm.objects<AllTypesObject>();
     CHECK_EQUALS(objs.size(), 1);
 
-    update_success = co_await synced_realm.subscriptions().update([](realm::SyncSubscriptionSet::MutableSyncSubscriptionSet& subs) {
+    update_success = co_await synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet& subs) {
         subs.update_subscription<AllTypesObject>("foo-strings");
     });
 

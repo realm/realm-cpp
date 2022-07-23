@@ -280,7 +280,7 @@ public:
 
         m_app = app::App::get_shared_app(app::App::Config{
             .app_id=app_id,
-	        .transport = std::make_shared<DefaultTransport>(),
+            .transport = std::make_shared<DefaultTransport>(),
             .platform="Realm Cpp",
             .platform_version="?",
             .sdk_version="0.0.1"
