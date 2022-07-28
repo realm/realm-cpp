@@ -62,7 +62,7 @@ let package = Package(
                 .product(name: "RealmQueryParser", package: "realm-core"),
                 "libcurl"
             ],
-            path: "src/cpprealm",
+            path: "src/",
             publicHeadersPath: ".",
             cxxSettings: cxxSettings,
             linkerSettings: [
