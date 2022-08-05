@@ -119,8 +119,8 @@ struct db {
 	        .schema_mode = SchemaMode::AdditiveExplicit,
             .schema = Schema(schema),
             .schema_version = 0,
-            .sync_config = this->config.sync_config,
-            .scheduler = scheduler()
+            .scheduler = scheduler(),
+            .sync_config = this->config.sync_config
         });
     }
 

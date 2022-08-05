@@ -217,7 +217,6 @@ public:
     class iterator {
     public:
         using difference_type = size_type;
-        using value_type = value_type;
         using pointer = value_type*;
         using reference = value_type&;
         using iterator_category = std::input_iterator_tag;
