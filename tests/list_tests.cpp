@@ -4,7 +4,7 @@
 
 using namespace realm;
 
-TEST(list) {
+TEST(list_tests) {
     auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
     auto obj = AllTypesObject{};
     obj.list_int_col.push_back(42);
