@@ -44,7 +44,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/realm/realm-core", .exact("12.3.0")),
+        .package(url: "https://github.com/realm/realm-core", .exact("12.5.1")),
     ],
     targets: [
         .systemLibrary(
