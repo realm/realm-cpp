@@ -217,7 +217,6 @@ public:
     class iterator {
     public:
         using difference_type = size_type;
-        using value_type = value_type;
         using pointer = value_type*;
         using reference = value_type&;
         using iterator_category = std::input_iterator_tag;
@@ -609,9 +608,9 @@ persisted_base<T>::~persisted_base()
         if (!m_obj) {
             unmanaged.clear();
         }
-    } else if constexpr (realm::type_info::property_type<T>() == PropertyType::String) {
-        using std::string;
+    } else if constexpr (std::is_same_v<T, std::string>) {
         if (!m_obj) {
+            using std::string;
             unmanaged.~string();
         }
     }
@@ -734,10 +733,6 @@ T persisted_base<T>::operator *() const
 
 // MARK: rbool
 class rbool {
-    union {
-        bool b;
-        mutable Query q;
-    };
     bool is_for_queries = false;
     rbool(Query&& q) : q(std::move(q)), is_for_queries(true) {}
     rbool(bool b) : b(b) {}
@@ -778,6 +773,10 @@ public:
     operator bool() {
         return b;
     }
+    union {
+        bool b;
+        mutable Query q;
+    };
 };
 
 // MARK: Equatable

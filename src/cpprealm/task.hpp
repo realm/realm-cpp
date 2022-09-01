@@ -22,7 +22,7 @@
 // since C++ 20
 #include <version>
 
-#ifdef cpp_lib_coroutine
+#ifdef __cpp_lib_coroutine
 #include <coroutine>
 using namespace std;
 #elif __has_include(<experimental/coroutine>)

@@ -166,8 +166,8 @@ app::Response do_http_request(const app::Request& request)
 }
 class DefaultTransport : public app::GenericNetworkTransport {
 public:
-    void send_request_to_server(const app::Request request,
-                                std::function<void(const app::Response)> completion_block) override
+    void send_request_to_server(app::Request&& request,
+                                util::UniqueFunction<void(const app::Response&)>&& completion_block)
     {
         completion_block(do_http_request(request));
     }
@@ -224,6 +224,20 @@ struct User {
      */
     template <type_info::ObjectPersistable ...Ts, typename T>
     task<thread_safe_reference<db<Ts...>>> realm(const T& partition_value) const requires (type_info::StringPersistable<T> || type_info::IntPersistable<T>);
+
+    db_config flexible_sync_configuration() const
+    {
+        db_config config;
+        config.sync_config = std::make_shared<SyncConfig>(m_user, SyncConfig::FLXSyncEnabled{});
+        config.sync_config->error_handler = [](std::shared_ptr<SyncSession> session, SyncError error) {
+            std::cerr<<"sync error: "<<error.message<<std::endl;
+        };
+        config.path = m_user->sync_manager()->path_for_realm(*config.sync_config);
+        config.sync_config->client_resync_mode = realm::ClientResyncMode::Manual;
+        config.sync_config->stop_policy = SyncSessionStopPolicy::AfterChangesUploaded;
+        return config;
+    }
+    
     std::shared_ptr<SyncUser> m_user;
 };
 
@@ -266,7 +280,7 @@ public:
 
         m_app = app::App::get_shared_app(app::App::Config{
             .app_id=app_id,
-	    .transport = std::make_shared<DefaultTransport>(),
+            .transport = std::make_shared<DefaultTransport>(),
             .platform="Realm Cpp",
             .platform_version="?",
             .sdk_version="0.0.1"
@@ -317,7 +331,6 @@ task<thread_safe_reference<db<Ts...>>> User::realm(const T& partition_value) con
     auto tsr = co_await async_open<Ts...>(std::move(config));
     co_return tsr;
 }
-
 
 }
 #endif /* Header_h */

@@ -111,6 +111,14 @@ struct results {
         return iterator(m_parent.size(), this);
     }
 
+    std::unique_ptr<T> operator[](size_t index)
+    {
+        if (index >= m_parent.size())
+            throw std::out_of_range("Index out of range.");
+        auto obj = m_parent.template get<Obj>(index);
+        return T::schema::create_unique(std::move(obj), m_parent.get_realm());
+    }
+
     size_t size()
     {
         return m_parent.size();

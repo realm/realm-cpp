@@ -45,23 +45,26 @@ concept Comparable = requires (T a) {
     a >= a;
 };
 template <typename T>
-concept IntPersistable = std::is_integral<T>::value && requires(T a) {
+concept IntPersistable = !std::is_same_v<T, bool> && std::is_integral_v<T> && requires(T a) {
     { static_cast<realm::Int>(a) };
 };
 template <IntPersistable T>
 struct persisted_type<T> { using type = realm::Int; };
+
 template <typename T>
 concept BoolPersistable = std::is_same_v<T, bool> && requires(T a) {
     { static_cast<realm::Bool>(a) };
 };
 template <BoolPersistable T>
 struct persisted_type<T> { using type = realm::Bool; };
+
 template <typename T>
 concept EnumPersistable = std::is_enum_v<T> && requires(T a) {
     { static_cast<realm::Int>(a) };
 };
 template <EnumPersistable T>
 struct persisted_type<T> { using type = realm::Int; };
+
 template <typename T>
 concept StringPersistable = requires(T a) {
     { static_cast<realm::String>(a) };
@@ -189,15 +192,22 @@ template <ListPersistable T>
 static constexpr typename persisted_type<T>::type convert_if_required(const T& a)
 {
     typename persisted_type<T>::type v;
-    std::transform(a.begin(), a.end(), std::back_inserter(v), [](auto& value) {
-        if constexpr (ObjectPersistable<typename T::value_type>) {
-            return value.m_obj->get_key();
-        } else if constexpr (BinaryPersistableList<T>) {
-            return BinaryData(reinterpret_cast<const char *>(value.data()), value.size());
-        } else {
+
+    if constexpr (BoolPersistable<typename T::value_type>) {
+        std::transform(a.begin(), a.end(), std::back_inserter(v), [](auto value) {
             return static_cast<typename persisted_type<typename T::value_type>::type>(value);
-        }
-    });
+        });
+    } else {
+        std::transform(a.begin(), a.end(), std::back_inserter(v), [](auto& value) {
+            if constexpr (ObjectPersistable<typename T::value_type>) {
+                return value.m_obj->get_key();
+            } else if constexpr (BinaryPersistableList<T>) {
+                return BinaryData(reinterpret_cast<const char *>(value.data()), value.size());
+            } else {
+                return static_cast<typename persisted_type<typename T::value_type>::type>(value);
+            }
+        });
+    }
     return v;
 }
 
@@ -205,6 +215,7 @@ template <typename T>
 static constexpr PropertyType property_type();
 
 template<> constexpr PropertyType property_type<int>() { return PropertyType::Int; }
+template<> constexpr PropertyType property_type<bool>() { return PropertyType::Bool; }
 template<> constexpr PropertyType property_type<std::string>() { return PropertyType::String; }
 template<ObjectPersistable T> static constexpr PropertyType property_type() { return PropertyType::Object | PropertyType::Nullable; }
 template<OptionalPersistable T> static constexpr PropertyType property_type() {

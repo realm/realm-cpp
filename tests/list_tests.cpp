@@ -4,7 +4,7 @@
 
 using namespace realm;
 
-TEST(list) {
+TEST(list_tests) {
     auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
     auto obj = AllTypesObject{};
     obj.list_int_col.push_back(42);
@@ -345,6 +345,8 @@ TEST(list_all_primitive_types) {
 
     auto int_list_obj = AllTypesObject();
     test_list(int_list_obj.list_int_col, std::vector<int>({1, 2}), realm, int_list_obj);
+    auto bool_list_obj = AllTypesObject();
+    test_list(bool_list_obj.list_bool_col, std::vector<bool>({true, false}), realm, bool_list_obj);
     auto str_list_obj = AllTypesObject();
     test_list(str_list_obj.list_str_col, std::vector<std::string>({"foo", "bar"}), realm, str_list_obj);
     auto uuid_list_obj = AllTypesObject();

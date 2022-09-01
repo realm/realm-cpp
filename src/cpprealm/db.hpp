@@ -27,6 +27,7 @@
 #include <cpprealm/results.hpp>
 #include <cpprealm/task.hpp>
 #include <cpprealm/thread_safe_reference.hpp>
+#include <cpprealm/flex_sync.hpp>
 
 #include <realm/object-store/object_schema.hpp>
 #include <realm/object-store/object_store.hpp>
@@ -89,8 +90,6 @@ static std::shared_ptr<realm::util::Scheduler> make_qt()
 #endif
 
 struct db_config {
-//    db_config() = default;
-//    db_config(std::string path) : path(std::move(path)) {}
 
     std::string path = std::filesystem::current_path().append("default.realm");
 
@@ -120,9 +119,14 @@ struct db {
 	        .schema_mode = SchemaMode::AdditiveExplicit,
             .schema = Schema(schema),
             .schema_version = 0,
-            .sync_config = this->config.sync_config,
-            .scheduler = scheduler()
+            .scheduler = scheduler(),
+            .sync_config = this->config.sync_config
         });
+    }
+
+    SyncSubscriptionSet subscriptions()
+    {
+        return SyncSubscriptionSet(m_realm->get_active_subscription_set(), m_realm);
     }
 
     void write(std::function<void()>&& block) const
@@ -245,4 +249,4 @@ static task<thread_safe_reference<db<Ts...>>> async_open(db_config config) {
 }
 
 }
-#endif /* Header_h */
+#endif /* realm_realm_hpp */
