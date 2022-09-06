@@ -26,7 +26,6 @@ add_compile_definitions(REALM_VERSION_PATCH=1)
 
 set(SOURCES
     src/cpprealm/sdk.cpp
-    src/cpprealm/object.cpp
 ) # REALM_SOURCES
 
 set(HEADERS

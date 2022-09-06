@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2021 Realm Inc.
+// Copyright 2022 Realm Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -99,32 +99,6 @@ struct ObjectChangeCallbackWrapper;
  */
 struct object {
     /**
-     Performs actions contained within the given block inside a write transaction.
-
-     If the block throws an error, the transaction will be canceled and any
-     changes made before the error will be rolled back.
-
-     Only one write transaction can be open at a time for each Realm file. Write
-     transactions cannot be nested, and trying to begin a write transaction on a
-     Realm which is already in a write transaction will throw an exception.
-     Calls to `write` from `Realm` instances for the same Realm file in other
-     threads or other processes will block until the current write transaction
-     completes or is cancelled.
-
-     Before beginning the write transaction, `write` updates the `Realm`
-     instance to the latest Realm version, as if `refresh()` had been called,
-     and generates notifications if applicable. This has no effect if the Realm
-     was already up to date.
-
-     @param block: The block containing actions to perform.
-     @returns: The value returned from the block, if any.
-
-     @throws: An error if the transaction could not be completed successfully.
-             If `block` throws, the function throws the propagated `ErrorType` instead.
-     */
-    void write(std::function<void()> fn);
-
-    /**
      Registers a block to be called each time the object changes.
 
      The block will be asynchronously called after each write transaction which
@@ -174,7 +148,7 @@ struct object {
     notification_token observe(std::function<void(ObjectChange<T>)> block);
 
     bool is_managed() const noexcept {
-        return m_obj.has_value();
+        return m_object && m_object->is_valid();
     }
 
 private:
@@ -200,19 +174,28 @@ private:
     template <type_info::ObjectPersistable T>
     friend inline bool operator==(const T& lhs, const T& rhs);
 
-    std::shared_ptr<Realm> m_realm = nullptr;
     template <realm::type_info::ObjectPersistable T>
     friend std::ostream& operator<< (std::ostream& stream, const T& object);
-    std::optional<Obj> m_obj;
+    std::optional<Object> m_object;
 };
 
 template <type_info::ObjectPersistable T>
 inline bool operator==(const T& lhs, const T& rhs) {
     if (lhs.is_managed() && rhs.is_managed()) {
-        return *lhs.m_obj == *rhs.m_obj && rhs.m_realm == lhs.m_realm;
-    } else if (!lhs.is_managed() && !rhs.is_managed()) {
-        return false;
+        const Object& a = *lhs.m_object;
+        const Object& b = *rhs.m_object;
+
+        if (a.get_realm() != b.get_realm()) {
+            return false;
+        }
+
+        const Obj obj1 = a.obj();
+        const Obj obj2 = b.obj();
+        // if table and index are the same
+        return obj1.get_table() == obj2.get_table()
+            && obj1.get_key() == obj2.get_key();
     }
+
     return false;
 };
 
@@ -230,84 +213,88 @@ using ObjectNotificationCallback = std::function<void(const T*,
 }
 
 template <typename T>
-notification_token object::observe(std::function<void(ObjectChange<T>)> block) {
-  struct ObjectChangeCallbackWrapper {
-    ObjectNotificationCallback<T> block;
-    const T& object;
+notification_token object::observe(std::function<void(ObjectChange<T>)> block)
+{
+    struct ObjectChangeCallbackWrapper {
+        ObjectNotificationCallback<T> block;
+        const T& object;
 
-    std::optional<std::vector<std::string>> property_names = std::nullopt;
-    std::optional<std::vector<std::any>> old_values = std::nullopt;
-    bool deleted = false;
+        std::optional<std::vector<std::string>> property_names = std::nullopt;
+        std::optional<std::vector<std::any>> old_values = std::nullopt;
+        bool deleted = false;
 
-    void populateProperties(realm::CollectionChangeSet const& c) {
-        if (property_names) {
-            return;
-        }
-        if (!c.deletions.empty()) {
-            deleted = true;
-            return;
-        }
-        if (c.columns.empty()) {
-            return;
-        }
+        void populateProperties(realm::CollectionChangeSet const& c)
+        {
+            if (property_names) {
+                return;
+            }
+            if (!c.deletions.empty()) {
+                deleted = true;
+                return;
+            }
+            if (c.columns.empty()) {
+                return;
+            }
 
-        // FIXME: It's possible for the column key of a persisted property
-        // to equal the column key of a computed property.
-        auto properties = std::vector<std::string>();
-        TableRef table = object.m_realm->read_group().get_table(ObjectStore::table_name_for_object_type(T::schema::name));
+            // FIXME: It's possible for the column key of a persisted property
+            // to equal the column key of a computed property.
+            auto properties = std::vector<std::string>();
+            const TableRef table = object.m_object->obj().get_table();
 
-        std::apply([&c, &table, &properties](auto&&... props) {
-            (((c.columns.count(table->get_column_key(props.name).value)) ?
-              properties.push_back(props.name) : void()), ...);
-        }, T::schema::properties);
-        if (!properties.empty()) {
-            property_names = properties;
-        }
-    }
-
-    std::optional<std::vector<std::any>> readValues(realm::CollectionChangeSet const& c) {
-        if (c.empty()) {
-            return std::nullopt;
-        }
-        populateProperties(c);
-        if (!property_names) {
-            return std::nullopt;
-        }
-
-        std::vector<std::any> values;
-        for (auto& name : *property_names) {
-            std::apply([&name, &values, this](auto&&... props) {
-                ((name == props.name ? values.push_back(*(object.*props.ptr)) : void()), ...);
+            std::apply([&c, &table, &properties](const auto&... props) {
+                (((c.columns.count(table->get_column_key(props.name).value)) ?
+                  properties.push_back(props.name) : void()), ...);
             }, T::schema::properties);
+
+            if (!properties.empty()) {
+                property_names = properties;
+            }
         }
-        return values;
-    }
 
-    void before(realm::CollectionChangeSet const& c) {
-        old_values = readValues(c);
-    }
+        std::optional<std::vector<std::any>> readValues(realm::CollectionChangeSet const& c) {
+            if (c.empty()) {
+                return std::nullopt;
+            }
+            populateProperties(c);
+            if (!property_names) {
+                return std::nullopt;
+            }
 
-    void after(realm::CollectionChangeSet const& c) {
-        auto new_values = readValues(c);
-        if (deleted) {
-            block(nullptr, {}, {}, {}, nullptr);
-        } else if (new_values) {
-            block(&object, *property_names, old_values ? *old_values : std::vector<std::any>{}, *new_values, nullptr);
+            std::vector<std::any> values;
+            for (auto& name : *property_names) {
+                std::apply([&name, &values, this](auto&&... props) {
+                    ((name == props.name ? values.push_back(*(object.*props.ptr)) : void()), ...);
+                }, T::schema::properties);
+            }
+            return values;
         }
-        property_names = std::nullopt;
-        old_values = std::nullopt;
-    }
 
-    void error(std::exception_ptr err) {
-        block(nullptr, {}, {}, {}, err);
-    }
-  };
-    if (!m_realm) {
+        void before(realm::CollectionChangeSet const& c)
+        {
+            old_values = readValues(c);
+        }
+
+        void after(realm::CollectionChangeSet const& c)
+        {
+            auto new_values = readValues(c);
+            if (deleted) {
+                block(nullptr, {}, {}, {}, nullptr);
+            } else if (new_values) {
+                block(&object, *property_names, old_values ? *old_values : std::vector<std::any>{}, *new_values, nullptr);
+            }
+            property_names = std::nullopt;
+            old_values = std::nullopt;
+        }
+
+        void error(std::exception_ptr err) {
+            block(nullptr, {}, {}, {}, err);
+        }
+    };
+    if (!is_managed()) {
         throw std::runtime_error("Only objects which are managed by a Realm support change notifications");
     }
-    notification_token token;
-    token.m_object = realm::Object(m_realm, T::schema::to_core_schema(), *(m_obj));
-    token.m_token = token.m_object.add_notification_callback(ObjectChangeCallbackWrapper{
+    auto token = notification_token();
+    token.m_token = m_object->add_notification_callback(ObjectChangeCallbackWrapper {
         [block](const T* ptr,
                 std::vector<std::string> property_names,
                 std::vector<std::any> old_values,

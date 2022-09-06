@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2021 Realm Inc.
+// Copyright 2022 Realm Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ struct thread_safe_reference {
 template <type_info::ObjectPersistable T>
 struct thread_safe_reference<T> {
     thread_safe_reference(const T& object)
-    : m_tsr(ThreadSafeReference(realm::Object(object.m_realm, *object.m_obj)))
+    : m_tsr(ThreadSafeReference(*object.m_object))
     {
     }
 

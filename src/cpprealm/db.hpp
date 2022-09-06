@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2021 Realm Inc.
+// Copyright 2022 Realm Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@
 #include <cpprealm/thread_safe_reference.hpp>
 #include <cpprealm/flex_sync.hpp>
 
+#include <realm/object-store/binding_context.hpp>
 #include <realm/object-store/object_schema.hpp>
 #include <realm/object-store/object_store.hpp>
 #include <realm/object-store/shared_realm.hpp>
@@ -100,6 +101,67 @@ private:
     friend struct db;
 };
 
+enum realm_notification_state {
+    refresh_required,
+    did_change
+};
+
+struct realm_notification_token {
+    /// Removes this notifier from the Realm, stopping any
+    /// further notifications from running in assigned callback.
+    void invalidate();
+private:
+    friend struct realm_notification_helper;
+    std::function<void(realm_notification_state)> m_callback;
+    SharedRealm m_realm;
+    size_t m_index;
+};
+
+struct realm_notification_helper : public realm::BindingContext {
+public:
+    realm_notification_helper(SharedRealm realm) : m_realm(realm) { }
+
+    void changes_available() override
+    {
+        for (auto& [key, token] : m_tokens) {
+            token.m_callback(refresh_required);
+        }
+    }
+
+    void did_change(std::vector<ObserverState> const& observed, std::vector<void*> const& invalidated, bool version_changed) override
+    {
+        for (auto& [key, token] : m_tokens) {
+            token.m_callback(realm_notification_state::did_change);
+        }
+    }
+
+    realm_notification_token add_notification_handler(std::function<void(realm_notification_state)> callback)
+    {
+        auto token = realm_notification_token();
+        token.m_callback = std::move(callback);
+        token.m_realm = m_realm;
+        token.m_index = m_last_index;
+        m_tokens[m_last_index] = token;
+        m_last_index++;
+        return token;
+    }
+
+    void remove_notification_handler(const realm_notification_token& token)
+    {
+        m_tokens.erase(token.m_index);
+    }
+
+private:
+    SharedRealm m_realm;
+    std::map<size_t, realm_notification_token> m_tokens;
+    size_t m_last_index;
+};
+
+inline void realm_notification_token::invalidate() {
+    static_cast<realm_notification_helper*>(m_realm->m_binding_context.get())->remove_notification_handler(*this);
+    m_realm = nullptr;
+}
+
 #if QT_CORE_LIB
 static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::make_qt;
 #else
@@ -122,6 +184,7 @@ struct db {
             .scheduler = scheduler(),
             .sync_config = this->config.sync_config
         });
+        m_realm->m_binding_context = std::make_unique<realm_notification_helper>(realm_notification_helper(m_realm));
     }
 
     SyncSubscriptionSet subscriptions()
@@ -154,18 +217,17 @@ struct db {
     template <type_info::ObjectPersistable T>
     void remove(T& object) requires (std::is_same_v<T, Ts> || ...)
     {
-        auto actual_schema = *m_realm->schema().find(T::schema::name);
-        std::vector<FieldValue> dict;
+        REALM_ASSERT(object.is_managed());
         auto& group = m_realm->read_group();
-        auto table = group.get_table(actual_schema.table_key);
-        table->remove_object(object.m_obj->get_key());
+        auto schema = object.m_object->get_object_schema();
+        auto table = group.get_table(schema.table_key);
+        table->remove_object(object.m_object->obj().get_key());
     }
 
     template <type_info::ObjectPersistable T>
     results<T> objects() requires (std::is_same_v<T, Ts> || ...)
     {
-        return results<T>(Results(m_realm,
-                                         m_realm->read_group().get_table(ObjectStore::table_name_for_object_type(T::schema::name))));
+        return results<T>(Results(m_realm, m_realm->read_group().get_table(ObjectStore::table_name_for_object_type(T::schema::name))));
     }
 
     template <type_info::ObjectPersistable T>
@@ -176,23 +238,26 @@ struct db {
     }
 
     template <type_info::ObjectPersistable T>
-    T* object_new(const typename T::schema::PrimaryKeyProperty::Result& primary_key) requires (std::is_same_v<T, Ts> || ...) {
-        auto table = m_realm->read_group().get_table(ObjectStore::table_name_for_object_type(T::schema::name));
-        return T::schema::create_new(table->get_object_with_primary_key(primary_key),
-                                 m_realm);
-    }
-
-    template <type_info::ObjectPersistable T>
     T resolve(thread_safe_reference<T>&& tsr) const requires (std::is_same_v<T, Ts> || ...)
     {
         Object object = tsr.m_tsr.template resolve<Object>(m_realm);
         return T::schema::create(object.obj(), object.realm());
     }
-    template <type_info::ObjectPersistable T>
-    T* resolve_new(thread_safe_reference<T>&& tsr) const requires (std::is_same_v<T, Ts> || ...)
+
+    /// Adds a notification handler for changes in this Realm, and returns a notification token.
+    ///
+    /// Notification handlers are called after each write transaction is committed,
+    /// either on the current thread or other threads.
+    ///
+    /// Handler callbacks are called on the same thread that they were added on.
+    ///
+    ///  @param callback   A callback which is called to process Realm notifications.
+    ///  @return A token object which you must take ownship of. Notifications will be
+    ///          deliviered for as long as the Realm is alive. To stop recieving notifications for a
+    ///          callback call `realm_notification_token::invalidate()`
+    realm_notification_token observe(std::function<void(realm_notification_state)> callback)
     {
-        Object object = tsr.m_tsr.template resolve<Object>(m_realm);
-        return T::schema::create_new(object.obj(), object.realm());
+        return static_cast<realm_notification_helper*>(m_realm->m_binding_context.get())->add_notification_handler(callback);
     }
 
 #if QT_CORE_LIB

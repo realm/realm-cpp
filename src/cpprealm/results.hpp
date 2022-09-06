@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2021 Realm Inc.
+// Copyright 2022 Realm Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,6 +39,26 @@ public:
             ((this->*props.ptr).prepare_for_query(query), ...);
             (set_managed((this->*props.ptr), schema.property_for_name(props.name)->column_key), ...);
         }, T::schema::properties);
+    }
+};
+
+template <typename T>
+struct results;
+template <type_info::ObjectPersistable T>
+struct results_change {
+    results<T>* collection;
+    std::vector<uint64_t> deletions;
+    std::vector<uint64_t> insertions;
+    std::vector<uint64_t> modifications;
+
+    // This flag indicates whether the underlying object which is the source of this
+    // collection was deleted. This applies to lists, dictionaries and sets.
+    // This enables notifiers to report a change on empty collections that have been deleted.
+    bool collection_root_was_deleted = false;
+
+    bool empty() const noexcept {
+        return deletions.empty() && insertions.empty() && modifications.empty() &&
+        !collection_root_was_deleted;
     }
 };
 
@@ -139,6 +159,56 @@ struct results {
         m_parent = realm::Results(m_parent.get_realm(), full_query);
         return *this;
     }
+
+    struct results_callback_wrapper {
+        util::UniqueFunction<void(results_change<T>, std::exception_ptr err)> handler;
+        results<T>& collection;
+        bool ignoreChangesInInitialNotification;
+
+        void operator()(realm::CollectionChangeSet const& changes, std::exception_ptr err)
+        {
+            if (err) {
+                handler({&collection, {},{},{}}, err);
+                return;
+            }
+
+            if (ignoreChangesInInitialNotification) {
+                ignoreChangesInInitialNotification = false;
+                handler({&collection, {},{},{}}, nullptr);
+            }
+            else if (changes.empty()) {
+                handler({&collection, {},{},{}}, nullptr);
+
+            }
+            else if (!changes.collection_root_was_deleted || !changes.deletions.empty()) {
+                handler({&collection,
+                    to_vector(changes.deletions),
+                    to_vector(changes.insertions),
+                    to_vector(changes.modifications),
+                }, nullptr);
+            }
+        }
+
+    private:
+        std::vector<u_int64_t> to_vector(const IndexSet& index_set)
+        {
+            auto vector = std::vector<u_int64_t>();
+            for (auto index : index_set.as_indexes()) {
+                vector.push_back(index);
+            }
+            return vector;
+        };
+    };
+
+    notification_token observe(util::UniqueFunction<void(results_change<T>, std::exception_ptr)> handler)
+    {
+        auto token = notification_token();
+        token.m_token = m_parent.add_notification_callback(results_callback_wrapper {
+            std::move(handler), *static_cast<results<T>*>(this), false
+        });
+        return token;
+    }
+
 private:
     template <type_info::ObjectPersistable...>
     friend struct db;
