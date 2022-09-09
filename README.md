@@ -15,24 +15,22 @@ Realm was built for mobile developers, with simplicity in mind. The idiomatic, o
 
 ```cpp
 // Define your models like regular structs.
-class Dog: realm::object {
-public:
+struct Dog: realm::object {
     realm::persisted<std::string> name;
     realm::persisted<int> age;
-    
+
     using schema = realm::schema<"Dog",
                                  realm::property<"name", &Dog::name>,
                                  realm::property<"age", &Dog::age>>;
 };
 
-class Person: realm::object {
-public:
-    realm::peristed<std::string> var _id;
+struct Person: realm::object {
+    realm::persisted<std::string> _id;
     realm::persisted<std::string> name;
     realm::persisted<int> age;
     // Create relationships by pointing an Object field to another Class
     realm::persisted<std::optional<Dog>> dog;
-    
+
     using schema = realm::schema<"Person",
                                  realm::property<"_id", &Person::_id, true>, // primary key
                                  realm::property<"name", &Person::name>,
