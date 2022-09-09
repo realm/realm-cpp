@@ -1,4 +1,4 @@
-![Realm](https://github.com/realm/realm-cocoa/raw/master/logo.png)
+![Realm](./logo.png)
 
 Realm is a mobile database that runs directly inside phones, tablets or wearables.
 This repository holds the source code for the C++ SDK Prototype.
@@ -14,6 +14,8 @@ This repository holds the source code for the C++ SDK Prototype.
 Realm was built for mobile developers, with simplicity in mind. The idiomatic, object-oriented data model can save you thousands of lines of code.
 
 ```cpp
+#include <cpprealm/sdk.hpp>
+
 // Define your models like regular structs.
 struct Dog: realm::object {
     realm::persisted<std::string> name;
