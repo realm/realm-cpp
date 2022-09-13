@@ -305,8 +305,7 @@ public:
     size_t find(const value_type& a) requires (type_info::PrimitivePersistable<value_type>);
     size_t find(const value_type& a) requires (type_info::ObjectPersistable<value_type>);
 
-    notification_token observe(util::UniqueFunction<void(CollectionChange<T>,
-                                                         std::exception_ptr)>);
+    notification_token observe(util::UniqueFunction<void(CollectionChange<T>)>);
 
     /// Make this container property managed
     /// @param object The parent object
@@ -483,22 +482,17 @@ requires (type_info::ObjectPersistable<typename T::value_type>) {
 
 template <realm::type_info::ListPersistable T>
 struct CollectionCallbackWrapper {
-    util::UniqueFunction<void(CollectionChange<T>, std::exception_ptr err)> handler;
+    util::UniqueFunction<void(CollectionChange<T>)> handler;
     persisted<T>& collection;
     bool ignoreChangesInInitialNotification;
 
-    void operator()(realm::CollectionChangeSet const& changes, std::exception_ptr err) {
-        if (err) {
-            handler({&collection, {},{},{}}, err);
-            return;
-        }
-
+    void operator()(realm::CollectionChangeSet const& changes) {
         if (ignoreChangesInInitialNotification) {
             ignoreChangesInInitialNotification = false;
-            handler({&collection, {},{},{}}, nullptr);
+            handler({&collection, {},{},{}});
         }
         else if (changes.empty()) {
-            handler({&collection, {},{},{}}, nullptr);
+            handler({&collection, {},{},{}});
 
         }
         else if (!changes.collection_root_was_deleted || !changes.deletions.empty()) {
@@ -506,7 +500,7 @@ struct CollectionCallbackWrapper {
                 to_vector(changes.deletions),
                 to_vector(changes.insertions),
                 to_vector(changes.modifications),
-            }, nullptr);
+            });
         }
     }
 
@@ -521,8 +515,7 @@ private:
 };
 
 template <realm::type_info::ListPersistable T>
-notification_token persisted_container_base<T>::observe(util::UniqueFunction<void(CollectionChange<T>,
-                                                                                  std::exception_ptr)> handler)
+notification_token persisted_container_base<T>::observe(util::UniqueFunction<void(CollectionChange<T>)> handler)
 {
     if (this->m_obj) {
         notification_token token;

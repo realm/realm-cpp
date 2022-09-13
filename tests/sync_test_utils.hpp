@@ -50,28 +50,6 @@ struct SyncTestHarness {
             realm::Property("name", realm::PropertyType::String),
             realm::Property("realm_id", realm::PropertyType::String | realm::PropertyType::Nullable)});
 
-        /*
-         struct Dog: realm::object {
-             realm::persisted<std::string> name;
-             realm::persisted<int> age;
-
-             using schema = realm::schema<"Dog",
-                     realm::property<"name", &Dog::name>,
-                     realm::property<"age", &Dog::age>>;
-         };
-
-         struct Person: realm::object {
-             realm::persisted<std::string> name;
-             realm::persisted<int> age;
-             realm::persisted<std::optional<Dog>> dog;
-
-             using schema = realm::schema<"Person",
-                     realm::property<"name", &Person::name>,
-                     realm::property<"age", &Person::age>,
-                     realm::property<"dog", &Person::dog>>;
-         };
-         */
-
         realm::Schema default_schema({dog_schema, person_schema});
 
         static const realm::AppSession cached_app_session = [&] {

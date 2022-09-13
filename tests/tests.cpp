@@ -1,6 +1,6 @@
 #include "test_utils.hpp"
 #include "test_objects.hpp"
-#include "sync_test_x_utils.hpp"
+#include "sync_test_utils.hpp"
 
 #include <realm/object-store/impl/realm_coordinator.hpp>
 
