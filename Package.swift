@@ -14,7 +14,6 @@ var cxxSettings: [CXXSetting] = [
     .define("REALM_INSTALL_LIBEXECDIR", to: ""),
     .define("REALM_ENABLE_ASSERTIONS", to: "1"),
     .define("REALM_ENABLE_ENCRYPTION", to: "1"),
-
     .define("REALM_VERSION_MAJOR", to: "0"),
     .define("REALM_VERSION_MINOR", to: "0"),
     .define("REALM_VERSION_PATCH", to: "1"),
@@ -44,7 +43,8 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/realm/realm-core", .exact("12.5.1")),
+        .package(url: "https://github.com/realm/realm-core", .branch("lm/object-store-utils")),
+//        .package(path: "../realm-core")
     ],
     targets: [
         .systemLibrary(
@@ -71,11 +71,13 @@ let package = Package(
             ]),
         .executableTarget(
             name: "realm-cpp-sdkTests",
-            dependencies: ["realm-cpp-sdk", "libcurl"],
+            dependencies: ["realm-cpp-sdk", "libcurl", .product(name: "BaasTestUtils", package: "realm-core")],
             path: "tests",
             cxxSettings: testCxxSettings + [
-                .define("REALM_DISABLE_METADATA_ENCRYPTION")
-            ]),
+                .define("REALM_MONGODB_ENDPOINT", to: "\"http://localhost:9090\""),
+                .define("REALM_ENABLE_SYNC"),
+                .define("REALM_ENABLE_AUTH_TESTS"),
+            ] + cxxSettings),
     ],
     cxxLanguageStandard: .cxx20
 )

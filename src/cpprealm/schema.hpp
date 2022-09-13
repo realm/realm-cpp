@@ -110,7 +110,7 @@ struct property {
 
                 Obj obj;
                 if constexpr (Result::value_type::schema::HasPrimaryKeyProperty) {
-                    obj = target_table->create_object_with_primary_key((**field).*Result::value_type::schema::PrimaryKeyProperty::ptr);
+                    obj = target_table->create_object_with_primary_key(*((**field).*Result::value_type::schema::PrimaryKeyProperty::ptr));
                 } else {
                     obj = target_table->create_object();
                 }

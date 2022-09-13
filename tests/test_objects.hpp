@@ -4,20 +4,24 @@
 #include <cpprealm/sdk.hpp>
 
 struct Dog: realm::object {
+    realm::persisted<int> _id;
     realm::persisted<std::string> name;
     realm::persisted<int> age;
 
     using schema = realm::schema<"Dog",
+            realm::property<"_id", &Dog::_id, true>,
             realm::property<"name", &Dog::name>,
             realm::property<"age", &Dog::age>>;
 };
 
 struct Person: realm::object {
+    realm::persisted<int> _id;
     realm::persisted<std::string> name;
     realm::persisted<int> age;
     realm::persisted<std::optional<Dog>> dog;
 
     using schema = realm::schema<"Person",
+            realm::property<"_id", &Person::_id, true>,
             realm::property<"name", &Person::name>,
             realm::property<"age", &Person::age>,
             realm::property<"dog", &Person::dog>>;
@@ -27,7 +31,9 @@ struct AllTypesObjectLink: realm::object {
     realm::persisted<int> _id;
     realm::persisted<std::string> str_col;
 
-    using schema = realm::schema<"AllTypesObjectLink", realm::property<"_id", &AllTypesObjectLink::_id, true>, realm::property<"str_col", &AllTypesObjectLink::str_col>>;
+    using schema = realm::schema<"AllTypesObjectLink",
+    realm::property<"_id", &AllTypesObjectLink::_id, true>,
+    realm::property<"str_col", &AllTypesObjectLink::str_col>>;
 };
 
 struct AllTypesObject: realm::object {

@@ -700,7 +700,7 @@ T persisted_base<T>::operator *() const
                 auto value = m_obj->template get<type>(managed);
                 // convert optionals
                 if (value) {
-                    return T(*value);
+                    return T(value);
                 } else {
                     return T();
                 }

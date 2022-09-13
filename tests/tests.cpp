@@ -1,9 +1,11 @@
 #include "test_utils.hpp"
 #include "test_objects.hpp"
-#include "sync_test_utils.hpp"
+#include "sync_test_x_utils.hpp"
 
 #include <realm/object-store/impl/realm_coordinator.hpp>
 
+#include <sync/sync_test_utils.hpp>
+#include <baas_admin_api.hpp>
 
 TEST(all) {
     auto realm = realm::open<Person, Dog>({.path=path});
@@ -63,11 +65,14 @@ TEST(all) {
 }
 
 TEST(flx_sync) {
-    auto app = realm::App("cpp-sdk-vbfxo");
+    test::SyncTestHarness harness;
+    auto app_id = harness.setup();
+
+    auto app = realm::App(app_id, "localhost:9090");
     auto user = co_await app.login(realm::App::Credentials::anonymous());
     auto flx_sync_config = user.flexible_sync_configuration();
 
-    auto tsr = co_await realm::async_open<AllTypesObject, AllTypesObjectLink>(flx_sync_config);
+    auto tsr = co_await realm::async_open<Person, Dog>(flx_sync_config);
     auto synced_realm = tsr.resolve();
 
     auto update_success = co_await synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet& subs) {
@@ -77,68 +82,68 @@ TEST(flx_sync) {
     CHECK_EQUALS(synced_realm.subscriptions().size(), 0);
 
     update_success = co_await synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet& subs) {
-        subs.add<AllTypesObject>("foo-strings", [](auto& obj) {
-            return obj.str_col == "foo";
+        subs.add<Person>("foo-person", [](auto& obj) {
+            return obj.name == "foo";
         });
     });
     CHECK_EQUALS(update_success, true);
     CHECK_EQUALS(synced_realm.subscriptions().size(), 1);
 
-    auto sub = *synced_realm.subscriptions().find("foo-strings");
-    CHECK_EQUALS(sub.name(), "foo-strings");
-    CHECK_EQUALS(sub.object_class_name(), "AllTypesObject");
-    CHECK_EQUALS(sub.query_string(), "str_col == \"foo\"");
+    auto sub = *synced_realm.subscriptions().find("foo-person");
+    CHECK_EQUALS(sub.name(), "foo-person");
+    CHECK_EQUALS(sub.object_class_name(), "Person");
+    CHECK_EQUALS(sub.query_string(), "name == \"foo\"");
 
     auto non_existent_sub = synced_realm.subscriptions().find("non-existent");
     CHECK_EQUALS((non_existent_sub == std::nullopt), true);
 
     synced_realm.write([&synced_realm]() {
-        synced_realm.add(AllTypesObject{._id=1, .str_col="foo"});
+        synced_realm.add(Person{._id=1, .name="foo"});
     });
 
     co_await test::wait_for_sync_uploads(user);
     co_await test::wait_for_sync_downloads(user);
     synced_realm.write([]() { }); // refresh realm
-    auto objs = synced_realm.objects<AllTypesObject>();
+    auto objs = synced_realm.objects<Person>();
 
     CHECK_EQUALS(objs[0]->_id, 1);
 
     update_success = co_await synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet& subs) {
-        subs.update_subscription<AllTypesObject>("foo-strings", [](auto& obj) {
-            return obj.str_col == "bar" && obj._id == 123;
+        subs.update_subscription<Person>("foo-person", [](auto& obj) {
+            return obj.name == "bar" && obj._id == 123;
         });
     });
 
-    sub = *synced_realm.subscriptions().find("foo-strings");
-    CHECK_EQUALS(sub.name(), "foo-strings");
-    CHECK_EQUALS(sub.object_class_name(), "AllTypesObject");
-    CHECK_EQUALS(sub.query_string(), "str_col == \"bar\" and _id == 123");
+    sub = *synced_realm.subscriptions().find("foo-person");
+    CHECK_EQUALS(sub.name(), "foo-person");
+    CHECK_EQUALS(sub.object_class_name(), "Person");
+    CHECK_EQUALS(sub.query_string(), "name == \"bar\" and _id == 123");
 
     synced_realm.write([&synced_realm]() {
-        synced_realm.add(AllTypesObject{._id=123, .str_col="bar"});
+        synced_realm.add(Person{._id=123, .name="bar"});
     });
 
     co_await test::wait_for_sync_uploads(user);
     co_await test::wait_for_sync_downloads(user);
 
     synced_realm.write([]() { }); // refresh realm
-    objs = synced_realm.objects<AllTypesObject>();
+    objs = synced_realm.objects<Person>();
     CHECK_EQUALS(objs.size(), 1);
 
     update_success = co_await synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet& subs) {
-        subs.update_subscription<AllTypesObject>("foo-strings");
+        subs.update_subscription<Person>("foo-person");
     });
 
-    sub = *synced_realm.subscriptions().find("foo-strings");
-    CHECK_EQUALS(sub.name(), "foo-strings");
-    CHECK_EQUALS(sub.object_class_name(), "AllTypesObject");
+    sub = *synced_realm.subscriptions().find("foo-person");
+    CHECK_EQUALS(sub.name(), "foo-person");
+    CHECK_EQUALS(sub.object_class_name(), "Person");
     CHECK_EQUALS(sub.query_string(), "TRUEPREDICATE");
 
     co_await test::wait_for_sync_uploads(user);
     co_await test::wait_for_sync_downloads(user);
 
     synced_realm.write([]() { }); // refresh realm
-    objs = synced_realm.objects<AllTypesObject>();
+    objs = synced_realm.objects<Person>();
     CHECK_EQUALS(objs.size(), 2);
 
     co_return;

@@ -193,7 +193,7 @@ TEST(notifications_insertions) {
     int callback_count = 0;
 
     auto require_change = [&] {
-        auto token = obj.list_int_col.observe([&](CollectionChange<std::vector<int>> c, std::exception_ptr) {
+        auto token = obj.list_int_col.observe([&](CollectionChange<std::vector<int>> c) {
             CHECK_EQUALS(c.collection , &obj.list_int_col);
             callback_count++;
             change = std::move(c);
@@ -236,7 +236,7 @@ TEST(notifications_deletions) {
     CollectionChange<std::vector<int>> change;
 
     auto require_change = [&] {
-        auto token = obj.list_int_col.observe([&](CollectionChange<std::vector<int>> c, std::exception_ptr) {
+        auto token = obj.list_int_col.observe([&](CollectionChange<std::vector<int>> c) {
             did_run = true;
             change = std::move(c);
         });
@@ -269,7 +269,7 @@ TEST(notifications_modifications) {
     CollectionChange<std::vector<int>> change;
 
     auto require_change = [&] {
-        auto token = obj.list_int_col.observe([&](CollectionChange<std::vector<int>> c, std::exception_ptr) {
+        auto token = obj.list_int_col.observe([&](CollectionChange<std::vector<int>> c) {
             did_run = true;
             change = std::move(c);
         });
