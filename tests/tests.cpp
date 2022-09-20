@@ -187,50 +187,6 @@ TEST(query) {
     co_return;
 }
 
-TEST(realm_notifications) {
-    auto realm = realm::open<Person, Dog>({.path=path});
-
-    size_t run_count = 0;
-    auto token = realm.observe([&run_count](auto state) {
-        switch (state) {
-            case realm::refresh_required:
-                // TODO: Setup RunLoop in tests to invoke this.
-                break;
-            case realm::did_change:
-                run_count++;
-        }
-    });
-
-    auto token2 = realm.observe([&run_count](auto state) {
-        switch (state) {
-            case realm::refresh_required:
-                // TODO: Setup RunLoop in tests to invoke this.
-                break;
-            case realm::did_change:
-                run_count++;
-        }
-    });
-
-    auto person = Person { .name = "John", .age = 42 };
-    realm.write([&realm, &person](){
-        realm.add(person);
-    });
-    CHECK_EQUALS(run_count, 2);
-    token.invalidate();
-
-    realm.write([&realm, &person](){
-        person.age = 43;
-    });
-    CHECK_EQUALS(run_count, 3);
-    token2.invalidate();
-    realm.write([&realm, &person](){
-        person.age = 44;
-    });
-    CHECK_EQUALS(run_count, 3);
-
-    co_return;
-}
-
 TEST(results_notifications) {
     auto realm = realm::open<Person, Dog>({.path=path});
 
@@ -245,7 +201,7 @@ TEST(results_notifications) {
     realm::results_change<Person> change;
 
     auto require_change = [&] {
-        auto token = results.observe([&](realm::results_change<Person> c, std::exception_ptr) {
+        auto token = results.observe([&](realm::results_change<Person> c) {
             did_run = true;
             change = std::move(c);
         });
@@ -280,7 +236,7 @@ TEST(results_notifications_insertions) {
     int callback_count = 0;
     auto results = realm.objects<AllTypesObject>();
     auto require_change = [&] {
-        auto token = results.observe([&](realm::results_change<AllTypesObject> c, std::exception_ptr) {
+        auto token = results.observe([&](realm::results_change<AllTypesObject> c) {
             CHECK_EQUALS(c.collection , &results);
             callback_count++;
             change = std::move(c);
@@ -327,7 +283,7 @@ TEST(results_notifications_deletions) {
     auto results = realm.objects<AllTypesObject>();
 
     auto require_change = [&] {
-        auto token = results.observe([&](realm::results_change<AllTypesObject> c, std::exception_ptr) {
+        auto token = results.observe([&](realm::results_change<AllTypesObject> c) {
             did_run = true;
             change = std::move(c);
         });
@@ -361,7 +317,7 @@ TEST(results_notifications_modifications) {
     auto results = realm.objects<AllTypesObject>();
 
     auto require_change = [&] {
-        auto token = results.observe([&](realm::results_change<AllTypesObject> c, std::exception_ptr) {
+        auto token = results.observe([&](realm::results_change<AllTypesObject> c) {
             did_run = true;
             change = std::move(c);
         });

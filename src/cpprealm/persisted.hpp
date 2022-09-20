@@ -306,7 +306,7 @@ public:
     size_t find(const value_type& a) requires (type_info::PrimitivePersistable<value_type>);
     size_t find(const value_type& a) requires (type_info::ObjectPersistable<value_type>);
 
-    notification_token observe(util::UniqueFunction<void(collection_change<T>, std::exception_ptr)>);
+    notification_token observe(util::UniqueFunction<void(collection_change<T>)>);
 
     /// Make this container property managed
     /// @param object The parent object
@@ -464,8 +464,7 @@ requires (type_info::ObjectPersistable<typename T::value_type>) {
 }
 
 template <realm::type_info::ListPersistable T>
-notification_token persisted_container_base<T>::observe(util::UniqueFunction<void(collection_change<T>,
-                                                                                  std::exception_ptr)> handler)
+notification_token persisted_container_base<T>::observe(util::UniqueFunction<void(collection_change<T>)> handler)
 {
     if (!this->m_object) {
         throw std::runtime_error("Only collections which are managed by a Realm support change notifications");

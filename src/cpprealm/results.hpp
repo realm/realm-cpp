@@ -161,31 +161,25 @@ struct results {
     }
 
     struct results_callback_wrapper {
-        util::UniqueFunction<void(results_change<T>, std::exception_ptr err)> handler;
+        util::UniqueFunction<void(results_change<T>)> handler;
         results<T>& collection;
         bool ignoreChangesInInitialNotification;
 
-        void operator()(realm::CollectionChangeSet const& changes, std::exception_ptr err)
+        void operator()(realm::CollectionChangeSet const& changes)
         {
-            if (err) {
-                handler({&collection, {},{},{}}, err);
-                return;
-            }
-
             if (ignoreChangesInInitialNotification) {
                 ignoreChangesInInitialNotification = false;
-                handler({&collection, {},{},{}}, nullptr);
+                handler({&collection, {},{},{}});
             }
             else if (changes.empty()) {
-                handler({&collection, {},{},{}}, nullptr);
-
+                handler({&collection, {},{},{}});
             }
             else if (!changes.collection_root_was_deleted || !changes.deletions.empty()) {
                 handler({&collection,
                     to_vector(changes.deletions),
                     to_vector(changes.insertions),
                     to_vector(changes.modifications),
-                }, nullptr);
+                });
             }
         }
 
@@ -200,7 +194,7 @@ struct results {
         };
     };
 
-    notification_token observe(util::UniqueFunction<void(results_change<T>, std::exception_ptr)> handler)
+    notification_token observe(util::UniqueFunction<void(results_change<T>)> handler)
     {
         auto token = notification_token();
         token.m_token = m_parent.add_notification_callback(results_callback_wrapper {

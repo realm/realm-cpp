@@ -72,22 +72,17 @@ struct persisted;
 
 template <realm::type_info::ListPersistable T>
 struct collection_callback_wrapper {
-    util::UniqueFunction<void(collection_change<T>, std::exception_ptr err)> handler;
+    util::UniqueFunction<void(collection_change<T>)> handler;
     persisted<T>& collection;
     bool ignoreChangesInInitialNotification;
 
-    void operator()(realm::CollectionChangeSet const& changes, std::exception_ptr err) {
-        if (err) {
-            handler({&collection, {},{},{}}, err);
-            return;
-        }
-
+    void operator()(realm::CollectionChangeSet const& changes) {
         if (ignoreChangesInInitialNotification) {
             ignoreChangesInInitialNotification = false;
-            handler({&collection, {},{},{}}, nullptr);
+            handler({&collection, {},{},{}});
         }
         else if (changes.empty()) {
-            handler({&collection, {},{},{}}, nullptr);
+            handler({&collection, {},{},{}});
 
         }
         else if (!changes.collection_root_was_deleted || !changes.deletions.empty()) {
@@ -95,7 +90,7 @@ struct collection_callback_wrapper {
                 to_vector(changes.deletions),
                 to_vector(changes.insertions),
                 to_vector(changes.modifications),
-            }, nullptr);
+            });
         }
     }
 

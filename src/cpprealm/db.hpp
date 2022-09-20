@@ -101,67 +101,6 @@ private:
     friend struct db;
 };
 
-enum realm_notification_state {
-    refresh_required,
-    did_change
-};
-
-struct realm_notification_token {
-    /// Removes this notifier from the Realm, stopping any
-    /// further notifications from running in assigned callback.
-    void invalidate();
-private:
-    friend struct realm_notification_helper;
-    std::function<void(realm_notification_state)> m_callback;
-    SharedRealm m_realm;
-    size_t m_index;
-};
-
-struct realm_notification_helper : public realm::BindingContext {
-public:
-    realm_notification_helper(SharedRealm realm) : m_realm(realm) { }
-
-    void changes_available() override
-    {
-        for (auto& [key, token] : m_tokens) {
-            token.m_callback(refresh_required);
-        }
-    }
-
-    void did_change(std::vector<ObserverState> const& observed, std::vector<void*> const& invalidated, bool version_changed) override
-    {
-        for (auto& [key, token] : m_tokens) {
-            token.m_callback(realm_notification_state::did_change);
-        }
-    }
-
-    realm_notification_token add_notification_handler(std::function<void(realm_notification_state)> callback)
-    {
-        auto token = realm_notification_token();
-        token.m_callback = std::move(callback);
-        token.m_realm = m_realm;
-        token.m_index = m_last_index;
-        m_tokens[m_last_index] = token;
-        m_last_index++;
-        return token;
-    }
-
-    void remove_notification_handler(const realm_notification_token& token)
-    {
-        m_tokens.erase(token.m_index);
-    }
-
-private:
-    SharedRealm m_realm;
-    std::map<size_t, realm_notification_token> m_tokens;
-    size_t m_last_index;
-};
-
-inline void realm_notification_token::invalidate() {
-    static_cast<realm_notification_helper*>(m_realm->m_binding_context.get())->remove_notification_handler(*this);
-    m_realm = nullptr;
-}
-
 #if QT_CORE_LIB
 static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::make_qt;
 #else
@@ -184,7 +123,6 @@ struct db {
             .scheduler = scheduler(),
             .sync_config = this->config.sync_config
         });
-        m_realm->m_binding_context = std::make_unique<realm_notification_helper>(realm_notification_helper(m_realm));
     }
 
     SyncSubscriptionSet subscriptions()
@@ -242,22 +180,6 @@ struct db {
     {
         Object object = tsr.m_tsr.template resolve<Object>(m_realm);
         return T::schema::create(object.obj(), object.realm());
-    }
-
-    /// Adds a notification handler for changes in this Realm, and returns a notification token.
-    ///
-    /// Notification handlers are called after each write transaction is committed,
-    /// either on the current thread or other threads.
-    ///
-    /// Handler callbacks are called on the same thread that they were added on.
-    ///
-    ///  @param callback   A callback which is called to process Realm notifications.
-    ///  @return A token object which you must take ownship of. Notifications will be
-    ///          deliviered for as long as the Realm is alive. To stop recieving notifications for a
-    ///          callback call `realm_notification_token::invalidate()`
-    realm_notification_token observe(std::function<void(realm_notification_state)> callback)
-    {
-        return static_cast<realm_notification_helper*>(m_realm->m_binding_context.get())->add_notification_handler(callback);
     }
 
 #if QT_CORE_LIB
