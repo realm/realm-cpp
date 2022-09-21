@@ -186,7 +186,7 @@ public:
 class DefaultTransport : public app::GenericNetworkTransport {
 public:
     void send_request_to_server(app::Request&& request,
-                                util::UniqueFunction<void(const app::Response&)>&& completion_block) {
+                                app::HttpCompletion&& completion_block) override {
         auto url = CFStringCreateWithCString(kCFAllocatorDefault, request.url.c_str(), kCFStringEncodingUTF8);
         CFURLRef myURL = CFURLCreateWithString(kCFAllocatorDefault, url, nullptr);
         CFStringRef method;
@@ -260,7 +260,7 @@ public:
         CFRelease(myReadStream);
         if (myResponse)
             CFRelease(myResponse);
-        completion_block({
+        completion_block(request, {
             .http_status_code = static_cast<int>(myErrCode),
             .body = response_string
         });

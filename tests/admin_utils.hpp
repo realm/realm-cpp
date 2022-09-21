@@ -31,7 +31,7 @@ namespace {
 
     static realm::app::Response do_http_request(app::Request &&request) {
         app::Response r_response;
-        transport.send_request_to_server(std::move(request), [&r_response](auto response){
+        transport.send_request_to_server(std::move(request), [&r_response](auto request, auto response){
             r_response = std::move(response);
         });
         return r_response;
@@ -291,14 +291,13 @@ struct Admin {
                     {"username", "unique_user@domain.com"},
                     {"password", "password"}
             };
-            auto headers =  std::map<std::string, std::string> {
-                    {"Content-Type", "application/json;charset=utf-8"},
-                    {"Accept",       "application/json"}
-            };
-            auto result = do_http_request({
+            auto result = do_http_request(app::Request{
                                                   .method = realm::app::HttpMethod::post,
                                                   .url = "http://localhost:9090/api/admin/v3.0/auth/providers/local-userpass/login",
-                                                  .headers = headers,
+                                                  .headers = {
+                                                          {"Content-Type", "application/json;charset=utf-8"},
+                                                          {"Accept",       "application/json"}
+                                                  },
                                                   .body = body.str()
                                           });
             if (result.http_status_code != 200) {
