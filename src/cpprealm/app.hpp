@@ -299,7 +299,7 @@ struct User {
      */
     std::string identifier() const
     {
-        m_user->identity();
+       return m_user->identity();
     }
 
     /**
