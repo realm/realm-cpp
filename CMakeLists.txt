@@ -112,16 +112,16 @@ set_target_properties(cpprealm PROPERTIES PUBLIC_HEADER "${HEADERS}")
 install(TARGETS cpprealm
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm)
 set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
-find_library(FoundationLib CoreFoundation)
-message("LIB: ${FoundationLib}")
+
 if (APPLE)
+    find_library(FoundationLib CoreFoundation)
+    message("LIB: ${FoundationLib}")
     list(APPEND CMAKE_SYSTEM_FRAMEWORK_PATH
             ${CMAKE_OSX_SYSROOT_PATH}/Library/Frameworks
             ${CMAKE_OSX_SYSROOT_PATH}/Network/Library/Frameworks
             ${CMAKE_OSX_SYSROOT_PATH}/System/Library/Frameworks
             )
     target_link_libraries(cpprealm "-framework CoreFoundation")
-    #    target_link_libraries(cpprealm_exe_tests "-framework CoreFoundation")
 else()
     target_link_libraries(cpprealm curl)
 endif()

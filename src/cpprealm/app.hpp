@@ -359,7 +359,7 @@ class App {
         return std::move(logger);
     }
 public:
-    explicit App(const std::string& app_id, const std::string& base_url = "")
+    explicit App(const std::string& app_id, const std::optional<std::string>& base_url)
     {
         #if QT_CORE_LIB
         util::Scheduler::set_default_factory(util::make_qt);
@@ -387,7 +387,7 @@ public:
         m_app = app::App::get_shared_app(app::App::Config{
             .app_id=app_id,
             .transport = std::make_shared<internal::DefaultTransport>(),
-            .base_url = base_url.empty() ? util::Optional<std::string>() : base_url,
+            .base_url = base_url ? util::Optional<std::string>() : base_url,
             .platform="Realm Cpp",
             .platform_version="?",
             .sdk_version="0.0.1",
