@@ -4,6 +4,7 @@ project(realm)
 
 # Project-wide build flags
 set(CMAKE_CXX_STANDARD 20)
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
 add_subdirectory(realm-core)
 
@@ -43,8 +44,8 @@ set(HEADERS
     src/cpprealm/flex_sync.hpp
 ) # REALM_INSTALL_HEADERS
 
-add_library(cpprealm STATIC ${SOURCES} ${HEADERS})
-add_executable(cpprealm_exe_tests tests/tests.cpp tests/str_tests.cpp tests/list_tests.cpp tests/query_tests.cpp tests/test_utils.hpp tests/sync_test_utils.hpp tests/test_objects.hpp tests/test_utils.cpp)
+add_library(cpprealm SHARED ${SOURCES} ${HEADERS})
+add_executable(cpprealm_exe_tests tests/tests.cpp tests/str_tests.cpp tests/list_tests.cpp tests/query_tests.cpp tests/test_utils.hpp tests/sync_test_utils.hpp tests/test_objects.hpp tests/test_utils.cpp tests/admin_utils.hpp tests/admin_utils.cpp)
 #add_test(cpprealm_tests)
 
 target_include_directories(cpprealm PRIVATE realm-core/src)
@@ -104,14 +105,31 @@ if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL
 target_compile_options(cpprealm PUBLIC -fcoroutines)
 endif()
 
-target_link_libraries(cpprealm Storage ObjectStore Sync z curl)
+target_link_libraries(cpprealm Storage ObjectStore Sync z)
 
 set_target_properties(cpprealm PROPERTIES PUBLIC_HEADER "${HEADERS}")
 
 install(TARGETS cpprealm
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm)
+set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
+find_library(FoundationLib CoreFoundation)
+message("LIB: ${FoundationLib}")
+if (APPLE)
+    list(APPEND CMAKE_SYSTEM_FRAMEWORK_PATH
+            ${CMAKE_OSX_SYSROOT_PATH}/Library/Frameworks
+            ${CMAKE_OSX_SYSROOT_PATH}/Network/Library/Frameworks
+            ${CMAKE_OSX_SYSROOT_PATH}/System/Library/Frameworks
+            )
+    target_link_libraries(cpprealm "-framework CoreFoundation")
+    #    target_link_libraries(cpprealm_exe_tests "-framework CoreFoundation")
+else()
+    target_link_libraries(cpprealm curl)
+endif()
+target_link_libraries(cpprealm_exe_tests PUBLIC cpprealm z curl ObjectStore Sync Storage "-framework CoreFoundation" "-framework CFNetwork")
 
-target_link_libraries(cpprealm_exe_tests PUBLIC cpprealm z curl ObjectStore Sync Storage)
+file(COPY tests/setup_baas.rb DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY tests/dependencies.list DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY tests/config_overrides.json DESTINATION ${CMAKE_BINARY_DIR})
 
 add_test(cpprealm_tests cpprealm_exe_tests)
 enable_testing()

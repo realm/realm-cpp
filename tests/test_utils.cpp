@@ -1,4 +1,5 @@
 #include "test_utils.hpp"
+#include "admin_utils.hpp"
 
 harness harness::shared = harness{};
 
@@ -14,6 +15,7 @@ void register_function(std::pair<std::string /* path */, fun_t> f) {
 
 int main() {
     std::cout<<"Launching "<<registered_functions().size()<<" tests."<<std::endl;
+    RealmServer::shared;
     for (auto& pair : registered_functions()) {
         auto path = pair.first;
         std::filesystem::remove(std::filesystem::current_path() / std::string(path));
@@ -30,7 +32,7 @@ int main() {
         while (std::transform_reduce(funs.begin(), funs.end(), true,
                                      [](bool done1, bool done2) -> bool { return done1 && done2; },
                                      [](const auto& task) -> bool { return task.second.handle.done(); }) == false) {
-        };
+        }
     }
 
     std::cout<<harness::shared.success_count<<"/"<<harness::shared.success_count + harness::shared.fail_count<<" checks completed successfully."<<std::endl;
