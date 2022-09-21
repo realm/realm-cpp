@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2021 Realm Inc.
+// Copyright 2022 Realm Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -182,12 +182,16 @@ constexpr typename persisted_type<T>::type convert_if_required(const T& a)
         return a;
     }
 }
+
 template <OptionalObjectPersistable T>
 static constexpr typename persisted_type<T>::type convert_if_required(const T& a)
 {
-    if (a) { return a->m_obj ? a->m_obj->get_key() : ObjKey{}; }
-    else { return ObjKey{}; }
+    if (a) {
+        return a->m_object ? a->m_m_object->obj().get_key() : ObjKey{};
+    }
+    return ObjKey{};
 }
+
 template <ListPersistable T>
 static constexpr typename persisted_type<T>::type convert_if_required(const T& a)
 {

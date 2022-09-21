@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2021 Realm Inc.
+// Copyright 2022 Realm Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,46 +77,44 @@ struct property {
     }
 
     static void assign(Class& object, ColKey col_key, SharedRealm realm) {
-        if constexpr (type_info::ListPersistable<Result>) {
-            (object.*Ptr).assign(*object.m_obj, col_key, realm);
-        } else {
-            (object.*Ptr).assign(*object.m_obj, col_key);
-        }
+        (object.*Ptr).assign(object.m_object->obj(), col_key, realm);
     }
 
-    static void set(Class& object, ColKey col_key) {
-        object.m_obj->template set<typename type_info::persisted_type<Result>::type>(col_key,
-                                                                                     (object.*ptr).as_core_type());
+    static void set(Class& object, const std::string& property_name) {
+        object.m_object->template set_column_value(property_name, (object.*ptr).as_core_type());
     }
-    static void set(Class& object, ColKey col_key) requires (type_info::ListPersistable<Result>) {
+
+    static void set(Class& object, const std::string& property_name) requires (type_info::ListPersistable<Result>) {
+        auto col_key = object.m_object->obj().get_table()->get_column_key(property_name);
         if constexpr (type_info::ObjectPersistable<typename Result::value_type>) {
+            auto table = object.m_object->obj().get_table()->get_link_target(col_key);
             for (auto& list_obj : (object.*ptr).unmanaged) {
-                auto table = object.m_obj->get_table()->get_link_target(col_key);
-                Result::value_type::schema::add(list_obj, table, object.m_realm);
-                object.m_obj->get_linklist(col_key).add(list_obj.m_obj->get_key());
+                Result::value_type::schema::add(list_obj, table, object.m_object->get_realm());
+                object.m_object->obj().get_linklist(col_key).add(list_obj.m_object->obj().get_key());
             }
         } else {
-            object.m_obj->set_list_values(col_key, (object.*ptr).as_core_type());
+            object.m_object->obj().set_list_values(col_key, (object.*ptr).as_core_type());
         }
     }
-    static void set(Class& object, ColKey col_key) requires (type_info::OptionalObjectPersistable<Result>) {
+
+    static void set(Class& object, const std::string& property_name) requires (type_info::OptionalObjectPersistable<Result>) {
         auto field = (object.*ptr);
         if (*field) {
-            if (field.m_obj) {
-                object.m_obj->set(col_key, field.m_obj->get_key());
+            if (field.m_object) {
+                object.m_object->set_column_value(property_name, field.m_object->obj().get_key());
             } else {
-                auto target_table = object.m_obj->get_table()->get_link_target(col_key);
+                auto col_key = object.m_object->obj().get_table()->get_column_key(property_name);
+                auto target_table = object.m_object->obj().get_table()->get_link_target(col_key);
                 auto target_cls = *field;
 
-                Obj obj;
+                auto realm = object.m_object->get_realm();
                 if constexpr (Result::value_type::schema::HasPrimaryKeyProperty) {
-                    obj = target_table->create_object_with_primary_key((**field).*Result::value_type::schema::PrimaryKeyProperty::ptr);
+                    target_cls->m_object = Object(realm, target_table->create_object_with_primary_key((**field).*Result::value_type::schema::PrimaryKeyProperty::ptr));
                 } else {
-                    obj = target_table->create_object();
+                    target_cls->m_object = Object(realm, target_table->create_object());
                 }
-                target_cls->m_obj = obj;
                 Result::value_type::schema::set(*target_cls);
-                object.m_obj->set(col_key, obj.get_key());
+                object.m_object->obj().set(col_key, target_cls->m_object->obj().get_key());
             }
         }
     }
@@ -166,48 +164,36 @@ struct schema {
 
     static void set(Class& cls)
     {
-        (Properties::set(cls, cls.m_obj->get_table()->get_column_key(Properties::name)), ...);
-    }
-
-    static void initialize(Class& cls, Obj&& obj, SharedRealm realm)
-    {
-        cls.m_obj = std::move(obj);
-        cls.m_realm = realm;
-
-        (Properties::assign(cls, cls.m_obj->get_table()->get_column_key(Properties::name), realm), ...);
+        (Properties::set(cls, Properties::name), ...);
     }
 
     static Class create(Obj&& obj, SharedRealm realm)
     {
         Class cls;
-        initialize(cls, std::move(obj), realm);
+        cls.m_object = Object(realm, std::move(obj));
+        (Properties::assign(cls, cls.m_object->obj().get_table()->get_column_key(Properties::name), realm), ...);
         return cls;
     }
-    static Class* create_new(Obj&& obj, SharedRealm realm)
-    {
-        auto cls = new Class();
-        initialize(*cls, std::move(obj), realm);
-        return cls;
-    }
+
     static std::unique_ptr<Class> create_unique(Obj&& obj, SharedRealm realm)
     {
         auto cls = std::make_unique<Class>();
-        initialize(*cls, std::move(obj), realm);
+        cls->m_object = Object(realm, std::move(obj));
+        (Properties::assign(*cls, cls->m_object->obj().get_table()->get_column_key(Properties::name), realm), ...);
         return cls;
     }
 
     static void add(Class& object, TableRef table, SharedRealm realm)
     {
-        Obj managed;
         if constexpr (HasPrimaryKeyProperty) {
             auto pk = *(object.*PrimaryKeyProperty::ptr);
-            managed = table->create_object_with_primary_key(pk);
+            object.m_object = Object(realm, table->create_object_with_primary_key(pk));
         } else {
-            managed = table->create_object(ObjKey{});
+            object.m_object = Object(realm, table->create_object(ObjKey{}));
         }
-        object.m_obj = managed; // This gets set twice?
+
         set(object);
-        initialize(object, std::move(managed), realm);
+        (Properties::assign(object, object.m_object->obj().get_table()->get_column_key(Properties::name), realm), ...);
     }
 };
 

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2021 Realm Inc.
+// Copyright 2022 Realm Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@
 #include <cpprealm/thread_safe_reference.hpp>
 #include <cpprealm/flex_sync.hpp>
 
+#include <realm/object-store/binding_context.hpp>
 #include <realm/object-store/object_schema.hpp>
 #include <realm/object-store/object_store.hpp>
 #include <realm/object-store/shared_realm.hpp>
@@ -154,18 +155,17 @@ struct db {
     template <type_info::ObjectPersistable T>
     void remove(T& object) requires (std::is_same_v<T, Ts> || ...)
     {
-        auto actual_schema = *m_realm->schema().find(T::schema::name);
-        std::vector<FieldValue> dict;
+        REALM_ASSERT(object.is_managed());
         auto& group = m_realm->read_group();
-        auto table = group.get_table(actual_schema.table_key);
-        table->remove_object(object.m_obj->get_key());
+        auto schema = object.m_object->get_object_schema();
+        auto table = group.get_table(schema.table_key);
+        table->remove_object(object.m_object->obj().get_key());
     }
 
     template <type_info::ObjectPersistable T>
     results<T> objects() requires (std::is_same_v<T, Ts> || ...)
     {
-        return results<T>(Results(m_realm,
-                                         m_realm->read_group().get_table(ObjectStore::table_name_for_object_type(T::schema::name))));
+        return results<T>(Results(m_realm, m_realm->read_group().get_table(ObjectStore::table_name_for_object_type(T::schema::name))));
     }
 
     template <type_info::ObjectPersistable T>
@@ -176,23 +176,10 @@ struct db {
     }
 
     template <type_info::ObjectPersistable T>
-    T* object_new(const typename T::schema::PrimaryKeyProperty::Result& primary_key) requires (std::is_same_v<T, Ts> || ...) {
-        auto table = m_realm->read_group().get_table(ObjectStore::table_name_for_object_type(T::schema::name));
-        return T::schema::create_new(table->get_object_with_primary_key(primary_key),
-                                 m_realm);
-    }
-
-    template <type_info::ObjectPersistable T>
     T resolve(thread_safe_reference<T>&& tsr) const requires (std::is_same_v<T, Ts> || ...)
     {
         Object object = tsr.m_tsr.template resolve<Object>(m_realm);
         return T::schema::create(object.obj(), object.realm());
-    }
-    template <type_info::ObjectPersistable T>
-    T* resolve_new(thread_safe_reference<T>&& tsr) const requires (std::is_same_v<T, Ts> || ...)
-    {
-        Object object = tsr.m_tsr.template resolve<Object>(m_realm);
-        return T::schema::create_new(object.obj(), object.realm());
     }
 
 #if QT_CORE_LIB

@@ -40,12 +40,68 @@ struct persisted_container_base;
  */
 struct notification_token {
 private:
+    friend struct object;
     template <realm::type_info::ListPersistable T>
     friend struct persisted_container_base;
-    List m_list;
-    friend struct object;
-    realm::Object m_object;
+    template <typename T>
+    friend struct results;
     realm::NotificationToken m_token;
+};
+
+template <type_info::ListPersistable T>
+struct collection_change {
+    /// The list being observed.
+    const persisted_container_base<T>* collection;
+    std::vector<uint64_t> deletions;
+    std::vector<uint64_t> insertions;
+    std::vector<uint64_t> modifications;
+
+    // This flag indicates whether the underlying object which is the source of this
+    // collection was deleted. This applies to lists, dictionaries and sets.
+    // This enables notifiers to report a change on empty collections that have been deleted.
+    bool collection_root_was_deleted = false;
+
+    bool empty() const noexcept {
+        return deletions.empty() && insertions.empty() && modifications.empty() &&
+        !collection_root_was_deleted;
+    }
+};
+
+template <type_info::Persistable T>
+struct persisted;
+
+template <realm::type_info::ListPersistable T>
+struct collection_callback_wrapper {
+    util::UniqueFunction<void(collection_change<T>)> handler;
+    persisted<T>& collection;
+    bool ignoreChangesInInitialNotification;
+
+    void operator()(realm::CollectionChangeSet const& changes) {
+        if (ignoreChangesInInitialNotification) {
+            ignoreChangesInInitialNotification = false;
+            handler({&collection, {},{},{}});
+        }
+        else if (changes.empty()) {
+            handler({&collection, {},{},{}});
+
+        }
+        else if (!changes.collection_root_was_deleted || !changes.deletions.empty()) {
+            handler({&collection,
+                to_vector(changes.deletions),
+                to_vector(changes.insertions),
+                to_vector(changes.modifications),
+            });
+        }
+    }
+
+private:
+    std::vector<u_int64_t> to_vector(const IndexSet& index_set) {
+        auto vector = std::vector<u_int64_t>();
+        for (auto index : index_set.as_indexes()) {
+            vector.push_back(index);
+        }
+        return vector;
+    };
 };
 
 
@@ -77,25 +133,6 @@ struct PropertyChange {
      for `List` properties and will always be nil.
     */
     std::optional<std::any> new_value;
-};
-
-template <type_info::ListPersistable T>
-struct CollectionChange {
-    /// The list being observed.
-    const persisted_container_base<T>* collection;
-    std::vector<uint64_t> deletions;
-    std::vector<uint64_t> insertions;
-    std::vector<uint64_t> modifications;
-
-    // This flag indicates whether the underlying object which is the source of this
-    // collection was deleted. This applies to lists, dictionaries and sets.
-    // This enables notifiers to report a change on empty collections that have been deleted.
-    bool collection_root_was_deleted = false;
-
-    bool empty() const noexcept {
-        return deletions.empty() && insertions.empty() && modifications.empty() &&
-        !collection_root_was_deleted;
-    }
 };
 
 } // namespace realm
