@@ -359,7 +359,7 @@ class App {
         return std::move(logger);
     }
 public:
-    explicit App(const std::string& app_id, const std::optional<std::string>& base_url)
+    explicit App(const std::string& app_id, const std::optional<std::string>& base_url = {})
     {
         #if QT_CORE_LIB
         util::Scheduler::set_default_factory(util::make_qt);
