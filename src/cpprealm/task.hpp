@@ -225,7 +225,7 @@ auto make_awaitable(F&& func) {
         Awaiter& operator=(Awaiter&&) = delete;
         bool await_ready() { return {}; }
         void await_suspend(coroutine_handle<> handle) {
-            func([handle = std::move(handle), this] (auto&&... args) mutable
+            func([handle = handle, this] (auto&&... args) mutable
                  {
                 try {
                     result.emplace(handle_result_args(FWD(args)...));
@@ -244,6 +244,15 @@ auto make_awaitable(F&& func) {
         std::optional<Res> result;
         std::optional<std::exception_ptr> error;
         F& func;
+        ~Awaiter()
+        {
+            if (result) {
+                result.reset();
+            }
+            if (error) {
+                error.reset();
+            }
+        }
     };
     return Awaiter{.func = func};
 }

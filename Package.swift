@@ -26,20 +26,37 @@ let testCxxSettings: [CXXSetting] = cxxSettings + [
     // Command-line `swift build` resolves header search paths
     // relative to the package root, while Xcode resolves them
     // relative to the target root, so we need both.
-    .headerSearchPath("../src")
+    .headerSearchPath("../src"),
+    .unsafeFlags(["-lcurl"])
 ]
+
+let cppSdkTarget: Target = .target(
+    name: "realm-cpp-sdk",
+    dependencies: [
+        .product(name: "RealmCore", package: "realm-core"),
+        .product(name: "RealmQueryParser", package: "realm-core"),
+        .byNameItem(name: "libcurl", condition: .when(platforms: [.linux]))
+    ],
+    path: "src/",
+    publicHeadersPath: ".",
+    cxxSettings: cxxSettings,
+    linkerSettings: [
+        .linkedFramework("Foundation", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS])),
+        .linkedFramework("Security", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS])),
+    ])
 
 let package = Package(
     name: "realm-cpp-sdk",
     platforms: [
         .macOS(.v10_15),
-        .iOS(.v11),
+        .iOS(.v14),
         .tvOS(.v9),
         .watchOS(.v2)
     ],
     products: [
         .library(
             name: "realm-cpp-sdk",
+            type: .dynamic,
             targets: ["realm-cpp-sdk"]),
     ],
     dependencies: [
@@ -55,27 +72,30 @@ let package = Package(
                 .brew(["curl"])
             ]
         ),
-        .target(
-            name: "realm-cpp-sdk",
-            dependencies: [
-                .product(name: "RealmCore", package: "realm-core"),
-                .product(name: "RealmQueryParser", package: "realm-core"),
-                "libcurl"
-            ],
-            path: "src/",
-            publicHeadersPath: ".",
-            cxxSettings: cxxSettings,
-            linkerSettings: [
-                .linkedFramework("Foundation", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS])),
-                .linkedFramework("Security", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS])),
-            ]),
+        cppSdkTarget,
         .executableTarget(
             name: "realm-cpp-sdkTests",
             dependencies: ["realm-cpp-sdk", "libcurl"],
             path: "tests",
             cxxSettings: testCxxSettings + [
                 .define("REALM_DISABLE_METADATA_ENCRYPTION")
+            ],
+            linkerSettings: [
+                .linkedFramework("Foundation", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS])),
+                .linkedFramework("CFNetwork", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS]))
             ]),
+        .executableTarget(
+            name: "helloworld",
+            dependencies: ["realm-cpp-sdk"],
+            path: "examples/cmake",
+            cxxSettings: cxxSettings + [
+                .define("REALM_DISABLE_METADATA_ENCRYPTION")
+            ],
+            linkerSettings: [
+                .linkedFramework("Foundation", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS])),
+                .linkedFramework("CFNetwork", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS]))
+            ]
+        )
     ],
     cxxLanguageStandard: .cxx20
 )

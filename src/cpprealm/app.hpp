@@ -26,13 +26,20 @@
 #include <cpprealm/type_info.hpp>
 #include <cpprealm/task.hpp>
 #include <cpprealm/db.hpp>
+#include <utility>
 
+#if __APPLE__
+#include <CFNetwork/CFHTTPMessage.h>
+#include <CFNetwork/CFHTTPStream.h>
+#include <CoreFoundation/CFString.h>
+#else
 #include <curl/curl.h>
-
+#endif
 namespace realm {
 
-namespace {
+namespace internal {
 
+#if !__APPLE__
 class CurlGlobalGuard {
 public:
     CurlGlobalGuard()
@@ -164,14 +171,100 @@ app::Response do_http_request(const app::Request& request)
         std::move(response),
     };
 }
+#endif
+#if !__APPLE__
 class DefaultTransport : public app::GenericNetworkTransport {
 public:
     void send_request_to_server(app::Request&& request,
                                 util::UniqueFunction<void(const app::Response&)>&& completion_block)
     {
+
         completion_block(do_http_request(request));
     }
 };
+#else
+class DefaultTransport : public app::GenericNetworkTransport {
+public:
+    void send_request_to_server(app::Request&& request,
+                                app::HttpCompletion&& completion_block) override {
+        auto url = CFStringCreateWithCString(kCFAllocatorDefault, request.url.c_str(), kCFStringEncodingUTF8);
+        CFURLRef myURL = CFURLCreateWithString(kCFAllocatorDefault, url, nullptr);
+        CFStringRef method;
+        switch (request.method) {
+            case app::HttpMethod::get:
+                method = CFSTR("GET");
+                break;
+            case app::HttpMethod::post:
+                method = CFSTR("POST");
+                break;
+            case app::HttpMethod::put:
+                method = CFSTR("PUT");
+                break;
+            case app::HttpMethod::patch:
+                method = CFSTR("PATCH");
+                break;
+            case app::HttpMethod::del:
+                method = CFSTR("DELETE");
+                break;
+        }
+        CFHTTPMessageRef myRequest =
+                CFHTTPMessageCreateRequest(kCFAllocatorDefault, method, myURL,
+                                           kCFHTTPVersion1_1);
+        if (request.method != app::HttpMethod::get) {
+            auto body_string = CFStringCreateWithCString(kCFAllocatorDefault, request.body.c_str(),
+                                                         kCFStringEncodingUTF8);
+            CFDataRef bodyData = CFStringCreateExternalRepresentation(kCFAllocatorDefault,
+                                                                      body_string, kCFStringEncodingUTF8, 0);
+            CFHTTPMessageSetBody(myRequest, bodyData);
+            CFRelease(body_string);
+            CFRelease(bodyData);
+        }
+        if (!request.headers.empty()) {
+            for (auto &header: request.headers) {
+                auto name = CFStringCreateWithCString(kCFAllocatorDefault, header.first.c_str(), kCFStringEncodingUTF8);
+                auto value = CFStringCreateWithCString(kCFAllocatorDefault, header.second.c_str(),
+                                                       kCFStringEncodingUTF8);
+                CFHTTPMessageSetHeaderFieldValue(myRequest, name, value);
+                CFRelease(name);
+                CFRelease(value);
+            }
+        }
+        CFReadStreamRef myReadStream = CFReadStreamCreateForHTTPRequest(kCFAllocatorDefault, myRequest);
+        CFReadStreamOpen(myReadStream);
+        auto error = CFReadStreamGetError(myReadStream);
+        if (error.error) {
+            abort();
+        }
+        std::string response_string;
+
+        UInt8 buffer[2048];
+        auto bytes_read = CFReadStreamRead(myReadStream, buffer, sizeof(buffer));
+        if (bytes_read != -1) {
+            response_string = std::string((char *) buffer, bytes_read);
+            while (bytes_read != 0) {
+                bytes_read = CFReadStreamRead(myReadStream, buffer, sizeof(buffer));
+                if (bytes_read != 0) {
+                    response_string += std::string((char *) buffer, bytes_read);
+                }
+            }
+        }
+        auto myResponse = (CFHTTPMessageRef)CFReadStreamCopyProperty(myReadStream, kCFStreamPropertyHTTPResponseHeader);
+        const UInt32 myErrCode = CFHTTPMessageGetResponseStatusCode(myResponse);
+        CFReadStreamClose(myReadStream);
+        CFRelease(myRequest);
+        CFRelease(myURL);
+        CFRelease(url);
+        CFRelease(method);
+        CFRelease(myReadStream);
+        if (myResponse)
+            CFRelease(myResponse);
+        completion_block(request, {
+            .http_status_code = static_cast<int>(myErrCode),
+            .body = response_string
+        });
+    }
+};
+#endif
 } // anonymous namespace
 
 
@@ -188,11 +281,24 @@ public:
  initialized. User objects can be accessed from any thread.
  */
 struct User {
+    User() = default;
+    User(const User&) = default;
+    User(User&&) = default;
+    User& operator=(const User&) = default;
+    User& operator=(User&&) = default;
+    explicit User(std::shared_ptr<SyncUser> user)
+    : m_user(std::move(user))
+    {
+    }
+
     /**
      The unique MongoDB Realm string identifying this user.
      Note this is different from an identitiy: A user may have multiple identities but has a single indentifier. See RLMUserIdentity.
      */
-    std::string identifier() const;
+    std::string identifier() const
+    {
+       return m_user->identity();
+    }
 
     /**
      The user's refresh token used to access the Realm Application.
@@ -253,7 +359,7 @@ class App {
         return std::move(logger);
     }
 public:
-    App(const std::string& app_id)
+    explicit App(const std::string& app_id, const std::optional<std::string>& base_url = {})
     {
         #if QT_CORE_LIB
         util::Scheduler::set_default_factory(util::make_qt);
@@ -280,10 +386,11 @@ public:
 
         m_app = app::App::get_shared_app(app::App::Config{
             .app_id=app_id,
-            .transport = std::make_shared<DefaultTransport>(),
+            .transport = std::make_shared<internal::DefaultTransport>(),
+            .base_url = base_url ? base_url : util::Optional<std::string>(),
             .platform="Realm Cpp",
             .platform_version="?",
-            .sdk_version="0.0.1"
+            .sdk_version="0.0.1",
         }, config);
     }
 
@@ -296,8 +403,39 @@ public:
         {
             return Credentials(app::AppCredentials::user_api_key(key));
         }
+        static Credentials facebook(const std::string access_token)
+        {
+            return Credentials(app::AppCredentials::facebook(access_token));
+        }
+        static Credentials apple(const std::string id_token)
+        {
+            return Credentials(app::AppCredentials::apple(id_token));
+        }
+        static Credentials google(app::AuthCode auth_code)
+        {
+            return Credentials(app::AppCredentials::google(std::move(auth_code)));
+        }
+        static Credentials google(app::IdToken id_token)
+        {
+            return Credentials(app::AppCredentials::google(std::move(id_token)));
+        }
+        static Credentials custom(const std::string token)
+        {
+            return Credentials(app::AppCredentials::custom(token));
+        }
+        static Credentials username_password(const std::string username, const std::string password)
+        {
+            return Credentials(app::AppCredentials::username_password(username, password));
+        }
+        static Credentials function(const bson::BsonDocument& payload)
+        {
+            return Credentials(app::AppCredentials::function(payload));
+        }
+        Credentials() = delete;
+        Credentials(const Credentials& credentials) = default;
+        Credentials(Credentials&&) = default;
     private:
-        Credentials(app::AppCredentials&& credentials)
+        explicit Credentials(app::AppCredentials&& credentials)
         : m_credentials(credentials)
         {
         }
@@ -305,11 +443,31 @@ public:
         app::AppCredentials m_credentials;
     };
 
+    task<void> register_user(const std::string username, const std::string password) {
+        try {
+            auto error = co_await make_awaitable<util::Optional<app::AppError>>([&](auto cb) {
+                m_app->template provider_client<app::App::UsernamePasswordProviderClient>().register_email(username,
+                                                                                                           password,
+                                                                                                           cb);
+            });
+            if (error) {
+                throw *error;
+            }
+        } catch (std::exception& err) {
+            throw;
+        }
+        co_return;
+    }
+
     task<User> login(const Credentials& credentials) {
-        auto user = co_await make_awaitable<std::shared_ptr<SyncUser>>([&] (auto cb) {
-            m_app->log_in_with_credentials(credentials.m_credentials, cb);
-        });
-        co_return User{user};
+        try {
+            auto user = co_await make_awaitable<std::shared_ptr<SyncUser>>([this, credentials = std::move(credentials)](auto cb) {
+                m_app->log_in_with_credentials(credentials.m_credentials, cb);
+            });
+            co_return std::move(User{std::move(user)});
+        } catch (std::exception& err) {
+            throw;
+        }
     }
 private:
     std::shared_ptr<app::App> m_app;
