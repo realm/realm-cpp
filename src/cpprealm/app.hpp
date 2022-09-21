@@ -237,10 +237,8 @@ public:
         }
         std::string response_string;
 
-//        CFIndex bytes_read;
-//        if (CFReadStreamGetBuffer(myReadStream, 2048, &bytes_read)) {
-            UInt8 buffer[2048];
-            auto bytes_read = CFReadStreamRead(myReadStream, buffer, sizeof(buffer));
+        UInt8 buffer[2048];
+        auto bytes_read = CFReadStreamRead(myReadStream, buffer, sizeof(buffer));
         if (bytes_read != -1) {
             response_string = std::string((char *) buffer, bytes_read);
             while (bytes_read != 0) {

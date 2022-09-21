@@ -10,9 +10,12 @@
 #include <format>
 #include <iostream>
 #include <map>
-#include <vector>
 #include <numeric>
 #include <thread>
+#include <string>
+#include <sstream>
+#include <vector>
+
 #include <cpprealm/schema.hpp>
 #include <cpprealm/app.hpp>
 #include <realm/object-store/sync/app.hpp>
@@ -20,8 +23,6 @@
 #include <realm/object-store/schema.hpp>
 #include <realm/object-store/property.hpp>
 #include <realm/util/scope_exit.hpp>
-#include <string>
-#include <sstream>
 
 using namespace std::filesystem;
 
@@ -29,9 +30,10 @@ namespace {
     inline auto transport = realm::internal::DefaultTransport();
     using namespace realm;
 
-    static realm::app::Response do_http_request(app::Request &&request) {
+    realm::app::Response do_http_request(app::Request &&request) {
         app::Response r_response;
-        transport.send_request_to_server(std::move(request), [&r_response](auto request, auto response){
+        transport.send_request_to_server(std::move(request),
+                                         [&r_response](auto request, auto response){
             r_response = std::move(response);
         });
         return r_response;
@@ -45,7 +47,7 @@ namespace {
         std::atomic<FILE*> pipe;
         std::atomic<bool> is_running;
         std::atomic<bool> is_cancelled;
-        int termination_status;
+        int termination_status = -1;
         std::atomic<int> pid = -1;
 
         ~Process() {
@@ -98,7 +100,6 @@ namespace {
 
         void wait_until_exit() noexcept {
             while (pipe == nullptr || pid == -1) {
-                continue;
             }
             waitpid(pid, nullptr, 0);
         }
@@ -238,13 +239,13 @@ struct Admin {
         public:
             std::string access_token;
             std::string group_id;
-            std::string url;
+            std::string m_url;
 
             app::Response request(app::HttpMethod method, bson::BsonDocument&& body = {}) const {
                 auto body_str = (std::stringstream() << body).str();
                 return do_http_request({
                                                .method = method,
-                                               .url = this->url +
+                                               .url = m_url +
                                                       "?bypass_service_change=DestructiveSyncProtocolVersionIncrease",
 
                                                .headers = {
@@ -278,8 +279,8 @@ struct Admin {
                 }
                 return bson::parse(response.body);
             }
-            Endpoint operator[](std::string url) const {
-                return {access_token, group_id, this->url + "/" + url};
+            Endpoint operator[](const std::string& url) const {
+                return {access_token, group_id, m_url + "/" + url};
             }
         };
         Endpoint apps;
@@ -319,7 +320,6 @@ struct Admin {
             session.apps = Endpoint{access_token,
                             group_id,
                             "http://localhost:9090/api/admin/v3.0/groups/" + group_id + "/apps"};
-//            shared = session;
             return session;
         }
 
@@ -330,12 +330,12 @@ struct Admin {
 
             auto app = apps[app_id];
 
-            app["secrets"].post({
+            static_cast<void>(app["secrets"].post({
                 { "name", "customTokenKey" },
                 { "value", "My_very_confidential_secretttttt" }
-             });
+             }));
 
-            app["auth_providers"].post({
+            static_cast<void>(app["auth_providers"].post({
                   {"type", "custom-token"},
                   {"config", bson::BsonDocument {
                      {"audience", bson::BsonArray()},
@@ -348,10 +348,10 @@ struct Admin {
                             bson::BsonDocument {{"required", false}, {"name", "user_data.occupation"}, {"field_name", "occupation"}},
                             bson::BsonDocument {{"required", false}, {"name", "my_metadata.name"}, {"field_name", "anotherName"}}
                     }}
-            });
+            }));
 
-            app["auth_providers"].post({{"type", "anon-user"}});
-            app["auth_providers"].post({
+            static_cast<void>(app["auth_providers"].post({{"type", "anon-user"}}));
+            static_cast<void>(app["auth_providers"].post({
                   {"type", "local-userpass"},
                   {"config", bson::BsonDocument {
                                      {"emailConfirmationUrl", "http://foo.com"},
@@ -360,7 +360,7 @@ struct Admin {
                                      {"resetPasswordSubject", "Bye"},
                                      {"autoConfirm", true}
                   }}
-              });
+              }));
 
             auto auth_providers_endpoint = app["auth_providers"];
             auto providers = static_cast<bson::BsonArray>(auth_providers_endpoint.get());
@@ -371,10 +371,10 @@ struct Admin {
             auth_providers_endpoint[static_cast<std::string>(static_cast<bson::BsonDocument>(*api_key_provider)["_id"])]
                 ["enable"].put();
 
-            app["secrets"].post({
+            static_cast<void>(app["secrets"].post({
                                         {     "name", "BackingDB_uri"},
                                         {"value", "mongodb://localhost:26000"}
-                                });
+                                }));
 
             auto service_response = app["services"].post({
                                                                { "name", "mongodb1"},
@@ -430,80 +430,6 @@ struct Admin {
             auto config = app["sync"]["config"];
             config.put(bson::BsonDocument {{"development_mode_enabled", true}});
             return static_cast<std::string>(info["client_app_id"]);
-//
-//            app.functions.post(on: group, [
-//            "name": "sum",
-//                    "private": false,
-//                    "can_evaluate": [:],
-//            "source": """
-//            exports = function(...args) {
-//                return parseInt(args.reduce((a,b) => a + b, 0));
-//            };
-//            """
-//            ], failOnError)
-//
-//            app.functions.post(on: group, [
-//            "name": "updateUserData",
-//                    "private": false,
-//                    "can_evaluate": [:],
-//            "source": """
-//            exports = async function(data) {
-//                const user = context.user;
-//                const mongodb = context.services.get("mongodb1");
-//                const userDataCollection = mongodb.db("test_data").collection("UserData");
-//                await userDataCollection.updateOne(
-//                        { "user_id": user.id },
-//                        { "$set": data },
-//                        { "upsert": true }
-//                );
-//                return true;
-//            };
-//            """
-//            ], failOnError)
-//
-//            let rules = app.services[serviceId].rules
-//            let userDataRule: [String: Any] = [
-//            "database": "test_data",
-//                    "collection": "UserData",
-//                    "roles": [[
-//            "name": "default",
-//            "apply_when": [:],
-//            "insert": true,
-//            "delete": true,
-//            "additional_fields": [:]
-//            ]]
-//            ]
-//            _ = rules.post(userDataRule)
-//            app.customUserData.patch(on: group, [
-//            "mongo_service_id": serviceId,
-//                    "enabled": true,
-//                    "database_name": "test_data",
-//                    "collection_name": "UserData",
-//                    "user_id_field": "user_id"
-//            ], failOnError)
-//
-//            _ = app.secrets.post([
-//            "name": "gcm",
-//                    "value": "gcm"
-//            ])
-//
-//            app.services.post(on: group, [
-//            "name": "gcm",
-//                    "type": "gcm",
-//                    "config": [
-//            "senderId": "gcm"
-//            ],
-//            "secret_config": [
-//            "apiKey": "gcm"
-//            ],
-//            "version": 1
-//            ], failOnError)
-//
-//            guard case .success = group.wait(timeout: .now() + 5.0) else {
-//                throw URLError(.badServerResponse)
-//            }
-//
-//            return clientAppId
         }
     };
 };
@@ -564,14 +490,16 @@ namespace {
             wait_for_server_to_start();
         }
 
-        void wait_for_server_to_start() {
+        static inline void wait_for_server_to_start() {
             auto response = do_http_request({
                                                     .url="http://localhost:9090/api/admin/v3.0/groups/groupId/apps/appId"
                                             });
-            if (response.body.empty()) {
+            while (response.body.empty()) {
                 std::cout << "Server not up" << std::endl;
                 std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-                wait_for_server_to_start();
+                response = do_http_request({
+                                                   .url="http://localhost:9090/api/admin/v3.0/groups/groupId/apps/appId"
+                                           });
             }
             std::cout << "Server started!" << std::endl;
         }
