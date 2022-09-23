@@ -67,6 +67,11 @@ struct thread_safe_reference<db<Ts...>> {
     {
         return db<Ts...>(Realm::get_shared_realm(std::move(m_tsr)));
     }
+
+    explicit operator bool() const noexcept
+    {
+        return m_tsr.operator bool();
+    }
 private:
     ThreadSafeReference m_tsr;
     template <type_info::ObjectBasePersistable ...>

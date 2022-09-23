@@ -187,6 +187,54 @@ public:
 #endif
 } // anonymous namespace
 
+struct app_error {
+
+    app_error(realm::app::AppError error) : m_error(error)
+    {
+    }
+
+    std::error_code error_code() const
+    {
+        return m_error.error_code;
+    }
+
+    std::string_view mesage() const
+    {
+        return m_error.message;
+    }
+
+    std::string_view link_to_server_logs() const
+    {
+        return m_error.link_to_server_logs;
+    }
+
+    bool is_json_error() const
+    {
+        return error_code().category() == realm::app::json_error_category();
+    }
+
+    bool is_service_error() const
+    {
+        return error_code().category() == realm::app::service_error_category();
+    }
+
+    bool is_http_error() const
+    {
+        return error_code().category() == realm::app::http_error_category();
+    }
+
+    bool is_custom_error() const
+    {
+        return error_code().category() == realm::app::custom_error_category();
+    }
+
+    bool is_client_error() const
+    {
+        return error_code().category() == realm::app::client_error_category();
+    }
+private:
+    realm::app::AppError m_error;
+};
 
 // MARK: User
 
@@ -206,10 +254,16 @@ struct User {
     User(User&&) = default;
     User& operator=(const User&) = default;
     User& operator=(User&&) = default;
-    explicit User(std::shared_ptr<SyncUser> user)
-    : m_user(std::move(user))
+    explicit User(std::shared_ptr<SyncUser> user, std::shared_ptr<app::App> app)
+    : m_user(std::move(user)), m_app(std::move(app))
     {
     }
+
+    enum class state : uint8_t {
+        logged_out,
+        logged_in,
+        removed,
+    };
 
     /**
      The unique MongoDB Realm string identifying this user.
@@ -218,6 +272,11 @@ struct User {
     std::string identifier() const
     {
        return m_user->identity();
+    }
+
+    state state() const
+    {
+        return static_cast<enum state>(m_user->state());
     }
 
     /**
@@ -263,9 +322,28 @@ struct User {
         config.sync_config->stop_policy = SyncSessionStopPolicy::AfterChangesUploaded;
         return config;
     }
-    
+
+    task<std::optional<app_error>> log_out() {
+        auto error = co_await make_awaitable<util::Optional<app_error>>([&] (auto cb)
+                                                                        {
+                                                                            m_app->log_out(m_user, cb);
+                                                                        });
+        co_return error ? std::optional<app_error>{app_error(*error)} : std::nullopt;
+    }
+
+    void log_out(util::UniqueFunction<void(std::optional<app_error>)>&& callback)
+    {
+        m_app->log_out(m_user, [cb = std::move(callback)](auto error) {
+            cb(error ? std::optional<app_error>{app_error(*error)} : std::nullopt);
+        });
+    }
+
+    std::shared_ptr<app::App> m_app;
     std::shared_ptr<SyncUser> m_user;
 };
+static_assert((int)User::state::logged_in  == (int)SyncUser::State::LoggedIn);
+static_assert((int)User::state::logged_out == (int)SyncUser::State::LoggedOut);
+static_assert((int)User::state::removed    == (int)SyncUser::State::Removed);
 
 class App {
     static std::unique_ptr<util::Logger> defaultSyncLogger(util::Logger::Level level) {
@@ -376,10 +454,20 @@ public:
     }
 
     task<User> login(const Credentials& credentials) {
-        auto user = co_await make_awaitable<std::shared_ptr<SyncUser>>([this, credentials](auto cb) {
-            m_app->log_in_with_credentials(credentials.m_credentials, cb);
+        try {
+            auto user = co_await make_awaitable<std::shared_ptr<SyncUser>>([this, credentials = std::move(credentials)](auto cb) {
+                m_app->log_in_with_credentials(credentials.m_credentials, cb);
+            });
+            co_return std::move(User{std::move(user), m_app});
+        } catch (std::exception& err) {
+            throw;
+        }
+    }
+
+    void login(const Credentials& credentials, util::UniqueFunction<void(User, std::optional<app_error>)>&& callback) {
+        m_app->log_in_with_credentials(credentials.m_credentials, [cb = std::move(callback), this](auto& user, auto error) {
+            cb(User{std::move(user), m_app}, error ? std::optional<app_error>{app_error(*error)} : std::nullopt);
         });
-        co_return std::move(User{std::move(user)});
     }
 private:
     std::shared_ptr<app::App> m_app;

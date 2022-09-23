@@ -3,8 +3,78 @@
 #include "sync_test_utils.hpp"
 #include "admin_utils.hpp"
 
+#include <realm/util/base64.hpp>
 #include <realm/object-store/impl/realm_coordinator.hpp>
+#include <external/json/json.hpp>
 
+#if REALM_PLATFORM_APPLE
+#import <CommonCrypto/CommonHMAC.h>
+#else
+#include <openssl/sha.h>
+#include <openssl/hmac.h>
+#endif
+
+#include <semaphore>
+
+static std::string HMAC_SHA256(std::string_view key, std::string_view data)
+{
+#if REALM_PLATFORM_APPLE
+    std::string ret;
+    ret.resize(CC_SHA256_DIGEST_LENGTH);
+    CCHmac(kCCHmacAlgSHA256, key.data(), key.size(), data.data(), data.size(),
+           reinterpret_cast<uint8_t*>(const_cast<char*>(ret.data())));
+    return ret;
+#else
+    std::array<unsigned char, EVP_MAX_MD_SIZE> hash;
+    unsigned int hashLen;
+    HMAC(EVP_sha256(), key.data(), static_cast<int>(key.size()), reinterpret_cast<unsigned char const*>(data.data()),
+         static_cast<int>(data.size()), hash.data(), &hashLen);
+    return std::string{reinterpret_cast<char const*>(hash.data()), hashLen};
+#endif
+}
+
+static std::string create_jwt(const std::string& appId)
+{
+    nlohmann::json header = {{"alg", "HS256"}, {"typ", "JWT"}};
+    nlohmann::json payload = {{"aud", appId}, {"sub", "someUserId"}, {"exp", 1961896476}};
+
+    payload["user_data"]["name"] = "Foo Bar";
+    payload["user_data"]["occupation"] = "firefighter";
+
+    payload["my_metadata"]["name"] = "Bar Foo";
+    payload["my_metadata"]["occupation"] = "stock analyst";
+
+    std::string headerStr = header.dump();
+    std::string payloadStr = payload.dump();
+
+    std::string encoded_header;
+    encoded_header.resize(realm::util::base64_encoded_size(headerStr.length()));
+    realm::util::base64_encode(headerStr.data(), headerStr.length(), encoded_header.data(), encoded_header.size());
+
+    std::string encoded_payload;
+    encoded_payload.resize(realm::util::base64_encoded_size(payloadStr.length()));
+    realm::util::base64_encode(payloadStr.data(), payloadStr.length(), encoded_payload.data(), encoded_payload.size());
+
+    // Remove padding characters.
+    while (encoded_header.back() == '=')
+        encoded_header.pop_back();
+    while (encoded_payload.back() == '=')
+        encoded_payload.pop_back();
+
+    std::string jwtPayload = encoded_header + "." + encoded_payload;
+
+    auto mac = HMAC_SHA256("My_very_confidential_secretttttt", jwtPayload);
+
+    std::string signature;
+    signature.resize(realm::util::base64_encoded_size(mac.length()));
+    realm::util::base64_encode(mac.data(), mac.length(), signature.data(), signature.size());
+    while (signature.back() == '=')
+        signature.pop_back();
+    std::replace(signature.begin(), signature.end(), '+', '-');
+    std::replace(signature.begin(), signature.end(), '/', '_');
+
+    return jwtPayload + "." + signature;
+}
 
 TEST(all) {
     auto realm = realm::open<Person, Dog>({.path=path});
@@ -59,6 +129,96 @@ TEST(all) {
     });
 
     CHECK_EQUALS(*synced_realm.object<AllTypesObject>(1)._id, 1);
+
+    co_return;
+}
+
+TEST(log_out_anonymous) {
+    auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"}), "http://localhost:9090");
+
+    auto user1 = co_await app.login(realm::App::Credentials::anonymous());
+    CHECK_EQUALS((user1.state() == realm::User::state::logged_in), true);
+
+    auto opt_error = co_await user1.log_out();
+    CHECK(!opt_error)
+    CHECK_EQUALS((int)user1.state(), (int)realm::User::state::removed);
+
+    // Test with completion handler
+    auto user2 = co_await app.login(realm::App::Credentials::anonymous());
+    bool did_run = false;
+    user2.log_out([&did_run](auto opt_error) {
+        did_run = true;
+    });
+    CHECK(did_run);
+    CHECK_EQUALS((int)user2.state(), (int)realm::User::state::removed);
+
+    co_return;
+}
+
+TEST(log_out_username_password) {
+    auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"}), "http://localhost:9090");
+
+    co_await app.register_user("foo@mongodb.com", "foobar");
+    auto user1 = co_await app.login(realm::App::Credentials::username_password("foo@mongodb.com", "foobar"));
+    CHECK_EQUALS((user1.state() == realm::User::state::logged_in), true);
+
+    auto opt_error = co_await user1.log_out();
+    CHECK(!opt_error)
+    CHECK_EQUALS((int)user1.state(), (int)realm::User::state::logged_out);
+
+    // Test with completion handler
+    auto user2 = co_await app.login(realm::App::Credentials::username_password("foo@mongodb.com", "foobar"));
+    bool did_run = false;
+    user2.log_out([&did_run](auto opt_error) {
+        did_run = true;
+    });
+    CHECK(did_run);
+    CHECK_EQUALS((int)user2.state(), (int)realm::User::state::logged_out);
+
+    co_return;
+}
+
+TEST(auth_providers_completion_handler) {
+    auto app_id = Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"});
+    auto app = realm::App(app_id, "http://localhost:9090");
+
+    auto run_login = [&app](realm::App::Credentials&& credentials) {
+        bool did_run = false;
+        realm::User user;
+        app.login(credentials, [&did_run, &user](realm::User u, std::optional<realm::app_error> e) {
+            user = std::move(u);
+            CHECK(!e);
+            did_run = true;
+        });
+        CHECK(did_run);
+        CHECK_EQUALS((user.state() == realm::User::state::logged_in), true);
+    };
+
+    co_await app.register_user("foo@mongodb.com", "foobar");
+    run_login(realm::App::Credentials::username_password("foo@mongodb.com", "foobar"));
+    run_login(realm::App::Credentials::anonymous());
+    run_login(realm::App::Credentials::custom(create_jwt(app_id)));
+
+    co_return;
+}
+
+
+TEST(async_open_completion) {
+    std::binary_semaphore sema{0};
+    auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"}), "http://localhost:9090");
+    auto user = co_await app.login(realm::App::Credentials::anonymous());
+    auto flx_sync_config = user.flexible_sync_configuration();
+
+    realm::thread_safe_reference<realm::db<AllTypesObject, AllTypesObjectLink>> tsr;
+    realm::AsyncOpenRealm<AllTypesObject, AllTypesObjectLink>(flx_sync_config, [&tsr, &sema](realm::thread_safe_reference<realm::db<AllTypesObject, AllTypesObjectLink>> t, std::exception_ptr e) {
+        tsr = std::move(t);
+        sema.release();
+    });
+    sema.acquire();
+    auto realm = tsr.resolve();
+
+    bool assertion = realm.config.path.length() > 0;
+    CHECK(assertion);
 
     co_return;
 }
@@ -143,6 +303,7 @@ TEST(flx_sync) {
         objs = synced_realm.objects<AllTypesObject>();
         CHECK_EQUALS(objs.size(), 2);
     } catch (const std::exception& err) {
+        REALM_TERMINATE("Should not happen");
     }
     co_return;
 }
@@ -420,5 +581,3 @@ TEST(embedded) {
     CHECK(did_run)
     co_return;
 }
-
-//@end
