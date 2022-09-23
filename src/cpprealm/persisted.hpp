@@ -52,7 +52,7 @@ struct persisted_base {
     persisted_base(T&& value);
     persisted_base(const char* value) requires realm::type_info::StringPersistable<T>;
     template <typename S>
-    requires (type_info::ObjectPersistable<T>)
+    requires (type_info::ObjectBasePersistable<T>)
     persisted_base(std::optional<S> value);
 
     persisted_base();
@@ -76,7 +76,7 @@ protected:
 
     template <StringLiteral Name, auto Ptr, bool>
     friend struct property;
-    template <type_info::ObjectPersistable V>
+    template <type_info::ObjectBasePersistable V>
     friend struct query;
     template <StringLiteral, type_info::Propertyable ...Properties>
     friend struct schema;
@@ -289,22 +289,22 @@ public:
         }
     }
     typename T::value_type operator[](size_type pos) requires (type_info::PrimitivePersistable<value_type>);
-    typename T::value_type operator[](size_type pos) requires (type_info::ObjectPersistable<value_type>);
+    typename T::value_type operator[](size_type pos) requires (type_info::ObjectBasePersistable<value_type>);
 
     void push_back(const value_type& a) requires (type_info::PrimitivePersistable<value_type>);
-    void push_back(value_type& a) requires (type_info::ObjectPersistable<value_type>);
-    void push_back(value_type&& a) requires (type_info::ObjectPersistable<value_type>);
+    void push_back(value_type& a) requires (type_info::ObjectBasePersistable<value_type>);
+    void push_back(value_type&& a) requires (type_info::ObjectBasePersistable<value_type>);
 
     void pop_back();
     void erase(size_type pos);
     void clear();
 
     void set(size_type pos, const value_type& a) requires (type_info::PrimitivePersistable<value_type>);
-    void set(size_type pos, value_type& a) requires (type_info::ObjectPersistable<value_type>);
-    void set(size_type pos, value_type&& a) requires (type_info::ObjectPersistable<value_type>);
+    void set(size_type pos, value_type& a) requires (type_info::ObjectBasePersistable<value_type>);
+    void set(size_type pos, value_type&& a) requires (type_info::ObjectBasePersistable<value_type>);
 
     size_t find(const value_type& a) requires (type_info::PrimitivePersistable<value_type>);
-    size_t find(const value_type& a) requires (type_info::ObjectPersistable<value_type>);
+    size_t find(const value_type& a) requires (type_info::ObjectBasePersistable<value_type>);
 
     notification_token observe(util::UniqueFunction<void(collection_change<T>)>);
 
@@ -329,7 +329,7 @@ void persisted_container_base<T>::push_back(const typename T::value_type& a) req
 
 template <realm::type_info::ListPersistable T>
 void persisted_container_base<T>::push_back(typename T::value_type& a)
-requires (type_info::ObjectPersistable<typename T::value_type>) {
+requires (type_info::ObjectBasePersistable<typename T::value_type>) {
     if (this->m_object) {
         if (!a.m_object) {
             T::value_type::schema::add(a, this->m_object->obj().get_table()->get_link_target(this->managed), m_backing_list.get_realm());
@@ -342,7 +342,7 @@ requires (type_info::ObjectPersistable<typename T::value_type>) {
 
 template <realm::type_info::ListPersistable T>
 void persisted_container_base<T>::push_back(typename T::value_type&& a)
-requires (type_info::ObjectPersistable<typename T::value_type>) {
+requires (type_info::ObjectBasePersistable<typename T::value_type>) {
     if (this->m_object) {
         push_back(a);
     } else {
@@ -363,7 +363,7 @@ requires (type_info::PrimitivePersistable<typename T::value_type>) {
 
 template <realm::type_info::ListPersistable T>
 void persisted_container_base<T>::set(size_type pos, typename T::value_type& a)
-requires (type_info::ObjectPersistable<typename T::value_type>) {
+requires (type_info::ObjectBasePersistable<typename T::value_type>) {
     if (this->m_obj) {
         if (!a.m_obj) {
             T::value_type::schema::add(a, this->m_obj->get_table()->get_link_target(this->managed), nullptr);
@@ -376,7 +376,7 @@ requires (type_info::ObjectPersistable<typename T::value_type>) {
 
 template <realm::type_info::ListPersistable T>
 void persisted_container_base<T>::set(size_type pos, typename T::value_type&& a)
-requires (type_info::ObjectPersistable<typename T::value_type>) {
+requires (type_info::ObjectBasePersistable<typename T::value_type>) {
     if (this->m_obj) {
         set(pos, a);
     } else {
@@ -400,7 +400,7 @@ size_t persisted_container_base<T>::find(const typename T::value_type& a) requir
 
 template <realm::type_info::ListPersistable T>
 size_t persisted_container_base<T>::find(const typename T::value_type& a)
-requires (type_info::ObjectPersistable<typename T::value_type>) {
+requires (type_info::ObjectBasePersistable<typename T::value_type>) {
     if (this->m_object && this->m_object->is_valid() && a.m_object && a.m_object->is_valid()) {
         return m_backing_list.find(a.m_object->obj().get_key());
     } else {
@@ -455,7 +455,7 @@ requires (type_info::PrimitivePersistable<typename T::value_type>) {
 
 template <realm::type_info::ListPersistable T>
 typename T::value_type persisted_container_base<T>::operator[](typename T::size_type idx)
-requires (type_info::ObjectPersistable<typename T::value_type>) {
+requires (type_info::ObjectBasePersistable<typename T::value_type>) {
     if (this->m_object) {
         return T::value_type::schema::create(m_backing_list.get(idx), this->m_backing_list.get_realm());
     } else {
@@ -538,7 +538,7 @@ persisted_base<T>::persisted_base(const char* value) requires realm::type_info::
 }
 template <realm::type_info::Persistable T>
 template <typename S>
-requires (type_info::ObjectPersistable<T>)
+requires (type_info::ObjectBasePersistable<T>)
 persisted_base<T>::persisted_base(std::optional<S> value) {
     unmanaged = value;
 }
@@ -605,6 +605,18 @@ persisted_base<T>& persisted_base<T>::operator=(const T& o) {
                 // set the parent column to null and unset the co
                 obj->obj().set_null(managed);
             }
+        } else if constexpr (type_info::EmbeddedObjectPersistable<T>) {
+            // if non-null object is being assigned...
+            if (o.m_object) {
+                // if object is managed, we will to set the link
+                // to the new target's key
+                obj->obj().template set<type>(managed, o.m_object->obj().get_key());
+            } else {
+                // else new unmanaged object is being assigned.
+                // we must assign the values to this object's fields
+                // TODO:
+                REALM_UNREACHABLE();
+            }
         } else {
             obj->obj().template set<type>(managed, o);
         }
@@ -640,11 +652,13 @@ template <realm::type_info::Persistable T>
 T persisted_base<T>::operator *() const
 {
     if (m_object) {
-        if constexpr (type_info::OptionalPersistable<T>) {
-            if constexpr (type_info::ObjectPersistable<typename T::value_type>) {
+        if constexpr (type_info::OptionalPersistable<T> || type_info::EmbeddedObjectPersistable<T>) {
+            if constexpr (type_info::EmbeddedObjectPersistable<T>) {
+                return T::schema::create(m_object->obj().get_linked_object(managed), m_object->get_realm());
+            } else if constexpr (type_info::ObjectBasePersistable<typename T::value_type>) {
                 return T::value_type::schema::create(m_object->obj().get_linked_object(managed), m_object->get_realm());
             } else {
-                auto value = m_object->obj()->template get<type>(managed);
+                auto value = m_object->obj().template get<type>(managed);
                 // convert optionals
                 if (value) {
                     return T(*value);
@@ -657,7 +671,7 @@ T persisted_base<T>::operator *() const
                 T v;
                 auto lst = m_object->obj()->template get_list_values<typename type_info::persisted_type<typename T::value_type>::type>(managed);
                 for (size_t i; i < lst.size(); i++) {
-                    if constexpr (type_info::ObjectPersistable<typename T::value_type>) {
+                    if constexpr (type_info::ObjectBasePersistable<typename T::value_type>) {
                         auto obj = lst.get_object(i);
                         v.push_back(T::value_type::schema::create(obj, obj.get_table(), nullptr));
                     } else {
@@ -809,7 +823,7 @@ rbool operator!=(const persisted<T>& a, const char* b) requires (Equatable<T>)
 template <realm::type_info::Persistable T>
 typename persisted_base<T>::type persisted_base<T>::as_core_type() const
 {
-    if constexpr (type_info::ObjectPersistable<T>) {
+    if constexpr (type_info::ObjectBasePersistable<T>) {
         if (m_object) {
             return m_object->obj().template get<type>(managed);
         } else {
@@ -976,7 +990,7 @@ std::ostream& operator<< (std::ostream& stream, const persisted<T>& value)
     return stream << *value;
 }
 
-template <realm::type_info::ObjectPersistable T>
+template <realm::type_info::ObjectBasePersistable T>
 std::ostream& operator<< (std::ostream& stream, const T& object)
 {
     if (object.m_object) {
@@ -1000,4 +1014,4 @@ std::ostream& operator<< (std::ostream& stream, const T& binary)
 
 }
 
-#endif /* Header_h */
+#endif /* realm_persisted_hpp */

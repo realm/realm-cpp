@@ -29,7 +29,7 @@ template <typename T>
 struct thread_safe_reference {
 };
 
-template <type_info::ObjectPersistable T>
+template <type_info::ObjectBasePersistable T>
 struct thread_safe_reference<T> {
     thread_safe_reference(const T& object)
     : m_tsr(ThreadSafeReference(*object.m_object))
@@ -39,15 +39,15 @@ struct thread_safe_reference<T> {
     T resolve(std::shared_ptr<Realm> const&);
 private:
     realm::ThreadSafeReference m_tsr;
-    template <type_info::ObjectPersistable ...Ts>
+    template <type_info::ObjectBasePersistable ...Ts>
     friend struct db;
 };
 
 
-template <type_info::ObjectPersistable ...Ts>
+template <type_info::ObjectBasePersistable ...Ts>
 struct db;
 
-template <type_info::ObjectPersistable ...Ts>
+template <type_info::ObjectBasePersistable ...Ts>
 struct thread_safe_reference<db<Ts...>> {
     thread_safe_reference(ThreadSafeReference tsr)
     : m_tsr(std::move(tsr))
@@ -66,7 +66,7 @@ struct thread_safe_reference<db<Ts...>> {
     }
 private:
     ThreadSafeReference m_tsr;
-    template <type_info::ObjectPersistable ...>
+    template <type_info::ObjectBasePersistable ...>
     friend struct db;
 };
 }

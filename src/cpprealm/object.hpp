@@ -44,12 +44,12 @@ struct object;
  Information about the changes made to an object which is passed to `realm::object`'s
  notification blocks.
  */
-template <type_info::ObjectPersistable T>
+template <type_info::ObjectBasePersistable T>
 struct ObjectChange {
     /// The object being observed.
     const T* object;
     /// The object has been deleted from the Realm.
-    bool is_deleted;
+    bool is_deleted = false;
     /**
      If an error occurs, notification blocks are called one time with an `error`
      result and an `std::exception` containing details about the error. Currently the
@@ -65,144 +65,9 @@ struct ObjectChange {
 };
 
 namespace {
-template <type_info::ObjectPersistable T>
+template <type_info::ObjectBasePersistable T>
 struct ObjectChangeCallbackWrapper;
-}
-// MARK: Object
-/**
- `realm::object` is a class used to define Realm model objects.
-
- In Realm you define your model classes by subclassing `realm::object` and adding properties to be managed.
- You then instantiate and use your custom subclasses instead of using the `realm::object` class directly.
-
- ```cpp
- class Dog: realm::object {
-     realm::persisted<std::string> name;
-     realm::persisted<bool> adopted;
-     realm::persisted<std::vector<Dog>> siblings;
-
-     using schema = realm::schema<"Dog", realm::property<"name", &Dog::name>,
-                                  realm::property<"adopted", &Dog::adopted>,
-                                  realm::property<"siblings", &Dog::siblings>>;
- }
- ```
- ### Schema
-
- All properties which should be stored by Realm must be explicitly marked with
- `realm::persisted` and added to the schema. Any properties not marked with `realm::persisted`
- and not added to the schema will be ignored entirely by Realm, and may be of any type.
-
- ### Querying
-
- You can retrieve all objects of a given type from a Realm by calling the `objects(_:)` instance method.
-
- */
-struct object {
-    /**
-     Registers a block to be called each time the object changes.
-
-     The block will be asynchronously called after each write transaction which
-     deletes the object or modifies any of the managed properties of the object,
-     including self-assignments that set a property to its existing value.
-
-     For write transactions performed on different threads or in different
-     processes, the block will be called when the managing Realm is
-     (auto)refreshed to a version including the changes, while for local write
-     transactions it will be called at some point in the future after the write
-     transaction is committed.
-
-     The block will be executed on any insertion,
-     modification, or deletion for all object properties and the properties of
-     any nested, linked objects.
-     ```cpp
-     class Dog: realm::object {
-         realm::persisted<std::string> name;
-         realm::persisted<bool> adopted;
-         realm::persisted<std::vector<Dog>> siblings;
-
-         using schema = realm::schema<"Dog", realm::property<"name", &Dog::name>,
-                                      realm::property<"adopted", &Dog::adopted>,
-                                      realm::property<"siblings", &Dog::siblings>>;
-     }
-
-     // ... where `dog` is a managed Dog object.
-     dog.observe<Dog>([]{ (auto&& changes)
-        // ...
-     });
-     ```
-
-     Only objects which are managed by a Realm can be observed in this way. You
-     must retain the returned token for as long as you want updates to be sent
-     to the block. To stop receiving updates, call `invalidate()` on the token.
-
-     It is safe to capture a strong reference to the observed object within the
-     callback block. There is no retain cycle due to that the callback is
-     retained by the returned token and not by the object itself.
-
-     @warning: This method cannot be called during a write transaction, or when
-                the containing Realm is read-only.
-     @parameter block: The block to call with information about changes to the object.
-     @returns: A token which must be held for as long as you want updates to be delivered.
-     */
-    template <typename T>
-    notification_token observe(std::function<void(ObjectChange<T>)> block);
-
-    bool is_managed() const noexcept {
-        return m_object && m_object->is_valid();
-    }
-
-private:
-    template <type_info::Persistable T>
-    friend struct persisted_base;
-    template <type_info::OptionalObjectPersistable T>
-    friend constexpr typename type_info::persisted_type<T>::type type_info::convert_if_required(const T& a);
-    template <type_info::ListPersistable T>
-    friend constexpr typename type_info::persisted_type<T>::type type_info::convert_if_required(const T& a);
-    template <StringLiteral, auto Ptr, bool IsPrimaryKey>
-    friend struct property;
-    template <StringLiteral, type_info::Propertyable ...Properties>
-    friend struct schema;
-    template <type_info::ObjectPersistable T>
-    friend struct ObjectChangeCallbackWrapper;
-    template <type_info::ObjectPersistable ...Ts>
-    friend struct db;
-    template <typename T>
-    friend struct thread_safe_reference;
-    template <realm::type_info::ListPersistable T>
-    friend struct persisted_container_base;
-
-    template <type_info::ObjectPersistable T>
-    friend inline bool operator==(const T& lhs, const T& rhs);
-
-    template <realm::type_info::ObjectPersistable T>
-    friend std::ostream& operator<< (std::ostream& stream, const T& object);
-    std::optional<Object> m_object;
-};
-
-template <type_info::ObjectPersistable T>
-inline bool operator==(const T& lhs, const T& rhs) {
-    if (lhs.is_managed() && rhs.is_managed()) {
-        const Object& a = *lhs.m_object;
-        const Object& b = *rhs.m_object;
-
-        if (a.get_realm() != b.get_realm()) {
-            return false;
-        }
-
-        const Obj obj1 = a.obj();
-        const Obj obj2 = b.obj();
-        // if table and index are the same
-        return obj1.get_table() == obj2.get_table()
-            && obj1.get_key() == obj2.get_key();
-    }
-
-    return false;
-};
-
-// MARK: - Implementations
-
-namespace {
-template <type_info::ObjectPersistable T>
+template <type_info::ObjectBasePersistable T>
 using ObjectNotificationCallback = std::function<void(const T*,
                                                       std::vector<std::string> property_names,
                                                       std::vector<std::any> old_values,
@@ -210,14 +75,12 @@ using ObjectNotificationCallback = std::function<void(const T*,
                                                       std::exception_ptr error)>;
 
 
-}
-
-template <typename T>
-notification_token object::observe(std::function<void(ObjectChange<T>)> block)
-{
+template <typename V, type_info::ObjectBasePersistable T>
+NotificationToken _observe(V* obj, Object& m_object, std::function<void(ObjectChange<T>)> block) {
     struct ObjectChangeCallbackWrapper {
-        ObjectNotificationCallback<T> block;
+        ObjectNotificationCallback<T> block{};
         const T& object;
+        const Object& m_object;
 
         std::optional<std::vector<std::string>> property_names = std::nullopt;
         std::optional<std::vector<std::any>> old_values = std::nullopt;
@@ -239,7 +102,7 @@ notification_token object::observe(std::function<void(ObjectChange<T>)> block)
             // FIXME: It's possible for the column key of a persisted property
             // to equal the column key of a computed property.
             auto properties = std::vector<std::string>();
-            const TableRef table = object.m_object->obj().get_table();
+            const TableRef table = m_object.obj().get_table();
 
             std::apply([&c, &table, &properties](const auto&... props) {
                 (((c.columns.count(table->get_column_key(props.name).value)) ?
@@ -290,38 +153,262 @@ notification_token object::observe(std::function<void(ObjectChange<T>)> block)
             block(nullptr, {}, {}, {}, err);
         }
     };
-    if (!is_managed()) {
+    if (!obj->is_managed()) {
         throw std::runtime_error("Only objects which are managed by a Realm support change notifications");
     }
-    auto token = notification_token();
-    token.m_token = m_object->add_notification_callback(ObjectChangeCallbackWrapper {
-        [block](const T* ptr,
-                std::vector<std::string> property_names,
-                std::vector<std::any> old_values,
-                std::vector<std::any> new_values,
-                std::exception_ptr error) {
-            if (!ptr) {
-                if (error) {
-                    block(ObjectChange<T> { .error = error });
+    return m_object.add_notification_callback(ObjectChangeCallbackWrapper {
+            [block](const T* ptr,
+                    std::vector<std::string> property_names,
+                    std::vector<std::any> old_values,
+                    std::vector<std::any> new_values,
+                    std::exception_ptr error) {
+                if (!ptr) {
+                    if (error) {
+                        block(ObjectChange<T> { .error = error });
+                    } else {
+                        block(ObjectChange<T> { .is_deleted = true });
+                    }
                 } else {
-                    block(ObjectChange<T> { .is_deleted = true });
-                }
-            } else {
-                for (size_t i = 0; i < property_names.size(); i++) {
-                    PropertyChange property;
-                    property.name = property_names[i];
-                    if (old_values.size()) {
-                        property.old_value = old_values[i];
+                    for (size_t i = 0; i < property_names.size(); i++) {
+                        PropertyChange property;
+                        property.name = property_names[i];
+                        if (!old_values.empty()) {
+                            property.old_value = old_values[i];
+                        }
+                        if (!new_values.empty()) {
+                            property.new_value = new_values[i];
+                        }
+                        block(ObjectChange<T> { .object = ptr, .property = property });
                     }
-                    if (new_values.size()) {
-                        property.new_value = new_values[i];
-                    }
-                    block(ObjectChange<T> { .object = ptr, .property = property });
                 }
-            }
-        }, *static_cast<T*>(this)});
-    return token;
+            }, *static_cast<T*>(obj), m_object});
+}
+}
+
+// MARK: Object
+/**
+ `realm::object` is a class used to define Realm model objects.
+
+ In Realm you define your model classes by subclassing `realm::object` and adding properties to be managed.
+ You then instantiate and use your custom subclasses instead of using the `realm::object` class directly.
+
+ ```cpp
+ class Dog: realm::object {
+     realm::persisted<std::string> name;
+     realm::persisted<bool> adopted;
+     realm::persisted<std::vector<Dog>> siblings;
+
+     using schema = realm::schema<"Dog", realm::property<"name", &Dog::name>,
+                                  realm::property<"adopted", &Dog::adopted>,
+                                  realm::property<"siblings", &Dog::siblings>>;
+ }
+ ```
+ ### Schema
+
+ All properties which should be stored by Realm must be explicitly marked with
+ `realm::persisted` and added to the schema. Any properties not marked with `realm::persisted`
+ and not added to the schema will be ignored entirely by Realm, and may be of any type.
+
+ ### Querying
+
+ You can retrieve all objects of a given type from a Realm by calling the `objects(_:)` instance method.
+
+ */
+struct object {
+    /**
+  Registers a block to be called each time the object changes.
+
+  The block will be asynchronously called after each write transaction which
+  deletes the object or modifies any of the managed properties of the object,
+  including self-assignments that set a property to its existing value.
+
+  For write transactions performed on different threads or in different
+  processes, the block will be called when the managing Realm is
+  (auto)refreshed to a version including the changes, while for local write
+  transactions it will be called at some point in the future after the write
+  transaction is committed.
+
+  The block will be executed on any insertion,
+  modification, or deletion for all object properties and the properties of
+  any nested, linked objects.
+  ```cpp
+  class Dog: realm::object {
+      realm::persisted<std::string> name;
+      realm::persisted<bool> adopted;
+      realm::persisted<std::vector<Dog>> siblings;
+
+      using schema = realm::schema<"Dog", realm::property<"name", &Dog::name>,
+                                   realm::property<"adopted", &Dog::adopted>,
+                                   realm::property<"siblings", &Dog::siblings>>;
+  }
+
+  // ... where `dog` is a managed Dog object.
+  dog.observe<Dog>([]{ (auto&& changes)
+     // ...
+  });
+  ```
+
+  Only objects which are managed by a Realm can be observed in this way. You
+  must retain the returned token for as long as you want updates to be sent
+  to the block. To stop receiving updates, call `invalidate()` on the token.
+
+  It is safe to capture a strong reference to the observed object within the
+  callback block. There is no retain cycle due to that the callback is
+  retained by the returned token and not by the object itself.
+
+  @warning: This method cannot be called during a write transaction, or when
+             the containing Realm is read-only.
+  @parameter block: The block to call with information about changes to the object.
+  @returns: A token which must be held for as long as you want updates to be delivered.
+  */
+    template <typename T>
+    [[nodiscard]] notification_token observe(std::function<void(ObjectChange<T>)> block);
+
+    bool is_managed() const noexcept {
+        return m_object && m_object->is_valid();
+    }
+private:
+    template <type_info::Persistable T>
+    friend struct persisted_base;
+    template <type_info::OptionalObjectPersistable T>
+    friend constexpr typename type_info::persisted_type<T>::type type_info::convert_if_required(const T& a);
+    template <type_info::ListPersistable T>
+    friend constexpr typename type_info::persisted_type<T>::type type_info::convert_if_required(const T& a);
+    template <StringLiteral, auto Ptr, bool IsPrimaryKey>
+    friend struct property;
+    template <StringLiteral, type_info::Propertyable ...Properties>
+    friend struct schema;
+    template <type_info::ObjectBasePersistable T>
+    friend struct ObjectChangeCallbackWrapper;
+    template <type_info::ObjectBasePersistable ...Ts>
+    friend struct db;
+    template <typename T>
+    friend struct thread_safe_reference;
+    template <realm::type_info::ListPersistable T>
+    friend struct persisted_container_base;
+
+    template <type_info::ObjectBasePersistable T>
+    friend inline bool operator==(const T& lhs, const T& rhs);
+
+    template <realm::type_info::ObjectBasePersistable T>
+    friend std::ostream& operator<< (std::ostream& stream, const T& object);
+    std::optional<Object> m_object;
 };
+
+struct embedded_object {
+    /**
+     Registers a block to be called each time the object changes.
+
+     The block will be asynchronously called after each write transaction which
+     deletes the object or modifies any of the managed properties of the object,
+     including self-assignments that set a property to its existing value.
+
+     For write transactions performed on different threads or in different
+     processes, the block will be called when the managing Realm is
+     (auto)refreshed to a version including the changes, while for local write
+     transactions it will be called at some point in the future after the write
+     transaction is committed.
+
+     The block will be executed on any insertion,
+     modification, or deletion for all object properties and the properties of
+     any nested, linked objects.
+     ```cpp
+     class Dog: realm::object {
+         realm::persisted<std::string> name;
+         realm::persisted<bool> adopted;
+         realm::persisted<std::vector<Dog>> siblings;
+
+         using schema = realm::schema<"Dog", realm::property<"name", &Dog::name>,
+                                      realm::property<"adopted", &Dog::adopted>,
+                                      realm::property<"siblings", &Dog::siblings>>;
+     }
+
+     // ... where `dog` is a managed Dog object.
+     dog.observe<Dog>([]{ (auto&& changes)
+        // ...
+     });
+     ```
+
+     Only objects which are managed by a Realm can be observed in this way. You
+     must retain the returned token for as long as you want updates to be sent
+     to the block. To stop receiving updates, call `invalidate()` on the token.
+
+     It is safe to capture a strong reference to the observed object within the
+     callback block. There is no retain cycle due to that the callback is
+     retained by the returned token and not by the object itself.
+
+     @warning: This method cannot be called during a write transaction, or when
+                the containing Realm is read-only.
+     @parameter block: The block to call with information about changes to the object.
+     @returns: A token which must be held for as long as you want updates to be delivered.
+     */
+    template <typename T>
+    [[nodiscard]] notification_token observe(std::function<void(ObjectChange<T>)> block);
+
+    bool is_managed() const noexcept {
+        return m_object && m_object->is_valid();
+    }
+private:
+    template <type_info::Persistable T>
+    friend struct persisted_base;
+    template <type_info::OptionalObjectPersistable T>
+    friend constexpr typename type_info::persisted_type<T>::type type_info::convert_if_required(const T& a);
+    template <type_info::ListPersistable T>
+    friend constexpr typename type_info::persisted_type<T>::type type_info::convert_if_required(const T& a);
+    template <StringLiteral, auto Ptr, bool IsPrimaryKey>
+    friend struct property;
+    template <StringLiteral, type_info::Propertyable ...Properties>
+    friend struct schema;
+    template <type_info::ObjectBasePersistable T>
+    friend struct ObjectChangeCallbackWrapper;
+    template <type_info::ObjectBasePersistable ...Ts>
+    friend struct db;
+    template <typename T>
+    friend struct thread_safe_reference;
+    template <realm::type_info::ListPersistable T>
+    friend struct persisted_container_base;
+
+    template <type_info::ObjectBasePersistable T>
+    friend inline bool operator==(const T& lhs, const T& rhs);
+
+    template <realm::type_info::ObjectBasePersistable T>
+    friend std::ostream& operator<< (std::ostream& stream, const T& object);
+    std::optional<Object> m_object;
+};
+
+template <type_info::ObjectBasePersistable T>
+inline bool operator==(const T& lhs, const T& rhs) {
+    if (lhs.is_managed() && rhs.is_managed()) {
+        const Object& a = *lhs.m_object;
+        const Object& b = *rhs.m_object;
+
+        if (a.get_realm() != b.get_realm()) {
+            return false;
+        }
+
+        const Obj obj1 = a.obj();
+        const Obj obj2 = b.obj();
+        // if table and index are the same
+        return obj1.get_table() == obj2.get_table()
+            && obj1.get_key() == obj2.get_key();
+    }
+
+    return false;
+};
+
+// MARK: - Implementations
+
+template <typename T>
+notification_token object::observe(std::function<void(ObjectChange<T>)> block)
+{
+    return notification_token(std::move(_observe(this, *this->m_object, block)));
+}
+
+template <typename T>
+notification_token embedded_object::observe(std::function<void(ObjectChange<T>)> block)
+{
+    return notification_token(std::move(_observe(this, *this->m_object, block)));
+}
 
 } // namespace realm
 

@@ -6,12 +6,12 @@
 
 using namespace realm;
 
-template<type_info::ObjectPersistable Cls, type_info::ObjectPersistable ...Ts>
-bool validate_equals(db<Ts...>& realm, u_int equal_count, std::function<rbool(Cls&)> expr) {
+template<type_info::ObjectBasePersistable Cls, type_info::ObjectBasePersistable ...Ts>
+void validate_equals(db<Ts...>& realm, u_int equal_count, std::function<rbool(Cls&)> expr) {
     auto results = realm.template objects<Cls>().where([expr](auto& obj) {
         return expr(obj);
     });
-    CHECK_EQUALS(results.size(), equal_count);
+    CHECK_EQUALS(results.size(), equal_count)
 }
 
 TEST(tsq_basic_comparison) {

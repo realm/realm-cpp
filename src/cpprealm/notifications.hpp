@@ -32,7 +32,12 @@ namespace realm {
 
 struct Realm;
 struct NotificationToken;
+struct notification_token;
 struct object;
+struct embedded_object;
+template <type_info::ObjectBasePersistable T>
+struct ObjectChange;
+
 template <type_info::ListPersistable T>
 struct persisted_container_base;
 /**
@@ -40,7 +45,14 @@ struct persisted_container_base;
  */
 struct notification_token {
 private:
+    notification_token() = default;
+    explicit notification_token(realm::NotificationToken&& token)
+    : m_token(std::move(token))
+    {
+    }
+
     friend struct object;
+    friend struct embedded_object;
     template <realm::type_info::ListPersistable T>
     friend struct persisted_container_base;
     template <typename T>

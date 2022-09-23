@@ -337,7 +337,7 @@ struct Admin {
             return session;
         }
 
-        template <type_info::ObjectPersistable ...Ts>
+        template <type_info::ObjectBasePersistable ...Ts>
         [[nodiscard]] std::string create_app(bson::BsonArray queryable_fields = {}) const {
             auto info = static_cast<bson::BsonDocument>(apps.post({{"name", "test"}}));
             auto app_id = static_cast<std::string>(info["_id"]);

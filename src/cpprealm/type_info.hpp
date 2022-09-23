@@ -27,6 +27,8 @@
 
 namespace realm {
     using uuid = realm::UUID;
+    struct object;
+    struct embedded_object;
 }
 namespace realm::type_info {
 
@@ -117,10 +119,19 @@ template <typename T>
 concept Optional = is_optional<T>::value;
 
 template <typename T>
-concept ObjectPersistable = requires(T a) {
+concept ObjectBasePersistable = requires(T a) {
     { std::is_same_v<typename T::schema::Class, T> };
 };
-template <ObjectPersistable T>
+template <typename T>
+concept ObjectPersistable = ObjectBasePersistable<T> && requires(T a) {
+    { std::is_base_of_v<realm::object, T> };
+};
+template <typename T>
+concept EmbeddedObjectPersistable = ObjectBasePersistable<T> && requires(T a) {
+    { std::is_same_v<typename T::schema::Class, T> };
+    { std::is_base_of_v<realm::embedded_object, T> };
+};
+template <ObjectBasePersistable T>
 struct persisted_type<T> { using type = realm::ObjKey; };
 
 template <typename T>
@@ -161,7 +172,7 @@ template <typename T>
 concept OptionalPersistable = Optional<T> && NonOptionalPersistable<typename T::value_type>;
 template <OptionalPersistable T>
 struct persisted_type<T> { using type = util::Optional<persisted_type<typename T::value_type>>; };
-template <ObjectPersistable T>
+template <ObjectBasePersistable T>
 struct persisted_type<std::optional<T>> { using type = realm::ObjKey; };
 template <typename T>
 concept NonContainerPersistable = NonOptionalPersistable<T> || OptionalPersistable<T>;
@@ -183,11 +194,20 @@ constexpr typename persisted_type<T>::type convert_if_required(const T& a)
     }
 }
 
-template <OptionalObjectPersistable T>
+template <EmbeddedObjectPersistable T>
 static constexpr typename persisted_type<T>::type convert_if_required(const T& a)
 {
     if (a) {
         return a->m_object ? a->m_m_object->obj().get_key() : ObjKey{};
+    }
+    return ObjKey{};
+}
+
+template <OptionalObjectPersistable T>
+static constexpr typename persisted_type<T>::type convert_if_required(const T& a)
+{
+    if (a) {
+        return a->m_object ? a->m_object->obj().get_key() : ObjKey{};
     }
     return ObjKey{};
 }
@@ -203,7 +223,7 @@ static constexpr typename persisted_type<T>::type convert_if_required(const T& a
         });
     } else {
         std::transform(a.begin(), a.end(), std::back_inserter(v), [](auto& value) {
-            if constexpr (ObjectPersistable<typename T::value_type>) {
+            if constexpr (ObjectBasePersistable<typename T::value_type>) {
                 return value.m_obj->get_key();
             } else if constexpr (BinaryPersistableList<T>) {
                 return BinaryData(reinterpret_cast<const char *>(value.data()), value.size());
@@ -221,7 +241,8 @@ static constexpr PropertyType property_type();
 template<> constexpr PropertyType property_type<int>() { return PropertyType::Int; }
 template<> constexpr PropertyType property_type<bool>() { return PropertyType::Bool; }
 template<> constexpr PropertyType property_type<std::string>() { return PropertyType::String; }
-template<ObjectPersistable T> static constexpr PropertyType property_type() { return PropertyType::Object | PropertyType::Nullable; }
+template<OptionalObjectPersistable T> static constexpr PropertyType property_type() { return PropertyType::Object | PropertyType::Nullable; }
+template<EmbeddedObjectPersistable T> static constexpr PropertyType property_type() { return PropertyType::Object | PropertyType::Nullable; }
 template<OptionalPersistable T> static constexpr PropertyType property_type() {
     return property_type<typename T::value_type>() | PropertyType::Nullable;
 }
@@ -244,7 +265,7 @@ template<ListPersistable T> static constexpr PropertyType property_type() {
     return PropertyType::Array | property_type<typename T::value_type>();
 }
 template<ListPersistable T> static constexpr PropertyType property_type()
-requires (ObjectPersistable<typename T::value_type>) {
+requires (ObjectBasePersistable<typename T::value_type>) {
     return PropertyType::Array | PropertyType::Object;
 }
 template <typename T>

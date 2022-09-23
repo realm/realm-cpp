@@ -19,6 +19,7 @@
 #ifndef realm_schema_hpp
 #define realm_schema_hpp
 
+//#include <cpprealm/object.hpp>
 #include <cpprealm/persisted.hpp>
 
 #include <realm/object-store/object_schema.hpp>
@@ -59,14 +60,16 @@ struct property {
     }
 
     explicit operator realm::Property() const {
-        if constexpr (type_info::OptionalPersistable<Result>) {
-            if constexpr (type_info::ObjectPersistable<typename Result::value_type>) {
+        if constexpr (type_info::OptionalPersistable<Result> || type_info::EmbeddedObjectPersistable<Result>) {
+            if constexpr (type_info::EmbeddedObjectPersistable<Result>) {
+                return realm::Property(name, type, Result::schema::name);
+            } else if constexpr (type_info::ObjectBasePersistable<typename Result::value_type>) {
                 return realm::Property(name, type, Result::value_type::schema::name);
             } else {
                 return realm::Property(name, type);
             }
         } else if constexpr (type_info::ListPersistable<Result>) {
-            if constexpr (type_info::ObjectPersistable<typename Result::value_type>) {
+            if constexpr (type_info::ObjectBasePersistable<typename Result::value_type>) {
                 return realm::Property(name, type, Result::value_type::schema::name);
             } else {
                 return realm::Property(name, type, is_primary_key);
@@ -86,7 +89,7 @@ struct property {
 
     static void set(Class& object, const std::string& property_name) requires (type_info::ListPersistable<Result>) {
         auto col_key = object.m_object->obj().get_table()->get_column_key(property_name);
-        if constexpr (type_info::ObjectPersistable<typename Result::value_type>) {
+        if constexpr (type_info::ObjectBasePersistable<typename Result::value_type>) {
             auto table = object.m_object->obj().get_table()->get_link_target(col_key);
             for (auto& list_obj : (object.*ptr).unmanaged) {
                 Result::value_type::schema::add(list_obj, table, object.m_object->get_realm());
@@ -116,6 +119,21 @@ struct property {
                 Result::value_type::schema::set(*target_cls);
                 object.m_object->obj().set(col_key, target_cls->m_object->obj().get_key());
             }
+        }
+    }
+    static void set(Class& object, const std::string& property_name) requires (type_info::EmbeddedObjectPersistable<Result>) {
+        auto field = (object.*ptr);
+        if (field.m_object) {
+            object.m_object->set_column_value(property_name, field.m_object->obj().get_key());
+        } else {
+            auto col_key = object.m_object->obj().get_table()->get_column_key(property_name);
+            auto target_table = object.m_object->obj().get_table()->get_link_target(col_key);
+            auto target_cls = *field;
+
+            auto realm = object.m_object->get_realm();
+            target_cls.m_object = Object(realm, object.m_object->obj().create_and_set_linked_object(col_key));
+            Result::schema::set(target_cls);
+//            object.*ptr = target_cls;
         }
     }
     static constexpr const char* name = Name.value;
@@ -150,7 +168,7 @@ struct schema {
 
     using PrimaryKeyProperty = decltype(primary_key());
     static constexpr bool HasPrimaryKeyProperty = !std::is_void_v<PrimaryKeyProperty>;
-
+    static constexpr bool IsEmbedded = std::is_base_of_v<embedded_object, Class>;
     static realm::ObjectSchema to_core_schema()
     {
         realm::ObjectSchema schema;
@@ -158,6 +176,9 @@ struct schema {
         (schema.persisted_properties.push_back(static_cast<realm::Property>(Properties())) , ...);
         if constexpr (HasPrimaryKeyProperty) {
             schema.primary_key = PrimaryKeyProperty::name;
+        }
+        if constexpr (IsEmbedded) {
+            schema.table_type = ObjectSchema::ObjectType::Embedded;
         }
         return schema;
     }

@@ -328,7 +328,7 @@ struct User {
      @param partition_value The  value the Realm is partitioned on.
      @return A `thread_safe_reference` to the synchronized db.
      */
-    template <type_info::ObjectPersistable ...Ts, typename T>
+    template <type_info::ObjectBasePersistable ...Ts, typename T>
     task<thread_safe_reference<db<Ts...>>> realm(const T& partition_value) const requires (type_info::StringPersistable<T> || type_info::IntPersistable<T>);
 
     db_config flexible_sync_configuration() const
@@ -351,7 +351,7 @@ class App {
     static std::unique_ptr<util::Logger> defaultSyncLogger(util::Logger::Level level) {
         struct SyncLogger : public util::RootLogger {
             void do_log(Level, const std::string& message) override {
-                std::cout<<"sync: " + message<<std::endl;
+                std::cout<<"sync: "<<message<<std::endl;
             }
         };
         auto logger = std::make_unique<SyncLogger>();
@@ -475,7 +475,7 @@ private:
 
 // MARK: Impl
 
-template <type_info::ObjectPersistable ...Ts, typename T>
+template <type_info::ObjectBasePersistable ...Ts, typename T>
 task<thread_safe_reference<db<Ts...>>> User::realm(const T& partition_value) const requires (type_info::StringPersistable<T> || type_info::IntPersistable<T>)
 {
     db_config config;

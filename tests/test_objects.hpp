@@ -70,12 +70,21 @@ struct AllTypesObject: realm::object {
     realm::property<"list_obj_col", &AllTypesObject::list_obj_col>>;
 };
 
+struct EmbeddedFoo: realm::embedded_object {
+    realm::persisted<int> bar;
+
+    using schema = realm::schema<"EmbeddedFoo", realm::property<"bar", &EmbeddedFoo::bar>>;
+};
 
 struct Foo: realm::object {
     realm::persisted<int> bar;
+    realm::persisted<EmbeddedFoo> foo;
+
     Foo() = default;
     Foo(const Foo&) = delete;
-    using schema = realm::schema<"Foo", realm::property<"bar", &Foo::bar>>;
+    using schema = realm::schema<"Foo",
+        realm::property<"bar", &Foo::bar>,
+        realm::property<"foo", &Foo::foo>>;
 };
 
 #endif //REALM_TEST_OBJECTS_HPP
