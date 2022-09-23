@@ -15,7 +15,7 @@ void validate_equals(db<Ts...>& realm, u_int equal_count, std::function<rbool(Cl
 }
 
 TEST(tsq_basic_comparison) {
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     auto date = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
     auto create_obj = [&]() {
@@ -76,7 +76,7 @@ TEST(tsq_basic_comparison) {
 }
 
 TEST(tsq_greater_less_than) {
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     auto date = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
     auto create_obj = [&]() {

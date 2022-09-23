@@ -202,7 +202,9 @@ namespace {
         // First pass we only add the properties to the schema as we can't add
         // links until the targets of the links exist.
         auto pk = schema.primary_key_property();
-        stitchProperties[pk->name] = stitch_rule(*pk, schema);
+        if (pk) {
+            stitchProperties[pk->name] = stitch_rule(*pk, schema);
+        }
         for (auto &property: schema.persisted_properties) {
             if (property.type != realm::PropertyType::Object) {
                 stitchProperties[property.name] = stitch_rule(property, schema);

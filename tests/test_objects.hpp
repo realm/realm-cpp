@@ -23,6 +23,13 @@ struct Person: realm::object {
             realm::property<"dog", &Person::dog>>;
 };
 
+struct AllTypesObjectEmbedded: realm::embedded_object {
+    realm::persisted<std::string> str_col;
+
+    using schema = realm::schema<"AllTypesObjectEmbedded",
+        realm::property<"str_col", &AllTypesObjectEmbedded::str_col>>;
+};
+
 struct AllTypesObjectLink: realm::object {
     realm::persisted<int> _id;
     realm::persisted<std::string> str_col;
@@ -51,6 +58,7 @@ struct AllTypesObject: realm::object {
     realm::persisted<std::vector<std::chrono::time_point<std::chrono::system_clock>>> list_date_col;
 
     realm::persisted<std::vector<AllTypesObjectLink>> list_obj_col;
+    realm::persisted<std::vector<AllTypesObjectEmbedded>> list_embedded_obj_col;
 
     using schema = realm::schema<
     "AllTypesObject",
@@ -67,7 +75,8 @@ struct AllTypesObject: realm::object {
     realm::property<"list_uuid_col", &AllTypesObject::list_uuid_col>,
     realm::property<"list_binary_col", &AllTypesObject::list_binary_col>,
     realm::property<"list_date_col", &AllTypesObject::list_date_col>,
-    realm::property<"list_obj_col", &AllTypesObject::list_obj_col>>;
+    realm::property<"list_obj_col", &AllTypesObject::list_obj_col>,
+    realm::property<"list_embedded_obj_col", &AllTypesObject::list_embedded_obj_col>>;
 };
 
 struct EmbeddedFoo: realm::embedded_object {

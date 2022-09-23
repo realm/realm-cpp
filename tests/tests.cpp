@@ -52,7 +52,7 @@ TEST(all) {
     auto app = realm::App("car-wsney");
     auto user = co_await app.login(realm::App::Credentials::anonymous());
 
-    auto tsr = co_await user.realm<AllTypesObject, AllTypesObjectLink>("foo");
+    auto tsr = co_await user.realm<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>("foo");
     auto synced_realm = tsr.resolve();
     synced_realm.write([&synced_realm]() {
         synced_realm.add(AllTypesObject{._id=1});
@@ -64,12 +64,12 @@ TEST(all) {
 }
 
 TEST(flx_sync) {
-    auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"}), "http://localhost:9090");
+    auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({"str_col", "_id"}), "http://localhost:9090");
     auto user = co_await app.login(realm::App::Credentials::anonymous());
     auto flx_sync_config = user.flexible_sync_configuration();
 
     try {
-        auto tsr = co_await realm::async_open<AllTypesObject, AllTypesObjectLink>(flx_sync_config);
+        auto tsr = co_await realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config);
         auto synced_realm = tsr.resolve();
 
         auto update_success = co_await synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
@@ -227,7 +227,7 @@ TEST(results_notifications) {
 
 
 TEST(results_notifications_insertions) {
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm] {
         realm.add(AllTypesObject { ._id = 1 });
     });
@@ -276,7 +276,7 @@ TEST(results_notifications_insertions) {
 TEST(results_notifications_deletions) {
     auto obj = AllTypesObject();
 
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm, &obj] {
         realm.add(obj);
     });
@@ -309,7 +309,7 @@ TEST(results_notifications_deletions) {
 TEST(results_notifications_modifications) {
     auto obj = AllTypesObject();
 
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm, &obj] {
         realm.add(obj);
     });
@@ -341,7 +341,7 @@ TEST(results_notifications_modifications) {
 }
 
 TEST(binary) {
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({.path=path});
     auto obj = AllTypesObject();
     obj.binary_col.push_back(1);
     obj.binary_col.push_back(2);
@@ -360,7 +360,7 @@ TEST(binary) {
 }
 
 TEST(date) {
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({.path=path});
     auto obj = AllTypesObject();
     CHECK_EQUALS(obj.date_col, std::chrono::time_point<std::chrono::system_clock>{});
     auto now = std::chrono::system_clock::now();

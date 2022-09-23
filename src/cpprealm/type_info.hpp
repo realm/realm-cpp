@@ -128,8 +128,8 @@ concept ObjectPersistable = ObjectBasePersistable<T> && requires(T a) {
 };
 template <typename T>
 concept EmbeddedObjectPersistable = ObjectBasePersistable<T> && requires(T a) {
-    { std::is_same_v<typename T::schema::Class, T> };
-    { std::is_base_of_v<realm::embedded_object, T> };
+    std::is_same_v<typename T::schema::Class, T>;
+    std::is_base_of_v<realm::embedded_object, T>;
 };
 template <ObjectBasePersistable T>
 struct persisted_type<T> { using type = realm::ObjKey; };

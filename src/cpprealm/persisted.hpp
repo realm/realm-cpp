@@ -332,9 +332,18 @@ void persisted_container_base<T>::push_back(typename T::value_type& a)
 requires (type_info::ObjectBasePersistable<typename T::value_type>) {
     if (this->m_object) {
         if (!a.m_object) {
-            T::value_type::schema::add(a, this->m_object->obj().get_table()->get_link_target(this->managed), m_backing_list.get_realm());
+            if (this->m_object->obj().get_table()->get_link_target(this->managed)->is_embedded()) {
+                a.m_object = Object(m_backing_list.get_realm(),
+                                    m_backing_list.add_embedded());
+                T::value_type::schema::set(a);
+            } else {
+                T::value_type::schema::add(a, this->m_object->obj().get_table()->get_link_target(this->managed),
+                                           m_backing_list.get_realm());
+            }
         }
-        m_backing_list.add(a.m_object->obj().get_key());
+        if (!this->m_object->obj().get_table()->get_link_target(this->managed)->is_embedded()) {
+            m_backing_list.add(a.m_object->obj().get_key());
+        }
     } else {
         this->unmanaged.push_back(a);
     }

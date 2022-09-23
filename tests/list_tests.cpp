@@ -5,7 +5,7 @@
 using namespace realm;
 
 TEST(list_tests) {
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     auto obj = AllTypesObject{};
     obj.list_int_col.push_back(42);
     CHECK_EQUALS(obj.list_int_col[0], 42);
@@ -14,29 +14,38 @@ TEST(list_tests) {
     CHECK_EQUALS(obj.list_obj_col[0].str_col, "Fido");
     CHECK_EQUALS(obj.list_int_col.size(), 1);
     for (auto& i : obj.list_int_col) {
-        CHECK_EQUALS(i, 42);
+        CHECK_EQUALS(i, 42)
     }
+
+    obj.list_embedded_obj_col.push_back(AllTypesObjectEmbedded{.str_col="Fido"});
+    CHECK_EQUALS(obj.list_embedded_obj_col[0].str_col, "Fido")
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 1)
+
     realm.write([&realm, &obj]() {
         realm.add(obj);
     });
 
-    CHECK_EQUALS(obj.list_int_col[0], 42);
-    CHECK_EQUALS(obj.list_obj_col[0].str_col, "Fido");
+    CHECK_EQUALS(obj.list_int_col[0], 42)
+    CHECK_EQUALS(obj.list_obj_col[0].str_col, "Fido")
+    CHECK_EQUALS(obj.list_embedded_obj_col[0].str_col, "Fido")
 
     realm.write([&obj]() {
         obj.list_int_col.push_back(84);
         obj.list_obj_col.push_back(AllTypesObjectLink{._id=1, .str_col="Rex"});
+        obj.list_embedded_obj_col.push_back(AllTypesObjectEmbedded{.str_col="Rex"});
     });
     size_t idx = 0;
     for (auto& i : obj.list_int_col) {
-        CHECK_EQUALS(i, obj.list_int_col[idx]);
+        CHECK_EQUALS(i, obj.list_int_col[idx])
         ++idx;
     }
     CHECK_EQUALS(obj.list_int_col.size(), 2);
     CHECK_EQUALS(obj.list_int_col[0], 42);
     CHECK_EQUALS(obj.list_int_col[1], 84);
-    CHECK_EQUALS(obj.list_obj_col[0].str_col, "Fido");
-    CHECK_EQUALS(obj.list_obj_col[1].str_col, "Rex");
+    CHECK_EQUALS(obj.list_obj_col[0].str_col, "Fido")
+    CHECK_EQUALS(obj.list_obj_col[1].str_col, "Rex")
+    CHECK_EQUALS(obj.list_embedded_obj_col[0].str_col, "Fido")
+    CHECK_EQUALS(obj.list_embedded_obj_col[1].str_col, "Rex")
     co_return;
 }
 
@@ -61,7 +70,7 @@ TEST(list_insert_remove_primitive) {
     CHECK_EQUALS(obj.list_int_col.find(4), 1);
     CHECK_EQUALS(obj.list_int_col[1], 4);
 
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm, &obj] {
         realm.add(obj);
     });
@@ -138,7 +147,7 @@ TEST(list_insert_remove_object) {
     CHECK_EQUALS(obj.list_obj_col.find(o4), realm::npos);
     CHECK_EQUALS(obj.list_obj_col[3].str_col, o4.str_col);
 
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm, &obj] {
         realm.add(obj);
     });
@@ -181,7 +190,7 @@ TEST(list_insert_remove_object) {
 TEST(notifications_insertions) {
     auto obj = AllTypesObject();
 
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm, &obj] {
         realm.add(obj);
     });
@@ -225,7 +234,7 @@ TEST(notifications_insertions) {
 TEST(notifications_deletions) {
     auto obj = AllTypesObject();
 
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm, &obj] {
         realm.add(obj);
         obj.list_int_col.push_back(456);
@@ -257,7 +266,7 @@ TEST(notifications_deletions) {
 TEST(notifications_modifications) {
     auto obj = AllTypesObject();
 
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm, &obj] {
         realm.add(obj);
         obj.list_int_col.push_back(123);
@@ -341,7 +350,7 @@ void test_list(Col& list, std::vector<Value> values, auto& realm, auto& obj) {
 };
 
 TEST(list_all_primitive_types) {
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
 
     auto int_list_obj = AllTypesObject();
     test_list(int_list_obj.list_int_col, std::vector<int>({1, 2}), realm, int_list_obj);

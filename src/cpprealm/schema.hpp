@@ -69,7 +69,9 @@ struct property {
                 return realm::Property(name, type);
             }
         } else if constexpr (type_info::ListPersistable<Result>) {
-            if constexpr (type_info::ObjectBasePersistable<typename Result::value_type>) {
+            if constexpr (type_info::EmbeddedObjectPersistable<Result>) {
+                return realm::Property(name, type, Result::schema::name);
+            } else if constexpr (type_info::ObjectBasePersistable<typename Result::value_type>) {
                 return realm::Property(name, type, Result::value_type::schema::name);
             } else {
                 return realm::Property(name, type, is_primary_key);
@@ -91,9 +93,17 @@ struct property {
         auto col_key = object.m_object->obj().get_table()->get_column_key(property_name);
         if constexpr (type_info::ObjectBasePersistable<typename Result::value_type>) {
             auto table = object.m_object->obj().get_table()->get_link_target(col_key);
+            auto i = 0;
             for (auto& list_obj : (object.*ptr).unmanaged) {
-                Result::value_type::schema::add(list_obj, table, object.m_object->get_realm());
-                object.m_object->obj().get_linklist(col_key).add(list_obj.m_object->obj().get_key());
+                if (table->is_embedded()) {
+                    list_obj.m_object = Object(object.m_object->get_realm(),
+                                               object.m_object->obj().get_linklist(col_key).create_and_insert_linked_object(i));
+                    Result::value_type::schema::set(list_obj);
+                    i++;
+                } else {
+                    Result::value_type::schema::add(list_obj, table, object.m_object->get_realm());
+                    object.m_object->obj().get_linklist(col_key).add(list_obj.m_object->obj().get_key());
+                }
             }
         } else {
             object.m_object->obj().set_list_values(col_key, (object.*ptr).as_core_type());
@@ -133,7 +143,6 @@ struct property {
             auto realm = object.m_object->get_realm();
             target_cls.m_object = Object(realm, object.m_object->obj().create_and_set_linked_object(col_key));
             Result::schema::set(target_cls);
-//            object.*ptr = target_cls;
         }
     }
     static constexpr const char* name = Name.value;
@@ -209,7 +218,8 @@ struct schema {
         if constexpr (HasPrimaryKeyProperty) {
             auto pk = *(object.*PrimaryKeyProperty::ptr);
             object.m_object = Object(realm, table->create_object_with_primary_key(pk));
-        } else {
+        }
+        else {
             object.m_object = Object(realm, table->create_object(ObjKey{}));
         }
 
