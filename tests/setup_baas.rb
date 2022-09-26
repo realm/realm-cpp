@@ -13,7 +13,7 @@ PID_FILE = "#{BUILD_DIR}/pid.txt"
 MONGO_EXE = "'#{BIN_DIR}'/mongo"
 MONGOD_EXE = "'#{BIN_DIR}'/mongod"
 
-DEPENDENCIES = File.open("#{BASE_DIR}/dependencies.list").map { |line|
+DEPENDENCIES = File.open(Dir.glob("#{BASE_DIR}/**/dependencies.list")[0]).map { |line|
   line.chomp.split("=")
 }.to_h
 

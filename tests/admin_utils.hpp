@@ -26,6 +26,7 @@
 #include <map>
 #include <numeric>
 #include <thread>
+#include <semaphore>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -38,6 +39,9 @@
 #include <realm/object-store/property.hpp>
 #include <realm/util/scope_exit.hpp>
 
+#if __APPLE__
+#include <CoreFoundation/CFBundle.h>
+#endif
 using namespace std::filesystem;
 
 namespace {
@@ -46,10 +50,13 @@ namespace {
 
     realm::app::Response do_http_request(app::Request &&request) {
         app::Response r_response;
+        std::binary_semaphore semaphore{0};
         transport.send_request_to_server(std::move(request),
-                                         [&r_response](auto request, auto response){
+                                         [&r_response, &semaphore](auto request, auto response){
             r_response = std::move(response);
+            semaphore.release();
         });
+        semaphore.acquire();
         return r_response;
     }
 
@@ -495,11 +502,15 @@ namespace {
             server_process.environment = env;
             std::filesystem::create_directory(temp_directory_path());
             server_process.launch_path = bin_dir.string() + "/stitch_server";
+            std::string config_overrides = "config_overrides.json";
+            if (auto bundle = CFBundleGetMainBundle()) {
+                config_overrides = "realm-cpp-sdk_realm-cpp-sdkTests.bundle/Contents/Resources/" + config_overrides;
+            }
             server_process.arguments = {
                     "--configFile",
                     stitch_root + "/etc/configs/test_config.json",
                     "--configFile",
-                    "config_overrides.json"
+                    config_overrides
             };
 
             server_process.run();
@@ -547,7 +558,12 @@ namespace {
     public:
         Admin::Session login() {
             auto setup_process = Process();
-            setup_process.launch_path = "ruby setup_baas.rb";
+            if (auto bundle = CFBundleGetMainBundle()) {
+                std::string bundle_name = "realm-cpp-sdk_realm-cpp-sdkTests.bundle/";
+                setup_process.launch_path = "ruby " + bundle_name + "Contents/Resources/setup_baas.rb";
+            } else {
+                setup_process.launch_path = "ruby setup_baas.rb";
+            }
             setup_process.run();
             setup_process.wait_until_exit();
 

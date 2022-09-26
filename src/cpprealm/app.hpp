@@ -28,11 +28,7 @@
 #include <cpprealm/db.hpp>
 #include <utility>
 
-#if __APPLE__
-#include <CFNetwork/CFHTTPMessage.h>
-#include <CFNetwork/CFHTTPStream.h>
-#include <CoreFoundation/CFString.h>
-#else
+#if !__APPLE__
 #include <curl/curl.h>
 #endif
 namespace realm {
@@ -186,83 +182,7 @@ public:
 class DefaultTransport : public app::GenericNetworkTransport {
 public:
     void send_request_to_server(app::Request&& request,
-                                app::HttpCompletion&& completion_block) override {
-        auto url = CFStringCreateWithCString(kCFAllocatorDefault, request.url.c_str(), kCFStringEncodingUTF8);
-        CFURLRef myURL = CFURLCreateWithString(kCFAllocatorDefault, url, nullptr);
-        CFStringRef method;
-        switch (request.method) {
-            case app::HttpMethod::get:
-                method = CFSTR("GET");
-                break;
-            case app::HttpMethod::post:
-                method = CFSTR("POST");
-                break;
-            case app::HttpMethod::put:
-                method = CFSTR("PUT");
-                break;
-            case app::HttpMethod::patch:
-                method = CFSTR("PATCH");
-                break;
-            case app::HttpMethod::del:
-                method = CFSTR("DELETE");
-                break;
-        }
-        CFHTTPMessageRef myRequest =
-                CFHTTPMessageCreateRequest(kCFAllocatorDefault, method, myURL,
-                                           kCFHTTPVersion1_1);
-        if (request.method != app::HttpMethod::get) {
-            auto body_string = CFStringCreateWithCString(kCFAllocatorDefault, request.body.c_str(),
-                                                         kCFStringEncodingUTF8);
-            CFDataRef bodyData = CFStringCreateExternalRepresentation(kCFAllocatorDefault,
-                                                                      body_string, kCFStringEncodingUTF8, 0);
-            CFHTTPMessageSetBody(myRequest, bodyData);
-            CFRelease(body_string);
-            CFRelease(bodyData);
-        }
-        if (!request.headers.empty()) {
-            for (auto &header: request.headers) {
-                auto name = CFStringCreateWithCString(kCFAllocatorDefault, header.first.c_str(), kCFStringEncodingUTF8);
-                auto value = CFStringCreateWithCString(kCFAllocatorDefault, header.second.c_str(),
-                                                       kCFStringEncodingUTF8);
-                CFHTTPMessageSetHeaderFieldValue(myRequest, name, value);
-                CFRelease(name);
-                CFRelease(value);
-            }
-        }
-        CFReadStreamRef myReadStream = CFReadStreamCreateForHTTPRequest(kCFAllocatorDefault, myRequest);
-        CFReadStreamOpen(myReadStream);
-        auto error = CFReadStreamGetError(myReadStream);
-        if (error.error) {
-            abort();
-        }
-        std::string response_string;
-
-        UInt8 buffer[2048];
-        auto bytes_read = CFReadStreamRead(myReadStream, buffer, sizeof(buffer));
-        if (bytes_read != -1) {
-            response_string = std::string((char *) buffer, bytes_read);
-            while (bytes_read != 0) {
-                bytes_read = CFReadStreamRead(myReadStream, buffer, sizeof(buffer));
-                if (bytes_read != 0) {
-                    response_string += std::string((char *) buffer, bytes_read);
-                }
-            }
-        }
-        auto myResponse = (CFHTTPMessageRef)CFReadStreamCopyProperty(myReadStream, kCFStreamPropertyHTTPResponseHeader);
-        const UInt32 myErrCode = CFHTTPMessageGetResponseStatusCode(myResponse);
-        CFReadStreamClose(myReadStream);
-        CFRelease(myRequest);
-        CFRelease(myURL);
-        CFRelease(url);
-        CFRelease(method);
-        CFRelease(myReadStream);
-        if (myResponse)
-            CFRelease(myResponse);
-        completion_block(request, {
-            .http_status_code = static_cast<int>(myErrCode),
-            .body = response_string
-        });
-    }
+                                app::HttpCompletion&& completion_block) override;
 };
 #endif
 } // anonymous namespace
@@ -444,30 +364,19 @@ public:
     };
 
     task<void> register_user(const std::string username, const std::string password) {
-        try {
-            auto error = co_await make_awaitable<util::Optional<app::AppError>>([&](auto cb) {
-                m_app->template provider_client<app::App::UsernamePasswordProviderClient>().register_email(username,
-                                                                                                           password,
-                                                                                                           cb);
-            });
-            if (error) {
-                throw *error;
-            }
-        } catch (std::exception& err) {
-            throw;
-        }
+        auto error = co_await make_awaitable<util::Optional<app::AppError>>([&](auto cb) {
+            m_app->template provider_client<app::App::UsernamePasswordProviderClient>().register_email(username,
+                                                                                                       password,
+                                                                                                       cb);
+        });
         co_return;
     }
 
     task<User> login(const Credentials& credentials) {
-        try {
-            auto user = co_await make_awaitable<std::shared_ptr<SyncUser>>([this, credentials = std::move(credentials)](auto cb) {
-                m_app->log_in_with_credentials(credentials.m_credentials, cb);
-            });
-            co_return std::move(User{std::move(user)});
-        } catch (std::exception& err) {
-            throw;
-        }
+        auto user = co_await make_awaitable<std::shared_ptr<SyncUser>>([this, credentials = std::move(credentials)](auto cb) {
+            m_app->log_in_with_credentials(credentials.m_credentials, cb);
+        });
+        co_return std::move(User{std::move(user)});
     }
 private:
     std::shared_ptr<app::App> m_app;

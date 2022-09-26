@@ -48,7 +48,7 @@ let cppSdkTarget: Target = .target(
 let package = Package(
     name: "realm-cpp-sdk",
     platforms: [
-        .macOS(.v10_15),
+        .macOS(.v11),
         .iOS(.v14),
         .tvOS(.v9),
         .watchOS(.v2)
@@ -61,7 +61,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/realm/realm-core", .exact("12.7.0")),
+        .package(url: "https://github.com/realm/realm-core", .exact("12.8.0")),
     ],
     targets: [
         .systemLibrary(
@@ -77,12 +77,15 @@ let package = Package(
             name: "realm-cpp-sdkTests",
             dependencies: ["realm-cpp-sdk", "libcurl"],
             path: "tests",
+            resources: [
+                .copy("setup_baas.rb"),
+                .copy("dependencies.list"),
+                .copy("config_overrides.json")],
             cxxSettings: testCxxSettings + [
                 .define("REALM_DISABLE_METADATA_ENCRYPTION")
             ],
             linkerSettings: [
-                .linkedFramework("Foundation", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS])),
-                .linkedFramework("CFNetwork", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS]))
+                .linkedFramework("Foundation", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS]))
             ]),
         .executableTarget(
             name: "helloworld",
@@ -92,8 +95,7 @@ let package = Package(
                 .define("REALM_DISABLE_METADATA_ENCRYPTION")
             ],
             linkerSettings: [
-                .linkedFramework("Foundation", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS])),
-                .linkedFramework("CFNetwork", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS]))
+                .linkedFramework("Foundation", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS]))
             ]
         )
     ],
