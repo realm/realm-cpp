@@ -1,5 +1,8 @@
 name: CI
 
+env:
+  REALM_CI: true
+
 on:
   push:
     branches:
@@ -16,12 +19,12 @@ jobs:
           preset:
             - default
           runner:
-            - ubuntu-latest
+            - ubuntu-22.04
             - macos-12
             - windows-latest
           include:
             - preset: linux
-              runner: ubuntu-latest
+              runner: ubuntu-22.04
             - preset: windows
               runner: windows-latest
             - preset: macos
@@ -41,22 +44,15 @@ jobs:
         with:
           key: ${{ runner.os }}-${{ matrix.preset }}-${{ matrix.build-preset || matrix.preset }}
 
-      - name: Make Ccache default compiler
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          echo "/usr/lib/ccache" >> $GITHUB_PATH
-          echo "/usr/local/opt/ccache/libexec" >> $GITHUB_PATH
-
       - name: Setup Visual Studio Compilers for default preset
         if: runner.os == 'Windows' && matrix.preset == 'default'
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Setup GCC 10 for Linux builds
+      - name: Setup GCC 11 for Linux builds
         if: runner.os == 'Linux'
         run: |
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
 
       - name: Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@master
