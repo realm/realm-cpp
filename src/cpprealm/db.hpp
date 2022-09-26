@@ -44,6 +44,10 @@
 #include <QtWidgets/QApplication>
 #endif
 
+#if REALM_HAVE_UV
+#include <realm/object-store/util/uv/scheduler.hpp>
+#endif
+
 namespace realm {
 struct object;
 #if QT_CORE_LIB
@@ -102,6 +106,8 @@ private:
 
 #if QT_CORE_LIB
 static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::make_qt;
+#elif REALM_HAVE_UV
+static std::function<std::shared_ptr<util::Scheduler>()> scheduler = [] { return std::make_shared<util::UvMainLoopScheduler>(); }
 #else
 static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::Scheduler::make_default;
 #endif

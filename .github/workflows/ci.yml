@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.runner }}
+    name: Build
+    strategy:
+      fail-fast: false
+      matrix:
+          preset:
+            - default
+          runner:
+            - ubuntu-latest
+            - macos-12
+            - windows-latest
+          include:
+            - preset: linux
+              runner: ubuntu-latest
+            - preset: windows
+              runner: windows-latest
+            - preset: macos
+              runner: macos-12
+            - preset: ios
+              build-preset: ios-catalyst 
+              runner: macos-12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Setup Ccache
+        if: runner.os != 'Windows'
+        uses: hendrikmuhs/ccache-action@v1.1
+        with:
+          key: ${{ matrix.preset }}-${{ matrix.build-preset || matrix.preset }}
+
+      - name: Make Ccache default compiler
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          echo "/usr/lib/ccache" >> $GITHUB_PATH
+          echo "/usr/local/opt/ccache/libexec" >> $GITHUB_PATH
+
+      - name: Setup Visual Studio Compilers for default preset
+        if: runner.os == 'Windows' && matrix.preset == 'default'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Setup GCC 10 for Linux builds
+        if: runner.os == 'Linux'
+        run: |
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
+
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Setup Xcode
+        if: runner.os == 'macOS'
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '14.0'
+
+      - name: Get vcpkg submodule commit sha
+        id: vcpkg_cache_key
+        working-directory: realm-core/tools/vcpkg/ports
+        shell: bash
+        run: echo "::set-output name=commit::$(git rev-parse HEAD)"
+
+      - name: Setup Vcpkg
+        continue-on-error: true
+        uses: friendlyanon/setup-vcpkg@v1
+        with:
+          path: src/realm-core/tools/vcpkg/ports
+          cache-key: vcpkg-${{ matrix.preset }}-${{ hashFiles('./realm-core/tools/vcpkg/vcpkg.json') }}-${{ steps.vcpkg_cache_key.outputs.commit }}
+          cache-restore-keys: vcpkg-${{ matrix.preset }}-
+
+      - name: Setup Android NDK
+        if: startsWith(matrix.preset, 'android-')
+        run: echo "ANDROID_NDK=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV
+
+      - name: Install Linux Dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y libssl-dev libcurl4-openssl-dev libuv1-dev qtbase5-dev zlib1g-dev
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Compile
+        run: cmake --build --preset ${{ matrix.build-preset || matrix.preset }} --config Release
