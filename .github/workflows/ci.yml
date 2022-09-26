@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.runner }}
-    name: Build
+    name: Build CMake (${{ matrix.build-preset || matrix.preset }}, ${{ matrix.runner }})
     strategy:
       fail-fast: false
       matrix:
