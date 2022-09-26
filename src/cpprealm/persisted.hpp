@@ -691,7 +691,7 @@ T persisted_base<T>::operator *() const
                 return v;
             } if constexpr (std::is_same_v<realm::BinaryData, type>) {
                 realm::BinaryData binary = m_object->obj().template get<type>(managed);
-                return std::vector<u_int8_t>(binary.data(), binary.data() + binary.size());
+                return std::vector<uint8_t>(binary.data(), binary.data() + binary.size());
             } else {
                 return static_cast<T>(m_object->obj().template get<type>(managed));
             }
