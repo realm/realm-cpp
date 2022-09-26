@@ -678,7 +678,7 @@ T persisted_base<T>::operator *() const
         } else {
             if constexpr (type_info::ListPersistable<T>) {
                 T v;
-                auto lst = m_object->obj()->template get_list_values<typename type_info::persisted_type<typename T::value_type>::type>(managed);
+                auto lst = m_object->obj().template get_list_values<typename realm::type_info::persisted_type<typename T::value_type>::type>(managed);
                 for (size_t i; i < lst.size(); i++) {
                     if constexpr (type_info::ObjectBasePersistable<typename T::value_type>) {
                         auto obj = lst.get_object(i);
