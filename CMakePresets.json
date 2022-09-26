@@ -10,6 +10,7 @@
       "name": "default",
       "binaryDir": "${sourceDir}/.build/cmake-preset-${presetName}",
       "generator": "Ninja Multi-Config",
+      "toolchainFile": "${sourceDir}/realm-core/tools/vcpkg/ports/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/realm-core/tools/vcpkg/triplets",
         "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo;MinSizeRel"
@@ -29,7 +30,6 @@
       "name": "windows",
       "inherits": "default",
       "generator": "Visual Studio 17 2022",
-      "toolchainFile": "${sourceDir}/realm-core/tools/vcpkg/ports/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-windows-static"
       },
