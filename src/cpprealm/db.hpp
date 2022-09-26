@@ -107,7 +107,7 @@ private:
 #if QT_CORE_LIB
 static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::make_qt;
 #elif REALM_HAVE_UV
-static std::function<std::shared_ptr<util::Scheduler>()> scheduler = [] { return std::make_shared<util::UvMainLoopScheduler>(); }
+static std::function<std::shared_ptr<util::Scheduler>()> scheduler = [] { return std::make_shared<util::UvMainLoopScheduler>(); };
 #else
 static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::Scheduler::make_default;
 #endif
@@ -233,6 +233,7 @@ static task<thread_safe_reference<db<Ts...>>> async_open(db_config config) {
 	    .schema_mode = SchemaMode::AdditiveExplicit,
         .schema = Schema(schema),
         .schema_version = 0,
+        .scheduler = scheduler(),
         .sync_config = config.sync_config
     });
     co_return thread_safe_reference<db<Ts...>>(co_await make_awaitable<ThreadSafeReference>([&async_open_task](auto cb) {
