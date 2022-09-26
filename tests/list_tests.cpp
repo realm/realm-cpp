@@ -5,7 +5,7 @@
 using namespace realm;
 
 TEST(list_tests) {
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     auto obj = AllTypesObject{};
     obj.list_int_col.push_back(42);
     CHECK_EQUALS(obj.list_int_col[0], 42);
@@ -14,29 +14,38 @@ TEST(list_tests) {
     CHECK_EQUALS(obj.list_obj_col[0].str_col, "Fido");
     CHECK_EQUALS(obj.list_int_col.size(), 1);
     for (auto& i : obj.list_int_col) {
-        CHECK_EQUALS(i, 42);
+        CHECK_EQUALS(i, 42)
     }
+
+    obj.list_embedded_obj_col.push_back(AllTypesObjectEmbedded{.str_col="Fido"});
+    CHECK_EQUALS(obj.list_embedded_obj_col[0].str_col, "Fido")
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 1)
+
     realm.write([&realm, &obj]() {
         realm.add(obj);
     });
 
-    CHECK_EQUALS(obj.list_int_col[0], 42);
-    CHECK_EQUALS(obj.list_obj_col[0].str_col, "Fido");
+    CHECK_EQUALS(obj.list_int_col[0], 42)
+    CHECK_EQUALS(obj.list_obj_col[0].str_col, "Fido")
+    CHECK_EQUALS(obj.list_embedded_obj_col[0].str_col, "Fido")
 
     realm.write([&obj]() {
         obj.list_int_col.push_back(84);
         obj.list_obj_col.push_back(AllTypesObjectLink{._id=1, .str_col="Rex"});
+        obj.list_embedded_obj_col.push_back(AllTypesObjectEmbedded{.str_col="Rex"});
     });
     size_t idx = 0;
     for (auto& i : obj.list_int_col) {
-        CHECK_EQUALS(i, obj.list_int_col[idx]);
+        CHECK_EQUALS(i, obj.list_int_col[idx])
         ++idx;
     }
     CHECK_EQUALS(obj.list_int_col.size(), 2);
     CHECK_EQUALS(obj.list_int_col[0], 42);
     CHECK_EQUALS(obj.list_int_col[1], 84);
-    CHECK_EQUALS(obj.list_obj_col[0].str_col, "Fido");
-    CHECK_EQUALS(obj.list_obj_col[1].str_col, "Rex");
+    CHECK_EQUALS(obj.list_obj_col[0].str_col, "Fido")
+    CHECK_EQUALS(obj.list_obj_col[1].str_col, "Rex")
+    CHECK_EQUALS(obj.list_embedded_obj_col[0].str_col, "Fido")
+    CHECK_EQUALS(obj.list_embedded_obj_col[1].str_col, "Rex")
     co_return;
 }
 
@@ -61,7 +70,7 @@ TEST(list_insert_remove_primitive) {
     CHECK_EQUALS(obj.list_int_col.find(4), 1);
     CHECK_EQUALS(obj.list_int_col[1], 4);
 
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm, &obj] {
         realm.add(obj);
     });
@@ -138,7 +147,7 @@ TEST(list_insert_remove_object) {
     CHECK_EQUALS(obj.list_obj_col.find(o4), realm::npos);
     CHECK_EQUALS(obj.list_obj_col[3].str_col, o4.str_col);
 
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm, &obj] {
         realm.add(obj);
     });
@@ -178,10 +187,85 @@ TEST(list_insert_remove_object) {
     co_return;
 }
 
+TEST(list_insert_remove_embedded_object) {
+    auto obj = AllTypesObject();
+    CHECK_EQUALS(obj.is_managed(), false)
+
+    auto o1 = AllTypesObjectEmbedded();
+    o1.str_col = "foo";
+    auto o2 = AllTypesObjectEmbedded();
+    o2.str_col = "bar";
+    auto o3 = AllTypesObjectEmbedded();
+    o3.str_col = "baz";
+    auto o4 = AllTypesObjectEmbedded();
+    o4.str_col = "foo baz";
+    auto o5 = AllTypesObjectEmbedded();
+    o5.str_col = "foo bar";
+
+    // unmanaged
+    obj.list_embedded_obj_col.push_back(o1);
+    obj.list_embedded_obj_col.push_back(o2);
+    obj.list_embedded_obj_col.push_back(o3);
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 3)
+
+    obj.list_embedded_obj_col.pop_back();
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 2)
+    obj.list_embedded_obj_col.erase(0);
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 1)
+    obj.list_embedded_obj_col.clear();
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 0)
+    obj.list_embedded_obj_col.push_back(o1);
+    obj.list_embedded_obj_col.push_back(o2);
+    obj.list_embedded_obj_col.push_back(o3);
+    obj.list_embedded_obj_col.push_back(o4);
+
+    CHECK_EQUALS(obj.list_embedded_obj_col.find(o4), realm::npos)
+    CHECK_EQUALS(obj.list_embedded_obj_col[3].str_col, o4.str_col)
+
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
+    realm.write([&realm, &obj] {
+        realm.add(obj);
+    });
+
+    // ensure values exist
+    CHECK_EQUALS(obj.is_managed(), true)
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 4)
+
+    CHECK_THROWS([&] { obj.list_embedded_obj_col.push_back(o5); })
+
+    CHECK_EQUALS(o5.is_managed(), false)
+    realm.write([&obj, &o5] {
+        obj.list_embedded_obj_col.push_back(o5);
+    });
+    CHECK_EQUALS(o5.is_managed(), true)
+
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 5)
+    CHECK_EQUALS(obj.list_embedded_obj_col.find(o5), 4)
+    CHECK_EQUALS(obj.list_embedded_obj_col[4], o5)
+
+    realm.write([&obj] {
+        obj.list_embedded_obj_col.pop_back();
+    });
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 4)
+    CHECK_EQUALS(obj.list_embedded_obj_col.find(o5), realm::npos)
+
+    realm.write([&obj] {
+        obj.list_embedded_obj_col.erase(0);
+    });
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 3)
+
+    realm.write([&obj] {
+        obj.list_embedded_obj_col.clear();
+    });
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 0)
+
+    co_return;
+}
+
 TEST(notifications_insertions) {
     auto obj = AllTypesObject();
 
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm, &obj] {
         realm.add(obj);
     });
@@ -225,7 +309,7 @@ TEST(notifications_insertions) {
 TEST(notifications_deletions) {
     auto obj = AllTypesObject();
 
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm, &obj] {
         realm.add(obj);
         obj.list_int_col.push_back(456);
@@ -257,7 +341,7 @@ TEST(notifications_deletions) {
 TEST(notifications_modifications) {
     auto obj = AllTypesObject();
 
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm, &obj] {
         realm.add(obj);
         obj.list_int_col.push_back(123);
@@ -341,7 +425,7 @@ void test_list(Col& list, std::vector<Value> values, auto& realm, auto& obj) {
 };
 
 TEST(list_all_primitive_types) {
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
 
     auto int_list_obj = AllTypesObject();
     test_list(int_list_obj.list_int_col, std::vector<int>({1, 2}), realm, int_list_obj);

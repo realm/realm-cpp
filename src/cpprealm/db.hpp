@@ -23,7 +23,6 @@
 #include <iostream>
 
 #include <cpprealm/type_info.hpp>
-#include <cpprealm/object.hpp>
 #include <cpprealm/results.hpp>
 #include <cpprealm/task.hpp>
 #include <cpprealm/thread_safe_reference.hpp>
@@ -46,7 +45,7 @@
 #endif
 
 namespace realm {
-
+struct object;
 #if QT_CORE_LIB
 
 namespace util {
@@ -97,7 +96,7 @@ struct db_config {
     std::shared_ptr<SyncConfig> sync_config;
 private:
     friend struct User;
-    template <type_info::ObjectPersistable ...Ts>
+    template <type_info::ObjectBasePersistable ...Ts>
     friend struct db;
 };
 
@@ -107,9 +106,9 @@ static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::make
 static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::Scheduler::make_default;
 #endif
 
-template <type_info::ObjectPersistable ...Ts>
+template <type_info::ObjectBasePersistable ...Ts>
 struct db {
-    db(db_config config = {}) : config(std::move(config))
+    explicit db(db_config config = {}) : config(std::move(config))
     {
         std::vector<ObjectSchema> schema;
 
@@ -196,7 +195,7 @@ private:
         config.path = realm->config().path;
         config.sync_config = realm->config().sync_config;
     }
-    friend class object;
+    friend struct object;
     template <typename ...Vs>
     friend task<thread_safe_reference<db<Vs...>>> async_open(db_config config);
     template <typename T>
@@ -204,7 +203,7 @@ private:
     SharedRealm m_realm;
 };
 
-template <type_info::ObjectPersistable ...Ts>
+template <type_info::ObjectBasePersistable ...Ts>
 static db<Ts...> open(db_config config = {})
 {
     // TODO: Add these flags to core
@@ -214,7 +213,7 @@ static db<Ts...> open(db_config config = {})
     return db<Ts...>(std::move(config));
 }
 
-template <type_info::ObjectPersistable ...Ts>
+template <type_info::ObjectBasePersistable ...Ts>
 static task<thread_safe_reference<db<Ts...>>> async_open(db_config config) {
     // TODO: Add these flags to core
 #if QT_CORE_LIB

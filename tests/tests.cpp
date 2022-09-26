@@ -25,7 +25,7 @@ TEST(all) {
 
     bool did_run = false;
     auto token = person.observe<Person>([&did_run](auto&& change) {
-        CHECK_EQUALS(change.property.name, "age");
+        CHECK_EQUALS(change.property.name, "age")
         CHECK_EQUALS(std::any_cast<int>(*change.property.new_value), 19);
         did_run = true;
     });
@@ -37,7 +37,7 @@ TEST(all) {
     CHECK_EQUALS(*person.age, 19);
 
     auto persons = realm.objects<Person>();
-    CHECK_EQUALS(persons.size(), 1);
+    CHECK_EQUALS(persons.size(), 1)
 
     std::vector<Person> people;
     std::copy(persons.begin(), persons.end(), std::back_inserter(people));
@@ -46,13 +46,13 @@ TEST(all) {
             realm.remove(person);
         });
     }
-    CHECK_EQUALS(did_run, true);
+    CHECK_EQUALS(did_run, true)
 
     CHECK_EQUALS(persons.size(), 0);
     auto app = realm::App("car-wsney");
     auto user = co_await app.login(realm::App::Credentials::anonymous());
 
-    auto tsr = co_await user.realm<AllTypesObject, AllTypesObjectLink>("foo");
+    auto tsr = co_await user.realm<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>("foo");
     auto synced_realm = tsr.resolve();
     synced_realm.write([&synced_realm]() {
         synced_realm.add(AllTypesObject{._id=1});
@@ -64,12 +64,12 @@ TEST(all) {
 }
 
 TEST(flx_sync) {
-    auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"}), "http://localhost:9090");
+    auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({"str_col", "_id"}), "http://localhost:9090");
     auto user = co_await app.login(realm::App::Credentials::anonymous());
     auto flx_sync_config = user.flexible_sync_configuration();
 
     try {
-        auto tsr = co_await realm::async_open<AllTypesObject, AllTypesObjectLink>(flx_sync_config);
+        auto tsr = co_await realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config);
         auto synced_realm = tsr.resolve();
 
         auto update_success = co_await synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
@@ -87,12 +87,12 @@ TEST(flx_sync) {
         CHECK_EQUALS(synced_realm.subscriptions().size(), 1);
 
         auto sub = *synced_realm.subscriptions().find("foo-strings");
-        CHECK_EQUALS(sub.name(), "foo-strings");
-        CHECK_EQUALS(sub.object_class_name(), "AllTypesObject");
-        CHECK_EQUALS(sub.query_string(), "str_col == \"foo\"");
+        CHECK_EQUALS(sub.name(), "foo-strings")
+        CHECK_EQUALS(sub.object_class_name(), "AllTypesObject")
+        CHECK_EQUALS(sub.query_string(), "str_col == \"foo\"")
 
         auto non_existent_sub = synced_realm.subscriptions().find("non-existent");
-        CHECK_EQUALS((non_existent_sub == std::nullopt), true);
+        CHECK_EQUALS((non_existent_sub == std::nullopt), true)
 
         synced_realm.write([&synced_realm]() {
             synced_realm.add(AllTypesObject{._id=1, .str_col="foo"});
@@ -103,7 +103,7 @@ TEST(flx_sync) {
         synced_realm.write([]() {}); // refresh realm
         auto objs = synced_realm.objects<AllTypesObject>();
 
-        CHECK_EQUALS(objs[0]->_id, 1);
+        CHECK_EQUALS(objs[0]->_id, 1)
 
         update_success = co_await synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
             subs.update_subscription<AllTypesObject>("foo-strings", [](auto &obj) {
@@ -227,7 +227,7 @@ TEST(results_notifications) {
 
 
 TEST(results_notifications_insertions) {
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm] {
         realm.add(AllTypesObject { ._id = 1 });
     });
@@ -276,7 +276,7 @@ TEST(results_notifications_insertions) {
 TEST(results_notifications_deletions) {
     auto obj = AllTypesObject();
 
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm, &obj] {
         realm.add(obj);
     });
@@ -309,7 +309,7 @@ TEST(results_notifications_deletions) {
 TEST(results_notifications_modifications) {
     auto obj = AllTypesObject();
 
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, Dog>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm, &obj] {
         realm.add(obj);
     });
@@ -341,7 +341,7 @@ TEST(results_notifications_modifications) {
 }
 
 TEST(binary) {
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({.path=path});
     auto obj = AllTypesObject();
     obj.binary_col.push_back(1);
     obj.binary_col.push_back(2);
@@ -360,7 +360,7 @@ TEST(binary) {
 }
 
 TEST(date) {
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink>({.path=path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({.path=path});
     auto obj = AllTypesObject();
     CHECK_EQUALS(obj.date_col, std::chrono::time_point<std::chrono::system_clock>{});
     auto now = std::chrono::system_clock::now();
@@ -388,6 +388,35 @@ TEST(login_username_password) {
     co_await app.register_user("foo@mongodb.com", "foobar");
     auto user = co_await app.login(realm::App::Credentials::username_password("foo@mongodb.com", "foobar"));
     CHECK(!user.access_token().empty())
+    co_return;
+}
+
+TEST(embedded) {
+    auto realm = realm::open<Foo, EmbeddedFoo>({.path=path});
+
+    auto foo = Foo();
+    foo.foo = EmbeddedFoo{.bar=42};
+
+    realm.write([&foo, &realm](){
+        realm.add(foo);
+    });
+
+    CHECK_EQUALS((*foo.foo).bar, 42)
+    bool did_run;
+    EmbeddedFoo e_foo = (*foo.foo);
+    auto token = e_foo.observe<EmbeddedFoo>([&did_run](auto change){
+        CHECK_EQUALS(change.object->bar, 84)
+        did_run = true;
+    });
+    realm.write([&foo](){
+        (*foo.foo).bar = 84;
+    });
+    CHECK_EQUALS((*foo.foo).bar, 84)
+    realm.write([&foo, &realm]{
+        realm.remove(foo);
+    });
+    CHECK(did_run)
+    co_return;
 }
 
 //@end

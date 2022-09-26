@@ -60,7 +60,7 @@ public:
     // Inserts a new subscription into the set if one does not exist already.
     // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
     // for the templated class type.
-    template <type_info::ObjectPersistable T>
+    template <type_info::ObjectBasePersistable T>
     void add(const std::string& name, std::optional<std::function<rbool(T&)>> query_fn = std::nullopt) {
         auto schema = *m_realm->schema().find(T::schema::name);
         auto& group = m_realm->read_group();
@@ -101,7 +101,7 @@ public:
     // Will throw if subscription does not exist.
     // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
     // for the templated class type.
-    template <type_info::ObjectPersistable T>
+    template <type_info::ObjectBasePersistable T>
     void update_subscription(const std::string& name, std::optional<std::function<rbool(T&)>> query_fn = std::nullopt) {
         remove(name);
         add(name, query_fn);
@@ -160,7 +160,7 @@ public:
         co_return success;
     }
 private:
-    template <type_info::ObjectPersistable ...Ts>
+    template <type_info::ObjectBasePersistable ...Ts>
     friend struct db;
     SyncSubscriptionSet(sync::SubscriptionSet&& subscription_set, SharedRealm realm) : m_subscription_set(std::move(subscription_set)), m_realm(realm) {}
     sync::SubscriptionSet m_subscription_set;

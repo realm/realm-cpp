@@ -1,6 +1,7 @@
 # NEXT RELEASE
 
 ### Enhancements
+* Add support for Embedded Objects. Users can implement their own embedded objects by inheriting from `realm::embedded_object`. 
 * Add support for notifications on `results` collections by calling `results::observe`.
 * Add support for notifications on a realm by calling `db::observe`.
 

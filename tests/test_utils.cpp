@@ -15,7 +15,6 @@ void register_function(std::pair<std::string /* path */, fun_t> f) {
 
 int main() {
     std::cout<<"Launching "<<registered_functions().size()<<" tests."<<std::endl;
-    RealmServer::shared;
     for (auto& pair : registered_functions()) {
         auto path = pair.first;
         std::filesystem::remove(std::filesystem::current_path() / std::string(path));
@@ -29,9 +28,9 @@ int main() {
                        [](auto &pair) {
                            return std::pair{pair.first, pair.second(pair.first)};
                        });
-        while (std::transform_reduce(funs.begin(), funs.end(), true,
-                                     [](bool done1, bool done2) -> bool { return done1 && done2; },
-                                     [](const auto& task) -> bool { return task.second.handle.done(); }) == false) {
+        while (!std::transform_reduce(funs.begin(), funs.end(), true,
+                                      [](bool done1, bool done2) -> bool { return done1 && done2; },
+                                      [](const auto &task) -> bool { return task.second.handle.done(); })) {
         }
     }
 

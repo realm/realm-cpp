@@ -202,7 +202,9 @@ namespace {
         // First pass we only add the properties to the schema as we can't add
         // links until the targets of the links exist.
         auto pk = schema.primary_key_property();
-        stitchProperties[pk->name] = stitch_rule(*pk, schema);
+        if (pk) {
+            stitchProperties[pk->name] = stitch_rule(*pk, schema);
+        }
         for (auto &property: schema.persisted_properties) {
             if (property.type != realm::PropertyType::Object) {
                 stitchProperties[property.name] = stitch_rule(property, schema);
@@ -337,7 +339,7 @@ struct Admin {
             return session;
         }
 
-        template <type_info::ObjectPersistable ...Ts>
+        template <type_info::ObjectBasePersistable ...Ts>
         [[nodiscard]] std::string create_app(bson::BsonArray queryable_fields = {}) const {
             auto info = static_cast<bson::BsonDocument>(apps.post({{"name", "test"}}));
             auto app_id = static_cast<std::string>(info["_id"]);

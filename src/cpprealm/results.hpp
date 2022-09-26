@@ -27,7 +27,7 @@
 namespace realm {
 
 
-template <type_info::ObjectPersistable T>
+template <type_info::ObjectBasePersistable T>
 struct query : public T {
 private:
     void set_managed(auto& prop, auto column_key) {
@@ -44,7 +44,7 @@ public:
 
 template <typename T>
 struct results;
-template <type_info::ObjectPersistable T>
+template <type_info::ObjectBasePersistable T>
 struct results_change {
     results<T>* collection;
     std::vector<uint64_t> deletions;
@@ -204,7 +204,7 @@ struct results {
     }
 
 private:
-    template <type_info::ObjectPersistable...>
+    template <type_info::ObjectBasePersistable...>
     friend struct db;
     results(realm::Results&& parent)
     : m_parent(std::move(parent))

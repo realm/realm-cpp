@@ -4,7 +4,7 @@
 using namespace realm;
 
 auto get_realm(const std::string& path) {
-    return open<AllTypesObject, AllTypesObjectLink>({.path=path});
+    return open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({.path=path});
 }
 
 TEST(unmanaged_str_get_set) {
