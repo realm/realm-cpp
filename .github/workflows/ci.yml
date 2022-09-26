@@ -29,9 +29,6 @@ jobs:
               runner: windows-latest
             - preset: macos
               runner: macos-12
-            - preset: ios
-              build-preset: ios-catalyst 
-              runner: macos-12
     steps:
       - name: Checkout
         uses: actions/checkout@v2
