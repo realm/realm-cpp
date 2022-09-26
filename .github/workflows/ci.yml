@@ -70,9 +70,9 @@ jobs:
         continue-on-error: true
         uses: friendlyanon/setup-vcpkg@v1
         with:
-          path: src/realm-core/tools/vcpkg/ports
-          cache-key: vcpkg-${{ matrix.preset }}-${{ hashFiles('./realm-core/tools/vcpkg/vcpkg.json') }}-${{ steps.vcpkg_cache_key.outputs.commit }}
-          cache-restore-keys: vcpkg-${{ matrix.preset }}-
+          path: realm-core/tools/vcpkg/ports
+          cache-key: vcpkg-${{ runner.os }}-${{ matrix.preset }}-${{ hashFiles('./realm-core/tools/vcpkg/vcpkg.json') }}-${{ steps.vcpkg_cache_key.outputs.commit }}
+          cache-restore-keys: vcpkg-${{ runner.os }}-${{ matrix.preset }}-
 
       - name: Setup Android NDK
         if: startsWith(matrix.preset, 'android-')
