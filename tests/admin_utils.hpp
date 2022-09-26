@@ -21,7 +21,6 @@
 
 #include <cstdio>
 #include <filesystem>
-#include <format>
 #include <iostream>
 #include <map>
 #include <numeric>
@@ -29,6 +28,8 @@
 #include <string>
 #include <sstream>
 #include <vector>
+
+#include <sys/wait.h>
 
 #include <cpprealm/schema.hpp>
 #include <cpprealm/app.hpp>
@@ -160,7 +161,7 @@ namespace {
             type = bson_type(property.type);
         }
 
-        if (is_array(property.type)) {
+        if (realm::is_array(property.type)) {
             return {
                     {"bsonType", "array"},
                     {"items",    bson::BsonDocument{
@@ -213,7 +214,7 @@ namespace {
                 relationships[property.name] = bson::BsonDocument{
                         {"ref",         "#/relationship/mongodb1/test_data/" + property.object_type},
                         {"foreign_key", "_id"},
-                        {"is_list",     is_array(property.type) || is_set(property.type) ||
+                        {"is_list",     realm::is_array(property.type) || is_set(property.type) ||
                                         is_dictionary(property.type)}
                 };
             }
@@ -222,7 +223,7 @@ namespace {
         for (auto& property : schema.persisted_properties) {
             if (!(is_nullable(property.type) ||
                 is_mixed(property.type) ||
-                is_array(property.type) ||
+                realm::is_array(property.type) ||
                 is_dictionary(property.type) ||
                 is_set(property.type))) {
                 required_properties.push_back(property.name);
@@ -339,7 +340,7 @@ struct Admin {
             return session;
         }
 
-        template <type_info::ObjectBasePersistable ...Ts>
+        template <realm::type_info::ObjectBasePersistable ...Ts>
         [[nodiscard]] std::string create_app(bson::BsonArray queryable_fields = {}) const {
             auto info = static_cast<bson::BsonDocument>(apps.post({{"name", "test"}}));
             auto app_id = static_cast<std::string>(info["_id"]);
