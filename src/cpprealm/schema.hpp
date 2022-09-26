@@ -54,10 +54,6 @@ struct property {
     {
     }
 
-    explicit operator property() {
-        return property();
-    }
-
     explicit operator realm::Property() const {
         if constexpr (type_info::OptionalPersistable<Result> || type_info::EmbeddedObjectPersistable<Result>) {
             if constexpr (type_info::EmbeddedObjectPersistable<Result>) {
