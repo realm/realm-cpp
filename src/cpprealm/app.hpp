@@ -26,6 +26,7 @@
 #include <cpprealm/type_info.hpp>
 #include <cpprealm/task.hpp>
 #include <cpprealm/db.hpp>
+#include <map>
 #include <utility>
 
 #if !__APPLE__
@@ -338,6 +339,18 @@ struct User {
         });
     }
 
+    std::map<std::string, std::any> custom_data()
+    {
+        std::map<std::string, std::any> custom_data_map;
+        if (auto bson = m_user->custom_data()) {
+            for (auto it = bson->begin(); it != bson->end(); ++it) {
+                const auto& entry = (*it);
+                custom_data_map[entry.first.data()] = entry.second;
+            }
+        }
+        return custom_data_map;
+    }
+
     std::shared_ptr<app::App> m_app;
     std::shared_ptr<SyncUser> m_user;
 };
@@ -469,6 +482,18 @@ public:
             cb(User{std::move(user), m_app}, error ? std::optional<app_error>{app_error(*error)} : std::nullopt);
         });
     }
+
+    struct function {
+        void operator [](const std::string& name) {
+
+        };
+    };
+
+    function function()
+    {
+        return {};
+    }
+
 private:
     std::shared_ptr<app::App> m_app;
 };

@@ -399,6 +399,23 @@ struct Admin {
             auth_providers_endpoint[static_cast<std::string>(static_cast<bson::BsonDocument>(*api_key_provider)["_id"])]
                 ["enable"].put();
 
+            app["functions"].post({
+                                          {"name", "updateUserData"},
+                                          {"private", false},
+                                          {"can_evaluate", {}},
+                                          {"source",
+            "exports = async function(data) {"
+            "    const user = context.user;"
+            "    const mongodb = context.services.get(\"mongodb1\");"
+            "    const userDataCollection = mongodb.db(\"test_data\").collection(\"UserData\");"
+            "    await userDataCollection.updateOne("
+            "            { \"user_id\": user.id },"
+            "            { \"$set\": data },"
+            "            { \"upsert\": true }"
+            "    );"
+            "    return true;"
+            "};"
+            }});
             static_cast<void>(app["secrets"].post({
                                         {     "name", "BackingDB_uri"},
                                         {"value", "mongodb://localhost:26000"}

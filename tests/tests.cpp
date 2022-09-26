@@ -202,7 +202,6 @@ TEST(auth_providers_completion_handler) {
     co_return;
 }
 
-
 TEST(async_open_completion) {
     std::binary_semaphore sema{0};
     auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"}), "http://localhost:9090");
@@ -219,6 +218,16 @@ TEST(async_open_completion) {
 
     bool assertion = realm.config.path.length() > 0;
     CHECK(assertion);
+
+    co_return;
+}
+
+TEST(custom_user_data) {
+    auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"}), "http://localhost:9090");
+    auto user = co_await app.login(realm::App::Credentials::anonymous());
+
+    auto x = user.custom_data();
+
 
     co_return;
 }
