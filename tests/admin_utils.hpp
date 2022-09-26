@@ -560,7 +560,10 @@ namespace {
             auto setup_process = Process();
             if (auto bundle = CFBundleGetMainBundle()) {
                 std::string bundle_name = "realm-cpp-sdk_realm-cpp-sdkTests.bundle/";
-                setup_process.launch_path = "ruby " + bundle_name + "Contents/Resources/setup_baas.rb";
+                for (const auto& dirEntry : recursive_directory_iterator(std::filesystem::current_path()))
+                    if (dirEntry.path().string().find("setup_baas.rb") != std::string::npos) {
+                        setup_process.launch_path = "ruby " + dirEntry.path().string();
+                    }
             } else {
                 setup_process.launch_path = "ruby setup_baas.rb";
             }
