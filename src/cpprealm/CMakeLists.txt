@@ -26,6 +26,9 @@ endif()
 # Network transport dependencies
 if(APPLE)
     target_link_options(cpprealm PUBLIC "SHELL:-framework CFNetwork")
+    target_sources(cpprealm PRIVATE
+        internal/apple/default_network_transport.cpp
+    )
 else()
     if(VCPKG_TOOLCHAIN)
         find_package(libuv CONFIG REQUIRED)
@@ -49,6 +52,9 @@ else()
         CURL::libcurl
     )
 
+    target_sources(cpprealm PRIVATE
+        internal/curl/default_network_transport.cpp
+    )
 endif()
 
 target_link_libraries(cpprealm PUBLIC Realm::ObjectStore)
