@@ -19,6 +19,23 @@ set(HEADERS
 
 add_library(cpprealm SHARED ${SOURCES} ${HEADERS})
 
+if(CMAKE_SYSTEM_NAME MATCHES "^Windows")
+    target_compile_definitions(cpprealm PRIVATE
+        WIN32_LEAN_AND_MEAN # include minimal Windows.h for faster builds
+        UNICODE # prefer Unicode variants of Windows APIs over ANSI variants
+        _UNICODE # prefer Unicode variants of C runtime APIs over ANSI variants
+    )
+    if(NOT WINDOWS_STORE)
+        # for regular Windows target Windows 8.1 as the minimum version
+        # see https://docs.microsoft.com/en-us/windows/win32/WinProg/using-the-windows-headers
+        target_compile_definitions(cpprealm PRIVATE
+            _WIN32_WINNT=0x0603
+            WINVER=0x603
+            NTDDI_VERSION=0x06030000
+        )
+    endif()
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10 AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11)
     target_compile_options(cpprealm PUBLIC -fcoroutines)
 endif()
