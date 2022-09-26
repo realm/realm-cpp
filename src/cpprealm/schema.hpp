@@ -19,7 +19,6 @@
 #ifndef realm_schema_hpp
 #define realm_schema_hpp
 
-//#include <cpprealm/object.hpp>
 #include <cpprealm/persisted.hpp>
 
 #include <realm/object-store/object_schema.hpp>

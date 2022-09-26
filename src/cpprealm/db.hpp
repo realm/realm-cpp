@@ -23,7 +23,6 @@
 #include <iostream>
 
 #include <cpprealm/type_info.hpp>
-//#include <cpprealm/object.hpp>
 #include <cpprealm/results.hpp>
 #include <cpprealm/task.hpp>
 #include <cpprealm/thread_safe_reference.hpp>
@@ -46,9 +45,6 @@
 #endif
 
 namespace realm {
-namespace {
-struct object_base;
-}
 struct object;
 #if QT_CORE_LIB
 
@@ -200,7 +196,6 @@ private:
         config.sync_config = realm->config().sync_config;
     }
     friend struct object;
-    friend struct object_base;
     template <typename ...Vs>
     friend task<thread_safe_reference<db<Vs...>>> async_open(db_config config);
     template <typename T>

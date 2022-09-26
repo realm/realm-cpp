@@ -72,7 +72,7 @@ using ObjectNotificationCallback = std::function<void(const T*,
                                                       std::vector<std::string> property_names,
                                                       std::vector<std::any> old_values,
                                                       std::vector<std::any> new_values,
-                                                      std::exception_ptr error)>;
+                                                      const std::exception_ptr error)>;
 
 
 template <typename V, type_info::ObjectBasePersistable T>
@@ -161,7 +161,7 @@ NotificationToken _observe(V* obj, Object& m_object, std::function<void(ObjectCh
                     std::vector<std::string> property_names,
                     std::vector<std::any> old_values,
                     std::vector<std::any> new_values,
-                    std::exception_ptr error) {
+                    const std::exception_ptr& error) {
                 if (!ptr) {
                     if (error) {
                         block(ObjectChange<T> { .error = error });
@@ -183,7 +183,7 @@ NotificationToken _observe(V* obj, Object& m_object, std::function<void(ObjectCh
                 }
             }, *static_cast<T*>(obj), m_object});
 }
-}
+} // anonymous namespace
 
 // MARK: Object
 /**
@@ -295,6 +295,40 @@ private:
     std::optional<Object> m_object;
 };
 
+/**
+ `embedded_object` is a base class used to define embedded Realm model objects.
+
+ Embedded objects work similarly to normal objects, but are owned by a single
+ parent Object (which itself may be embedded). Unlike normal top-level objects,
+ embedded objects cannot be directly created in or added to a Realm. Instead,
+ they can only be created as part of a parent object, or by assigning an
+ unmanaged object to a parent object's property. Embedded objects are
+ automatically deleted when the parent object is deleted or when the parent is
+ modified to no longer point at the embedded object, either by reassigning an
+ Object property or by removing the embedded object from the List containing it.
+
+ Embedded objects can only ever have a single parent object which links to
+ them, and attempting to link to an existing managed embedded object will throw
+ an exception.
+
+ The property types supported on `embedded_object` are the same as for `object`,
+ except for that embedded objects cannot link to top-level objects, so `object`
+ and `std::vector<object>` properties are not supported (`embedded_object` and
+ `std::vector<embedded_object>` *are*).
+
+ Embedded objects cannot have primary keys or indexed properties.
+
+ ```cpp
+ class Owner: object {
+     realm::persisted<std::string> name;
+     realm::persisted<std::vector<dog>> dogs;
+ };
+ class Dog: embedded_object {
+     realm::persisted<std::string> name;
+     realm::persisted<bool> adopted;
+ };
+ ```
+ */
 struct embedded_object {
     /**
      Registers a block to be called each time the object changes.
@@ -394,7 +428,7 @@ inline bool operator==(const T& lhs, const T& rhs) {
     }
 
     return false;
-};
+}
 
 // MARK: - Implementations
 
