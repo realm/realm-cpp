@@ -44,13 +44,13 @@ std::cerr<<__FILE__<<" L"<<__LINE__<<": "<<#a<<" ("<<a<<")"<<" did not equal "<<
 namespace test {
     struct task_base {
         struct promise_type {
-            coroutine_handle<> precursor;
+            coro::coroutine_handle<> precursor;
 
             task_base get_return_object() noexcept {
-                return task_base{coroutine_handle<promise_type>::from_promise(*this)};
+                return task_base{coro::coroutine_handle<promise_type>::from_promise(*this)};
             }
 
-            suspend_never initial_suspend() const noexcept { return {}; }
+            coro::suspend_never initial_suspend() const noexcept { return {}; }
 
             void unhandled_exception() {
                 if (auto err = std::current_exception())
@@ -65,12 +65,12 @@ namespace test {
 
                     void await_resume() const noexcept {
                     }
-                    coroutine_handle<> await_suspend(coroutine_handle<promise_type> h) noexcept {
+                    coro::coroutine_handle<> await_suspend(coro::coroutine_handle<promise_type> h) noexcept {
                         auto precursor = h.promise().precursor;
                         if (precursor) {
                             return precursor;
                         }
-                        return noop_coroutine();
+                        return coro::noop_coroutine();
                     }
                 };
                 return awaiter{};
@@ -79,7 +79,7 @@ namespace test {
             void return_void() noexcept {
             }
         };
-        coroutine_handle<promise_type> handle;
+        coro::coroutine_handle<promise_type> handle;
         std::string path;
     };
     template <realm::StringLiteral TestName>
@@ -92,7 +92,7 @@ namespace test {
             handle.promise();
         }
 
-        void await_suspend(coroutine_handle<> coroutine) const noexcept {
+        void await_suspend(coro::coroutine_handle<> coroutine) const noexcept {
             handle.promise().precursor = coroutine;
         }
 
