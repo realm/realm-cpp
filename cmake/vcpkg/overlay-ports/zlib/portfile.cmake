@@ -1,0 +1,1 @@
+# Intentionally left empty to force VCPKG to not do anything to acquire zlib, and let CMake discover it normally

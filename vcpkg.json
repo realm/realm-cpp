@@ -6,7 +6,7 @@
         },
         {
             "name": "openssl",
-            "platform": "!osx & !linux"
+            "platform": "!osx & !linux & !android"
         },
         {
             "name": "zlib",

@@ -36,8 +36,11 @@ if(CMAKE_SYSTEM_NAME MATCHES "^Windows")
     endif()
 endif()
 
-if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10 AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11)
+if(CMAKE_CXX_COMPILER_ID MATCHES GNU AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10 AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11)
     target_compile_options(cpprealm PUBLIC -fcoroutines)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES Clang AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_compile_options(cpprealm PUBLIC -stdlib=libc++)
+    target_link_options(cpprealm PUBLIC -stdlib=libc++)
 endif()
 
 # Network transport dependencies

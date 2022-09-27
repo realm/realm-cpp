@@ -85,7 +85,8 @@
       "cacheVariables": {
         "CMAKE_SYSTEM_NAME": "Android",
         "CMAKE_ANDROID_NDK": "$env{ANDROID_NDK}",
-        "VCPKG_TARGET_TRIPLET": "$env{vcpkg_arch}-android"
+        "VCPKG_TARGET_TRIPLET": "$env{vcpkg_arch}-android",
+        "VCPKG_OVERLAY_PORTS": "${sourceDir}/cmake/vcpkg/overlay-ports"
       },
       "environment": {
         "ANDROID_NDK_HOME": "$env{ANDROID_NDK}"
