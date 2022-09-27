@@ -80,7 +80,7 @@ jobs:
       - uses: ammaraskar/gcc-problem-matcher@master
 
       - name: Configure
-        run: cmake --preset ios -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF}
+        run: cmake --preset ios
 
       - name: Compile
         run: cmake --build --preset ios-${{ matrix.preset }} --config Release

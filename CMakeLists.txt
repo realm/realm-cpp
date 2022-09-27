@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(realm)
 
-if(ENV{REALM_CI} OR REALM_USE_CCACHE)
+if("$ENV{REALM_CI}" OR REALM_USE_CCACHE)
     include(cmake/ccache.cmake)
 endif()
 
