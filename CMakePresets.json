@@ -29,7 +29,6 @@
       "displayName": "macOS",
       "inherits": "default",
       "generator": "Xcode",
-      "toolchainFile": "${sourceDir}/realm-core/tools/cmake/xcode.toolchain.cmake",
       "cacheVariables": {
         "CMAKE_MAKE_PROGRAM": "${sourceDir}/cmake/cmake-build-xcode.sh",
         "CMAKE_SYSTEM_NAME": "Darwin",
@@ -39,23 +38,6 @@
         "lhs": "${hostSystemName}",
         "type": "equals",
         "rhs": "Darwin"
-      }
-    },
-    {
-      "name": "ios",
-      "displayName": "iOS",
-      "inherits": "default",
-      "condition": {
-        "lhs": "${hostSystemName}",
-        "type": "equals",
-        "rhs": "Darwin"
-      },
-      "generator": "Xcode",
-      "toolchainFile": "${sourceDir}/realm-core/tools/cmake/xcode.toolchain.cmake",
-      "cacheVariables": {
-        "CMAKE_MAKE_PROGRAM": "${sourceDir}/cmake/cmake-build-xcode.sh",
-        "CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH": "YES",
-        "CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED": "NO"
       }
     },
     {
@@ -162,40 +144,6 @@
       "displayName": "macOS",
       "configurePreset": "macos",
       "nativeToolOptions": [ "-destination", "platform=macOS" ],
-      "configuration": "Debug"
-    },
-    {
-      "name": "ios",
-      "hidden": true,
-      "inherits": "default",
-      "configurePreset": "ios",
-      "nativeToolOptions": [ "-destination", "$env{xcode_destination}" ]
-    },
-    {
-      "name": "ios-device",
-      "displayName": "Device",
-      "inherits": "ios",
-      "environment": {
-        "xcode_destination": "generic/platform=iOS"
-      },
-      "configuration": "Debug"
-    },
-    {
-      "name": "ios-simulator",
-      "displayName": "Simulator",
-      "inherits": "ios",
-      "environment": {
-        "xcode_destination": "generic/platform=iOS Simulator"
-      },
-      "configuration": "Debug"
-    },
-    {
-      "name": "ios-catalyst",
-      "displayName": "Catalyst",
-      "inherits": "ios",
-      "environment": {
-        "xcode_destination": "generic/platform=macOS,variant=Mac Catalyst"
-      },
       "configuration": "Debug"
     }
   ]
