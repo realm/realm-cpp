@@ -83,7 +83,7 @@ jobs:
         run: sudo apt-get install -y libssl-dev libcurl4-openssl-dev libuv1-dev qtbase5-dev zlib1g-dev
 
       - name: Configure
-        run: cmake --preset ${{ matrix.preset }}
+        run: cmake --preset ${{ matrix.preset }} -DCMAKE_VERBOSE_MAKEFILE=ON
 
       - name: Compile
         run: cmake --build --preset ${{ matrix.build-preset || matrix.preset }} --config Release
