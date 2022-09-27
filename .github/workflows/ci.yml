@@ -39,7 +39,7 @@ jobs:
         if: runner.os != 'Windows'
         uses: hendrikmuhs/ccache-action@v1.1
         with:
-          key: ${{ runner.os }}-${{ matrix.preset }}-${{ matrix.build-preset || matrix.preset }}
+          key: ccache-${{ runner.os }}-${{ runner.arch }}-${{ matrix.preset }}-${{ matrix.build-preset || matrix.preset }}
 
       - name: Setup Visual Studio Compilers for default preset
         if: runner.os == 'Windows' && matrix.preset == 'default'
@@ -71,8 +71,8 @@ jobs:
         uses: friendlyanon/setup-vcpkg@v1
         with:
           path: realm-core/tools/vcpkg/ports
-          cache-key: vcpkg-${{ runner.os }}-${{ matrix.preset }}-${{ hashFiles('./realm-core/tools/vcpkg/vcpkg.json') }}-${{ steps.vcpkg_cache_key.outputs.commit }}
-          cache-restore-keys: vcpkg-${{ runner.os }}-${{ matrix.preset }}-
+          cache-key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.preset }}-${{ hashFiles('./realm-core/tools/vcpkg/vcpkg.json') }}-${{ steps.vcpkg_cache_key.outputs.commit }}
+          cache-restore-keys: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.preset }}-
 
       - name: Setup Android NDK
         if: startsWith(matrix.preset, 'android-')
