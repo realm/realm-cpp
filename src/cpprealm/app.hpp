@@ -112,7 +112,7 @@ app::Response do_http_request(const app::Request& request)
     });
 
     std::string response;
-    std::map<std::string, std::string> response_headers;
+    util::HTTPHeaders response_headers;
 
     /* First set the URL that is about to receive our POST. This URL can
      just as well be a https:// URL if that is what should receive the
@@ -172,10 +172,10 @@ app::Response do_http_request(const app::Request& request)
 class DefaultTransport : public app::GenericNetworkTransport {
 public:
     void send_request_to_server(app::Request&& request,
-                                util::UniqueFunction<void(const app::Response&)>&& completion_block)
+                                app::HttpCompletion&& completion_block)
     {
 
-        completion_block(do_http_request(request));
+        completion_block(request, do_http_request(request));
     }
 };
 #else

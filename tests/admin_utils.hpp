@@ -21,7 +21,6 @@
 
 #include <cstdio>
 #include <filesystem>
-#include <format>
 #include <iostream>
 #include <map>
 #include <numeric>
@@ -30,6 +29,8 @@
 #include <string>
 #include <sstream>
 #include <vector>
+
+#include <sys/wait.h>
 
 #include <cpprealm/schema.hpp>
 #include <cpprealm/app.hpp>

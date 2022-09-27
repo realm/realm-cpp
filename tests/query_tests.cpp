@@ -7,7 +7,7 @@
 using namespace realm;
 
 template<type_info::ObjectBasePersistable Cls, type_info::ObjectBasePersistable ...Ts>
-void validate_equals(db<Ts...>& realm, u_int equal_count, std::function<rbool(Cls&)> expr) {
+void validate_equals(db<Ts...>& realm, uint equal_count, std::function<rbool(Cls&)> expr) {
     auto results = realm.template objects<Cls>().where([expr](auto& obj) {
         return expr(obj);
     });
@@ -48,8 +48,8 @@ TEST(tsq_basic_comparison) {
     validate_equals<AllTypesObject>(realm, 0U, [](auto& o) { return o._id != 123; });
     validate_equals<AllTypesObject>(realm, 1U, [](auto& o) { return o.str_col == "foo bar"; });
     validate_equals<AllTypesObject>(realm, 0U, [](auto& o) { return o.str_col != "foo bar"; });
-    validate_equals<AllTypesObject>(realm, 1U, [](auto& o) { return o.binary_col == std::vector<u_int8_t>({0, 1, 2, 3}); });
-    validate_equals<AllTypesObject>(realm, 0U, [](auto& o) { return o.binary_col != std::vector<u_int8_t>({0, 1, 2, 3}); });
+    validate_equals<AllTypesObject>(realm, 1U, [](auto& o) { return o.binary_col == std::vector<uint8_t>({0, 1, 2, 3}); });
+    validate_equals<AllTypesObject>(realm, 0U, [](auto& o) { return o.binary_col != std::vector<uint8_t>({0, 1, 2, 3}); });
     validate_equals<AllTypesObject>(realm, 1U, [](auto& o) { return o.enum_col == AllTypesObject::Enum::two; });
     validate_equals<AllTypesObject>(realm, 0U, [](auto& o) { return o.enum_col != AllTypesObject::Enum::two; });
     validate_equals<AllTypesObject>(realm, 1U, [&date](auto& o) { return o.date_col == std::chrono::system_clock::from_time_t(date); });
