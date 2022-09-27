@@ -39,7 +39,7 @@ jobs:
         if: runner.os != 'Windows'
         uses: hendrikmuhs/ccache-action@v1.1
         with:
-          key: ${{ matrix.preset }}-${{ matrix.build-preset || matrix.preset }}
+          key: ${{ runner.os }}-${{ matrix.preset }}-${{ matrix.build-preset || matrix.preset }}
 
       - name: Make Ccache default compiler
         if: runner.os != 'Windows'
