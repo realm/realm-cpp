@@ -189,7 +189,7 @@ struct db {
 #endif
     db_config config;
 private:
-    db(SharedRealm realm)
+    db(const SharedRealm& realm)
     : m_realm(realm)
     {
         config.path = realm->config().path;

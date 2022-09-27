@@ -369,11 +369,14 @@ public:
                                                                                                        password,
                                                                                                        cb);
         });
+        if (error) {
+            throw *error;
+        }
         co_return;
     }
 
     task<User> login(const Credentials& credentials) {
-        auto user = co_await make_awaitable<std::shared_ptr<SyncUser>>([this, credentials = std::move(credentials)](auto cb) {
+        auto user = co_await make_awaitable<std::shared_ptr<SyncUser>>([this, credentials](auto cb) {
             m_app->log_in_with_credentials(credentials.m_credentials, cb);
         });
         co_return std::move(User{std::move(user)});
@@ -389,7 +392,7 @@ task<thread_safe_reference<db<Ts...>>> User::realm(const T& partition_value) con
 {
     db_config config;
     config.sync_config = std::make_shared<SyncConfig>(m_user, bson::Bson(partition_value));
-    config.sync_config->error_handler = [](std::shared_ptr<SyncSession> session, SyncError error) {
+    config.sync_config->error_handler = [](const std::shared_ptr<SyncSession>& session, const SyncError& error) {
         std::cerr<<"sync error: "<<error.message<<std::endl;
     };
     config.path = m_user->sync_manager()->path_for_realm(*config.sync_config);

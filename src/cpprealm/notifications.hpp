@@ -73,7 +73,7 @@ struct collection_change {
     // This enables notifiers to report a change on empty collections that have been deleted.
     bool collection_root_was_deleted = false;
 
-    bool empty() const noexcept {
+    [[nodiscard]] bool empty() const noexcept {
         return deletions.empty() && insertions.empty() && modifications.empty() &&
         !collection_root_was_deleted;
     }

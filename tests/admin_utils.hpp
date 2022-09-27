@@ -503,8 +503,11 @@ namespace {
             std::filesystem::create_directory(temp_directory_path());
             server_process.launch_path = bin_dir.string() + "/stitch_server";
             std::string config_overrides = "config_overrides.json";
-            if (auto bundle = CFBundleGetMainBundle()) {
-                config_overrides = "realm-cpp-sdk_realm-cpp-sdkTests.bundle/Contents/Resources/" + config_overrides;
+            if (CFBundleGetMainBundle()) {
+                for (const auto& dirEntry : recursive_directory_iterator(std::filesystem::current_path()))
+                    if (dirEntry.path().string().find("config_overrides.json") != std::string::npos) {
+                        config_overrides = dirEntry.path().string();
+                    }
             }
             server_process.arguments = {
                     "--configFile",
@@ -558,8 +561,7 @@ namespace {
     public:
         Admin::Session login() {
             auto setup_process = Process();
-            if (auto bundle = CFBundleGetMainBundle()) {
-                std::string bundle_name = "realm-cpp-sdk_realm-cpp-sdkTests.bundle/";
+            if (CFBundleGetMainBundle()) {
                 for (const auto& dirEntry : recursive_directory_iterator(std::filesystem::current_path()))
                     if (dirEntry.path().string().find("setup_baas.rb") != std::string::npos) {
                         setup_process.launch_path = "ruby " + dirEntry.path().string();
