@@ -224,10 +224,24 @@ TEST(async_open_completion) {
 
 TEST(custom_user_data) {
     auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"}), "http://localhost:9090");
-    auto user = co_await app.login(realm::App::Credentials::anonymous());
+    co_await app.register_user("foo@mongodb.com", "foobar");
+    auto user = co_await app.login(realm::App::Credentials::username_password("foo@mongodb.com", "foobar"));
 
-    auto x = user.custom_data();
+    user.call_function("updateUserData", {bson::BsonDocument({{"name", "john"}})}, [](auto&& res, auto err) {
+        CHECK(!err);
+    });
 
+    user.refresh_custom_user_data([](auto opt_err) {
+        CHECK(!opt_err)
+    });
+
+    auto name = (*user.custom_data())["name"];
+    CHECK_EQUALS(name, "john")
+
+    co_await user.call_function("updateUserData", {bson::BsonDocument({{"name", "jane"}})});
+    co_await user.refresh_custom_user_data();
+    name = (*user.custom_data())["name"];
+    CHECK_EQUALS(name, "jane")
 
     co_return;
 }
@@ -394,7 +408,6 @@ TEST(results_notifications) {
 
     co_return;
 }
-
 
 TEST(results_notifications_insertions) {
     auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});

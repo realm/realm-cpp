@@ -339,16 +339,42 @@ struct User {
         });
     }
 
-    std::map<std::string, std::any> custom_data()
+    std::optional<bson::BsonDocument> custom_data()
     {
-        std::map<std::string, std::any> custom_data_map;
-        if (auto bson = m_user->custom_data()) {
-            for (auto it = bson->begin(); it != bson->end(); ++it) {
-                const auto& entry = (*it);
-                custom_data_map[entry.first.data()] = entry.second;
-            }
+        return m_user->custom_data();
+    }
+
+    void call_function(const std::string& name, const realm::bson::BsonArray& params,
+                       util::UniqueFunction<void(std::optional<bson::Bson>&&, std::optional<app_error>)> callback)
+    {
+        m_app->call_function(name, params, std::move(callback));
+    }
+
+    task<std::optional<bson::Bson>> call_function(const std::string& name, const realm::bson::BsonArray& params)
+    {
+        try {
+            co_await make_awaitable<util::Optional<bson::Bson>>( [&](auto cb) {
+                m_app->call_function(m_user, name, params, std::move(cb));
+            });
+        } catch (std::exception& err) {
+            throw;
         }
-        return custom_data_map;
+    }
+
+    void refresh_custom_user_data(util::UniqueFunction<void(std::optional<app_error>)> callback)
+    {
+        m_user->refresh_custom_data(std::move(callback));
+    }
+
+    task<void> refresh_custom_user_data()
+    {
+        try {
+            co_await make_awaitable<std::optional<app_error>>( [&](auto cb) {
+                m_user->refresh_custom_data(std::move(cb));
+            });
+        } catch (std::exception& err) {
+            throw;
+        }
     }
 
     std::shared_ptr<app::App> m_app;
@@ -481,17 +507,6 @@ public:
         m_app->log_in_with_credentials(credentials.m_credentials, [cb = std::move(callback), this](auto& user, auto error) {
             cb(User{std::move(user), m_app}, error ? std::optional<app_error>{app_error(*error)} : std::nullopt);
         });
-    }
-
-    struct function {
-        void operator [](const std::string& name) {
-
-        };
-    };
-
-    function function()
-    {
-        return {};
     }
 
 private:

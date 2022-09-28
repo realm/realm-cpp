@@ -399,23 +399,27 @@ struct Admin {
             auth_providers_endpoint[static_cast<std::string>(static_cast<bson::BsonDocument>(*api_key_provider)["_id"])]
                 ["enable"].put();
 
-            app["functions"].post({
-                                          {"name", "updateUserData"},
-                                          {"private", false},
-                                          {"can_evaluate", {}},
-                                          {"source",
-            "exports = async function(data) {"
-            "    const user = context.user;"
-            "    const mongodb = context.services.get(\"mongodb1\");"
-            "    const userDataCollection = mongodb.db(\"test_data\").collection(\"UserData\");"
-            "    await userDataCollection.updateOne("
-            "            { \"user_id\": user.id },"
-            "            { \"$set\": data },"
-            "            { \"upsert\": true }"
-            "    );"
-            "    return true;"
-            "};"
-            }});
+
+            static_cast<void>(app["functions"].post({
+                                                            {"name", "updateUserData"},
+                                                            {"private", false},
+                                                            {"can_evaluate", {}},
+                                                            {"source",
+            R"(
+            exports = async function(data) {
+                const user = context.user;
+                const mongodb = context.services.get("mongodb1");
+                const userDataCollection = mongodb.db("test_data").collection("UserData");
+                await userDataCollection.updateOne(
+                                                { "user_id": user.id },
+                                                { "$set": data },
+                                               { "upsert": true }
+                                               );
+                res = await userDataCollection.find();
+                return res;
+                };
+            )"
+            }}));
             static_cast<void>(app["secrets"].post({
                                         {     "name", "BackingDB_uri"},
                                         {"value", "mongodb://localhost:26000"}
@@ -438,6 +442,15 @@ struct Admin {
             bson::BsonArray asymmetric_tables;
             std::vector<ObjectSchema> schema;
             (schema.push_back(Ts::schema::to_core_schema()), ...);
+
+            ObjectSchema user_data_schema = ObjectSchema("UserData", {
+                    Property("_id", PropertyType::ObjectId, true),
+                    Property("user_id", PropertyType::String),
+                    Property("name", PropertyType::String)
+            });
+            user_data_schema.table_type = realm::ObjectSchema::ObjectType::TopLevel;
+            schema.push_back(user_data_schema);
+
             for (auto& os : schema) {
                 if (os.table_type == ObjectSchema::ObjectType::TopLevelAsymmetric) {
                     asymmetric_tables.push_back(os.name);
@@ -474,6 +487,28 @@ struct Admin {
             app["services"][static_cast<std::string>(service_id)]["config"].patch(std::move(service_config));
             auto config = app["sync"]["config"];
             config.put(bson::BsonDocument {{"development_mode_enabled", true}});
+
+            bson::BsonDocument rules = {
+                    {"database", "test_data"},
+                    {"collection", "UserData"},
+                    {"roles", bson::BsonArray {
+                        bson::BsonDocument {{"name", "default"},
+                                            {"apply_when", {}},
+                                            {"insert", true},
+                                            {"delete", true},
+                                            {"additional_fields", {}}},
+                    }
+                    }
+            };
+            app["services"][static_cast<std::string>(service_id)]["rules"].post(rules);
+            app["custom_user_data"].patch(bson::BsonDocument {
+                    {"mongo_service_id", service_id},
+                    {"enabled", true},
+                    {"database_name", "test_data"},
+                    {"collection_name", "UserData"},
+                    {"user_id_field", "user_id"},
+            });
+
             return static_cast<std::string>(info["client_app_id"]);
         }
     };
