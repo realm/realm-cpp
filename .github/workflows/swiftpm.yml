@@ -39,9 +39,22 @@ jobs:
 
       - name: Build
         run: |
+          set -o pipefail
+
+          build_logger=xcpretty
+          if [[ -n "$RUNNER_DEBUG" ]]; then
+            build_logger=cat
+          fi
+
           # Xcode 13 can't build executable targets for non-macOS platforms
           scheme=realm-cpp-sdk
           if [[ "${{ matrix.platform }}" == macOS* ]] || [[ "${{ matrix.xcode }}" != 13.* ]]; then
             scheme=realm-cpp-sdkTests
           fi
-          xcodebuild -scheme $scheme -destination "generic/platform=${{ matrix.platform }}" -configuration Release
+          xcodebuild -scheme $scheme -destination "generic/platform=${{ matrix.platform }}" -configuration Release | $build_logger
+      
+      - name: Open a tmate debug session
+        if: ${{ failure() && runner.debug }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          timeout-minutes: 15

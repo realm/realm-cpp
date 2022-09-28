@@ -49,6 +49,12 @@ jobs:
       - name: Compile
         run: cmake --build --preset ${{ matrix.preset }} --config Release
 
+      - name: Open a tmate debug session
+        if: ${{ failure() && runner.debug }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          timeout-minutes: 15
+
   build-linux:
     runs-on: ubuntu-22.04
     name: Linux (${{ matrix.compiler.name }} ${{ matrix.compiler.version }})
@@ -118,3 +124,9 @@ jobs:
 
       - name: Compile
         run: cmake --build --preset linux --config Release
+
+      - name: Open a tmate debug session
+        if: ${{ failure() && runner.debug }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          timeout-minutes: 15
