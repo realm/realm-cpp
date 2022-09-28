@@ -50,13 +50,18 @@ namespace {
 
     realm::app::Response do_http_request(app::Request &&request) {
         app::Response r_response;
-        std::binary_semaphore semaphore{0};
+        std::condition_variable cv;
+        std::mutex m;
+        bool ready = false;
+        std::unique_lock lk(m);
         transport.send_request_to_server(std::move(request),
-                                         [&r_response, &semaphore](auto request, auto response){
+                                         [&r_response, &ready, &lk, &cv](auto request, auto response){
             r_response = std::move(response);
-            semaphore.release();
+            ready = true;
+            lk.unlock();
+            cv.notify_one();
         });
-        semaphore.acquire();
+        cv.wait(lk, [&ready]{return ready;});
         return r_response;
     }
 
