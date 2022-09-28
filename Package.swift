@@ -27,7 +27,6 @@ let testCxxSettings: [CXXSetting] = cxxSettings + [
     // relative to the package root, while Xcode resolves them
     // relative to the target root, so we need both.
     .headerSearchPath("../src"),
-    .unsafeFlags(["-lcurl"])
 ]
 
 let applePlatforms: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS]
@@ -37,9 +36,11 @@ let cppSdkTarget: Target = .target(
     dependencies: [
         .product(name: "RealmCore", package: "realm-core"),
         .product(name: "RealmQueryParser", package: "realm-core"),
-        .byNameItem(name: "libcurl", condition: .when(platforms: [.linux]))
     ],
     path: "src/",
+    exclude: [
+        "cpprealm/internal/curl",
+    ],
     publicHeadersPath: ".",
     cxxSettings: cxxSettings,
     linkerSettings: [
@@ -51,7 +52,7 @@ let package = Package(
     name: "realm-cpp-sdk",
     platforms: [
         .macOS(.v10_15),
-        .macCatalyst(.v13),
+        .macCatalyst(.v14),
         .iOS(.v13),
         .tvOS(.v14),
     ],
@@ -66,18 +67,10 @@ let package = Package(
         .package(url: "https://github.com/realm/realm-core", .exact("12.8.0")),
     ],
     targets: [
-        .systemLibrary(
-            name: "libcurl",
-            pkgConfig: "libcurl",
-            providers: [
-                .apt(["libcurl4-openssl-dev"]),
-                .brew(["curl"])
-            ]
-        ),
         cppSdkTarget,
         .executableTarget(
             name: "realm-cpp-sdkTests",
-            dependencies: ["realm-cpp-sdk", "libcurl"],
+            dependencies: ["realm-cpp-sdk"],
             path: "tests",
             resources: [
                 .copy("setup_baas.rb"),

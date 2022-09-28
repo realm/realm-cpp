@@ -55,10 +55,6 @@ add_executable(cpprealm_exe_tests tests/tests.cpp tests/str_tests.cpp tests/list
 
 target_include_directories(cpprealm PUBLIC src)
 
-if (APPLE)
-    target_sources(cpprealm PRIVATE src/cpprealm/network_transport.mm)
-endif()
-
 # on Apple platforms we use the built-in CFRunLoop
 # everywhere else it's libuv, except UWP where it doesn't build
 if(NOT APPLE AND NOT WINDOWS_STORE)
@@ -114,13 +110,16 @@ install(TARGETS cpprealm
 set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
 
 if (APPLE)
-    target_link_options(cpprealm PUBLIC 
-        "SHELL:-framework CFNetwork"
+    target_sources(cpprealm PRIVATE 
+        src/cpprealm/internal/apple/network_transport.mm
     )
 else()
     find_package(CURL REQUIRED)
     target_link_libraries(cpprealm PUBLIC
         CURL::libcurl
+    )
+    target_sources(cpprealm PRIVATE
+        src/cpprealm/internal/curl/network_transport.cpp
     )
 endif()
 
