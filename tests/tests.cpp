@@ -199,7 +199,7 @@ TEST(custom_user_data) {
 
 TEST(flx_sync) {
     auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({"str_col", "_id"}), "http://localhost:9090");
-    auto user = co_await app.login(realm::App::Credentials::anonymous());
+    auto user = co_await app.login(realm::App::credentials::anonymous());
     auto flx_sync_config = user.flexible_sync_configuration();
 
     try {
