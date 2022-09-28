@@ -399,7 +399,6 @@ struct Admin {
             auth_providers_endpoint[static_cast<std::string>(static_cast<bson::BsonDocument>(*api_key_provider)["_id"])]
                 ["enable"].put();
 
-
             static_cast<void>(app["functions"].post({
                                                             {"name", "updateUserData"},
                                                             {"private", false},
@@ -407,16 +406,15 @@ struct Admin {
                                                             {"source",
             R"(
             exports = async function(data) {
-                const user = context.user;
-                const mongodb = context.services.get("mongodb1");
-                const userDataCollection = mongodb.db("test_data").collection("UserData");
-                await userDataCollection.updateOne(
-                                                { "user_id": user.id },
-                                                { "$set": data },
-                                               { "upsert": true }
-                                               );
-                res = await userDataCollection.find();
-                return res;
+                    const user = context.user;
+                    const mongodb = context.services.get("mongodb1");
+                    const userDataCollection = mongodb.db("test_data").collection("UserData");
+                    doc = await userDataCollection.updateOne(
+                                                        { "user_id": user.id },
+                                                        { "$set": data },
+                                                        { "upsert": true }
+                                                    );
+                    return doc;
                 };
             )"
             }}));
@@ -443,6 +441,7 @@ struct Admin {
             std::vector<ObjectSchema> schema;
             (schema.push_back(Ts::schema::to_core_schema()), ...);
 
+            // Required for custom_user_data
             ObjectSchema user_data_schema = ObjectSchema("UserData", {
                     Property("_id", PropertyType::ObjectId, true),
                     Property("user_id", PropertyType::String),

@@ -139,8 +139,7 @@ TEST(log_out_anonymous) {
     auto user1 = co_await app.login(realm::App::Credentials::anonymous());
     CHECK_EQUALS((user1.state() == realm::User::state::logged_in), true);
 
-    auto opt_error = co_await user1.log_out();
-    CHECK(!opt_error)
+    co_await user1.log_out();
     CHECK_EQUALS((int)user1.state(), (int)realm::User::state::removed);
 
     // Test with completion handler
@@ -162,8 +161,7 @@ TEST(log_out_username_password) {
     auto user1 = co_await app.login(realm::App::Credentials::username_password("foo@mongodb.com", "foobar"));
     CHECK_EQUALS((user1.state() == realm::User::state::logged_in), true);
 
-    auto opt_error = co_await user1.log_out();
-    CHECK(!opt_error)
+    co_await user1.log_out();
     CHECK_EQUALS((int)user1.state(), (int)realm::User::state::logged_out);
 
     // Test with completion handler
@@ -205,19 +203,29 @@ TEST(auth_providers_completion_handler) {
 TEST(async_open_completion) {
     std::binary_semaphore sema{0};
     auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"}), "http://localhost:9090");
-    auto user = co_await app.login(realm::App::Credentials::anonymous());
+    User user;
+    app.login(realm::App::Credentials::anonymous(), [&](auto u, auto opt_error) {
+        CHECK(!opt_error)
+        user = u;
+    });
     auto flx_sync_config = user.flexible_sync_configuration();
-
     realm::thread_safe_reference<realm::db<AllTypesObject, AllTypesObjectLink>> tsr;
+
     realm::AsyncOpenRealm<AllTypesObject, AllTypesObjectLink>(flx_sync_config, [&tsr, &sema](realm::thread_safe_reference<realm::db<AllTypesObject, AllTypesObjectLink>> t, std::exception_ptr e) {
         tsr = std::move(t);
         sema.release();
     });
+
     sema.acquire();
     auto realm = tsr.resolve();
 
-    bool assertion = realm.config.path.length() > 0;
-    CHECK(assertion);
+    realm.write([&](){
+        for (auto obj : realm.objects<AllTypesObject>()) {
+            realm.remove(obj);
+        }
+    });
+
+    CHECK_EQUALS(realm.objects<AllTypesObject>().size(), 0)
 
     co_return;
 }

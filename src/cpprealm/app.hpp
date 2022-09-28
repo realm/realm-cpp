@@ -26,7 +26,6 @@
 #include <cpprealm/type_info.hpp>
 #include <cpprealm/task.hpp>
 #include <cpprealm/db.hpp>
-#include <map>
 #include <utility>
 
 #if !__APPLE__
@@ -260,6 +259,9 @@ struct User {
     {
     }
 
+    /**
+     The state of the user object.
+     */
     enum class state : uint8_t {
         logged_out,
         logged_in,
@@ -275,6 +277,9 @@ struct User {
        return m_user->identity();
     }
 
+    /**
+     The current state of the user.
+     */
     state state() const
     {
         return static_cast<enum state>(m_user->state());
@@ -324,12 +329,19 @@ struct User {
         return config;
     }
 
-    task<std::optional<app_error>> log_out() {
-        auto error = co_await make_awaitable<util::Optional<app_error>>([&] (auto cb)
-                                                                        {
-                                                                            m_app->log_out(m_user, cb);
-                                                                        });
-        co_return error ? std::optional<app_error>{app_error(*error)} : std::nullopt;
+    task<void> log_out() {
+        try {
+            auto error = co_await make_awaitable<util::Optional<app_error>>([&](auto cb) {
+                m_app->log_out(m_user, cb);
+            });
+            if (error) {
+                throw *error;
+            }
+        } catch (std::exception& err) {
+            throw;
+        }
+
+        co_return;
     }
 
     void log_out(util::UniqueFunction<void(std::optional<app_error>)>&& callback)
@@ -353,9 +365,10 @@ struct User {
     task<std::optional<bson::Bson>> call_function(const std::string& name, const realm::bson::BsonArray& params)
     {
         try {
-            co_await make_awaitable<util::Optional<bson::Bson>>( [&](auto cb) {
+            auto opt_bson = co_await make_awaitable<util::Optional<bson::Bson>>( [&](auto cb) {
                 m_app->call_function(m_user, name, params, std::move(cb));
             });
+            co_return opt_bson;
         } catch (std::exception& err) {
             throw;
         }
@@ -369,9 +382,12 @@ struct User {
     task<void> refresh_custom_user_data()
     {
         try {
-            co_await make_awaitable<std::optional<app_error>>( [&](auto cb) {
+            auto error = co_await make_awaitable<std::optional<app_error>>( [&](auto cb) {
                 m_user->refresh_custom_data(std::move(cb));
             });
+            if (error) {
+                throw *error;
+            }
         } catch (std::exception& err) {
             throw;
         }
@@ -440,11 +456,11 @@ public:
         {
             return Credentials(app::AppCredentials::user_api_key(key));
         }
-        static Credentials facebook(const std::string access_token)
+        static Credentials facebook(const std::string& access_token)
         {
             return Credentials(app::AppCredentials::facebook(access_token));
         }
-        static Credentials apple(const std::string id_token)
+        static Credentials apple(const std::string& id_token)
         {
             return Credentials(app::AppCredentials::apple(id_token));
         }
@@ -456,11 +472,11 @@ public:
         {
             return Credentials(app::AppCredentials::google(std::move(id_token)));
         }
-        static Credentials custom(const std::string token)
+        static Credentials custom(const std::string& token)
         {
             return Credentials(app::AppCredentials::custom(token));
         }
-        static Credentials username_password(const std::string username, const std::string password)
+        static Credentials username_password(const std::string& username, const std::string& password)
         {
             return Credentials(app::AppCredentials::username_password(username, password));
         }
