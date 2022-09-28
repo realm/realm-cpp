@@ -59,20 +59,11 @@ add_library(cpprealm SHARED ${SOURCES} ${HEADERS})
 add_executable(cpprealm_exe_tests tests/tests.cpp tests/str_tests.cpp tests/list_tests.cpp tests/query_tests.cpp tests/test_utils.hpp tests/sync_test_utils.hpp tests/test_objects.hpp tests/test_utils.cpp tests/admin_utils.hpp tests/admin_utils.cpp)
 #add_test(cpprealm_tests)
 
-target_include_directories(cpprealm PRIVATE realm-core/src)
-target_include_directories(cpprealm PUBLIC /usr/local/include)
-target_include_directories(cpprealm PUBLIC /usr/include/c++/10)
 target_include_directories(cpprealm PUBLIC src)
-target_include_directories(cpprealm_exe_tests PUBLIC src)
-target_include_directories(cpprealm_exe_tests PUBLIC realm-core/src)
 
-target_sources(cpprealm PRIVATE ${SOURCES})
 if (APPLE)
     target_sources(cpprealm PRIVATE src/cpprealm/network_transport.mm)
 endif()
-set_property(TARGET cpprealm PROPERTY CXX_STANDARD 20)
-set_property(TARGET Storage PROPERTY REALM_BUILD_LIB_ONLY 1)
-target_compile_options(cpprealm PUBLIC -std=c++2a)
 
 # on Apple platforms we use the built-in CFRunLoop
 # everywhere else it's libuv, except UWP where it doesn't build
