@@ -236,9 +236,9 @@ static inline task<thread_safe_reference<db<Ts...>>> async_open(const db_config&
 }
 
 template<type_info::ObjectPersistable ...Ts>
-struct AsyncOpenRealm {
-    AsyncOpenRealm(db_config config,
-                   util::UniqueFunction<void(thread_safe_reference<db<Ts...>>, std::exception_ptr e)> &&callback) {
+struct async_open_realm {
+    async_open_realm(db_config config,
+                     util::UniqueFunction<void(thread_safe_reference<db<Ts...>>, std::exception_ptr e)> &&callback) {
         // TODO: Add these flags to core
 #if QT_CORE_LIB
         util::Scheduler::set_default_factory(util::make_qt);

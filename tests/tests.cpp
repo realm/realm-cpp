@@ -154,7 +154,7 @@ TEST(async_open_completion) {
     auto flx_sync_config = user.flexible_sync_configuration();
     realm::thread_safe_reference<realm::db<AllTypesObject, AllTypesObjectLink>> tsr;
 
-    realm::AsyncOpenRealm<AllTypesObject, AllTypesObjectLink>(flx_sync_config, [&tsr, &sema](realm::thread_safe_reference<realm::db<AllTypesObject, AllTypesObjectLink>> t, std::exception_ptr e) {
+    realm::async_open_realm<AllTypesObject, AllTypesObjectLink>(flx_sync_config, [&tsr, &sema](realm::thread_safe_reference<realm::db<AllTypesObject, AllTypesObjectLink>> t, std::exception_ptr e) {
         tsr = std::move(t);
         sema.release();
     });
