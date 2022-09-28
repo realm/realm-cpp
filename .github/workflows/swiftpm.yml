@@ -1,0 +1,47 @@
+name: SwiftPM Build
+
+env:
+  REALM_CI: true
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-12
+    name: ${{ matrix.platform }}, Xcode ${{ matrix.xcode }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - macOS
+          - macOS,variant=Mac Catalyst
+          - iOS
+          - iOS Simulator
+          - tvOS
+          - tvOS Simulator
+        xcode:
+          - '13.2.1'
+          - '14.0'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ matrix.xcode }}
+
+      - uses: ammaraskar/gcc-problem-matcher@master
+
+      - name: Build
+        run: |
+          # Xcode 13 can't build executable targets for non-macOS platforms
+          scheme=realm-cpp-sdk
+          if [[ "${{ matrix.platform }}" == macOS* ]] || [[ "${{ matrix.xcode }}" != 13.* ]]; then
+            scheme=realm-cpp-sdkTests
+          fi
+          xcodebuild -scheme $scheme -destination "generic/platform=${{ matrix.platform }}" -configuration Release

@@ -30,6 +30,8 @@ let testCxxSettings: [CXXSetting] = cxxSettings + [
     .unsafeFlags(["-lcurl"])
 ]
 
+let applePlatforms: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS]
+
 let cppSdkTarget: Target = .target(
     name: "realm-cpp-sdk",
     dependencies: [
@@ -41,17 +43,17 @@ let cppSdkTarget: Target = .target(
     publicHeadersPath: ".",
     cxxSettings: cxxSettings,
     linkerSettings: [
-        .linkedFramework("Foundation", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS])),
-        .linkedFramework("Security", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS])),
+        .linkedFramework("Foundation", .when(platforms: applePlatforms)),
+        .linkedFramework("Security", .when(platforms: applePlatforms)),
     ])
 
 let package = Package(
     name: "realm-cpp-sdk",
     platforms: [
-        .macOS(.v11),
-        .iOS(.v14),
-        .tvOS(.v9),
-        .watchOS(.v2)
+        .macOS(.v10_15),
+        .macCatalyst(.v13),
+        .iOS(.v13),
+        .tvOS(.v14),
     ],
     products: [
         .library(
@@ -83,19 +85,14 @@ let package = Package(
                 .copy("config_overrides.json")],
             cxxSettings: testCxxSettings + [
                 .define("REALM_DISABLE_METADATA_ENCRYPTION")
-            ],
-            linkerSettings: [
-                .linkedFramework("Foundation", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS]))
-            ]),
+            ]
+        ),
         .executableTarget(
             name: "helloworld",
             dependencies: ["realm-cpp-sdk"],
             path: "examples/cmake",
             cxxSettings: cxxSettings + [
                 .define("REALM_DISABLE_METADATA_ENCRYPTION")
-            ],
-            linkerSettings: [
-                .linkedFramework("Foundation", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS]))
             ]
         )
     ],
