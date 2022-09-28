@@ -35,7 +35,10 @@ struct thread_safe_reference<T> {
     : m_tsr(ThreadSafeReference(*object.m_object))
     {
     }
-
+    thread_safe_reference(ThreadSafeReference&& tsr)
+    : m_tsr(std::move(tsr))
+    {
+    }
     T resolve(std::shared_ptr<Realm> const&);
 private:
     realm::ThreadSafeReference m_tsr;

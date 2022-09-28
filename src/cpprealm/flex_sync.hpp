@@ -19,6 +19,8 @@
 #ifndef flex_sync_hpp
 #define flex_sync_hpp
 
+#include <realm/sync/subscriptions.hpp>
+
 namespace realm {
 
 // A SyncSubscription represents a single query that may be OR'd with other queries on the same object class to be
