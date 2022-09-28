@@ -329,6 +329,12 @@ struct User {
         return config;
     }
 
+    /**
+     Logs out the current user
+
+     The users state will be set to `Removed` is they are an anonymous user or `LoggedOut` if they are authenticated by an email / password or third party auth clients
+     If the logout request fails, this method will still clear local authentication state.
+    */
     task<void> log_out() {
         try {
             auto error = co_await make_awaitable<util::Optional<app_error>>([&](auto cb) {
@@ -344,6 +350,12 @@ struct User {
         co_return;
     }
 
+    /**
+     Logs out the current user
+
+     The users state will be set to `Removed` is they are an anonymous user or `LoggedOut` if they are authenticated by an email / password or third party auth clients
+     If the logout request fails, this method will still clear local authentication state.
+    */
     void log_out(util::UniqueFunction<void(std::optional<app_error>)>&& callback)
     {
         m_app->log_out(m_user, [cb = std::move(callback)](auto error) {
@@ -351,22 +363,41 @@ struct User {
         });
     }
 
+    /**
+     The custom data of the user.
+     This is configured in your Atlas App Services app.
+    */
     std::optional<bson::BsonDocument> custom_data()
     {
         return m_user->custom_data();
     }
 
-    void call_function(const std::string& name, const realm::bson::BsonArray& params,
+    /**
+     Calls the Atlas App Services function with the provided name and arguments.
+
+     @param name The name of the Atlas App Services function to be called.
+     @param arguments The `BsonArray` of arguments to be provided to the function.
+     @param callback The completion handler to call when the function call is complete.
+     This handler is executed on the thread the method was called from.
+    */
+    void call_function(const std::string& name, const realm::bson::BsonArray& arguments,
                        util::UniqueFunction<void(std::optional<bson::Bson>&&, std::optional<app_error>)> callback)
     {
-        m_app->call_function(name, params, std::move(callback));
+        m_app->call_function(name, arguments, std::move(callback));
     }
 
-    task<std::optional<bson::Bson>> call_function(const std::string& name, const realm::bson::BsonArray& params)
+    /**
+     Calls the Atlas App Services function with the provided name and arguments.
+
+     @param name The name of the Atlas App Services function to be called.
+     @param arguments The `BsonArray` of arguments to be provided to the function.
+     @returns An optional Bson object containing the servers response.
+    */
+    task<std::optional<bson::Bson>> call_function(const std::string& name, const realm::bson::BsonArray& arguments)
     {
         try {
             auto opt_bson = co_await make_awaitable<util::Optional<bson::Bson>>( [&](auto cb) {
-                m_app->call_function(m_user, name, params, std::move(cb));
+                m_app->call_function(m_user, name, arguments, std::move(cb));
             });
             co_return opt_bson;
         } catch (std::exception& err) {
@@ -374,11 +405,17 @@ struct User {
         }
     }
 
+    /**
+     Refresh a user's custom data. This will, in effect, refresh the user's auth session.
+    */
     void refresh_custom_user_data(util::UniqueFunction<void(std::optional<app_error>)> callback)
     {
         m_user->refresh_custom_data(std::move(callback));
     }
-
+    
+    /**
+     Refresh a user's custom data. This will, in effect, refresh the user's auth session.
+    */
     task<void> refresh_custom_user_data()
     {
         try {
