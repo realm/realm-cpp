@@ -52,9 +52,9 @@ let package = Package(
     name: "realm-cpp-sdk",
     platforms: [
         .macOS(.v10_15),
-        .macCatalyst(.v14),
+        .macCatalyst(.v13),
         .iOS(.v13),
-        .tvOS(.v14),
+        .tvOS(.v13),
     ],
     products: [
         .library(
