@@ -24,9 +24,10 @@
 #include <Foundation/NSURLSession.h>
 
 namespace realm::internal {
-    void DefaultTransport::send_request_to_server(app::Request &&request, app::HttpCompletion &&completion_block) {
-        NSMutableURLRequest *urlRequest = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:[NSString stringWithCString:request.url.c_str()
-                                                                                                         encoding:NSUTF8StringEncoding]]];
+    void DefaultTransport::send_request_to_server(app::Request &&request, app::HttpCompletion&& completion_block) {
+        NSURL* url = [NSURL URLWithString:[NSString stringWithCString:request.url.c_str()
+                                                             encoding:NSUTF8StringEncoding]];
+        NSMutableURLRequest *urlRequest = [[NSMutableURLRequest alloc] initWithURL:url];
 
         switch (request.method) {
             case app::HttpMethod::get:
@@ -46,21 +47,18 @@ namespace realm::internal {
                 break;
         }
 
-        if (!request.headers.empty()) {
-            for (auto& header : request.headers) {
-                [urlRequest addValue:[NSString stringWithCString:header.second.c_str() encoding:NSUTF8StringEncoding]
-                  forHTTPHeaderField:[NSString stringWithCString:header.first.c_str() encoding:NSUTF8StringEncoding]];
-            }
+        for (auto& header : request.headers) {
+            [urlRequest addValue:[NSString stringWithCString:header.second.c_str() encoding:NSUTF8StringEncoding]
+              forHTTPHeaderField:[NSString stringWithCString:header.first.c_str() encoding:NSUTF8StringEncoding]];
         }
         if (request.method != app::HttpMethod::get && !request.body.empty()) {
             [urlRequest setHTTPBody:[[NSString stringWithCString:request.body.c_str() encoding:NSUTF8StringEncoding]
                     dataUsingEncoding:NSUTF8StringEncoding]];
         }
         NSURLSession *session = [NSURLSession sharedSession];
-        auto completion_ptr = completion_block.release();
         NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:urlRequest
                                                     completionHandler:[request = std::move(request),
-                                                                       completion_ptr](NSData *data, NSURLResponse *response, NSError *error) {
+                                                                       completion_ptr = completion_block.release()](NSData *data, NSURLResponse *response, NSError *error) {
             util::UniqueFunction<void(const app::Request&, const app::Response&)> completion(completion_ptr);
             auto httpResponse = (NSHTTPURLResponse *)response;
             std::string body;

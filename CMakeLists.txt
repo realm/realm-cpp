@@ -57,8 +57,6 @@ target_include_directories(cpprealm_exe_tests PUBLIC realm-core/src)
 
 target_sources(cpprealm PRIVATE ${SOURCES})
 if (APPLE)
-#    enable_language(OBJC)
-#    enable_language(OBJCXX)
     target_sources(cpprealm PRIVATE src/cpprealm/network_transport.mm)
 endif()
 set_property(TARGET cpprealm PROPERTY CXX_STANDARD 20)
