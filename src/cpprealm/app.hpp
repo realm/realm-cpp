@@ -187,6 +187,7 @@ public:
 #endif
 } // anonymous namespace
 
+// Represents an error state from the server.
 struct app_error {
 
     app_error(realm::app::AppError error) : m_error(error)
@@ -239,7 +240,7 @@ private:
 // MARK: User
 
 /**
- A `User` instance represents a single Realm App user account.
+ A `user` instance represents a single Realm App user account.
 
  A user may have one or more credentials associated with it. These credentials
  uniquely identify the user to the authentication provider, and are used to sign
@@ -248,13 +249,13 @@ private:
  Note that user objects are only vended out via SDK APIs, and cannot be directly
  initialized. User objects can be accessed from any thread.
  */
-struct User {
-    User() = default;
-    User(const User&) = default;
-    User(User&&) = default;
-    User& operator=(const User&) = default;
-    User& operator=(User&&) = default;
-    explicit User(std::shared_ptr<SyncUser> user, std::shared_ptr<app::App> app)
+struct user {
+    user() = default;
+    user(const user&) = default;
+    user(user&&) = default;
+    user& operator=(const user&) = default;
+    user& operator=(user&&) = default;
+    explicit user(std::shared_ptr<SyncUser> user, std::shared_ptr<app::App> app)
     : m_user(std::move(user)), m_app(std::move(app))
     {
     }
@@ -306,15 +307,6 @@ struct User {
     {
         return m_user->refresh_token();
     }
-
-    /**
-     Open a partition-based realm instance for the given url.
-
-     @param partition_value The  value the Realm is partitioned on.
-     @return A `thread_safe_reference` to the synchronized db.
-     */
-    template <type_info::ObjectBasePersistable ...Ts, typename T>
-    task<thread_safe_reference<db<Ts...>>> realm(const T& partition_value) const requires (type_info::StringPersistable<T> || type_info::IntPersistable<T>);
 
     db_config flexible_sync_configuration() const
     {
@@ -412,7 +404,7 @@ struct User {
     {
         m_user->refresh_custom_data(std::move(callback));
     }
-    
+
     /**
      Refresh a user's custom data. This will, in effect, refresh the user's auth session.
     */
@@ -433,9 +425,9 @@ struct User {
     std::shared_ptr<app::App> m_app;
     std::shared_ptr<SyncUser> m_user;
 };
-static_assert((int)User::state::logged_in  == (int)SyncUser::State::LoggedIn);
-static_assert((int)User::state::logged_out == (int)SyncUser::State::LoggedOut);
-static_assert((int)User::state::removed    == (int)SyncUser::State::Removed);
+static_assert((int)user::state::logged_in  == (int)SyncUser::State::LoggedIn);
+static_assert((int)user::state::logged_out == (int)SyncUser::State::LoggedOut);
+static_assert((int)user::state::removed    == (int)SyncUser::State::Removed);
 
 class App {
     static std::unique_ptr<util::Logger> defaultSyncLogger(util::Logger::Level level) {
@@ -484,48 +476,48 @@ public:
         }, config);
     }
 
-    struct Credentials {
-        static Credentials anonymous()
+    struct credentials {
+        static credentials anonymous()
         {
-            return Credentials(app::AppCredentials::anonymous());
+            return credentials(app::AppCredentials::anonymous());
         }
-        static Credentials api_key(const std::string& key)
+        static credentials api_key(const std::string& key)
         {
-            return Credentials(app::AppCredentials::user_api_key(key));
+            return credentials(app::AppCredentials::user_api_key(key));
         }
-        static Credentials facebook(const std::string& access_token)
+        static credentials facebook(const std::string& access_token)
         {
-            return Credentials(app::AppCredentials::facebook(access_token));
+            return credentials(app::AppCredentials::facebook(access_token));
         }
-        static Credentials apple(const std::string& id_token)
+        static credentials apple(const std::string& id_token)
         {
-            return Credentials(app::AppCredentials::apple(id_token));
+            return credentials(app::AppCredentials::apple(id_token));
         }
-        static Credentials google(app::AuthCode auth_code)
+        static credentials google(app::AuthCode auth_code)
         {
-            return Credentials(app::AppCredentials::google(std::move(auth_code)));
+            return credentials(app::AppCredentials::google(std::move(auth_code)));
         }
-        static Credentials google(app::IdToken id_token)
+        static credentials google(app::IdToken id_token)
         {
-            return Credentials(app::AppCredentials::google(std::move(id_token)));
+            return credentials(app::AppCredentials::google(std::move(id_token)));
         }
-        static Credentials custom(const std::string& token)
+        static credentials custom(const std::string& token)
         {
-            return Credentials(app::AppCredentials::custom(token));
+            return credentials(app::AppCredentials::custom(token));
         }
-        static Credentials username_password(const std::string& username, const std::string& password)
+        static credentials username_password(const std::string& username, const std::string& password)
         {
-            return Credentials(app::AppCredentials::username_password(username, password));
+            return credentials(app::AppCredentials::username_password(username, password));
         }
-        static Credentials function(const bson::BsonDocument& payload)
+        static credentials function(const bson::BsonDocument& payload)
         {
-            return Credentials(app::AppCredentials::function(payload));
+            return credentials(app::AppCredentials::function(payload));
         }
-        Credentials() = delete;
-        Credentials(const Credentials& credentials) = default;
-        Credentials(Credentials&&) = default;
+        credentials() = delete;
+        credentials(const credentials& credentials) = default;
+        credentials(credentials&&) = default;
     private:
-        explicit Credentials(app::AppCredentials&& credentials)
+        explicit credentials(app::AppCredentials&& credentials)
         : m_credentials(credentials)
         {
         }
@@ -545,43 +537,26 @@ public:
         co_return;
     }
 
-    task<User> login(const Credentials& credentials) {
+    task<user> login(const credentials& credentials) {
         try {
-            auto user = co_await make_awaitable<std::shared_ptr<SyncUser>>([this, credentials = std::move(credentials)](auto cb) {
+            auto u = co_await make_awaitable<std::shared_ptr<SyncUser>>([this, credentials = std::move(credentials)](auto cb) {
                 m_app->log_in_with_credentials(credentials.m_credentials, cb);
             });
-            co_return std::move(User{std::move(user), m_app});
+            co_return std::move(user{std::move(u), m_app});
         } catch (std::exception& err) {
             throw;
         }
     }
 
-    void login(const Credentials& credentials, util::UniqueFunction<void(User, std::optional<app_error>)>&& callback) {
-        m_app->log_in_with_credentials(credentials.m_credentials, [cb = std::move(callback), this](auto& user, auto error) {
-            cb(User{std::move(user), m_app}, error ? std::optional<app_error>{app_error(*error)} : std::nullopt);
+    void login(const credentials& credentials, util::UniqueFunction<void(user, std::optional<app_error>)>&& callback) {
+        m_app->log_in_with_credentials(credentials.m_credentials, [cb = std::move(callback), this](auto& u, auto error) {
+            cb(user{std::move(u), m_app}, error ? std::optional<app_error>{app_error(*error)} : std::nullopt);
         });
     }
 
 private:
     std::shared_ptr<app::App> m_app;
 };
-
-// MARK: Impl
-
-template <type_info::ObjectBasePersistable ...Ts, typename T>
-task<thread_safe_reference<db<Ts...>>> User::realm(const T& partition_value) const requires (type_info::StringPersistable<T> || type_info::IntPersistable<T>)
-{
-    db_config config;
-    config.sync_config = std::make_shared<SyncConfig>(m_user, bson::Bson(partition_value));
-    config.sync_config->error_handler = [](const std::shared_ptr<SyncSession>& session, const SyncError& error) {
-        std::cerr<<"sync error: "<<error.message<<std::endl;
-    };
-    config.path = m_user->sync_manager()->path_for_realm(*config.sync_config);
-    config.sync_config->client_resync_mode = realm::ClientResyncMode::Manual;
-    config.sync_config->stop_policy = SyncSessionStopPolicy::AfterChangesUploaded;
-    auto tsr = co_await async_open<Ts...>(std::move(config));
-    co_return tsr;
-}
 
 }
 #endif /* Header_h */

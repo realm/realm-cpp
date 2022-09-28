@@ -76,80 +76,23 @@ static std::string create_jwt(const std::string& appId)
     return jwtPayload + "." + signature;
 }
 
-TEST(all) {
-    auto realm = realm::open<Person, Dog>({.path=path});
-
-    auto person = Person();
-    person.name = "John";
-    person.age = 17;
-    person.dog = Dog{.name = "Fido"};
-
-    realm.write([&realm, &person] {
-        realm.add(person);
-    });
-
-    CHECK_EQUALS(*person.name, "John");
-    CHECK_EQUALS(*person.age, 17);
-    auto dog = **person.dog;
-    CHECK_EQUALS(*dog.name, "Fido");
-
-    bool did_run = false;
-    auto token = person.observe<Person>([&did_run](auto&& change) {
-        CHECK_EQUALS(change.property.name, "age")
-        CHECK_EQUALS(std::any_cast<int>(*change.property.new_value), 19);
-        did_run = true;
-    });
-
-    realm.write([&person] {
-        person.age += 2;
-    });
-
-    CHECK_EQUALS(*person.age, 19);
-
-    auto persons = realm.objects<Person>();
-    CHECK_EQUALS(persons.size(), 1)
-
-    std::vector<Person> people;
-    std::copy(persons.begin(), persons.end(), std::back_inserter(people));
-    for (auto& person:people) {
-        realm.write([&person, &realm]{
-            realm.remove(person);
-        });
-    }
-    CHECK_EQUALS(did_run, true)
-
-    CHECK_EQUALS(persons.size(), 0);
-    auto app = realm::App("car-wsney");
-    auto user = co_await app.login(realm::App::Credentials::anonymous());
-
-    auto tsr = co_await user.realm<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>("foo");
-    auto synced_realm = tsr.resolve();
-    synced_realm.write([&synced_realm]() {
-        synced_realm.add(AllTypesObject{._id=1});
-    });
-
-    CHECK_EQUALS(*synced_realm.object<AllTypesObject>(1)._id, 1);
-
-    co_return;
-}
-
 TEST(log_out_anonymous) {
     auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"}), "http://localhost:9090");
 
-    auto user1 = co_await app.login(realm::App::Credentials::anonymous());
-    CHECK_EQUALS((user1.state() == realm::User::state::logged_in), true);
+    auto user1 = co_await app.login(realm::App::credentials::anonymous());
+    CHECK_EQUALS((user1.state() == realm::user::state::logged_in), true);
 
     co_await user1.log_out();
-    CHECK_EQUALS((int)user1.state(), (int)realm::User::state::removed);
+    CHECK_EQUALS((int)user1.state(), (int)realm::user::state::removed);
 
     // Test with completion handler
-    auto user2 = co_await app.login(realm::App::Credentials::anonymous());
+    auto user2 = co_await app.login(realm::App::credentials::anonymous());
     bool did_run = false;
     user2.log_out([&did_run](auto opt_error) {
         did_run = true;
     });
     CHECK(did_run);
-    CHECK_EQUALS((int)user2.state(), (int)realm::User::state::removed);
+    CHECK_EQUALS((int)user2.state(), (int)realm::user::state::removed);
 
     co_return;
 }
@@ -158,20 +101,20 @@ TEST(log_out_username_password) {
     auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"}), "http://localhost:9090");
 
     co_await app.register_user("foo@mongodb.com", "foobar");
-    auto user1 = co_await app.login(realm::App::Credentials::username_password("foo@mongodb.com", "foobar"));
-    CHECK_EQUALS((user1.state() == realm::User::state::logged_in), true);
+    auto user1 = co_await app.login(realm::App::credentials::username_password("foo@mongodb.com", "foobar"));
+    CHECK_EQUALS((user1.state() == realm::user::state::logged_in), true);
 
     co_await user1.log_out();
-    CHECK_EQUALS((int)user1.state(), (int)realm::User::state::logged_out);
+    CHECK_EQUALS((int)user1.state(), (int)realm::user::state::logged_out);
 
     // Test with completion handler
-    auto user2 = co_await app.login(realm::App::Credentials::username_password("foo@mongodb.com", "foobar"));
+    auto user2 = co_await app.login(realm::App::credentials::username_password("foo@mongodb.com", "foobar"));
     bool did_run = false;
     user2.log_out([&did_run](auto opt_error) {
         did_run = true;
     });
     CHECK(did_run);
-    CHECK_EQUALS((int)user2.state(), (int)realm::User::state::logged_out);
+    CHECK_EQUALS((int)user2.state(), (int)realm::user::state::logged_out);
 
     co_return;
 }
@@ -180,22 +123,22 @@ TEST(auth_providers_completion_handler) {
     auto app_id = Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"});
     auto app = realm::App(app_id, "http://localhost:9090");
 
-    auto run_login = [&app](realm::App::Credentials&& credentials) {
+    auto run_login = [&app](realm::App::credentials&& credentials) {
         bool did_run = false;
-        realm::User user;
-        app.login(credentials, [&did_run, &user](realm::User u, std::optional<realm::app_error> e) {
+        realm::user user;
+        app.login(credentials, [&did_run, &user](realm::user u, std::optional<realm::app_error> e) {
             user = std::move(u);
             CHECK(!e);
             did_run = true;
         });
         CHECK(did_run);
-        CHECK_EQUALS((user.state() == realm::User::state::logged_in), true);
+        CHECK_EQUALS((user.state() == realm::user::state::logged_in), true);
     };
 
     co_await app.register_user("foo@mongodb.com", "foobar");
-    run_login(realm::App::Credentials::username_password("foo@mongodb.com", "foobar"));
-    run_login(realm::App::Credentials::anonymous());
-    run_login(realm::App::Credentials::custom(create_jwt(app_id)));
+    run_login(realm::App::credentials::username_password("foo@mongodb.com", "foobar"));
+    run_login(realm::App::credentials::anonymous());
+    run_login(realm::App::credentials::custom(create_jwt(app_id)));
 
     co_return;
 }
@@ -203,8 +146,8 @@ TEST(auth_providers_completion_handler) {
 TEST(async_open_completion) {
     std::binary_semaphore sema{0};
     auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"}), "http://localhost:9090");
-    User user;
-    app.login(realm::App::Credentials::anonymous(), [&](auto u, auto opt_error) {
+    realm::user user;
+    app.login(realm::App::credentials::anonymous(), [&](auto u, auto opt_error) {
         CHECK(!opt_error)
         user = u;
     });
@@ -233,7 +176,7 @@ TEST(async_open_completion) {
 TEST(custom_user_data) {
     auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"}), "http://localhost:9090");
     co_await app.register_user("foo@mongodb.com", "foobar");
-    auto user = co_await app.login(realm::App::Credentials::username_password("foo@mongodb.com", "foobar"));
+    auto user = co_await app.login(realm::App::credentials::username_password("foo@mongodb.com", "foobar"));
 
     user.call_function("updateUserData", {bson::BsonDocument({{"name", "john"}})}, [](auto&& res, auto err) {
         CHECK(!err);
@@ -572,14 +515,14 @@ TEST(login_username_password) {
     auto app_id = Admin::Session::shared.create_app();
     auto app = realm::App(app_id, "http://localhost:9090");
     try {
-        co_await app.login(realm::App::Credentials::apple("id_token"));
+        co_await app.login(realm::App::credentials::apple("id_token"));
     } catch (const std::exception& err) {
         // TODO: Log error check
     } catch (...) {
     }
 
     co_await app.register_user("foo@mongodb.com", "foobar");
-    auto user = co_await app.login(realm::App::Credentials::username_password("foo@mongodb.com", "foobar"));
+    auto user = co_await app.login(realm::App::credentials::username_password("foo@mongodb.com", "foobar"));
     CHECK(!user.access_token().empty())
     co_return;
 }
