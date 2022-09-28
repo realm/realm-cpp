@@ -162,7 +162,7 @@ public:
 private:
     template <type_info::ObjectBasePersistable ...Ts>
     friend struct db;
-    SyncSubscriptionSet(sync::SubscriptionSet&& subscription_set, SharedRealm realm) : m_subscription_set(std::move(subscription_set)), m_realm(realm) {}
+    SyncSubscriptionSet(sync::SubscriptionSet&& subscription_set, SharedRealm realm) : m_subscription_set(std::move(subscription_set)), m_realm(std::move(realm)) {}
     sync::SubscriptionSet m_subscription_set;
     SharedRealm m_realm;
 };

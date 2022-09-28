@@ -383,6 +383,8 @@ TEST(login_username_password) {
     try {
         co_await app.login(realm::App::Credentials::apple("id_token"));
     } catch (const std::exception& err) {
+        // TODO: Log error check
+    } catch (...) {
     }
 
     co_await app.register_user("foo@mongodb.com", "foobar");

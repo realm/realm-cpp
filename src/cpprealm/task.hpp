@@ -45,7 +45,7 @@ struct task {
 
         // Place to hold the results produced by the coroutine
         T data;
-
+        std::exception_ptr m_err;
         // Invoked when we first enter a coroutine. We initialize the precursor handle
         // with a resume point from where the task is ultimately suspended
         task get_return_object() noexcept
@@ -60,7 +60,7 @@ struct task {
         // If an exception was thrown in the coroutine body, we would handle it here
         void unhandled_exception() {
             if (auto err = std::current_exception())
-                std::rethrow_exception(err);
+                m_err = err;
         }
 
         // The coroutine is about to complete (via co_return or reaching the end of the coroutine body).
@@ -104,8 +104,11 @@ struct task {
         return handle.done();
     }
 
-    T await_resume() const noexcept {
+    T await_resume() const {
         // The returned value here is what `co_await our_task` evaluates to
+        if (auto err = handle.promise().m_err) {
+            std::rethrow_exception(err);
+        }
         return std::move(handle.promise().data);
     }
 

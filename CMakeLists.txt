@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.16)
 
 project(realm)
 
@@ -56,6 +56,9 @@ target_include_directories(cpprealm_exe_tests PUBLIC src)
 target_include_directories(cpprealm_exe_tests PUBLIC realm-core/src)
 
 target_sources(cpprealm PRIVATE ${SOURCES})
+if (APPLE)
+    target_sources(cpprealm PRIVATE src/cpprealm/network_transport.mm)
+endif()
 set_property(TARGET cpprealm PROPERTY CXX_STANDARD 20)
 set_property(TARGET Storage PROPERTY REALM_BUILD_LIB_ONLY 1)
 target_compile_options(cpprealm PUBLIC -std=c++2a)

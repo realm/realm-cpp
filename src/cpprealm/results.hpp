@@ -24,8 +24,9 @@
 #include <cpprealm/type_info.hpp>
 #include <realm/object-store/results.hpp>
 #include <realm/query.hpp>
-namespace realm {
+#include <cpprealm/object.hpp>
 
+namespace realm {
 
 template <type_info::ObjectBasePersistable T>
 struct query : public T {
