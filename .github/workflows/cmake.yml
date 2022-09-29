@@ -15,6 +15,7 @@ jobs:
     name: macOS ${{ matrix.configuration }} (preset ${{ matrix.preset }}, Xcode ${{ matrix.xcode }})
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         preset:
           - default

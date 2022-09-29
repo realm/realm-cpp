@@ -15,6 +15,7 @@ jobs:
     name: ${{ matrix.platform }} ${{ matrix.configuration }}, Xcode ${{ matrix.xcode }}
     strategy:
       fail-fast: false
+      max-parallel: 6
       matrix:
         platform:
           - macOS
@@ -63,7 +64,6 @@ jobs:
           path: .build/derived Data
           key: swiftpm-derivedData-${{ steps.platform-escaped.outputs.value }}-${{ matrix.configuration }}-xcode-${{ matrix.xcode }}-derivedData-cache-${{ hashFiles('Package.resolved') }}
           restore-keys: |
-            swiftpm-derivedData-${{ steps.platform-escaped.outputs.value }}-${{ matrix.configuration }}-xcode-${{ matrix.xcode }}-derivedData-cache-${{ hashFiles('Package.resolved') }}
             swiftpm-derivedData-${{ steps.platform-escaped.outputs.value }}-${{ matrix.configuration }}-xcode-${{ matrix.xcode }}-derivedData-cache-
 
       # https://stackoverflow.com/questions/53753511/is-it-possible-to-copy-an-xcode-derived-data-cache
