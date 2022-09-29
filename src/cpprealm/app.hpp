@@ -246,8 +246,7 @@ private:
  uniquely identify the user to the authentication provider, and are used to sign
  into a MongoDB Realm user account.
 
- Note that user objects are only vended out via SDK APIs, and cannot be directly
- initialized. User objects can be accessed from any thread.
+ user objects can be accessed from any thread.
  */
 struct user {
     user() = default;
@@ -324,7 +323,8 @@ struct user {
     /**
      Logs out the current user
 
-     The users state will be set to `Removed` is they are an anonymous user or `LoggedOut` if they are authenticated by an email / password or third party auth clients
+     The users state will be set to `Removed` is they are an anonymous user or `LoggedOut`
+     if they are authenticated by an email / password or third party auth clients
      If the logout request fails, this method will still clear local authentication state.
     */
     task<void> log_out() {
@@ -345,7 +345,8 @@ struct user {
     /**
      Logs out the current user
 
-     The users state will be set to `Removed` is they are an anonymous user or `LoggedOut` if they are authenticated by an email / password or third party auth clients
+     The users state will be set to `Removed` is they are an anonymous user or `LoggedOut`
+     if they are authenticated by an email / password or third party auth clients
      If the logout request fails, this method will still clear local authentication state.
     */
     void log_out(util::UniqueFunction<void(std::optional<app_error>)>&& callback)

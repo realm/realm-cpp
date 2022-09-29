@@ -26,7 +26,6 @@
 #include <map>
 #include <numeric>
 #include <thread>
-#include <semaphore>
 #include <string>
 #include <sstream>
 #include <vector>

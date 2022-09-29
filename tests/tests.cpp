@@ -14,8 +14,6 @@
 #include <openssl/hmac.h>
 #endif
 
-#include <semaphore>
-
 static std::string HMAC_SHA256(std::string_view key, std::string_view data)
 {
 #if REALM_PLATFORM_APPLE
@@ -76,6 +74,19 @@ static std::string create_jwt(const std::string& appId)
     return jwtPayload + "." + signature;
 }
 
+task<void> test_async(std::function<void(std::function<void(std::optional<realm::app_error>)>)> fn) {
+    try {
+        auto error = co_await make_awaitable<std::optional<realm::app_error>>( [&](std::function<void(std::optional<realm::app_error>)> cb) {
+            fn(std::move(cb));
+        });
+        if (error) {
+            throw *error;
+        }
+    } catch (std::exception& err) {
+        throw;
+    }
+}
+
 TEST(log_out_anonymous) {
     auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"}), "http://localhost:9090");
 
@@ -86,12 +97,20 @@ TEST(log_out_anonymous) {
     CHECK_EQUALS((int)user1.state(), (int)realm::user::state::removed);
 
     // Test with completion handler
-    auto user2 = co_await app.login(realm::App::credentials::anonymous());
-    bool did_run = false;
-    user2.log_out([&did_run](auto opt_error) {
-        did_run = true;
+    realm::user user2;
+    co_await test_async([&](auto cb) {
+        app.login(realm::App::credentials::anonymous(), [&, cb](realm::user&& u, std::optional<realm::app_error> e) {
+            user2 = std::move(u);
+            CHECK(!e);
+            cb(e);
+        });
     });
-    CHECK(did_run);
+    co_await test_async([&](auto cb) {
+        user2.log_out([cb](auto e) {
+            CHECK(!e);
+            cb(e);
+        });
+    });
     CHECK_EQUALS((int)user2.state(), (int)realm::user::state::removed);
 
     co_return;
@@ -109,11 +128,12 @@ TEST(log_out_username_password) {
 
     // Test with completion handler
     auto user2 = co_await app.login(realm::App::credentials::username_password("foo@mongodb.com", "foobar"));
-    bool did_run = false;
-    user2.log_out([&did_run](auto opt_error) {
-        did_run = true;
+    co_await test_async([&](auto cb) {
+        user2.log_out([cb](auto opt_error) {
+            CHECK(!opt_error);
+            cb(opt_error);
+        });
     });
-    CHECK(did_run);
     CHECK_EQUALS((int)user2.state(), (int)realm::user::state::logged_out);
 
     co_return;
@@ -123,43 +143,53 @@ TEST(auth_providers_completion_handler) {
     auto app_id = Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"});
     auto app = realm::App(app_id, "http://localhost:9090");
 
-    auto run_login = [&app](realm::App::credentials&& credentials) {
-        bool did_run = false;
+    auto run_login = [&app](realm::App::credentials&& credentials) -> task<void> {
         realm::user user;
-        app.login(credentials, [&did_run, &user](realm::user u, std::optional<realm::app_error> e) {
-            user = std::move(u);
-            CHECK(!e);
-            did_run = true;
+        co_await test_async([&](auto cb) {
+            app.login(credentials, [&user, cb](realm::user u, std::optional<realm::app_error> e) {
+                user = std::move(u);
+                CHECK(!e);
+                cb(e);
+            });
         });
-        CHECK(did_run);
+
         CHECK_EQUALS((user.state() == realm::user::state::logged_in), true);
+        co_return;
     };
 
     co_await app.register_user("foo@mongodb.com", "foobar");
-    run_login(realm::App::credentials::username_password("foo@mongodb.com", "foobar"));
-    run_login(realm::App::credentials::anonymous());
-    run_login(realm::App::credentials::custom(create_jwt(app_id)));
+    co_await run_login(realm::App::credentials::username_password("foo@mongodb.com", "foobar"));
+    co_await run_login(realm::App::credentials::anonymous());
+    co_await run_login(realm::App::credentials::custom(create_jwt(app_id)));
 
     co_return;
 }
 
 TEST(async_open_completion) {
-    std::binary_semaphore sema{0};
-    auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink>({"str_col", "_id"}), "http://localhost:9090");
+    auto app = realm::App(Admin::Session::shared.create_app<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({"str_col", "_id"}), "http://localhost:9090");
     realm::user user;
-    app.login(realm::App::credentials::anonymous(), [&](auto u, auto opt_error) {
-        CHECK(!opt_error)
-        user = u;
+    co_await test_async([&](auto cb) {
+        app.login(realm::App::credentials::anonymous(), [&, cb](auto u, auto opt_error) {
+            CHECK(!opt_error)
+            user = std::move(u);
+            cb(opt_error);
+        });
     });
     auto flx_sync_config = user.flexible_sync_configuration();
-    realm::thread_safe_reference<realm::db<AllTypesObject, AllTypesObjectLink>> tsr;
+    realm::thread_safe_reference<realm::db<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>> tsr;
 
-    realm::async_open_realm<AllTypesObject, AllTypesObjectLink>(flx_sync_config, [&tsr, &sema](realm::thread_safe_reference<realm::db<AllTypesObject, AllTypesObjectLink>> t, std::exception_ptr e) {
+    std::condition_variable cv;
+    std::mutex m;
+    bool ready = false;
+    std::unique_lock lk(m);
+    realm::async_open_realm<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config, [&](realm::thread_safe_reference<realm::db<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>> t, std::exception_ptr e) {
         tsr = std::move(t);
-        sema.release();
+        ready = true;
+        lk.unlock();
+        cv.notify_one();
     });
 
-    sema.acquire();
+    cv.wait(lk, [&ready]{return ready;});
     auto realm = tsr.resolve();
 
     realm.write([&](){
@@ -178,12 +208,18 @@ TEST(custom_user_data) {
     co_await app.register_user("foo@mongodb.com", "foobar");
     auto user = co_await app.login(realm::App::credentials::username_password("foo@mongodb.com", "foobar"));
 
-    user.call_function("updateUserData", {bson::BsonDocument({{"name", "john"}})}, [](auto&& res, auto err) {
-        CHECK(!err);
+    co_await test_async([&](auto cb) {
+        user.call_function("updateUserData", {bson::BsonDocument({{"name", "john"}})}, [cb](auto&& res, auto err) {
+            CHECK(!err);
+            cb(err);
+        });
     });
 
-    user.refresh_custom_user_data([](auto opt_err) {
-        CHECK(!opt_err)
+    co_await test_async([&](auto cb) {
+        user.refresh_custom_user_data([cb](auto opt_err) {
+            CHECK(!opt_err)
+            cb(opt_err);
+        });
     });
 
     auto name = (*user.custom_data())["name"];

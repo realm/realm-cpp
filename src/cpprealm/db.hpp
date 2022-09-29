@@ -249,8 +249,7 @@ struct async_open_realm {
         std::shared_ptr<AsyncOpenTask> async_open_task = Realm::get_synchronized_realm({
                                                                                                .path = config.path,
                                                                                                .schema_mode = SchemaMode::AdditiveExplicit,
-                                                                                               .schema = Schema(
-                                                                                                       schema),
+                                                                                               .schema = Schema(schema),
                                                                                                .schema_version = 0,
                                                                                                .sync_config = config.sync_config
                                                                                        });
