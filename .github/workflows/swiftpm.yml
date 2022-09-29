@@ -30,6 +30,8 @@ jobs:
         configuration:
           - Debug
           - Release
+        exclude:
+          - configuration: ${{ github.event_name == 'pull_request' && 'Debug' || 'none' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -50,9 +52,6 @@ jobs:
 
       - uses: ammaraskar/gcc-problem-matcher@master
 
-      - name: Resolve package dependencies
-        run: xcodebuild -resolvePackageDependencies
-
       - name: Compute cache key
         id: platform-escaped
         shell: pwsh
@@ -61,8 +60,8 @@ jobs:
       - name: Cache Derived Data
         uses: actions/cache@v2
         with:
-          path: .build/derived Data
-          key: swiftpm-derivedData-${{ steps.platform-escaped.outputs.value }}-${{ matrix.configuration }}-xcode-${{ matrix.xcode }}-derivedData-cache-${{ hashFiles('Package.resolved') }}
+          path: .build/derivedData
+          key: swiftpm-derivedData-${{ steps.platform-escaped.outputs.value }}-${{ matrix.configuration }}-xcode-${{ matrix.xcode }}-derivedData-cache-${{ github.sha }}
           restore-keys: |
             swiftpm-derivedData-${{ steps.platform-escaped.outputs.value }}-${{ matrix.configuration }}-xcode-${{ matrix.xcode }}-derivedData-cache-
 

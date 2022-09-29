@@ -15,7 +15,6 @@ jobs:
     name: macOS ${{ matrix.configuration }} (preset ${{ matrix.preset }}, Xcode ${{ matrix.xcode }})
     strategy:
       fail-fast: false
-      max-parallel: 2
       matrix:
         preset:
           - default
@@ -26,6 +25,8 @@ jobs:
         configuration:
           - Debug
           - Release
+        exclude:
+          - configuration: ${{ github.event_name == 'pull_request' && 'Debug' || 'none' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -75,6 +76,8 @@ jobs:
         configuration:
           - Debug
           - Release
+        exclude:
+          - configuration: ${{ github.event_name == 'pull_request' && 'Debug' || 'none' }}
 
     steps:
       - name: Checkout
