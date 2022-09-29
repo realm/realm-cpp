@@ -32,6 +32,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          # git-restore-mtime-bare uses the ref log to find the correct timestamp
+          # for each file. This requires a full git history. The default value (1)
+          # creates a shallow checkout.
+          fetch-depth: 0
+
+      # Restore timestamps so that DerivedData caching can work across runs
+      - name: Restore timestamps
+        uses: chetan/git-restore-mtime-action@v1
 
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
@@ -39,6 +48,27 @@ jobs:
           xcode-version: ${{ matrix.xcode }}
 
       - uses: ammaraskar/gcc-problem-matcher@master
+
+      - name: Resolve package dependencies
+        run: xcodebuild -resolvePackageDependencies
+
+      - name: Compute cache key
+        id: platform-escaped
+        shell: pwsh
+        run: echo "::set-output name=value::$([uri]::EscapeDataString('${{ matrix.platform }}'))"
+
+      - name: Cache Derived Data
+        uses: actions/cache@v2
+        with:
+          path: .build/derived Data
+          key: swiftpm-derivedData-${{ steps.platform-escaped.outputs.value }}-${{ matrix.configuration }}-xcode-${{ matrix.xcode }}-derivedData-cache-${{ hashFiles('Package.resolved') }}
+          restore-keys: |
+            swiftpm-derivedData-${{ steps.platform-escaped.outputs.value }}-${{ matrix.configuration }}-xcode-${{ matrix.xcode }}-derivedData-cache-${{ hashFiles('Package.resolved') }}
+            swiftpm-derivedData-${{ steps.platform-escaped.outputs.value }}-${{ matrix.configuration }}-xcode-${{ matrix.xcode }}-derivedData-cache-
+
+      # https://stackoverflow.com/questions/53753511/is-it-possible-to-copy-an-xcode-derived-data-cache
+      - name: Avoid inode changes for DerivedData
+        run: defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
 
       - name: Build
         run: |
@@ -48,7 +78,7 @@ jobs:
             scheme=realm-cpp-sdkTests
           fi
           xcodebuild -scheme $scheme -destination "generic/platform=${{ matrix.platform }}" -configuration ${{ matrix.configuration }} -derivedDataPath .build/derivedData
-      
+
       - name: Open a tmate debug session
         if: ${{ failure() && runner.debug }}
         uses: mxschmitt/action-tmate@v3
