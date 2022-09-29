@@ -12,7 +12,7 @@ on:
 jobs:
   build-macos:
     runs-on: macos-12
-    name: macOS (preset ${{ matrix.preset }}, Xcode ${{ matrix.xcode }})
+    name: macOS ${{ matrix.configuration }} (preset ${{ matrix.preset }}, Xcode ${{ matrix.xcode }})
     strategy:
       fail-fast: false
       matrix:
@@ -22,6 +22,9 @@ jobs:
         xcode:
           - '13.2.1'
           - '14.0'
+        configuration:
+          - Debug
+          - Release
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -47,7 +50,7 @@ jobs:
         run: cmake --preset ${{ matrix.preset }} -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF}
 
       - name: Compile
-        run: cmake --build --preset ${{ matrix.preset }} --config Release
+        run: cmake --build --preset ${{ matrix.preset }} --config ${{ matrix.configuration }}
 
       - name: Open a tmate debug session
         if: ${{ failure() && runner.debug }}
@@ -57,7 +60,7 @@ jobs:
 
   build-linux:
     runs-on: ubuntu-22.04
-    name: Linux (${{ matrix.compiler.name }} ${{ matrix.compiler.version }})
+    name: Linux ${{ matrix.configuration }} (${{ matrix.compiler.name }} ${{ matrix.compiler.version }})
     strategy:
       fail-fast: false
       matrix:
@@ -68,6 +71,9 @@ jobs:
             version: 12
           # - name: clang
           #   version: 14
+        configuration:
+          - Debug
+          - Release
 
     steps:
       - name: Checkout
@@ -123,7 +129,7 @@ jobs:
         run: cmake --preset linux -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF}
 
       - name: Compile
-        run: cmake --build --preset linux --config Release
+        run: cmake --build --preset linux --config ${{ matrix.configuration }}
 
       - name: Open a tmate debug session
         if: ${{ failure() && runner.debug }}

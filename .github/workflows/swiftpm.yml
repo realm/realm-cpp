@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     runs-on: macos-12
-    name: ${{ matrix.platform }}, Xcode ${{ matrix.xcode }}
+    name: ${{ matrix.platform }} ${{ matrix.configuration }}, Xcode ${{ matrix.xcode }}
     strategy:
       fail-fast: false
       matrix:
@@ -26,6 +26,9 @@ jobs:
         xcode:
           - '13.2.1'
           - '14.0'
+        configuration:
+          - Debug
+          - Release
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -44,7 +47,7 @@ jobs:
           if [[ "${{ matrix.platform }}" == macOS* ]] || [[ "${{ matrix.xcode }}" != 13.* ]]; then
             scheme=realm-cpp-sdkTests
           fi
-          xcodebuild -scheme $scheme -destination "generic/platform=${{ matrix.platform }}" -configuration Release
+          xcodebuild -scheme $scheme -destination "generic/platform=${{ matrix.platform }}" -configuration ${{ matrix.configuration }} -derivedDataPath .build/derivedData
       
       - name: Open a tmate debug session
         if: ${{ failure() && runner.debug }}
