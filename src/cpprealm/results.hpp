@@ -185,9 +185,9 @@ struct results {
         }
 
     private:
-        std::vector<u_int64_t> to_vector(const IndexSet& index_set)
+        std::vector<uint64_t> to_vector(const IndexSet& index_set)
         {
-            auto vector = std::vector<u_int64_t>();
+            auto vector = std::vector<uint64_t>();
             for (auto index : index_set.as_indexes()) {
                 vector.push_back(index);
             }

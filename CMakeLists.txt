@@ -2,11 +2,16 @@ cmake_minimum_required(VERSION 3.16)
 
 project(realm)
 
+if("$ENV{REALM_CI}" OR REALM_USE_CCACHE)
+    include(cmake/ccache.cmake)
+endif()
+
 # Project-wide build flags
 set(CMAKE_CXX_STANDARD 20)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
 
-add_subdirectory(realm-core)
+set(REALM_BUILD_LIB_ONLY ON)
+add_subdirectory(realm-core EXCLUDE_FROM_ALL)
 
 set(REALM_INCLUDE_CERTS 0)
 set(REALM_NO_CONFIG)
@@ -48,20 +53,7 @@ add_library(cpprealm SHARED ${SOURCES} ${HEADERS})
 add_executable(cpprealm_exe_tests tests/tests.cpp tests/str_tests.cpp tests/list_tests.cpp tests/query_tests.cpp tests/test_utils.hpp tests/sync_test_utils.hpp tests/test_objects.hpp tests/test_utils.cpp tests/admin_utils.hpp tests/admin_utils.cpp)
 #add_test(cpprealm_tests)
 
-target_include_directories(cpprealm PRIVATE realm-core/src)
-target_include_directories(cpprealm PUBLIC /usr/local/include)
-target_include_directories(cpprealm PUBLIC /usr/include/c++/10)
 target_include_directories(cpprealm PUBLIC src)
-target_include_directories(cpprealm_exe_tests PUBLIC src)
-target_include_directories(cpprealm_exe_tests PUBLIC realm-core/src)
-
-target_sources(cpprealm PRIVATE ${SOURCES})
-if (APPLE)
-    target_sources(cpprealm PRIVATE src/cpprealm/network_transport.mm)
-endif()
-set_property(TARGET cpprealm PROPERTY CXX_STANDARD 20)
-set_property(TARGET Storage PROPERTY REALM_BUILD_LIB_ONLY 1)
-target_compile_options(cpprealm PUBLIC -std=c++2a)
 
 # on Apple platforms we use the built-in CFRunLoop
 # everywhere else it's libuv, except UWP where it doesn't build
@@ -69,11 +61,13 @@ if(NOT APPLE AND NOT WINDOWS_STORE)
     set(REALM_HAVE_UV 1)
 
     option(REALM_FETCH_MISSING_DEPENDENCIES "Download missing dependencies with CMake's FetchContent where possible" ON)
+    list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/realm-core/tools/cmake")
     if(REALM_FETCH_MISSING_DEPENDENCIES)
         find_package(LibUV)
     else()
         find_package(LibUV REQUIRED)
     endif()
+    list(POP_BACK CMAKE_MODULE_PATH)
     if(LibUV_FOUND)
         set(libuv_target LibUV::LibUV)
     elseif(REALM_FETCH_MISSING_DEPENDENCIES)
@@ -93,12 +87,11 @@ if(NOT APPLE AND NOT WINDOWS_STORE)
         set(libuv_target uv_a)
     endif()
     
-    target_link_libraries(cpprealm ${libuv_target})
-    get_property(libuv_include_dir TARGET ${libuv_target} PROPERTY INCLUDE_DIRECTORIES)
+    target_link_libraries(cpprealm PUBLIC ${libuv_target})
 
     target_compile_definitions(cpprealm PUBLIC REALM_DISABLE_METADATA_ENCRYPTION=1 REALM_ENABLE_SYNC=1)
     target_compile_definitions(ObjectStore PUBLIC REALM_HAVE_UV=1)
-    target_include_directories(ObjectStore PRIVATE ${libuv_include_dir})
+    target_link_libraries(ObjectStore PUBLIC ${libuv_target})
 
 else()
     target_compile_definitions(cpprealm PUBLIC REALM_ENABLE_SYNC=1)
@@ -108,7 +101,7 @@ if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL
 target_compile_options(cpprealm PUBLIC -fcoroutines)
 endif()
 
-target_link_libraries(cpprealm Storage ObjectStore Sync z)
+target_link_libraries(cpprealm PUBLIC Realm::ObjectStore)
 
 set_target_properties(cpprealm PROPERTIES PUBLIC_HEADER "${HEADERS}")
 
@@ -117,18 +110,20 @@ install(TARGETS cpprealm
 set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
 
 if (APPLE)
-    find_library(FoundationLib CoreFoundation)
-    message("LIB: ${FoundationLib}")
-    list(APPEND CMAKE_SYSTEM_FRAMEWORK_PATH
-            ${CMAKE_OSX_SYSROOT_PATH}/Library/Frameworks
-            ${CMAKE_OSX_SYSROOT_PATH}/Network/Library/Frameworks
-            ${CMAKE_OSX_SYSROOT_PATH}/System/Library/Frameworks
-            )
-    target_link_libraries(cpprealm "-framework CoreFoundation")
+    target_sources(cpprealm PRIVATE 
+        src/cpprealm/internal/apple/network_transport.mm
+    )
 else()
-    target_link_libraries(cpprealm curl)
+    find_package(CURL REQUIRED)
+    target_link_libraries(cpprealm PUBLIC
+        CURL::libcurl
+    )
+    target_sources(cpprealm PRIVATE
+        src/cpprealm/internal/curl/network_transport.cpp
+    )
 endif()
-target_link_libraries(cpprealm_exe_tests PUBLIC cpprealm z curl ObjectStore Sync Storage "-framework CoreFoundation" "-framework CFNetwork")
+
+target_link_libraries(cpprealm_exe_tests cpprealm)
 
 file(COPY tests/setup_baas.rb DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY tests/dependencies.list DESTINATION ${CMAKE_BINARY_DIR})

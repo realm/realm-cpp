@@ -27,31 +27,34 @@ let testCxxSettings: [CXXSetting] = cxxSettings + [
     // relative to the package root, while Xcode resolves them
     // relative to the target root, so we need both.
     .headerSearchPath("../src"),
-    .unsafeFlags(["-lcurl"])
 ]
+
+let applePlatforms: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS]
 
 let cppSdkTarget: Target = .target(
     name: "realm-cpp-sdk",
     dependencies: [
         .product(name: "RealmCore", package: "realm-core"),
         .product(name: "RealmQueryParser", package: "realm-core"),
-        .byNameItem(name: "libcurl", condition: .when(platforms: [.linux]))
     ],
     path: "src/",
+    exclude: [
+        "cpprealm/internal/curl",
+    ],
     publicHeadersPath: ".",
     cxxSettings: cxxSettings,
     linkerSettings: [
-        .linkedFramework("Foundation", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS])),
-        .linkedFramework("Security", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS])),
+        .linkedFramework("Foundation", .when(platforms: applePlatforms)),
+        .linkedFramework("Security", .when(platforms: applePlatforms)),
     ])
 
 let package = Package(
     name: "realm-cpp-sdk",
     platforms: [
-        .macOS(.v11),
-        .iOS(.v14),
-        .tvOS(.v9),
-        .watchOS(.v2)
+        .macOS(.v10_15),
+        .macCatalyst(.v13),
+        .iOS(.v13),
+        .tvOS(.v13),
     ],
     products: [
         .library(
@@ -64,18 +67,10 @@ let package = Package(
         .package(url: "https://github.com/realm/realm-core", .exact("12.8.0")),
     ],
     targets: [
-        .systemLibrary(
-            name: "libcurl",
-            pkgConfig: "libcurl",
-            providers: [
-                .apt(["libcurl4-openssl-dev"]),
-                .brew(["curl"])
-            ]
-        ),
         cppSdkTarget,
         .executableTarget(
             name: "realm-cpp-sdkTests",
-            dependencies: ["realm-cpp-sdk", "libcurl"],
+            dependencies: ["realm-cpp-sdk"],
             path: "tests",
             resources: [
                 .copy("setup_baas.rb"),
@@ -83,19 +78,14 @@ let package = Package(
                 .copy("config_overrides.json")],
             cxxSettings: testCxxSettings + [
                 .define("REALM_DISABLE_METADATA_ENCRYPTION")
-            ],
-            linkerSettings: [
-                .linkedFramework("Foundation", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS]))
-            ]),
+            ]
+        ),
         .executableTarget(
             name: "helloworld",
             dependencies: ["realm-cpp-sdk"],
             path: "examples/cmake",
             cxxSettings: cxxSettings + [
                 .define("REALM_DISABLE_METADATA_ENCRYPTION")
-            ],
-            linkerSettings: [
-                .linkedFramework("Foundation", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS]))
             ]
         )
     ],

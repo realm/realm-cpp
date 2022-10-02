@@ -1,0 +1,142 @@
+name: CMake Build
+
+env:
+  REALM_CI: true
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-macos:
+    runs-on: macos-12
+    name: macOS ${{ matrix.configuration }} (preset ${{ matrix.preset }}, Xcode ${{ matrix.xcode }})
+    strategy:
+      fail-fast: false
+      matrix:
+        preset:
+          - default
+          - macos
+        xcode:
+          - '13.2.1'
+          - '14.0'
+        configuration:
+          - Debug
+          - Release
+        exclude:
+          - configuration: ${{ github.event_name == 'pull_request' && 'Debug' || 'none' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Setup Ccache
+        uses: hendrikmuhs/ccache-action@v1.1
+        with:
+          key: ccache-macos-${{ matrix.preset }}-${{ matrix.xcode }}
+
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ matrix.xcode }}
+
+      - uses: ammaraskar/gcc-problem-matcher@master
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }} -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF}
+
+      - name: Compile
+        run: cmake --build --preset ${{ matrix.preset }} --config ${{ matrix.configuration }}
+
+      - name: Open a tmate debug session
+        if: ${{ failure() && runner.debug }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          timeout-minutes: 15
+
+  build-linux:
+    runs-on: ubuntu-22.04
+    name: Linux ${{ matrix.configuration }} (${{ matrix.compiler.name }} ${{ matrix.compiler.version }})
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+          - name: gcc
+            version: 11
+          - name: gcc
+            version: 12
+          # - name: clang
+          #   version: 14
+        configuration:
+          - Debug
+          - Release
+        exclude:
+          - configuration: ${{ github.event_name == 'pull_request' && 'Debug' || 'none' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Setup Ccache
+        uses: hendrikmuhs/ccache-action@v1.1
+        with:
+          key: ccache-linux-${{ matrix.compiler.name }}-${{ matrix.compiler.version }}
+
+      - name: Get vcpkg submodule commit sha
+        id: vcpkg_cache_key
+        working-directory: realm-core/tools/vcpkg/ports
+        shell: bash
+        run: echo "::set-output name=commit::$(git rev-parse HEAD)" 
+      - name: Setup Vcpkg
+        continue-on-error: true
+        uses: friendlyanon/setup-vcpkg@v1
+        with:
+          path: realm-core/tools/vcpkg/ports
+          cache-key: vcpkg-linux-${{ matrix.compiler.name }}-${{ matrix.compiler.version }}-${{ hashFiles('./realm-core/tools/vcpkg/vcpkg.json') }}-${{ steps.vcpkg_cache_key.outputs.commit }}
+          cache-restore-keys: vcpkg-linux-${{ matrix.compiler.name }}-${{ matrix.compiler.version }}-
+      
+      - name: Install Linux Dependencies
+        run: | 
+          sudo apt-get install -y \
+            libcurl4-openssl-dev \
+            libssl-dev \
+            libuv1-dev \
+            ninja-build \
+            zlib1g-dev \
+            ${{ matrix.compiler.name }}-${{ matrix.compiler.version }}
+
+      - name: Setup GCC ${{ matrix.compiler.version }}
+        if: matrix.compiler.name == 'gcc'
+        run: |
+          sudo apt-get install -y g++-${{ matrix.compiler.version }}
+          sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-${{ matrix.compiler.version }} 100
+          sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-${{ matrix.compiler.version }} 100
+
+      - name: Setup Clang ${{ matrix.compiler.version }}
+        if: matrix.compiler.name == 'clang'
+        run: |
+          sudo apt-get install -y clang-${{ matrix.compiler.version }}
+          sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-${{ matrix.compiler.version }} 100
+          sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-${{ matrix.compiler.version }} 100
+
+      - uses: ammaraskar/gcc-problem-matcher@master
+
+      - name: Configure
+        run: cmake --preset linux -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF}
+
+      - name: Compile
+        run: cmake --build --preset linux --config ${{ matrix.configuration }}
+
+      - name: Open a tmate debug session
+        if: ${{ failure() && runner.debug }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          timeout-minutes: 15

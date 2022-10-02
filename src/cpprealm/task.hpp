@@ -24,10 +24,10 @@
 
 #ifdef __cpp_lib_coroutine
 #include <coroutine>
-using namespace std;
+namespace coro = std;
 #elif __has_include(<experimental/coroutine>)
 #include <experimental/coroutine>
-using namespace std::experimental;
+namespace coro = std::experimental;
 #else
 #error "no coroutine support"
 #endif
@@ -41,7 +41,7 @@ struct task {
         // Keep a coroutine handle referring to the parent coroutine if any. That is, if we
         // co_await a coroutine within another coroutine, this handle will be used to continue
         // working from where we left off.
-        coroutine_handle<> precursor;
+        coro::coroutine_handle<> precursor;
 
         // Place to hold the results produced by the coroutine
         T data;
@@ -50,12 +50,12 @@ struct task {
         // with a resume point from where the task is ultimately suspended
         task get_return_object() noexcept
         {
-            return {coroutine_handle<promise_type>::from_promise(*this)};
+            return {coro::coroutine_handle<promise_type>::from_promise(*this)};
         }
 
         // When the caller enters the coroutine, we have the option to suspend immediately.
         // Let's choose not to do that here
-        suspend_never initial_suspend() const noexcept { return {}; }
+        coro::suspend_never initial_suspend() const noexcept { return {}; }
 
         // If an exception was thrown in the coroutine body, we would handle it here
         void unhandled_exception() {
@@ -79,12 +79,12 @@ struct task {
                 // Returning a coroutine handle here resumes the coroutine it refers to (needed for
                 // continuation handling). If we wanted, we could instead enqueue that coroutine handle
                 // instead of immediately resuming it by enqueuing it and returning void.
-                coroutine_handle<> await_suspend(coroutine_handle<promise_type> h) noexcept {
+                coro::coroutine_handle<> await_suspend(coro::coroutine_handle<promise_type> h) noexcept {
                     auto precursor = h.promise().precursor;
                     if (precursor) {
                         return precursor;
                     }
-                    return noop_coroutine();
+                    return coro::noop_coroutine();
                 }
             };
             return awaiter{};
@@ -112,7 +112,7 @@ struct task {
         return std::move(handle.promise().data);
     }
 
-    void await_suspend(coroutine_handle<> coroutine) const noexcept {
+    void await_suspend(coro::coroutine_handle<> coroutine) const noexcept {
         // The coroutine itself is being suspended (async work can beget other async work)
         // Record the argument as the continuation point when this is resumed later. See
         // the final_suspend awaiter on the promise_type above for where this gets used
@@ -120,7 +120,7 @@ struct task {
     }
 
     // This handle is assigned to when the coroutine itself is suspended (see await_suspend above)
-    coroutine_handle<promise_type> handle;
+    coro::coroutine_handle<promise_type> handle;
 };
 
 template <>
@@ -130,18 +130,18 @@ struct task<void> {
         // Keep a coroutine handle referring to the parent coroutine if any. That is, if we
         // co_await a coroutine within another coroutine, this handle will be used to continue
         // working from where we left off.
-        coroutine_handle<> precursor;
+        coro::coroutine_handle<> precursor;
 
         // Invoked when we first enter a coroutine. We initialize the precursor handle
         // with a resume point from where the task is ultimately suspended
         task get_return_object() noexcept
         {
-            return {coroutine_handle<promise_type>::from_promise(*this)};
+            return {coro::coroutine_handle<promise_type>::from_promise(*this)};
         }
 
         // When the caller enters the coroutine, we have the option to suspend immediately.
         // Let's choose not to do that here
-        suspend_never initial_suspend() const noexcept {
+        coro::suspend_never initial_suspend() const noexcept {
             return {};
         }
 
@@ -167,12 +167,12 @@ struct task<void> {
                 // Returning a coroutine handle here resumes the coroutine it refers to (needed for
                 // continuation handling). If we wanted, we could instead enqueue that coroutine handle
                 // instead of immediately resuming it by enqueuing it and returning void.
-                coroutine_handle<> await_suspend(coroutine_handle<promise_type> h) noexcept {
+                coro::coroutine_handle<> await_suspend(coro::coroutine_handle<promise_type> h) noexcept {
                     auto precursor = h.promise().precursor;
                     if (precursor) {
                         return precursor;
                     }
-                    return noop_coroutine();
+                    return coro::noop_coroutine();
                 }
             };
             return awaiter{};
@@ -195,7 +195,7 @@ struct task<void> {
         // The returned value here is what `co_await our_task` evaluates to
     }
 
-    void await_suspend(coroutine_handle<> coroutine) const noexcept {
+    void await_suspend(coro::coroutine_handle<> coroutine) const noexcept {
         // The coroutine itself is being suspended (async work can beget other async work)
         // Record the argument as the continuation point when this is resumed later. See
         // the final_suspend awaiter on the promise_type above for where this gets used
@@ -203,7 +203,7 @@ struct task<void> {
     }
 
     // This handle is assigned to when the coroutine itself is suspended (see await_suspend above)
-    coroutine_handle<promise_type> handle;
+    coro::coroutine_handle<promise_type> handle;
 };
 #define FWD(x) static_cast<decltype(x)&&>(x)
 
@@ -227,7 +227,7 @@ auto make_awaitable(F&& func) {
     struct Awaiter {
         Awaiter& operator=(Awaiter&&) = delete;
         bool await_ready() { return {}; }
-        void await_suspend(coroutine_handle<> handle) {
+        void await_suspend(coro::coroutine_handle<> handle) {
             func([handle = handle, this] (auto&&... args) mutable
                  {
                 try {
