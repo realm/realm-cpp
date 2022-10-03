@@ -19,6 +19,8 @@
 #ifndef flex_sync_hpp
 #define flex_sync_hpp
 
+#include <future>
+
 #include <realm/sync/subscriptions.hpp>
 
 namespace realm {
@@ -62,9 +64,10 @@ public:
     // Inserts a new subscription into the set if one does not exist already.
     // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
     // for the templated class type.
-    template <type_info::ObjectBasePersistable T>
-    void add(const std::string& name, std::optional<std::function<rbool(T&)>> query_fn = std::nullopt) {
-        auto schema = *m_realm->schema().find(T::schema::name);
+    template <typename T>
+    std::enable_if_t<type_info::ObjectBasePersistableConcept<T>::value>
+            add(const std::string& name, std::optional<std::function<rbool(T&)>> query_fn = std::nullopt) {
+        auto schema = *m_realm->schema().find(T::schema.name);
         auto& group = m_realm->read_group();
         auto table_ref = group.get_table(schema.table_key);
         auto builder = Query(table_ref);
@@ -103,8 +106,9 @@ public:
     // Will throw if subscription does not exist.
     // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
     // for the templated class type.
-    template <type_info::ObjectBasePersistable T>
-    void update_subscription(const std::string& name, std::optional<std::function<rbool(T&)>> query_fn = std::nullopt) {
+    template <typename T>
+    std::enable_if_t<type_info::ObjectBasePersistableConcept<T>::value>
+    update_subscription(const std::string& name, std::optional<std::function<rbool(T&)>> query_fn = std::nullopt) {
         remove(name);
         add(name, query_fn);
     }
@@ -145,6 +149,7 @@ public:
         return std::nullopt;
     }
 
+#ifdef __cpp_coroutines
     // Asynchronously performs any transactions (add/remove/update) to the subscription set within the lambda and
     // commits them to the server.
     task<bool> update(std::function<void(MutableSyncSubscriptionSet&)> fn) {
@@ -161,8 +166,24 @@ public:
         });
         co_return success;
     }
+#else
+    std::promise<bool> update(std::function<void(MutableSyncSubscriptionSet&)> fn) {
+        auto mutable_set = MutableSyncSubscriptionSet(m_subscription_set.make_mutable_copy(), m_realm);
+        fn(mutable_set);
+        m_subscription_set = mutable_set.get_subscription_set().commit();
+
+        std::promise<bool> p;
+        m_subscription_set
+                    .get_state_change_notification(realm::sync::SubscriptionSet::State::Complete)
+                    .get_async([&p](realm::StatusWith<realm::sync::SubscriptionSet::State> state) mutable noexcept {
+                        p.set_value(state == sync::SubscriptionSet::State::Complete);
+                    });
+
+        return p;
+    }
+#endif
 private:
-    template <type_info::ObjectBasePersistable ...Ts>
+    template <typename ...Ts>
     friend struct db;
     SyncSubscriptionSet(sync::SubscriptionSet&& subscription_set, SharedRealm realm) : m_subscription_set(std::move(subscription_set)), m_realm(std::move(realm)) {}
     sync::SubscriptionSet m_subscription_set;

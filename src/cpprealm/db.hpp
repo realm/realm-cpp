@@ -25,7 +25,6 @@
 #include <cpprealm/type_info.hpp>
 #include <cpprealm/results.hpp>
 #include <cpprealm/task.hpp>
-#include <cpprealm/thread_safe_reference.hpp>
 #include <cpprealm/flex_sync.hpp>
 
 #include <realm/object-store/binding_context.hpp>
@@ -35,6 +34,7 @@
 #include <realm/object-store/sync/async_open_task.hpp>
 #include <realm/object-store/util/scheduler.hpp>
 #include <utility>
+#include "thread_safe_reference.hpp"
 
 #ifdef QT_CORE_LIB
 #include <QStandardPaths>
@@ -96,7 +96,7 @@ struct db_config {
     std::shared_ptr<SyncConfig> sync_config;
 private:
     friend struct User;
-    template <type_info::ObjectBasePersistable ...Ts>
+    template <typename ...Ts>
     friend struct db;
 };
 
@@ -106,13 +106,14 @@ static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::make
 static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::Scheduler::make_default;
 #endif
 
-template <type_info::ObjectBasePersistable ...Ts>
+
+template <typename ...Ts>
 struct db {
     explicit db(db_config config = {}) : config(std::move(config))
     {
         std::vector<ObjectSchema> schema;
 
-        (schema.push_back(Ts::schema::to_core_schema()), ...);
+        (schema.push_back(Ts::schema.to_core_schema()), ...);
 
         m_realm = Realm::get_shared_realm({
             .path = this->config.path,
@@ -136,24 +137,26 @@ struct db {
         m_realm->commit_transaction();
     }
 
-    template <type_info::ObjectPersistable T>
-    void add(T& object) requires (std::is_same_v<T, Ts> || ...)
+    template <typename T>
+    void add(T& object)
     {
-        auto actual_schema = *m_realm->schema().find(T::schema::name);
+        static_assert(type_info::ObjectPersistableConcept<T>::value && (std::is_same_v<T, Ts> || ...));
+        auto actual_schema = *m_realm->schema().find(T::schema.name);
         auto& group = m_realm->read_group();
         auto table = group.get_table(actual_schema.table_key);
-        T::schema::add(object, table, m_realm);
+        T::schema.add(object, table, m_realm);
     }
 
-    template <type_info::ObjectPersistable T>
-    void add(T&& object) requires (std::is_same_v<T, Ts> || ...)
+    template <typename T>
+    void add(T&& object)
     {
         add(object);
     }
 
-    template <type_info::ObjectPersistable T>
-    void remove(T& object) requires (std::is_same_v<T, Ts> || ...)
+    template <typename T>
+    void remove(T& object)
     {
+        static_assert(type_info::ObjectPersistableConcept<T>::value && (std::is_same_v<T, Ts> || ...));
         REALM_ASSERT(object.is_managed());
         auto& group = m_realm->read_group();
         auto schema = object.m_object->get_object_schema();
@@ -161,24 +164,27 @@ struct db {
         table->remove_object(object.m_object->obj().get_key());
     }
 
-    template <type_info::ObjectPersistable T>
-    results<T> objects() requires (std::is_same_v<T, Ts> || ...)
+    template <typename T>
+    results<T> objects()
     {
-        return results<T>(Results(m_realm, m_realm->read_group().get_table(ObjectStore::table_name_for_object_type(T::schema::name))));
+        static_assert(type_info::ObjectPersistableConcept<T>::value && (std::is_same_v<T, Ts> || ...),
+                "Object type not available in this realm");
+        return results<T>(Results(m_realm, m_realm->read_group().get_table(ObjectStore::table_name_for_object_type(T::schema.name))));
     }
 
-    template <type_info::ObjectPersistable T>
-    T object(const typename T::schema::PrimaryKeyProperty::Result& primary_key) requires (std::is_same_v<T, Ts> || ...) {
-        auto table = m_realm->read_group().get_table(ObjectStore::table_name_for_object_type(T::schema::name));
-        return T::schema::create(table->get_object_with_primary_key(primary_key),
+    template <typename T>
+    T object(const typename decltype(T::schema)::PrimaryKeyProperty::Result& primary_key) {
+        static_assert(type_info::ObjectPersistableConcept<T>::value && (std::is_same_v<T, Ts> || ...));
+        auto table = m_realm->read_group().get_table(ObjectStore::table_name_for_object_type(T::schema.name));
+        return T::schema.create(table->get_object_with_primary_key(primary_key),
                                  m_realm);
     }
 
-    template <type_info::ObjectPersistable T>
-    T resolve(thread_safe_reference<T>&& tsr) const requires (std::is_same_v<T, Ts> || ...)
+    template <typename T>
+    T resolve(thread_safe_reference<T>&& tsr) const
     {
         Object object = tsr.m_tsr.template resolve<Object>(m_realm);
-        return T::schema::create(object.obj(), object.realm());
+        return T::schema.create(object.obj(), object.realm());
     }
 
 #if QT_CORE_LIB
@@ -196,14 +202,12 @@ private:
         config.sync_config = realm->config().sync_config;
     }
     friend struct object;
-    template <typename ...Vs>
-    friend task<thread_safe_reference<db<Vs...>>> async_open(db_config config);
-    template <typename T>
+    template <typename T, typename>
     friend struct thread_safe_reference;
     SharedRealm m_realm;
 };
 
-template <type_info::ObjectBasePersistable ...Ts>
+template <typename ...Ts>
 static db<Ts...> open(db_config config = {})
 {
     // TODO: Add these flags to core
@@ -213,27 +217,29 @@ static db<Ts...> open(db_config config = {})
     return db<Ts...>(std::move(config));
 }
 
-template <type_info::ObjectBasePersistable ...Ts>
-static inline task<thread_safe_reference<db<Ts...>>> async_open(const db_config& config) {
+template <typename ...Ts>
+static inline std::promise<thread_safe_reference<db<Ts...>>> async_open(const db_config& config) {
     // TODO: Add these flags to core
 #if QT_CORE_LIB
     util::Scheduler::set_default_factory(util::make_qt);
 #endif
     std::vector<ObjectSchema> schema;
-    (schema.push_back(Ts::schema::to_core_schema()), ...);
-    
-    auto tsr = co_await make_awaitable<ThreadSafeReference>([config, schema](auto cb) {
-        std::shared_ptr<AsyncOpenTask> async_open_task = Realm::get_synchronized_realm({
-            .path = config.path,
-            .schema_mode = SchemaMode::AdditiveExplicit,
-            .schema = Schema(schema),
-            .schema_version = 0,
-            .sync_config = config.sync_config
-        });
-        async_open_task->start(cb);
-    });
-    co_return thread_safe_reference<db<Ts...>>(std::move(tsr));
-}
+    (schema.push_back(Ts::schema.to_core_schema()), ...);
 
+    std::promise<thread_safe_reference<db<Ts...>>> p;
+
+    std::shared_ptr<AsyncOpenTask> async_open_task = Realm::get_synchronized_realm({
+                                                                                           .path = config.path,
+                                                                                           .schema_mode = SchemaMode::AdditiveExplicit,
+                                                                                           .schema = Schema(schema),
+                                                                                           .schema_version = 0,
+                                                                                           .sync_config = config.sync_config
+                                                                                   });
+    async_open_task->start([&p](auto tsr, auto ex) {
+        if (ex) p.set_exception(ex);
+        else p.set_value(thread_safe_reference<db<Ts...>>(std::move(tsr)));
+    });
+    return p;
+}
 }
 #endif /* realm_realm_hpp */

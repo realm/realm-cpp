@@ -6,12 +6,12 @@
 
 using namespace realm;
 
-template<type_info::ObjectBasePersistable Cls, type_info::ObjectBasePersistable ...Ts>
-void validate_equals(db<Ts...>& realm, uint equal_count, std::function<rbool(Cls&)> expr) {
+template<typename Cls, typename ...Ts>
+void validate_equals(db<Ts...>& realm, u_int equal_count, std::function<rbool(Cls&)> expr) {
     auto results = realm.template objects<Cls>().where([expr](auto& obj) {
         return expr(obj);
     });
-    CHECK_EQUALS(results.size(), equal_count)
+    CHECK_EQUALS(results.size(), equal_count);
 }
 
 TEST(tsq_basic_comparison) {
@@ -71,8 +71,6 @@ TEST(tsq_basic_comparison) {
     validate_equals<AllTypesObject>(realm, 0U, [&obj2](auto& o) { return o.date_col != obj2.date_col; });
     validate_equals<AllTypesObject>(realm, 1U, [&obj2](auto& o) { return o.uuid_col == obj2.uuid_col; });
     validate_equals<AllTypesObject>(realm, 0U, [&obj2](auto& o) { return o.uuid_col != obj2.uuid_col; });
-
-    co_return;
 }
 
 TEST(tsq_greater_less_than) {
@@ -130,8 +128,6 @@ TEST(tsq_greater_less_than) {
     validate_equals<AllTypesObject>(realm, 1U, [&date, &obj2](auto& o) { return o.date_col >= obj2.date_col; });
     validate_equals<AllTypesObject>(realm, 0U, [&date, &obj2](auto& o) { return o.date_col < obj2.date_col; });
     validate_equals<AllTypesObject>(realm, 1U, [&date, &obj2](auto& o) { return o.date_col <= obj2.date_col; });
-
-    co_return;
 }
 
 TEST(tsq_compound) {
@@ -161,6 +157,4 @@ TEST(tsq_compound) {
         return person.age == 100 || person.name.contains("oh") && person.name != "Foo";
     });
     CHECK_EQUALS(results.size(), 1);
-
-    co_return;
 }

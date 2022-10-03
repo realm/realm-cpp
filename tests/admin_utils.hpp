@@ -352,7 +352,7 @@ struct Admin {
             return session;
         }
 
-        template <type_info::ObjectBasePersistable ...Ts>
+        template <typename ...Ts>
         [[nodiscard]] std::string create_app(bson::BsonArray queryable_fields = {}) const {
             auto info = static_cast<bson::BsonDocument>(apps.post({{"name", "test"}}));
             auto app_id = static_cast<std::string>(info["_id"]);
@@ -421,7 +421,7 @@ struct Admin {
             bson::BsonDocument schema_ids;
             bson::BsonArray asymmetric_tables;
             std::vector<ObjectSchema> schema;
-            (schema.push_back(Ts::schema::to_core_schema()), ...);
+            (schema.push_back(Ts::schema.to_core_schema()), ...);
             for (auto& os : schema) {
                 if (os.table_type == ObjectSchema::ObjectType::TopLevelAsymmetric) {
                     asymmetric_tables.push_back(os.name);

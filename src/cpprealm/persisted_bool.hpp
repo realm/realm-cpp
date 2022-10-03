@@ -16,29 +16,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef realm_sdk_hpp
-#define realm_sdk_hpp
 
-#include <utility>
+#ifndef REALM_PERSISTED_BOOL_HPP
+#define REALM_PERSISTED_BOOL_HPP
 
-#include <cpprealm/type_info.hpp>
 #include <cpprealm/persisted.hpp>
-#include <cpprealm/persisted_binary.hpp>
-#include <cpprealm/persisted_bool.hpp>
-#include <cpprealm/persisted_embedded.hpp>
-#include <cpprealm/persisted_enum.hpp>
-#include <cpprealm/persisted_int.hpp>
-#include <cpprealm/persisted_list.hpp>
-#include <cpprealm/persisted_optional.hpp>
-#include <cpprealm/persisted_string.hpp>
-#include <cpprealm/persisted_timestamp.hpp>
-#include <cpprealm/persisted_uuid.hpp>
-#include <cpprealm/schema.hpp>
-#include <cpprealm/results.hpp>
-#include <cpprealm/notifications.hpp>
-#include <cpprealm/object.hpp>
-#include <cpprealm/app.hpp>
-#include <cpprealm/db.hpp>
-#include <cpprealm/thread_safe_reference.hpp>
 
-#endif /* realm_sdk_hpp */
+namespace realm {
+    template<typename T>
+    struct persisted<T, type_info::BoolPersistable<T>> : public persisted_noncontainer_base<T> {
+        using persisted_noncontainer_base<T>::persisted_noncontainer_base;
+        using persisted_noncontainer_base<T>::operator*;
+        using persisted_noncontainer_base<T>::operator=;
+    };
+}
+
+#endif //REALM_PERSISTED_BOOL_HPP

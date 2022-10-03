@@ -14,20 +14,20 @@ TEST(list_tests) {
     CHECK_EQUALS(obj.list_obj_col[0].str_col, "Fido");
     CHECK_EQUALS(obj.list_int_col.size(), 1);
     for (auto& i : obj.list_int_col) {
-        CHECK_EQUALS(i, 42)
+        CHECK_EQUALS(i, 42);
     }
 
     obj.list_embedded_obj_col.push_back(AllTypesObjectEmbedded{.str_col="Fido"});
-    CHECK_EQUALS(obj.list_embedded_obj_col[0].str_col, "Fido")
-    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 1)
+    CHECK_EQUALS(obj.list_embedded_obj_col[0].str_col, "Fido");
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 1);
 
     realm.write([&realm, &obj]() {
         realm.add(obj);
     });
 
-    CHECK_EQUALS(obj.list_int_col[0], 42)
-    CHECK_EQUALS(obj.list_obj_col[0].str_col, "Fido")
-    CHECK_EQUALS(obj.list_embedded_obj_col[0].str_col, "Fido")
+    CHECK_EQUALS(obj.list_int_col[0], 42);
+    CHECK_EQUALS(obj.list_obj_col[0].str_col, "Fido");
+    CHECK_EQUALS(obj.list_embedded_obj_col[0].str_col, "Fido");
 
     realm.write([&obj]() {
         obj.list_int_col.push_back(84);
@@ -36,17 +36,16 @@ TEST(list_tests) {
     });
     size_t idx = 0;
     for (auto& i : obj.list_int_col) {
-        CHECK_EQUALS(i, obj.list_int_col[idx])
+        CHECK_EQUALS(i, obj.list_int_col[idx]);
         ++idx;
     }
     CHECK_EQUALS(obj.list_int_col.size(), 2);
     CHECK_EQUALS(obj.list_int_col[0], 42);
     CHECK_EQUALS(obj.list_int_col[1], 84);
-    CHECK_EQUALS(obj.list_obj_col[0].str_col, "Fido")
-    CHECK_EQUALS(obj.list_obj_col[1].str_col, "Rex")
-    CHECK_EQUALS(obj.list_embedded_obj_col[0].str_col, "Fido")
-    CHECK_EQUALS(obj.list_embedded_obj_col[1].str_col, "Rex")
-    co_return;
+    CHECK_EQUALS(obj.list_obj_col[0].str_col, "Fido");
+    CHECK_EQUALS(obj.list_obj_col[1].str_col, "Rex");
+    CHECK_EQUALS(obj.list_embedded_obj_col[0].str_col, "Fido");
+    CHECK_EQUALS(obj.list_embedded_obj_col[1].str_col, "Rex");
 }
 
 TEST(list_insert_remove_primitive) {
@@ -103,8 +102,6 @@ TEST(list_insert_remove_primitive) {
         obj.list_int_col.clear();
     });
     CHECK_EQUALS(obj.list_int_col.size(), 0);
-
-    co_return;
 }
 
 TEST(list_insert_remove_object) {
@@ -183,13 +180,11 @@ TEST(list_insert_remove_object) {
         obj.list_obj_col.clear();
     });
     CHECK_EQUALS(obj.list_obj_col.size(), 0);
-
-    co_return;
 }
 
 TEST(list_insert_remove_embedded_object) {
     auto obj = AllTypesObject();
-    CHECK_EQUALS(obj.is_managed(), false)
+    CHECK_EQUALS(obj.is_managed(), false);
 
     auto o1 = AllTypesObjectEmbedded();
     o1.str_col = "foo";
@@ -206,21 +201,21 @@ TEST(list_insert_remove_embedded_object) {
     obj.list_embedded_obj_col.push_back(o1);
     obj.list_embedded_obj_col.push_back(o2);
     obj.list_embedded_obj_col.push_back(o3);
-    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 3)
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 3);
 
     obj.list_embedded_obj_col.pop_back();
-    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 2)
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 2);
     obj.list_embedded_obj_col.erase(0);
-    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 1)
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 1);
     obj.list_embedded_obj_col.clear();
-    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 0)
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 0);
     obj.list_embedded_obj_col.push_back(o1);
     obj.list_embedded_obj_col.push_back(o2);
     obj.list_embedded_obj_col.push_back(o3);
     obj.list_embedded_obj_col.push_back(o4);
 
-    CHECK_EQUALS(obj.list_embedded_obj_col.find(o4), realm::npos)
-    CHECK_EQUALS(obj.list_embedded_obj_col[3].str_col, o4.str_col)
+    CHECK_EQUALS(obj.list_embedded_obj_col.find(o4), realm::npos);
+    CHECK_EQUALS(obj.list_embedded_obj_col[3].str_col, o4.str_col);
 
     auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
     realm.write([&realm, &obj] {
@@ -228,38 +223,36 @@ TEST(list_insert_remove_embedded_object) {
     });
 
     // ensure values exist
-    CHECK_EQUALS(obj.is_managed(), true)
-    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 4)
+    CHECK_EQUALS(obj.is_managed(), true);
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 4);
 
-    CHECK_THROWS([&] { obj.list_embedded_obj_col.push_back(o5); })
+    CHECK_THROWS([&] { obj.list_embedded_obj_col.push_back(o5); });
 
-    CHECK_EQUALS(o5.is_managed(), false)
+    CHECK_EQUALS(o5.is_managed(), false);
     realm.write([&obj, &o5] {
         obj.list_embedded_obj_col.push_back(o5);
     });
-    CHECK_EQUALS(o5.is_managed(), true)
+    CHECK_EQUALS(o5.is_managed(), true);
 
-    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 5)
-    CHECK_EQUALS(obj.list_embedded_obj_col.find(o5), 4)
-    CHECK_EQUALS(obj.list_embedded_obj_col[4], o5)
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 5);
+    CHECK_EQUALS(obj.list_embedded_obj_col.find(o5), 4);
+    CHECK_EQUALS(obj.list_embedded_obj_col[4], o5);
 
     realm.write([&obj] {
         obj.list_embedded_obj_col.pop_back();
     });
-    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 4)
-    CHECK_EQUALS(obj.list_embedded_obj_col.find(o5), realm::npos)
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 4);
+    CHECK_EQUALS(obj.list_embedded_obj_col.find(o5), realm::npos);
 
     realm.write([&obj] {
         obj.list_embedded_obj_col.erase(0);
     });
-    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 3)
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 3);
 
     realm.write([&obj] {
         obj.list_embedded_obj_col.clear();
     });
-    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 0)
-
-    co_return;
+    CHECK_EQUALS(obj.list_embedded_obj_col.size(), 0);
 }
 
 TEST(notifications_insertions) {
@@ -302,8 +295,6 @@ TEST(notifications_insertions) {
 
     CHECK_EQUALS(change.insertions.size(), 1);
     CHECK_EQUALS(callback_count, 3);
-
-    co_return;
 }
 
 TEST(notifications_deletions) {
@@ -334,8 +325,6 @@ TEST(notifications_deletions) {
     realm.write([] { });
     CHECK_EQUALS(change.deletions.size(), 1);
     CHECK_EQUALS(did_run, true);
-
-    co_return;
 }
 
 TEST(notifications_modifications) {
@@ -369,12 +358,10 @@ TEST(notifications_modifications) {
     CHECK_EQUALS(change.modifications.size(), 1);
     CHECK_EQUALS(change.modifications[0], 1);
     CHECK_EQUALS(did_run, true);
-
-    co_return;
 }
 
-template<typename Col, typename Value>
-void test_list(Col& list, std::vector<Value> values, auto& realm, auto& obj) {
+template<typename Col, typename Value, typename Realm, typename Object>
+void test_list(Col& list, std::vector<Value> values, Realm& realm, Object& obj) {
     CHECK_EQUALS(obj.is_managed(), false);
 
     // unmanaged
@@ -442,5 +429,4 @@ TEST(list_all_primitive_types) {
     auto date1 = std::chrono::system_clock::now();
     auto date2 = date1 + std::chrono::hours(24);
     test_list(date_list_obj.list_date_col, std::vector<std::chrono::time_point<std::chrono::system_clock>>({date1, date2}), realm, date_list_obj);
-    co_return;
 }

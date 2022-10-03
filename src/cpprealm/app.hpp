@@ -27,6 +27,7 @@
 #include <cpprealm/task.hpp>
 #include <cpprealm/db.hpp>
 #include <utility>
+#include <future>
 
 namespace realm {
 
@@ -42,8 +43,9 @@ public:
 
 
 // MARK: User
-
-/**
+template <typename ...Ts>
+static inline std::promise<thread_safe_reference<db<Ts...>>> async_open(const db_config& config);
+    /**
  A `User` instance represents a single Realm App user account.
 
  A user may have one or more credentials associated with it. These credentials
@@ -101,8 +103,8 @@ struct User {
      @param partition_value The  value the Realm is partitioned on.
      @return A `thread_safe_reference` to the synchronized db.
      */
-    template <type_info::ObjectBasePersistable ...Ts, typename T>
-    task<thread_safe_reference<db<Ts...>>> realm(const T& partition_value) const requires (type_info::StringPersistable<T> || type_info::IntPersistable<T>);
+    template <typename ...Ts, typename T>
+    std::promise<thread_safe_reference<db<Ts...>>> realm(const T& partition_value) const;
 
     db_config flexible_sync_configuration() const
     {
@@ -216,6 +218,7 @@ public:
         app::AppCredentials m_credentials;
     };
 
+#if __cpp_coroutines
     task<void> register_user(const std::string username, const std::string password) {
         auto error = co_await make_awaitable<util::Optional<app::AppError>>([&](auto cb) {
             m_app->template provider_client<app::App::UsernamePasswordProviderClient>().register_email(username,
@@ -234,14 +237,34 @@ public:
         });
         co_return std::move(User{std::move(user)});
     }
+#else
+std::promise<void> register_user(const std::string& username, const std::string& password) {
+    std::promise<void> p;
+    m_app->template provider_client<app::App::UsernamePasswordProviderClient>().register_email(username,
+                                                                                               password,
+                                                                                               [&p](auto err){
+        if (err) p.set_exception(std::make_exception_ptr(*err));
+        else p.set_value();
+    });
+    return p;
+}
+std::promise<User> login(const Credentials& credentials) {
+    std::promise<User> p;
+    m_app->log_in_with_credentials(credentials.m_credentials, [&p](auto& user, auto err) {
+        if (err) p.set_exception(std::make_exception_ptr(*err));
+        else p.set_value(User{std::move(user)});
+    });
+    return p;
+}
+#endif
 private:
     std::shared_ptr<app::App> m_app;
 };
 
 // MARK: Impl
 
-template <type_info::ObjectBasePersistable ...Ts, typename T>
-task<thread_safe_reference<db<Ts...>>> User::realm(const T& partition_value) const requires (type_info::StringPersistable<T> || type_info::IntPersistable<T>)
+template <typename ...Ts, typename T>
+std::promise<thread_safe_reference<db<Ts...>>> User::realm(const T& partition_value) const
 {
     db_config config;
     config.sync_config = std::make_shared<SyncConfig>(m_user, bson::Bson(partition_value));
@@ -251,8 +274,7 @@ task<thread_safe_reference<db<Ts...>>> User::realm(const T& partition_value) con
     config.path = m_user->sync_manager()->path_for_realm(*config.sync_config);
     config.sync_config->client_resync_mode = realm::ClientResyncMode::Manual;
     config.sync_config->stop_policy = SyncSessionStopPolicy::AfterChangesUploaded;
-    auto tsr = co_await async_open<Ts...>(std::move(config));
-    co_return tsr;
+    return async_open<Ts...>(std::move(config));
 }
 
 }

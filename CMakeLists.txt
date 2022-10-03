@@ -7,7 +7,7 @@ if("$ENV{REALM_CI}" OR REALM_USE_CCACHE)
 endif()
 
 # Project-wide build flags
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
 
 set(REALM_BUILD_LIB_ONLY ON)
@@ -47,7 +47,7 @@ set(HEADERS
     src/cpprealm/thread_safe_reference.hpp
     src/cpprealm/type_info.hpp
     src/cpprealm/flex_sync.hpp
-) # REALM_INSTALL_HEADERS
+        src/cpprealm/persisted_string.hpp src/cpprealm/persisted_bool.hpp src/cpprealm/persisted_int.hpp src/cpprealm/persisted_optional.hpp src/cpprealm/persisted_enum.hpp src/cpprealm/persisted_timestamp.hpp src/cpprealm/persisted_uuid.hpp src/cpprealm/persisted_list.hpp src/cpprealm/persisted_embedded.hpp src/cpprealm/persisted_binary.hpp) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm SHARED ${SOURCES} ${HEADERS})
 add_executable(cpprealm_exe_tests tests/tests.cpp tests/str_tests.cpp tests/list_tests.cpp tests/query_tests.cpp tests/test_utils.hpp tests/sync_test_utils.hpp tests/test_objects.hpp tests/test_utils.cpp tests/admin_utils.hpp tests/admin_utils.cpp)

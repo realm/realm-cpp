@@ -28,25 +28,39 @@
 
 namespace realm {
 
-template <type_info::ObjectBasePersistable T>
+template <typename T>
 struct query : public T {
+    static_assert(type_info::ObjectBasePersistableConcept<T>::value, "results must be of object type");
 private:
-    void set_managed(auto& prop, auto column_key) {
+    template <typename V>
+    void set_managed(V& prop, realm::ColKey column_key) {
         prop.managed = column_key;
+    }
+    template <size_t N, typename P>
+    constexpr auto prepare_for_query(Query& query, ObjectSchema& schema, P& property)
+    {
+        if constexpr (N + 1 == std::tuple_size_v<decltype(T::schema.properties)>) {
+            (this->*property.ptr).prepare_for_query(query);
+            set_managed((this->*property.ptr), schema.property_for_name(T::schema.names[N])->column_key);
+            return;
+        } else {
+            (this->*property.ptr).prepare_for_query(query);
+            set_managed((this->*property.ptr), schema.property_for_name(T::schema.names[N])->column_key);
+            return prepare_for_query<N + 1>(query, schema, std::get<N + 1>(T::schema.properties));
+        }
     }
 public:
     query(Query& query, ObjectSchema&& schema) {
-        std::apply([&](auto&&... props) {
-            ((this->*props.ptr).prepare_for_query(query), ...);
-            (set_managed((this->*props.ptr), schema.property_for_name(props.name)->column_key), ...);
-        }, T::schema::properties);
+        prepare_for_query<0>(query, schema, std::get<0>(T::schema.properties));
     }
 };
 
 template <typename T>
 struct results;
-template <type_info::ObjectBasePersistable T>
+template <typename T>
 struct results_change {
+    static_assert(type_info::ObjectBasePersistableConcept<T>::value, "results must be of object type");
+
     results<T>* collection;
     std::vector<uint64_t> deletions;
     std::vector<uint64_t> insertions;
@@ -86,7 +100,7 @@ struct results {
         reference operator*() noexcept
         {
             auto obj = m_parent->m_parent.template get<Obj>(m_idx);
-            value = std::move(T::schema::create(std::move(obj), m_parent->m_parent.get_realm()));
+            value = std::move(T::schema.create(std::move(obj), m_parent->m_parent.get_realm()));
             return value;
         }
 
@@ -137,7 +151,7 @@ struct results {
         if (index >= m_parent.size())
             throw std::out_of_range("Index out of range.");
         auto obj = m_parent.template get<Obj>(index);
-        return T::schema::create_unique(std::move(obj), m_parent.get_realm());
+        return T::schema.create_unique(std::move(obj), m_parent.get_realm());
     }
 
     size_t size()
@@ -154,7 +168,7 @@ struct results {
     results& where(std::function<rbool(T&)> fn)
     {
         auto builder = Query(m_parent.get_table());
-        auto schema = *m_parent.get_realm()->schema().find(T::schema::name);
+        auto schema = *m_parent.get_realm()->schema().find(T::schema.name);
         auto q = query<T>(builder, std::move(schema));
         auto full_query = fn(q).q;
         m_parent = realm::Results(m_parent.get_realm(), full_query);
@@ -195,7 +209,7 @@ struct results {
         };
     };
 
-    notification_token observe(util::UniqueFunction<void(results_change<T>)> handler)
+    notification_token observe(std::function<void(results_change<T>)> handler)
     {
         auto token = notification_token();
         token.m_token = m_parent.add_notification_callback(results_callback_wrapper {
@@ -205,7 +219,7 @@ struct results {
     }
 
 private:
-    template <type_info::ObjectBasePersistable...>
+    template <typename ...V>
     friend struct db;
     results(realm::Results&& parent)
     : m_parent(std::move(parent))
