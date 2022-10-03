@@ -29,6 +29,15 @@ namespace realm {
         using persisted_noncontainer_base<T>::operator=;
         template <typename C, typename U, typename V>
         friend persisted<C>& operator +=(persisted<C>& a, std::chrono::duration<U, V> b);
+        constexpr auto time_since_epoch() const {
+            if (auto& object = this->m_object) {
+                auto obj = object->obj();
+                auto ts = static_cast<T>(obj.template get<Timestamp>(this->managed));
+                return ts.time_since_epoch();
+            } else {
+                return this->unmanaged.time_since_epoch();
+            }
+        }
     };
     template <typename T, typename U, typename V>
     persisted<T>& operator +=(persisted<T>& a, std::chrono::duration<U, V> b) {
