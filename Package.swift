@@ -89,5 +89,5 @@ let package = Package(
             ]
         )
     ],
-    cxxLanguageStandard: .cxx20
+    cxxLanguageStandard: .cxx17
 )

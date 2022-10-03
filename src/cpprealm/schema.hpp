@@ -60,10 +60,6 @@ struct property {
     {
     }
 
-    explicit operator property() {
-        return property();
-    }
-
     realm::Property to_property(const char* name) const {
         if constexpr (type_info::NonOptionalPersistableConcept<Result>::value
                       || type_info::EmbeddedObjectPersistableConcept<Result>::value
@@ -185,9 +181,9 @@ struct schema {
     const char* names[sizeof...(Properties)] = {};
     const char* primary_key_name = "";
 
-    static constexpr std::tuple<Properties...> properties;
+    static constexpr std::tuple<Properties...> properties{};
 
-    using variant_t = std::variant<typename Properties::Result...>;
+    using variant_t = typename std::variant<typename Properties::Result...>;
 
     template <size_t N, typename P>
     constexpr auto apply_name(const std::tuple<Properties...>& tup, P&& prop) {
