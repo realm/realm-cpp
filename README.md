@@ -103,7 +103,10 @@ In case you don't want to use the precompiled version, you can build Realm yours
 Prerequisites:
 
 * Building Realm requires Xcode 11.x or newer.
-* Simply double-click the Package.swift file to build and develop.
+```sh
+git submodule update --init --recursive
+open Package.swift
+```
 
 ## Installing Realm
 

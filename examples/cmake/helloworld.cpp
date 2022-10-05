@@ -14,14 +14,14 @@ struct FooObject: realm::object {
     realm::persisted<realm::uuid> uuid_col;
     realm::persisted<std::vector<std::uint8_t>> binary_col;
 
-    using schema = realm::schema<
-    "AllTypesObject",
-    realm::property<"_id", &FooObject::_id, true>,
-    realm::property<"bool_col", &FooObject::bool_col>,
-    realm::property<"str_col", &FooObject::str_col>,
-    realm::property<"date_col", &FooObject::date_col>,
-    realm::property<"uuid_col", &FooObject::uuid_col>,
-    realm::property<"binary_col", &FooObject::binary_col>>;
+    using schema = realm::schema(
+        "AllTypesObject",
+        realm::property<&FooObject::_id, true>("_id"),
+        realm::property<"bool_col", &FooObject::bool_col>("bool_col"),
+        realm::property<"str_col", &FooObject::str_col>("str_col"),
+        realm::property<"date_col", &FooObject::date_col>("date_col"),
+        realm::property<"uuid_col", &FooObject::uuid_col>("uuid_col"),
+        realm::property<"binary_col", &FooObject::binary_col>("binary_col")>;
 };
 
 realm::task<void> wait_for_sync_uploads(const realm::User& user) {

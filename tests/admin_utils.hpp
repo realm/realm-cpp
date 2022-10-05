@@ -19,6 +19,11 @@
 #ifndef REALM_ADMIN_UTILS_HPP
 #define REALM_ADMIN_UTILS_HPP
 
+#if __APPLE__
+#include <TargetConditionals.h>
+#endif
+
+#if TARGET_OS_SIMULATOR == 0 && TARGET_OS_IPHONE == 0 && TARGET_OS_WATCH == 0
 #include <cstdio>
 #include <filesystem>
 #include <iostream>
@@ -40,9 +45,6 @@
 #include <realm/object-store/property.hpp>
 #include <realm/util/scope_exit.hpp>
 
-#if __APPLE__
-#include <CoreFoundation/CFBundle.h>
-#endif
 using namespace std::filesystem;
 
 namespace {
@@ -570,14 +572,11 @@ public:
     }
 
     Admin::Session login() {
-//        setup();
-//        launch_mongo_process();
-//        launch_server_process();
         return Admin::Session::login();
     }
 
 public:
     static RealmServer shared;
 };
-
+#endif // #if TARGET_OS_IOS == 0 && TARGET_OS_WATCH == 0
 #endif //REALM_ADMIN_UTILS_HPP
