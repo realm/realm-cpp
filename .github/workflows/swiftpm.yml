@@ -40,7 +40,7 @@ jobs:
           # for each file. This requires a full git history. The default value (1)
           # creates a shallow checkout.
           fetch-depth: 0
-	  submodules: 'recursive'
+          submodules: 'recursive'
       # Restore timestamps so that DerivedData caching can work across runs
       - name: Restore timestamps
         uses: chetan/git-restore-mtime-action@v1
