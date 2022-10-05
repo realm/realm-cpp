@@ -40,7 +40,7 @@ jobs:
           # for each file. This requires a full git history. The default value (1)
           # creates a shallow checkout.
           fetch-depth: 0
-
+	  submodules: 'recursive'
       # Restore timestamps so that DerivedData caching can work across runs
       - name: Restore timestamps
         uses: chetan/git-restore-mtime-action@v1
@@ -76,7 +76,6 @@ jobs:
           if [[ "${{ matrix.platform }}" == macOS* ]] || [[ "${{ matrix.xcode }}" != 13.* ]]; then
             scheme=realm-cpp-sdkTests
           fi
-	  git submodule update --init --recursive;
           xcodebuild -scheme $scheme -destination "generic/platform=${{ matrix.platform }}" -configuration ${{ matrix.configuration }} -derivedDataPath .build/derivedData
 
       - name: Open a tmate debug session
