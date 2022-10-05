@@ -33,7 +33,7 @@ namespace realm {
         }
         persisted& operator=(const char* o) {
             if (auto obj = persisted_noncontainer_base<T>::m_object) {
-                auto convert = type_info::persisted_type<T>::convert_if_required(T(o));
+                std::string convert = type_info::persisted_type<T>::convert_if_required(T(o));
                 obj->obj().template set<typename persisted_noncontainer_base<T>::type>(persisted_noncontainer_base<T>::managed, convert);
             } else {
                 persisted_noncontainer_base<T>::unmanaged = o;

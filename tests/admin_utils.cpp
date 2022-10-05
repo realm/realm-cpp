@@ -3,4 +3,10 @@
 //
 #include "admin_utils.hpp"
 
-Admin::Session Admin::Session::shared = RealmServer::shared.login();
+RealmServer RealmServer::shared = RealmServer();
+Admin::Session Admin::shared() {
+    if (!_shared) {
+        Admin::_shared = RealmServer::shared.login();
+    }
+    return *_shared;
+}

@@ -19,9 +19,9 @@ struct Dog: realm::object {
     realm::persisted<std::string> name;
     realm::persisted<int> age;
 
-    using schema = realm::schema<"Dog",
-                                 realm::property<"name", &Dog::name>,
-                                 realm::property<"age", &Dog::age>>;
+    using schema = realm::schemagen("Dog",
+                                    realm::property<&Dog::name>("name"),
+                                    realm::property<&Dog::age>("age"));
 };
 
 struct Person: realm::object {
@@ -31,11 +31,11 @@ struct Person: realm::object {
     // Create relationships by pointing an Object field to another Class
     realm::persisted<std::optional<Dog>> dog;
 
-    using schema = realm::schema<"Person",
-                                 realm::property<"_id", &Person::_id, true>, // primary key
-                                 realm::property<"name", &Person::name>,
-                                 realm::property<"age", &Person::age>,
-                                 realm::property<"dog", &Person::dog>>;
+    using schema = realm::schemagen("Person",
+                                    realm::property<&Person::_id, true>("_id"), // primary key
+                                    realm::property<&Person::name>("name"),
+                                    realm::property<&Person::age>("age"),
+                                    realm::property<&Person::dog>("dog"));
 };
 // Use them like regular objects.
 auto dog = Dog { .name = "Rex", .age = 1 };
@@ -84,8 +84,8 @@ realm.write([&dog] {
 The [MongoDB Realm Sync](https://www.mongodb.com/realm/mobile/sync) service makes it simple to keep data in sync across users, devices, and your backend in real-time.
 ```cpp
 auto app = realm::App("<app-id>");
-auto user = co_await app.login(realm::App::Credentials::anonymous());
-auto synced_realm_ref = co_await user.realm<Car>("foo");
+auto user = app.login(realm::App::Credentials::anonymous()).get_future().get();
+auto synced_realm_ref = user.realm<Car>("foo").get_future().get();
 auto realm = synced_realm_ref.resolve();
 
 auto car = realm.object_new<Car>(0);
@@ -111,7 +111,7 @@ Prerequisites:
 
 Prerequisites:
 
-* git, cmake, cxx20
+* git, cmake, cxx17
 
 ```sh
 git submodule update --init --recursive

@@ -126,7 +126,7 @@ class App {
     static std::unique_ptr<util::Logger> defaultSyncLogger(util::Logger::Level level) {
         struct SyncLogger : public util::RootLogger {
             void do_log(Level, const std::string& message) override {
-                std::cout<<"sync: "<<message<<std::endl;
+//                std::cerr<<"sync: "<<message<<std::endl;
             }
         };
         auto logger = std::make_unique<SyncLogger>();

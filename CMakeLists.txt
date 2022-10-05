@@ -47,10 +47,9 @@ set(HEADERS
     src/cpprealm/thread_safe_reference.hpp
     src/cpprealm/type_info.hpp
     src/cpprealm/flex_sync.hpp
-        src/cpprealm/persisted_string.hpp src/cpprealm/persisted_bool.hpp src/cpprealm/persisted_int.hpp src/cpprealm/persisted_optional.hpp src/cpprealm/persisted_enum.hpp src/cpprealm/persisted_timestamp.hpp src/cpprealm/persisted_uuid.hpp src/cpprealm/persisted_list.hpp src/cpprealm/persisted_embedded.hpp src/cpprealm/persisted_binary.hpp) # REALM_INSTALL_HEADERS
+        src/cpprealm/persisted_string.hpp src/cpprealm/persisted_bool.hpp src/cpprealm/persisted_int.hpp src/cpprealm/persisted_optional.hpp src/cpprealm/persisted_enum.hpp src/cpprealm/persisted_timestamp.hpp src/cpprealm/persisted_uuid.hpp src/cpprealm/persisted_list.hpp src/cpprealm/persisted_embedded.hpp src/cpprealm/persisted_binary.hpp src/cpprealm/persisted_mixed.hpp) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm SHARED ${SOURCES} ${HEADERS})
-add_executable(cpprealm_exe_tests tests/tests.cpp tests/str_tests.cpp tests/list_tests.cpp tests/query_tests.cpp tests/test_utils.hpp tests/sync_test_utils.hpp tests/test_objects.hpp tests/test_utils.cpp tests/admin_utils.hpp tests/admin_utils.cpp tests/date_tests.cpp)
 #add_test(cpprealm_tests)
 
 target_include_directories(cpprealm PUBLIC src)
@@ -123,11 +122,19 @@ else()
     )
 endif()
 
-target_link_libraries(cpprealm_exe_tests cpprealm)
+Include(FetchContent)
+FetchContent_Declare(
+        Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG        v2.13.9 # or a later release
+)
+FetchContent_MakeAvailable(Catch2)
 
+add_executable(cpprealm_exe_tests tests/str_tests.cpp tests/list_tests.cpp tests/query_tests.cpp tests/main.hpp tests/sync_test_utils.hpp tests/test_objects.hpp tests/main.cpp tests/admin_utils.hpp tests/admin_utils.cpp tests/date_tests.cpp tests/mixed_tests.cpp tests/results_tests.cpp tests/binary_tests.cpp tests/flx_sync_tests.cpp tests/app_tests.cpp tests/embedded_object_tests.cpp)
+target_link_libraries(cpprealm_exe_tests cpprealm Catch2::Catch2)
 file(COPY tests/setup_baas.rb DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY tests/dependencies.list DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY tests/config_overrides.json DESTINATION ${CMAKE_BINARY_DIR})
 
-add_test(cpprealm_tests cpprealm_exe_tests)
+#add_test(cpprealm_tests cpprealm_exe_tests)
 enable_testing()

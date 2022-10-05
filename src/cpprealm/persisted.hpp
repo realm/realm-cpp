@@ -75,6 +75,8 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
         if (auto obj = m_object) {
             if constexpr (type_info::PrimitivePersistableConcept<T>::value) {
                 obj->obj().template set<type>(managed, o);
+            } else if constexpr (type_info::MixedPersistableConcept<T>::value) {
+                obj->obj().set_any(managed, type_info::persisted_type<T>::convert_if_required(o));
             }
             // if parent is managed...
             else if constexpr (type_info::EmbeddedObjectPersistableConcept<T>::value) {
@@ -154,7 +156,8 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
                     }
                 }
             } else {
-                if constexpr (!type_info::PrimitivePersistableConcept<T>::value) {
+                if constexpr (!type_info::PrimitivePersistableConcept<T>::value
+                                && !type_info::MixedPersistableConcept<T>::value) {
                     if constexpr (type_info::ListPersistableConcept<T>::value) {
                         T v;
                         auto lst = m_object->obj().template get_list_values<typename type_info::persisted_type<typename T::value_type>::type>(
@@ -176,6 +179,9 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
                 if constexpr (std::is_same_v<realm::BinaryData, type>) {
                     realm::BinaryData binary = m_object->obj().template get<type>(managed);
                     return std::vector<u_int8_t>(binary.data(), binary.data() + binary.size());
+                } else if constexpr (type_info::MixedPersistableConcept<T>::value) {
+                    Mixed mixed = m_object->obj().template get<type>(managed);
+                    return type_info::mixed_to_variant<T>(mixed);
                 } else {
                     return static_cast<T>(m_object->obj().template get<type>(managed));
                 }
@@ -248,6 +254,9 @@ protected:
     friend rbool operator!=(const persisted<V>& a, const persisted<V>& b);
     template <typename V>
     friend rbool operator!=(const persisted<V>& a, const char* b);
+    template <template <typename ...> typename Variant, typename ...Ts, typename V>
+    std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
+    friend operator==(const persisted<Variant<Ts...>>& a, const V& b);
     template <typename V>
     std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
     friend inline operator <(const persisted<V>& lhs, const V& a);
@@ -428,6 +437,9 @@ class rbool {
     friend rbool operator==(const persisted<T>& a, const persisted<T>& b);
     template <typename T>
     friend rbool operator==(const persisted<T>& a, const char* b);
+    template <template <typename ...> typename Variant, typename ...Ts, typename V>
+    std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
+    friend operator==(const persisted<Variant<Ts...>>& a, const V& b);
 
     template <typename T, typename>
     friend struct persisted_noncontainer_base;
@@ -473,7 +485,7 @@ public:
         if (is_for_queries)
             q.~Query();
     }
-    operator bool() {
+    operator bool() const {
         return b;
     }
     union {
@@ -519,6 +531,25 @@ rbool operator==(const persisted<T>& a, const persisted<T>& b)
         return {std::move(query)};
     }
     return *a == *b;
+}
+
+template <template <typename ...> typename Variant, typename ...Ts, typename V>
+std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
+operator==(const persisted<Variant<Ts...>>& a, const V& b)
+{
+    if (a.should_detect_usage_for_queries) {
+        auto query = Query(a.query->get_table());
+        query.equal(a.managed, type_info::persisted_type<V>::convert_if_required(b));
+        return {std::move(query)};
+    }
+    return std::visit([&b](auto&& arg) {
+        using M = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_convertible_v<M, V>) {
+            return arg == b;
+        } else {
+            return false;
+        }
+    }, *a);
 }
 
 template <typename T>

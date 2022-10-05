@@ -91,7 +91,7 @@ static std::shared_ptr<realm::util::Scheduler> make_qt()
 
 struct db_config {
 
-    std::string path = std::filesystem::current_path().append("default.realm");
+    std::string path = std::filesystem::current_path();
 
     std::shared_ptr<SyncConfig> sync_config;
 private:
@@ -116,7 +116,7 @@ struct db {
         (schema.push_back(Ts::schema.to_core_schema()), ...);
 
         m_realm = Realm::get_shared_realm({
-            .path = this->config.path,
+            .path = this->config.path.append(".realm"),
 	        .schema_mode = SchemaMode::AdditiveExplicit,
             .schema = Schema(schema),
             .schema_version = 0,

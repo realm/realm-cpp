@@ -1,13 +1,14 @@
 QT += widgets
 
-CONFIG+=c++2a
-QMAKE_CXXFLAGS+="-std=c++2a"
-linux-g++*: QMAKE_CXXFLAGS += "-fcoroutines -fconcepts"
+CONFIG+=c++17
+QMAKE_CXXFLAGS+="-std=c++17"
 
 HEADERS += car.h
 SOURCES += car.cpp main.cpp
 INCLUDEPATH += /usr/local/include/ /usr/include/
 
+message($(CMAKE_CURRENT_SOURCE_DIR))
+add_subdirectory(../../../../../ build)
 QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.15
 CONFIG += system-zlib
 # install

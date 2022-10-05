@@ -91,7 +91,8 @@ struct property {
     }
 
     static void set(Class& object, const std::string& property_name) {
-        if constexpr (type_info::PrimitivePersistableConcept<Result>::value) {
+        if constexpr (type_info::PrimitivePersistableConcept<Result>::value
+                        || type_info::MixedPersistableConcept<Result>::value) {
             object.m_object->template set_column_value(property_name, (object.*ptr).as_core_type());
         }
         else if constexpr (type_info::EmbeddedObjectPersistableConcept<Result>::value) {

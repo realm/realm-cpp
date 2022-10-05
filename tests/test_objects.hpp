@@ -54,6 +54,15 @@ struct AllTypesObject: realm::object {
     realm::persisted<std::chrono::time_point<std::chrono::system_clock>> date_col;
     realm::persisted<realm::uuid> uuid_col;
     realm::persisted<std::vector<std::uint8_t>> binary_col;
+    realm::persisted<std::variant<
+        int64_t,
+        bool,
+        std::string,
+        double,
+        std::chrono::time_point<std::chrono::system_clock>,
+        realm::uuid,
+        std::vector<uint8_t>
+    >> mixed_col;
 
     realm::persisted<std::vector<int>> list_int_col;
     realm::persisted<std::vector<bool>> list_bool_col;
@@ -73,6 +82,7 @@ struct AllTypesObject: realm::object {
         realm::property<&AllTypesObject::date_col>("date_col"),
         realm::property<&AllTypesObject::uuid_col>("uuid_col"),
         realm::property<&AllTypesObject::binary_col>("binary_col"),
+        realm::property<&AllTypesObject::mixed_col>("mixed_col"),
         realm::property<&AllTypesObject::list_int_col>("list_int_col"),
         realm::property<&AllTypesObject::list_bool_col>("list_bool_col"),
         realm::property<&AllTypesObject::list_str_col>("list_str_col"),
