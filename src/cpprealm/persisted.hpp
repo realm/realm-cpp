@@ -31,6 +31,11 @@
 
 namespace realm {
 
+namespace internal {
+    template <typename Class, typename ...Properties>
+    struct schema;
+}
+
 struct FieldValue;
 template <typename T, typename = void>
 struct persisted;
@@ -197,7 +202,7 @@ protected:
     };
 
     template <typename Class, typename ...Properties>
-    friend struct schema;
+    friend struct internal::schema;
     template <auto Ptr, bool IsPrimaryKey>
     friend struct property;
     template <typename>

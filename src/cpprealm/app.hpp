@@ -125,8 +125,19 @@ struct User {
 class App {
     static std::unique_ptr<util::Logger> defaultSyncLogger(util::Logger::Level level) {
         struct SyncLogger : public util::RootLogger {
-            void do_log(Level, const std::string& message) override {
-//                std::cerr<<"sync: "<<message<<std::endl;
+            void do_log(Level level, const std::string& message) override {
+                std::string copy = message;
+                switch (level) {
+                    case Level::all:
+                    case Level::warn:
+                        std::cout<<"sync: "<<copy<<std::endl;
+                        break;
+                    case Level::error:
+                        std::cerr<<"sync: "<<copy<<std::endl;
+                        break;
+                    default:
+                        break;
+                }
             }
         };
         auto logger = std::make_unique<SyncLogger>();
