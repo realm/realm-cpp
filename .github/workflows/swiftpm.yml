@@ -76,6 +76,7 @@ jobs:
           if [[ "${{ matrix.platform }}" == macOS* ]] || [[ "${{ matrix.xcode }}" != 13.* ]]; then
             scheme=realm-cpp-sdkTests
           fi
+	  git submodule update --init --recursive
           xcodebuild -scheme $scheme -destination "generic/platform=${{ matrix.platform }}" -configuration ${{ matrix.configuration }} -derivedDataPath .build/derivedData
 
       - name: Open a tmate debug session
