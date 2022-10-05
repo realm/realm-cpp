@@ -47,7 +47,17 @@ set(HEADERS
     src/cpprealm/thread_safe_reference.hpp
     src/cpprealm/type_info.hpp
     src/cpprealm/flex_sync.hpp
-        src/cpprealm/persisted_string.hpp src/cpprealm/persisted_bool.hpp src/cpprealm/persisted_int.hpp src/cpprealm/persisted_optional.hpp src/cpprealm/persisted_enum.hpp src/cpprealm/persisted_timestamp.hpp src/cpprealm/persisted_uuid.hpp src/cpprealm/persisted_list.hpp src/cpprealm/persisted_embedded.hpp src/cpprealm/persisted_binary.hpp src/cpprealm/persisted_mixed.hpp) # REALM_INSTALL_HEADERS
+    src/cpprealm/persisted_string.hpp
+    src/cpprealm/persisted_bool.hpp
+    src/cpprealm/persisted_int.hpp
+    src/cpprealm/persisted_optional.hpp
+    src/cpprealm/persisted_enum.hpp
+    src/cpprealm/persisted_timestamp.hpp
+    src/cpprealm/persisted_uuid.hpp
+    src/cpprealm/persisted_list.hpp
+    src/cpprealm/persisted_embedded.hpp
+    src/cpprealm/persisted_binary.hpp
+    src/cpprealm/persisted_mixed.hpp) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm SHARED ${SOURCES} ${HEADERS})
 #add_test(cpprealm_tests)
@@ -136,5 +146,6 @@ file(COPY tests/setup_baas.rb DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY tests/dependencies.list DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY tests/config_overrides.json DESTINATION ${CMAKE_BINARY_DIR})
 
+#add_subdirectory(examples/cmake)
 #add_test(cpprealm_tests cpprealm_exe_tests)
 enable_testing()

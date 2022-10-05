@@ -7,8 +7,6 @@ HEADERS += car.h
 SOURCES += car.cpp main.cpp
 INCLUDEPATH += /usr/local/include/ /usr/include/
 
-message($(CMAKE_CURRENT_SOURCE_DIR))
-add_subdirectory(../../../../../ build)
 QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.15
 CONFIG += system-zlib
 # install
