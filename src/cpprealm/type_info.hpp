@@ -20,7 +20,7 @@
 #define realm_type_info_hpp
 
 #include <optional>
-//#include <concepts>
+#include <variant>
 
 #include <realm/object-store/property.hpp>
 #include <realm/obj.hpp>
