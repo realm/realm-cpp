@@ -249,7 +249,7 @@ protected:
     template <typename T, typename>
     friend struct type_info::persisted_type;
     template <typename Class, typename ...Properties>
-    friend struct schema;
+    friend struct internal::schema;
     template <auto Ptr, bool IsPrimaryKey>
     friend struct property;
     template <typename T, typename>

@@ -7,7 +7,7 @@ struct Dog: realm::object {
     realm::persisted<std::string> name;
     realm::persisted<int> age;
 
-    static constexpr auto schema = realm::schemagen("Dog",
+    static constexpr auto schema = realm::schema("Dog",
             realm::property<&Dog::name>("name"),
             realm::property<&Dog::age>("age")
     );
@@ -18,7 +18,7 @@ struct Person: realm::object {
     realm::persisted<int> age;
     realm::persisted<std::optional<Dog>> dog;
 
-    static constexpr auto schema = realm::schemagen("Person",
+    static constexpr auto schema = realm::schema("Person",
             realm::property<&Person::name>("name"),
             realm::property<&Person::age>("age"),
             realm::property<&Person::dog>("dog")
@@ -28,7 +28,7 @@ struct Person: realm::object {
 struct AllTypesObjectEmbedded: realm::embedded_object {
     realm::persisted<std::string> str_col;
 
-    static constexpr auto schema = realm::schemagen("AllTypesObjectEmbedded",
+    static constexpr auto schema = realm::schema("AllTypesObjectEmbedded",
         realm::property<&AllTypesObjectEmbedded::str_col>("str_col"));
 };
 
@@ -37,7 +37,7 @@ struct AllTypesObjectLink: realm::object {
     realm::persisted<std::string> str_col;
 
     static constexpr auto schema =
-            realm::schemagen("AllTypesObjectLink",
+            realm::schema("AllTypesObjectLink",
                             realm::property<&AllTypesObjectLink::_id, true>("_id"),
                             realm::property<&AllTypesObjectLink::str_col>("str_col"));
 };
@@ -74,7 +74,7 @@ struct AllTypesObject: realm::object {
     realm::persisted<std::vector<AllTypesObjectLink>> list_obj_col;
     realm::persisted<std::vector<AllTypesObjectEmbedded>> list_embedded_obj_col;
 
-    static constexpr auto schema = realm::schemagen("AllTypesObject",
+    static constexpr auto schema = realm::schema("AllTypesObject",
         realm::property<&AllTypesObject::_id, true>("_id"),
         realm::property<&AllTypesObject::bool_col>("bool_col"),
         realm::property<&AllTypesObject::str_col>("str_col"),
@@ -96,7 +96,7 @@ struct AllTypesObject: realm::object {
 struct EmbeddedFoo: realm::embedded_object {
     realm::persisted<int> bar;
 
-    static constexpr auto schema = realm::schemagen("EmbeddedFoo", realm::property<&EmbeddedFoo::bar>("bar"));
+    static constexpr auto schema = realm::schema("EmbeddedFoo", realm::property<&EmbeddedFoo::bar>("bar"));
 };
 
 struct Foo: realm::object {
@@ -105,7 +105,7 @@ struct Foo: realm::object {
 
     Foo() = default;
     Foo(const Foo&) = delete;
-    static constexpr auto schema = realm::schemagen("Foo",
+    static constexpr auto schema = realm::schema("Foo",
         realm::property<&Foo::bar>("bar"),
         realm::property<&Foo::foo>("foo"));
 };
@@ -130,7 +130,7 @@ private:
 };
 struct CustomStringObject : realm::object {
     realm::persisted<UppercaseString> str_col;
-    static constexpr auto schema = realm::schemagen("CustomStringObject",
+    static constexpr auto schema = realm::schema("CustomStringObject",
                                                     realm::property<&CustomStringObject::str_col>("str_col"));
 };
 struct IntTypesObject: realm::object {
@@ -140,7 +140,7 @@ struct IntTypesObject: realm::object {
     realm::persisted<int64_t> int64_col;
     realm::persisted<size_t> size_col;
 
-    static constexpr auto schema = realm::schemagen("IntTypesObject",
+    static constexpr auto schema = realm::schema("IntTypesObject",
                                                     realm::property<&Foo::bar>("bar"),
                                                     realm::property<&Foo::foo>("foo"));
 };

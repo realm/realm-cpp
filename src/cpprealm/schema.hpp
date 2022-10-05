@@ -174,178 +174,176 @@ constexpr auto make_subpack_tuple(Ts&&... xs)
 {
     return std::tuple<Ts...>(std::forward<Ts>(xs)...);
 }
+
 // MARK: schema
-template <typename Class, typename ...Properties>
-struct schema {
+namespace internal {
+    template<typename Class, typename ...Properties>
+    struct schema {
 
-    const char* name;
-    const char* names[sizeof...(Properties)] = {};
-    const char* primary_key_name = "";
+        const char *name;
+        const char *names[sizeof...(Properties)] = {};
+        const char *primary_key_name = "";
 
-    static constexpr std::tuple<Properties...> properties{};
+        static constexpr std::tuple<Properties...> properties{};
 
-    using variant_t = typename std::variant<typename Properties::Result...>;
+        using variant_t = typename std::variant<typename Properties::Result...>;
 
-    template <size_t N, typename P>
-    constexpr auto apply_name(const std::tuple<Properties...>& tup, P&& prop) {
-        if constexpr (N + 1 == sizeof...(Properties)) {
-            names[N] = std::get<N>(tup).name;
-            if (std::get<N>(tup).is_primary_key) {
-                primary_key_name = std::get<N>(tup).name;
-            }
-            return;
-        } else {
-            names[N] = std::get<N>(tup).name;
-            if (std::get<N>(tup).is_primary_key) {
-                primary_key_name = std::get<N>(tup).name;
-            }
-            return apply_name<N + 1>(tup, std::get<N + 1>(tup));
-        }
-    }
-    constexpr auto apply_name(const std::tuple<Properties...>& tup) {
-         return apply_name<0>(tup, std::get<0>(tup));
-    }
-    explicit constexpr schema(const char* name_, Properties&&... props)
-            : name(name_)
-    {
-        auto tup = std::make_tuple(props...);
-        apply_name(tup);
-    }
-
-    template <size_t N, typename P>
-    static constexpr auto primary_key(P&)
-    {
-//        static_assert(type_info::Propertyable<P>::value, "Type P is not a supported Property type");
-        if constexpr (P::is_primary_key) {
-            return P();
-        } else {
+        template<size_t N, typename P>
+        constexpr auto apply_name(const std::tuple<Properties...> &tup, P &&prop) {
             if constexpr (N + 1 == sizeof...(Properties)) {
+                names[N] = std::get<N>(tup).name;
+                if (std::get<N>(tup).is_primary_key) {
+                    primary_key_name = std::get<N>(tup).name;
+                }
                 return;
             } else {
-                return primary_key<N + 1>(std::get<N + 1>(properties));
+                names[N] = std::get<N>(tup).name;
+                if (std::get<N>(tup).is_primary_key) {
+                    primary_key_name = std::get<N>(tup).name;
+                }
+                return apply_name<N + 1>(tup, std::get<N + 1>(tup));
             }
         }
-    }
-    static constexpr auto primary_key() {
-        return primary_key<0>(std::get<0>(properties));
-    }
 
-    using PrimaryKeyProperty = decltype(primary_key());
-    static constexpr bool HasPrimaryKeyProperty = !std::is_void_v<PrimaryKeyProperty>;
-    static constexpr bool IsEmbedded = std::is_base_of_v<embedded_object, Class>;
-
-    template <size_t N, typename P>
-    constexpr auto to_property(realm::ObjectSchema& schema, P& p) const
-    {
-        if constexpr (N + 1 == sizeof...(Properties)) {
-            schema.persisted_properties.push_back(p.to_property(names[N]));
-            return;
-        } else {
-            schema.persisted_properties.push_back(p.to_property(names[N]));
-            return to_property<N + 1>(schema, std::get<N + 1>(properties));
+        constexpr auto apply_name(const std::tuple<Properties...> &tup) {
+            return apply_name<0>(tup, std::get<0>(tup));
         }
-    }
-    realm::ObjectSchema to_core_schema() const
-    {
-        realm::ObjectSchema schema;
-        schema.name = name;
-        to_property<0>(schema, std::get<0>(properties));
-        if constexpr (HasPrimaryKeyProperty) {
-            schema.primary_key = primary_key_name;
-        }
-        if constexpr (IsEmbedded) {
-            schema.table_type = ObjectSchema::ObjectType::Embedded;
-        }
-        return schema;
-    }
 
-    template <size_t N, typename P>
-    constexpr auto set(Class& object, P& property) const
-    {
-        if constexpr (N + 1 == sizeof...(Properties)) {
-            property.set(object, names[N]);
-            return;
-        } else {
-            property.set(object, names[N]);
-            return set<N + 1>(object, std::get<N + 1>(properties));
+        explicit constexpr schema(const char *name_, Properties &&... props)
+                : name(name_) {
+            auto tup = std::make_tuple(props...);
+            apply_name(tup);
         }
-    }
 
-    void set(Class& cls) const
-    {
-        set<0>(cls, std::get<0>(properties));
-    }
-
-    template <size_t N, typename P>
-    constexpr variant_t property_value_for_name(std::string_view property_name, const Class& cls, P& property) const
-    {
-        if constexpr (N + 1 == sizeof...(Properties)) {
-            if (property_name == std::string_view(names[N])) {
-                return *(cls.*property.ptr);
+        template<size_t N, typename P>
+        static constexpr auto primary_key(P &) {
+//        static_assert(type_info::Propertyable<P>::value, "Type P is not a supported Property type");
+            if constexpr (P::is_primary_key) {
+                return P();
+            } else {
+                if constexpr (N + 1 == sizeof...(Properties)) {
+                    return;
+                } else {
+                    return primary_key<N + 1>(std::get<N + 1>(properties));
+                }
             }
-            return variant_t{};
-        } else {
-            if (property_name == std::string_view(names[N])) {
-                return *(cls.*property.ptr);
+        }
+
+        static constexpr auto primary_key() {
+            return primary_key<0>(std::get<0>(properties));
+        }
+
+        using PrimaryKeyProperty = decltype(primary_key());
+        static constexpr bool HasPrimaryKeyProperty = !std::is_void_v<PrimaryKeyProperty>;
+        static constexpr bool IsEmbedded = std::is_base_of_v<embedded_object, Class>;
+
+        template<size_t N, typename P>
+        constexpr auto to_property(realm::ObjectSchema &schema, P &p) const {
+            if constexpr (N + 1 == sizeof...(Properties)) {
+                schema.persisted_properties.push_back(p.to_property(names[N]));
+                return;
+            } else {
+                schema.persisted_properties.push_back(p.to_property(names[N]));
+                return to_property<N + 1>(schema, std::get<N + 1>(properties));
             }
-            return property_value_for_name<N + 1>(property_name, cls, std::get<N + 1>(properties));
-        }
-    }
-    constexpr auto property_value_for_name(std::string_view property_name, const Class& cls) const
-    {
-        return property_value_for_name<0>(property_name, cls, std::get<0>(properties));
-    }
-
-    template <size_t N, typename P>
-    constexpr auto assign(Class& object, P& property) const
-    {
-        if constexpr (N + 1 == sizeof...(Properties)) {
-            property.assign(object, object.m_object->obj().get_table()->get_column_key(names[N]), object.m_object->realm());
-            return;
-        } else {
-            property.assign(object, object.m_object->obj().get_table()->get_column_key(names[N]), object.m_object->realm());
-            return assign<N + 1>(object, std::get<N + 1>(properties));
-        }
-    }
-
-    Class create(Obj&& obj, const SharedRealm& realm) const
-    {
-        Class cls;
-        cls.m_object = Object(realm, obj);
-        assign<0>(cls, std::get<0>(properties));
-        return cls;
-    }
-
-    std::unique_ptr<Class> create_unique(Obj&& obj, const SharedRealm& realm) const
-    {
-        auto cls = std::make_unique<Class>();
-        cls->m_object = Object(realm, obj);
-        assign<0>(*cls, std::get<0>(properties));
-        return cls;
-    }
-
-    void add(Class& object, TableRef table, SharedRealm realm) const
-    {
-        if constexpr (HasPrimaryKeyProperty) {
-            auto pk = *(object.*PrimaryKeyProperty::ptr);
-            object.m_object = Object(realm, table->create_object_with_primary_key(pk));
-        }
-        else {
-            object.m_object = Object(realm, table->create_object(ObjKey{}));
         }
 
-        set(object);
-        assign<0>(object, std::get<0>(properties));
-    }
-};
+        realm::ObjectSchema to_core_schema() const {
+            realm::ObjectSchema schema;
+            schema.name = name;
+            to_property<0>(schema, std::get<0>(properties));
+            if constexpr (HasPrimaryKeyProperty) {
+                schema.primary_key = primary_key_name;
+            }
+            if constexpr (IsEmbedded) {
+                schema.table_type = ObjectSchema::ObjectType::Embedded;
+            }
+            return schema;
+        }
+
+        template<size_t N, typename P>
+        constexpr auto set(Class &object, P &property) const {
+            if constexpr (N + 1 == sizeof...(Properties)) {
+                property.set(object, names[N]);
+                return;
+            } else {
+                property.set(object, names[N]);
+                return set<N + 1>(object, std::get<N + 1>(properties));
+            }
+        }
+
+        void set(Class &cls) const {
+            set<0>(cls, std::get<0>(properties));
+        }
+
+        template<size_t N, typename P>
+        constexpr variant_t
+        property_value_for_name(std::string_view property_name, const Class &cls, P &property) const {
+            if constexpr (N + 1 == sizeof...(Properties)) {
+                if (property_name == std::string_view(names[N])) {
+                    return *(cls.*property.ptr);
+                }
+                return variant_t{};
+            } else {
+                if (property_name == std::string_view(names[N])) {
+                    return *(cls.*property.ptr);
+                }
+                return property_value_for_name<N + 1>(property_name, cls, std::get<N + 1>(properties));
+            }
+        }
+
+        constexpr auto property_value_for_name(std::string_view property_name, const Class &cls) const {
+            return property_value_for_name<0>(property_name, cls, std::get<0>(properties));
+        }
+
+        template<size_t N, typename P>
+        constexpr auto assign(Class &object, P &property) const {
+            if constexpr (N + 1 == sizeof...(Properties)) {
+                property.assign(object, object.m_object->obj().get_table()->get_column_key(names[N]),
+                                object.m_object->realm());
+                return;
+            } else {
+                property.assign(object, object.m_object->obj().get_table()->get_column_key(names[N]),
+                                object.m_object->realm());
+                return assign<N + 1>(object, std::get<N + 1>(properties));
+            }
+        }
+
+        Class create(Obj &&obj, const SharedRealm &realm) const {
+            Class cls;
+            cls.m_object = Object(realm, obj);
+            assign<0>(cls, std::get<0>(properties));
+            return cls;
+        }
+
+        std::unique_ptr<Class> create_unique(Obj &&obj, const SharedRealm &realm) const {
+            auto cls = std::make_unique<Class>();
+            cls->m_object = Object(realm, obj);
+            assign<0>(*cls, std::get<0>(properties));
+            return cls;
+        }
+
+        void add(Class &object, TableRef table, SharedRealm realm) const {
+            if constexpr (HasPrimaryKeyProperty) {
+                auto pk = *(object.*PrimaryKeyProperty::ptr);
+                object.m_object = Object(realm, table->create_object_with_primary_key(pk));
+            } else {
+                object.m_object = Object(realm, table->create_object(ObjKey{}));
+            }
+
+            set(object);
+            assign<0>(object, std::get<0>(properties));
+        }
+    };
+}
 
 template <typename ...T>
-static constexpr auto schemagen(const char * name,
+static constexpr auto schema(const char * name,
                                 T&&... props) {
     auto tup = make_subpack_tuple(props...);
     auto i = std::get<0>(tup);
     using i2 = typename decltype(i)::Class;
-    return schema<i2, T...>(name, std::move(props)...);
+    return internal::schema<i2, T...>(name, std::move(props)...);
 }
 }
 

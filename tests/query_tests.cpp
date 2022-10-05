@@ -144,10 +144,10 @@ TEST_CASE("query") {
         validate_equals<AllTypesObject>(realm, 1U, [&obj2](auto &o) { return o.enum_col >= obj2.enum_col; });
         validate_equals<AllTypesObject>(realm, 0U, [&obj2](auto &o) { return o.enum_col < obj2.enum_col; });
         validate_equals<AllTypesObject>(realm, 1U, [&obj2](auto &o) { return o.enum_col <= obj2.enum_col; });
-        validate_equals<AllTypesObject>(realm, 0U, [&date, &obj2](auto &o) { return o.date_col > obj2.date_col; });
-        validate_equals<AllTypesObject>(realm, 1U, [&date, &obj2](auto &o) { return o.date_col >= obj2.date_col; });
-        validate_equals<AllTypesObject>(realm, 0U, [&date, &obj2](auto &o) { return o.date_col < obj2.date_col; });
-        validate_equals<AllTypesObject>(realm, 1U, [&date, &obj2](auto &o) { return o.date_col <= obj2.date_col; });
+        validate_equals<AllTypesObject>(realm, 0U, [&obj2](auto &o) { return o.date_col > obj2.date_col; });
+        validate_equals<AllTypesObject>(realm, 1U, [&obj2](auto &o) { return o.date_col >= obj2.date_col; });
+        validate_equals<AllTypesObject>(realm, 0U, [&obj2](auto &o) { return o.date_col < obj2.date_col; });
+        validate_equals<AllTypesObject>(realm, 1U, [&obj2](auto &o) { return o.date_col <= obj2.date_col; });
     }
 
     SECTION("tsq_compound", "[query]") {
