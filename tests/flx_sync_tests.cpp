@@ -5,7 +5,7 @@
 
 using namespace realm;
 
-#if TARGET_OS_IOS == 0 && TARGET_OS_WATCH == 0
+#if TARGET_OS_SIMULATOR == 0 && TARGET_OS_IPHONE == 0 && TARGET_OS_WATCH == 0 && TARGET_OS_TV == 0
 TEST_CASE("flx_sync", "[flx]") {
     SECTION("all") {
         auto app = realm::App(Admin::shared().create_app<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(

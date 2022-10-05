@@ -23,7 +23,7 @@
 #include <TargetConditionals.h>
 #endif
 
-#if TARGET_OS_SIMULATOR == 0 && TARGET_OS_IPHONE == 0 && TARGET_OS_WATCH == 0
+#if TARGET_OS_SIMULATOR == 0 && TARGET_OS_IPHONE == 0 && TARGET_OS_WATCH == 0 && TARGET_OS_TV == 0
 #include <cstdio>
 #include <filesystem>
 #include <iostream>

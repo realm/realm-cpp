@@ -16,7 +16,7 @@ TEST_CASE("app", "[app]") {
         CHECK(*synced_realm.object<AllTypesObject>(1)._id == 1);
     }
 
-#if TARGET_OS_IOS == 0 && TARGET_OS_WATCH == 0
+#if TARGET_OS_SIMULATOR == 0 && TARGET_OS_IPHONE == 0 && TARGET_OS_WATCH == 0 && TARGET_OS_TV == 0
     SECTION("login_username_password") {
         auto app_id = Admin::shared().create_app();
         auto app = realm::App(app_id, "http://localhost:9090");

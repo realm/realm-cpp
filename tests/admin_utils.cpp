@@ -2,7 +2,7 @@
 // Created by Jason Flax on 9/20/22.
 //
 #include "admin_utils.hpp"
-#if TARGET_OS_IOS == 0 && TARGET_OS_WATCH == 0
+#if TARGET_OS_SIMULATOR == 0 && TARGET_OS_IPHONE == 0 && TARGET_OS_WATCH == 0 && TARGET_OS_TV == 0
 void write_to_devnull() {
     /* open /dev/null for writing */
     int fd = open("/dev/null", O_WRONLY);
