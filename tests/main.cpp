@@ -1,6 +1,7 @@
 #define CATCH_CONFIG_RUNNER
 
-#include <catch2/catch.hpp>
+//#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include "admin_utils.hpp"
 
  void write_to_devnull() {
@@ -58,8 +59,5 @@ int main(int argc, char* argv[]) {
     }
 
     int result = Catch::Session().run(argc, argv);
-//    for (auto &pid: pids) {
-//        kill(pid, 9);
-//    }
     return result;
 }

@@ -1,7 +1,7 @@
 #ifndef REALM_MAIN_HPP
 #define REALM_MAIN_HPP
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include <cpprealm/sdk.hpp>
 
 struct realm_path {

@@ -68,9 +68,30 @@ let package = Package(
     ],
     targets: [
         cppSdkTarget,
+        .target(
+            name: "Catch2Generated",
+            path: "realm-core/external/generated",
+            // this file was manually generated with catch v3.0.1
+            // and should be regenerated when catch is upgraded
+            resources: [.copy("catch2/catch_user_config.hpp")],
+            publicHeadersPath: "."),
+        .target(
+            name: "Catch2",
+            dependencies: ["Catch2Generated"],
+            path: "Catch2/src",
+            exclude: [
+                "CMakeLists.txt",
+                "catch2/catch_user_config.hpp.in",
+                "catch2/internal/catch_main.cpp"
+                ],
+            publicHeadersPath: ".",
+            cxxSettings: ([
+                .headerSearchPath("catch2"),
+                .define("CATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS")
+            ] + cxxSettings) as [CXXSetting]),
         .executableTarget(
             name: "realm-cpp-sdkTests",
-            dependencies: ["realm-cpp-sdk"],
+            dependencies: ["realm-cpp-sdk", "Catch2"],
             path: "tests",
             resources: [
                 .copy("setup_baas.rb"),
