@@ -27,18 +27,18 @@
 #include <realm/object-store/shared_realm.hpp>
 
 #include <any>
+#include "persisted.hpp"
 
 namespace realm {
 
 struct Realm;
 struct NotificationToken;
 struct notification_token;
-struct object;
-struct embedded_object;
-template <type_info::ObjectBasePersistable T>
+struct object_base;
+template <typename T>
 struct ObjectChange;
 
-template <type_info::ListPersistable T>
+template <typename T>
 struct persisted_container_base;
 /**
  A token which is returned from methods which subscribe to changes to a `realm::object`.
@@ -51,16 +51,15 @@ private:
     {
     }
 
-    friend struct object;
-    friend struct embedded_object;
-    template <realm::type_info::ListPersistable T>
+    friend struct object_base;
+    template <typename T>
     friend struct persisted_container_base;
     template <typename T>
     friend struct results;
     realm::NotificationToken m_token;
 };
 
-template <type_info::ListPersistable T>
+template <typename T>
 struct collection_change {
     /// The list being observed.
     const persisted_container_base<T>* collection;
@@ -79,11 +78,10 @@ struct collection_change {
     }
 };
 
-template <type_info::Persistable T>
-struct persisted;
 
-template <realm::type_info::ListPersistable T>
+template <typename T>
 struct collection_callback_wrapper {
+    static_assert(realm::type_info::ListPersistableConcept<T>::value);
     util::UniqueFunction<void(collection_change<T>)> handler;
     persisted<T>& collection;
     bool ignoreChangesInInitialNotification;
@@ -121,6 +119,7 @@ private:
 /**
  Information about a specific property which changed in an `realm::object` change notification.
  */
+template <typename T>
 struct PropertyChange {
     /**
      The name of the property which changed.
@@ -138,13 +137,13 @@ struct PropertyChange {
      object, and you will need to check `isInvalidated` before accessing any
      of its properties.
     */
-    std::optional<std::any> old_value;
+    std::optional<typename decltype(T::schema)::variant_t> old_value;
 
     /**
      The value of the property after the change occurred. This is not supplied
      for `List` properties and will always be nil.
     */
-    std::optional<std::any> new_value;
+    std::optional<typename decltype(T::schema)::variant_t> new_value;
 };
 
 } // namespace realm

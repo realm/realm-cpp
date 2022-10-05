@@ -19,7 +19,7 @@
 #ifndef realm_persisted_hpp
 #define realm_persisted_hpp
 
-#include <cpprealm/notifications.hpp>
+//#include <cpprealm/notifications.hpp>
 #include <cpprealm/type_info.hpp>
 
 #include <realm/query.hpp>
@@ -31,59 +31,209 @@
 
 namespace realm {
 
+namespace internal {
+    template <typename Class, typename ...Properties>
+    struct schema;
+}
+
 struct FieldValue;
-template <type_info::Persistable T>
+template <typename T, typename = void>
 struct persisted;
 struct notification_token;
 
 template <typename T>
-concept Equatable = requires (T a) {
-    a == a;
-};
+using Equatable = typename std::enable_if<
+        std::declval<T>() == std::declval<T>(),
+        T
+>::type;
 
 class rbool;
 
-template <realm::type_info::Persistable T>
-struct persisted_base {
+template <typename, typename = void>
+struct persisted_base;
+
+template <typename T>
+struct persisted_base<T, realm::type_info::Persistable<T>> {
     using Result = T;
     using type = typename realm::type_info::persisted_type<T>::type;
 
     persisted_base(const T& value);
     persisted_base(T&& value);
-    persisted_base(const char* value) requires realm::type_info::StringPersistable<T>;
-    template <typename S>
-    requires (type_info::ObjectBasePersistable<T>)
-    persisted_base(std::optional<S> value);
+//
+//    template <typename S, std::enable_if_t<type_info::ObjectPersistableConcept<S>::value && std::is_same_v<S, typename T::value_type>>>
+//    persisted_base(std::optional<S> value) {
+//        unmanaged = value;
+//    }
+//    template <typename S, type_info::ObjectBasePersistable<T>>
+//    persisted_base(std::optional<S> value);
 
     persisted_base();
     ~persisted_base();
-    persisted_base(const persisted_base& o);
-    persisted_base(persisted_base&& o);
+    persisted_base(const persisted_base& o) {
+        *this = o;
+    }
+    persisted_base(persisted_base&& o) {
+        *this = std::move(o);
+    }
 
-    template <typename S>
-    requires (type_info::StringPersistable<T>) && std::is_same_v<S, const char*>
-    persisted_base& operator=(S o);
-    persisted_base& operator=(const T& o);
-    persisted_base& operator=(const persisted_base& o);
-    persisted_base& operator=(persisted_base&& o);
+    persisted_base& operator=(const T& o) {
+        if (auto obj = m_object) {
+            if constexpr (type_info::PrimitivePersistableConcept<T>::value) {
+                obj->obj().template set<type>(managed, o);
+            } else if constexpr (type_info::MixedPersistableConcept<T>::value) {
+                obj->obj().set_any(managed, type_info::persisted_type<T>::convert_if_required(o));
+            }
+            // if parent is managed...
+            else if constexpr (type_info::EmbeddedObjectPersistableConcept<T>::value) {
+                // if non-null object is being assigned...
+                if (o.m_object) {
+                    // if object is managed, we will to set the link
+                    // to the new target's key
+                    obj->obj().template set<type>(managed, o.m_object->obj().get_key());
+                } else {
+                    // else new unmanaged object is being assigned.
+                    // we must assign the values to this object's fields
+                    // TODO:
+                    REALM_UNREACHABLE();
+                }
+            } else if constexpr (type_info::OptionalObjectPersistableConcept<T>::value) {
+                // if object...
+                if (auto link = o) {
+                    // if non-null object is being assigned...
+                    if (link->m_object) {
+                        // if object is managed, we will to set the link
+                        // to the new target's key
+                        obj->obj().template set<ObjKey>(managed, link->m_object->obj().get_key());
+                    } else {
+                        // else new unmanaged object is being assigned.
+                        // we must assign the values to this object's fields
+                        // TODO:
+                        REALM_UNREACHABLE();
+                    }
+                } else {
+                    // else null link is being assigned to this field
+                    // e.g., `person.dog = std::nullopt;`
+                    // set the parent column to null and unset the co
+                    obj->obj().set_null(managed);
+                }
+            } else {
+                obj->obj().template set<type>(managed, o);
+            }
+        } else {
+            new (&unmanaged) T(o);
+        }
+        return *this;
+    }
+    persisted_base& operator=(const persisted_base& o) {
+        if (auto obj = o.m_object) {
+            m_object = obj;
+            new (&managed) ColKey(o.managed);
+        } else {
+            new (&unmanaged) T(o.unmanaged);
+        }
+        return *this;
+    }
+    persisted_base& operator=(persisted_base&& o) {
+        if (o.m_object) {
+            m_object = o.m_object;
+            new (&managed) ColKey(std::move(o.managed));
+        } else {
+            new (&unmanaged) T(std::move(o.unmanaged));
+        }
+        return *this;
+    }
 
-    T operator *() const;
+    T operator *() const
+    {
+        if (m_object) {
+            if constexpr (type_info::OptionalPersistableConcept<T>::value || type_info::EmbeddedObjectPersistableConcept<T>::value) {
+                if constexpr (type_info::EmbeddedObjectPersistableConcept<T>::value) {
+                    return T::schema.create(m_object->obj().get_linked_object(managed), m_object->get_realm());
+                } else if constexpr (type_info::ObjectBasePersistableConcept<typename T::value_type>::value) {
+                    return T::value_type::schema.create(m_object->obj().get_linked_object(managed), m_object->get_realm());
+                } else {
+                    auto value = m_object->obj().template get<type>(managed);
+                    // convert optionals
+                    if (value) {
+                        return T(*value);
+                    } else {
+                        return T();
+                    }
+                }
+            } else {
+                if constexpr (!type_info::PrimitivePersistableConcept<T>::value
+                                && !type_info::MixedPersistableConcept<T>::value) {
+                    if constexpr (type_info::ListPersistableConcept<T>::value) {
+                        T v;
+                        auto lst = m_object->obj().template get_list_values<typename type_info::persisted_type<typename T::value_type>::type>(
+                                managed);
+                        for (size_t i; i < lst.size(); i++) {
+                            if constexpr (type_info::ObjectBasePersistableConcept<typename T::value_type>::value) {
+                                auto obj = lst.get_object(i);
+                                v.push_back(T::value_type::schema::create(obj, obj.get_table(), nullptr));
+                            } else {
+                                v.push_back(static_cast<typename T::value_type>(lst[i]));
+                            }
+                        }
+
+                        return v;
+                    } else {
+                        REALM_UNREACHABLE();
+                    }
+                }
+                if constexpr (std::is_same_v<realm::BinaryData, type>) {
+                    realm::BinaryData binary = m_object->obj().template get<type>(managed);
+                    return std::vector<u_int8_t>(binary.data(), binary.data() + binary.size());
+                } else if constexpr (type_info::MixedPersistableConcept<T>::value) {
+                    Mixed mixed = m_object->obj().template get<type>(managed);
+                    return type_info::mixed_to_variant<T>(mixed);
+                } else {
+                    return static_cast<T>(m_object->obj().template get<type>(managed));
+                }
+            }
+        } else {
+            return unmanaged;
+        }
+    }
 protected:
     union {
         T unmanaged;
         realm::ColKey managed;
     };
 
-    template <StringLiteral Name, auto Ptr, bool>
+    template <typename Class, typename ...Properties>
+    friend struct internal::schema;
+    template <auto Ptr, bool IsPrimaryKey>
     friend struct property;
-    template <type_info::ObjectBasePersistable V>
+    template <typename>
     friend struct query;
-    template <StringLiteral, type_info::Propertyable ...Properties>
-    friend struct schema;
-    template <type_info::TimestampPersistable X, typename U, typename V>
-    friend persisted<X>& operator +=(persisted<X>& a, std::chrono::duration<U, V> b);
-    type as_core_type() const;
-    void assign(const Obj& object, const ColKey& col_key, SharedRealm realm);
+    type as_core_type() const
+    {
+        if constexpr (type_info::ObjectBasePersistableConcept<T>::value) {
+            if (m_object) {
+                return m_object->obj().template get<type>(managed);
+            } else {
+                REALM_ASSERT(false);
+            }
+        } else {
+            if (m_object) {
+                if constexpr (type_info::PrimitivePersistableConcept<T>::value) {
+                    return m_object->obj().template get<type>(managed);
+                } else if  constexpr (type_info::ListPersistableConcept<T>::value) {
+                    return m_object->obj().template get_list_values<typename type_info::persisted_type<typename T::value_type>::type>(managed);
+                } else {
+                    return m_object->obj().template get<type>(managed);
+                }
+            } else {
+                return type_info::persisted_type<T>::convert_if_required(unmanaged);
+            }
+        }
+    }
+    void assign(const Obj& object, const ColKey& col_key, SharedRealm realm)
+    {
+        m_object = Object(realm, object);
+        managed = ColKey(col_key);
+    }
     std::optional<Object> m_object;
 
     // MARK: Queries
@@ -97,18 +247,45 @@ protected:
         query = &query_builder;
     }
 
-    template <realm::type_info::Persistable V>
-    friend rbool operator==(const persisted<V>& a, const V& b) requires (Equatable<V>);
-    template <realm::type_info::Persistable V>
-    friend rbool operator==(const persisted<V>& a, const persisted<V>& b) requires (Equatable<V>);
-    template <realm::type_info::Persistable V>
-    friend rbool operator==(const persisted<V>& a, const char* b) requires (Equatable<V>);
-    template <realm::type_info::Persistable V>
-    friend rbool operator!=(const persisted<V>& a, const V& b) requires (Equatable<V>);
-    template <realm::type_info::Persistable V>
-    friend rbool operator!=(const persisted<V>& a, const persisted<V>& b) requires (Equatable<V>);
-    template <realm::type_info::Persistable V>
-    friend rbool operator!=(const persisted<V>& a, const char* b) requires (Equatable<V>);
+    template <typename V>
+    friend rbool operator==(const persisted<V>& a, const V& b);
+    template <typename V>
+    friend rbool operator==(const persisted<V>& a, const persisted<V>& b);
+    template <typename V>
+    friend rbool operator==(const persisted<V>& a, const char* b);
+    template <typename V>
+    friend rbool operator!=(const persisted<V>& a, const V& b);
+    template <typename V>
+    friend rbool operator!=(const persisted<V>& a, const persisted<V>& b);
+    template <typename V>
+    friend rbool operator!=(const persisted<V>& a, const char* b);
+    template <template <typename ...> typename Variant, typename ...Ts, typename V>
+    std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
+    friend operator==(const persisted<Variant<Ts...>>& a, const V& b);
+    template <typename V>
+    std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
+    friend inline operator <(const persisted<V>& lhs, const V& a);
+    template <typename V>
+    std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
+    friend inline operator >(const persisted<V>& lhs, const V& a);
+    template <typename V>
+    std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
+    friend inline operator <=(const persisted<V>& lhs, const V& a);
+    template <typename V>
+    std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
+    friend inline operator >=(const persisted<V>& lhs, const V& a);
+    template <typename V>
+    std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
+    friend inline operator >(const persisted<V>& lhs, const persisted<V>& a);
+    template <typename V>
+    std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
+    friend inline operator <(const persisted<V>& lhs, const persisted<V>& a);
+    template <typename V>
+    std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
+    friend inline operator >=(const persisted<V>& lhs, const persisted<V>& a);
+    template <typename V>
+    std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
+    friend inline operator <=(const persisted<V>& lhs, const persisted<V>& a);
 };
 
 /// `realm::persisted` is used to declare properties on `realm::object` subclasses which should be
@@ -159,408 +336,82 @@ protected:
 ///  objects managed by a Realm. Similarly, ObjectID properties *should not* be initialized to
 ///  `ObjectID.generate()`, as doing so will result in extra ObjectIDs being
 ///  generated and then discarded when reading from a Realm.
-template <type_info::Persistable T>
-struct persisted : public persisted_base<T> {
-    using persisted_base<T>::persisted_base;
-};
-
-template <type_info::NonContainerPersistable T>
+template <typename T, typename = type_info::NonContainerPersistable<T>>
 struct persisted_noncontainer_base : public persisted_base<T> {
     using persisted_base<T>::persisted_base;
     using persisted_base<T>::operator=;
     using persisted_base<T>::operator*;
     using type = typename realm::type_info::persisted_type<T>::type;
-
-    void operator -=(const T& a) requires (type_info::IntPersistable<T> || type_info::DoublePersistable<T>);
-    void operator --() requires (type_info::IntPersistable<T> || type_info::DoublePersistable<T>);
-    T operator -() requires (type_info::IntPersistable<T> || type_info::DoublePersistable<T>);
-    void operator +=(const T& a) requires (type_info::AddAssignable<T>);
-    T operator *(const T& a) requires (type_info::AddAssignable<T>);
-    void operator ++() requires (type_info::AddAssignable<T>);
-    rbool operator <(const T& a) requires (type_info::Comparable<T>);
-    rbool operator >(const T& a) requires (type_info::Comparable<T>);
-    rbool operator <=(const T& a) requires (type_info::Comparable<T>);
-    rbool operator >=(const T& a) requires (type_info::Comparable<T>);
-    rbool operator <(const persisted<T>& a) requires (type_info::Comparable<T>);
-    rbool operator >(const persisted<T>& a) requires (type_info::Comparable<T>);
-    rbool operator <=(const persisted<T>& a) requires (type_info::Comparable<T>);
-    rbool operator >=(const persisted<T>& a) requires (type_info::Comparable<T>);
-    rbool contains(const char* str) requires (std::is_same_v<T, std::string>);
 };
 
-template <type_info::TimestampPersistable T, typename U, typename V>
-persisted<T>& operator +=(persisted<T>& a, std::chrono::duration<U, V> b) {
-    // TODO: Migrate object access to use CppContext
-    if (auto& object = a.m_object) {
-        auto obj = object->obj();
-        auto ts = obj.template get<Timestamp>(a.managed);
-        obj.template set(a.managed, Timestamp(ts.get_time_point() + b));
-    } else {
-        a.unmanaged += b;
-    }
-    return a;
-}
-
-template <type_info::NonContainerPersistable T>
-struct persisted<T> : public persisted_noncontainer_base<T> {
+template <typename T, typename = type_info::NonContainerPersistable<T>>
+struct persisted_add_assignable_base : public persisted_noncontainer_base<T> {
     using persisted_noncontainer_base<T>::persisted_noncontainer_base;
     using persisted_noncontainer_base<T>::operator=;
-};
+    using persisted_noncontainer_base<T>::operator*;
 
-// MARK: Persisted List
-
-template <realm::type_info::ListPersistable T>
-class persisted_container_base : public persisted_base<T> {
-
-public:
-    using value_type = typename T::value_type;
-    using size_type = typename T::size_type;
-
-    class iterator {
-    public:
-        using difference_type = size_type;
-        using pointer = value_type*;
-        using reference = value_type&;
-        using iterator_category = std::input_iterator_tag;
-
-        bool operator!=(const iterator& other) const
-        {
-            return !(*this == other);
-        }
-
-        bool operator==(const iterator& other) const
-        {
-            return (m_parent == other.m_parent) && (m_idx == other.m_idx);
-        }
-
-        reference operator*() noexcept
-        {
-            value = (*m_parent)[m_idx];
-            return value;
-        }
-
-        pointer operator->() const noexcept
-        {
-            value = (*m_parent)[m_idx];
-            return &value;
-        }
-
-        iterator& operator++()
-        {
-            m_idx++;
-            return *this;
-        }
-
-        iterator& operator++(int i)
-        {
-            m_idx += i;
-            return *this;
-        }
-    private:
-        friend struct persisted_container_base<T>;
-
-        iterator(size_t idx, persisted_container_base<T>* parent)
-                : m_idx(idx)
-                , m_parent(parent)
-        {
-        }
-
-        size_t m_idx;
-        persisted_container_base<T>* m_parent;
-        value_type value;
-    };
-
-    iterator begin()
-    {
-        return iterator(0, this);
+    void operator --() {
+        *this -= 1;
     }
-
-    iterator end()
-    {
-        return iterator(size(), this);
+    T operator -() {
+        return *this * -1;
     }
-
-    size_t size()
-    {
+    T operator -(const T& a) {
+        return *this - 1;
+    }
+    void operator -=(const T& a) {
         if (this->m_object) {
-            return m_backing_list.size();
+            this->m_object->template set<persisted_base<T>::type>(this->managed, *(*this) - a);
         } else {
-            return this->unmanaged.size();
+            this->unmanaged -= a;
         }
     }
-    typename T::value_type operator[](size_type pos) requires (type_info::PrimitivePersistable<value_type>);
-    typename T::value_type operator[](size_type pos) requires (type_info::ObjectBasePersistable<value_type>);
-
-    void push_back(const value_type& a) requires (type_info::PrimitivePersistable<value_type>);
-    void push_back(value_type& a) requires (type_info::ObjectBasePersistable<value_type>);
-    void push_back(value_type&& a) requires (type_info::ObjectBasePersistable<value_type>);
-
-    void pop_back();
-    void erase(size_type pos);
-    void clear();
-
-    void set(size_type pos, const value_type& a) requires (type_info::PrimitivePersistable<value_type>);
-    void set(size_type pos, value_type& a) requires (type_info::ObjectBasePersistable<value_type>);
-    void set(size_type pos, value_type&& a) requires (type_info::ObjectBasePersistable<value_type>);
-
-    size_t find(const value_type& a) requires (type_info::PrimitivePersistable<value_type>);
-    size_t find(const value_type& a) requires (type_info::ObjectBasePersistable<value_type>);
-
-    notification_token observe(util::UniqueFunction<void(collection_change<T>)>);
-
-    /// Make this container property managed
-    /// @param object The parent object
-    /// @param col_key The column key for this property
-    /// @param realm The Realm instance managing the parent.
-    void assign(const Obj& object, const ColKey& col_key, SharedRealm realm);
-
-private:
-    List m_backing_list;
-};
-
-template <realm::type_info::ListPersistable T>
-void persisted_container_base<T>::push_back(const typename T::value_type& a) requires (type_info::PrimitivePersistable<typename T::value_type>) {
-    if (this->m_object) {
-        m_backing_list.add(type_info::convert_if_required<typename T::value_type>(a));
-    } else {
-        this->unmanaged.push_back(a);
+    T operator +(const T& a) {
+        return *this + 1;
     }
-}
-
-template <realm::type_info::ListPersistable T>
-void persisted_container_base<T>::push_back(typename T::value_type& a)
-requires (type_info::ObjectBasePersistable<typename T::value_type>) {
-    if (this->m_object) {
-        if (!a.m_object) {
-            if (this->m_object->obj().get_table()->get_link_target(this->managed)->is_embedded()) {
-                a.m_object = Object(m_backing_list.get_realm(),
-                                    m_backing_list.add_embedded());
-                T::value_type::schema::set(a);
-            } else {
-                T::value_type::schema::add(a, this->m_object->obj().get_table()->get_link_target(this->managed),
-                                           m_backing_list.get_realm());
-            }
-        }
-        if (!this->m_object->obj().get_table()->get_link_target(this->managed)->is_embedded()) {
-            m_backing_list.add(a.m_object->obj().get_key());
-        }
-    } else {
-        this->unmanaged.push_back(a);
-    }
-}
-
-template <realm::type_info::ListPersistable T>
-void persisted_container_base<T>::push_back(typename T::value_type&& a)
-requires (type_info::ObjectBasePersistable<typename T::value_type>) {
-    if (this->m_object) {
-        push_back(a);
-    } else {
-        this->unmanaged.push_back(std::move(a));
-    }
-}
-
-template <realm::type_info::ListPersistable T>
-void persisted_container_base<T>::set(size_type pos, const typename T::value_type& a)
-requires (type_info::PrimitivePersistable<typename T::value_type>) {
-    if (this->m_object) {
-        auto as_core_type = static_cast<typename type_info::persisted_type<typename T::value_type>::type>(a);
-        m_backing_list.set(pos, as_core_type);
-    } else {
-        this->unmanaged[pos] = a;
-    }
-}
-
-template <realm::type_info::ListPersistable T>
-void persisted_container_base<T>::set(size_type pos, typename T::value_type& a)
-requires (type_info::ObjectBasePersistable<typename T::value_type>) {
-    if (this->m_obj) {
-        if (!a.m_obj) {
-            T::value_type::schema::add(a, this->m_obj->get_table()->get_link_target(this->managed), nullptr);
-        }
-        m_backing_list.set(pos, a.m_obj->get_key());
-    } else {
-        this->unmanaged[pos] = a;
-    }
-}
-
-template <realm::type_info::ListPersistable T>
-void persisted_container_base<T>::set(size_type pos, typename T::value_type&& a)
-requires (type_info::ObjectBasePersistable<typename T::value_type>) {
-    if (this->m_obj) {
-        set(pos, a);
-    } else {
-        this->unmanaged[pos] = std::move(a);
-    }
-}
-
-template <realm::type_info::ListPersistable T>
-size_t persisted_container_base<T>::find(const typename T::value_type& a) requires (type_info::PrimitivePersistable<typename T::value_type>) {
-    if (this->m_object) {
-        return m_backing_list.find(type_info::convert_if_required<typename T::value_type>(a));
-    } else {
-        auto it = std::find(this->unmanaged.begin(), this->unmanaged.end(), a);
-        if (it != this->unmanaged.end()) {
-          return std::distance(this->unmanaged.begin(), it);
-        } else {
-            return realm::npos;
-        }
-    }
-}
-
-template <realm::type_info::ListPersistable T>
-size_t persisted_container_base<T>::find(const typename T::value_type& a)
-requires (type_info::ObjectBasePersistable<typename T::value_type>) {
-    if (this->m_object && this->m_object->is_valid() && a.m_object && a.m_object->is_valid()) {
-        return m_backing_list.find(a.m_object->obj().get_key());
-    } else {
-        // unmanaged objects in vectors aren't equatable.
-        return realm::npos;
-    }
-}
-
-template <realm::type_info::ListPersistable T>
-void persisted_container_base<T>::pop_back() {
-    if (this->m_object) {
-        if (auto size = m_backing_list.size()) {
-            m_backing_list.remove(size - 1);
-        }
-    } else {
-        this->unmanaged.pop_back();
-    }
-}
-
-template <realm::type_info::ListPersistable T>
-void persisted_container_base<T>::erase(size_type pos) {
-    if (this->m_object) {
-        m_backing_list.remove(pos);
-    } else {
-        this->unmanaged.erase(this->unmanaged.begin() + pos);
-    }
-}
-
-template <realm::type_info::ListPersistable T>
-void persisted_container_base<T>::clear() {
-    if (this->m_object) {
-        m_backing_list.remove_all();
-    } else {
-        this->unmanaged.clear();
-    }
-}
-
-template <realm::type_info::ListPersistable T>
-typename T::value_type persisted_container_base<T>::operator[](typename T::size_type a)
-requires (type_info::PrimitivePersistable<typename T::value_type>) {
-    if (this->m_object) {
-        if constexpr (realm::type_info::BinaryPersistable<typename T::value_type>) {
-            auto binary_data = m_backing_list.get<BinaryData>(a);
-            return std::vector<uint8_t>(binary_data.data(), binary_data.data()+binary_data.size());
-        } else {
-            return static_cast<typename T::value_type>(m_backing_list.get<typename type_info::persisted_type<typename T::value_type>::type>(a));
-        }
-    } else {
-        return this->unmanaged[a];
-    }
-}
-
-template <realm::type_info::ListPersistable T>
-typename T::value_type persisted_container_base<T>::operator[](typename T::size_type idx)
-requires (type_info::ObjectBasePersistable<typename T::value_type>) {
-    if (this->m_object) {
-        return T::value_type::schema::create(m_backing_list.get(idx), this->m_backing_list.get_realm());
-    } else {
-        return this->unmanaged[idx];
-    }
-}
-
-template <realm::type_info::ListPersistable T>
-notification_token persisted_container_base<T>::observe(util::UniqueFunction<void(collection_change<T>)> handler)
-{
-    if (!this->m_object) {
-        throw std::runtime_error("Only collections which are managed by a Realm support change notifications");
-    }
-
-    if (!this->m_object->is_valid()) {
-        throw std::runtime_error("Only collections which are managed by a Realm support change notifications");
-    }
-
-    notification_token token;
-    token.m_token = m_backing_list.add_notification_callback(collection_callback_wrapper<T> { std::move(handler), *static_cast<persisted<T>*>(this), false });
-    return token;
-}
-
-template <realm::type_info::ListPersistable T>
-struct persisted<T> : public persisted_container_base<T> {
-    using persisted_container_base<T>::persisted_container_base;
-    using persisted_container_base<T>::operator=;
-};
-
-template <realm::type_info::BinaryPersistable T>
-struct persisted_binary_base : public persisted_base<T> {
-    using value_type = typename T::value_type;
-    using size_type = typename T::size_type;
-
-    typename T::value_type operator[](size_type pos)
-    {
+    void operator +=(const T& a) {
         if (this->m_object) {
-            return this->m_object->obj().template get<BinaryData>(this->managed)[pos];
+            this->m_object->obj().template set<typename persisted_base<T>::type>(this->managed, *(*this) + a);
         } else {
-            return this->unmanaged[pos];
+            this->unmanaged += a;
         }
     }
-    void push_back(value_type a)
-    {
-        if (this->m_object) {
-            BinaryData data = this->m_object->obj().template get<BinaryData>(this->managed);
-            std::string data_tmp = data.data();
-            data_tmp += a;
-            data = BinaryData(data_tmp);
-            this->m_object->obj().set(this->managed, data);
-        } else {
-            this->unmanaged.push_back(a);
-        }
+    void operator ++() {
+        *this += 1;
     }
+    T operator *(const T& a);
+    void operator *=(const T& a);
+    T operator /(const T& a);
+    void operator /=(const T& a);
 };
 
-template <realm::type_info::BinaryPersistable T>
-struct persisted<T> : public persisted_binary_base<T> {
-    using persisted_binary_base<T>::persisted_binary_base;
-    using persisted_binary_base<T>::operator=;
-};
+//// MARK: Implementation
 
-// MARK: Implementation
-
-template <realm::type_info::Persistable T>
-persisted_base<T>::persisted_base() {
+template <typename T>
+persisted_base<T, realm::type_info::Persistable<T>>::persisted_base() {
     new (&unmanaged) T();
 }
-template <realm::type_info::Persistable T>
-persisted_base<T>::persisted_base(const T& value) {
+template <typename T>
+persisted_base<T, realm::type_info::Persistable<T>>::persisted_base(const T& value) {
     unmanaged = value;
 }
-template <realm::type_info::Persistable T>
-persisted_base<T>::persisted_base(T&& value) {
+template <typename T>
+persisted_base<T, realm::type_info::Persistable<T>>::persisted_base(T&& value) {
     unmanaged = std::move(value);
 }
-template <realm::type_info::Persistable T>
-persisted_base<T>::persisted_base(const char* value) requires realm::type_info::StringPersistable<T> {
-    new (&unmanaged) std::string(value);
-}
-template <realm::type_info::Persistable T>
-template <typename S>
-requires (type_info::ObjectBasePersistable<T>)
-persisted_base<T>::persisted_base(std::optional<S> value) {
-    unmanaged = value;
-}
-template <realm::type_info::Persistable T>
-persisted_base<T>::~persisted_base()
+
+template <typename T>
+persisted_base<T, realm::type_info::Persistable<T>>::~persisted_base()
 {
     if (should_detect_usage_for_queries) {
         return;
     }
-    if constexpr (type_info::ListPersistable<T>) {
-        using std::vector;
-        if (!m_object) {
-            unmanaged.clear();
+    if constexpr (!type_info::PrimitivePersistableConcept<T>::value) {
+        if constexpr (type_info::ListPersistableConcept<T>::value) {
+            using std::vector;
+            if (!m_object) {
+                unmanaged.clear();
+            }
         }
     } else if constexpr (std::is_same_v<T, std::string>) {
         if (!m_object) {
@@ -569,139 +420,9 @@ persisted_base<T>::~persisted_base()
         }
     }
 }
-template <realm::type_info::Persistable T>
-persisted_base<T>::persisted_base(const persisted_base& o) {
-    *this = o;
-}
-template <realm::type_info::Persistable T>
-persisted_base<T>::persisted_base(persisted_base&& o) {
-    *this = std::move(o);
-}
-template <realm::type_info::Persistable T>
-template <typename S>
-requires (type_info::StringPersistable<T>) && std::is_same_v<S, const char*>
-persisted_base<T>& persisted_base<T>::operator=(S o) {
-    if (auto obj = m_object) {
-        // TODO: Simplify this?
-        obj->obj().template set<type>(managed, o);
-    } else {
-        unmanaged = o;
-    }
-    return *this;
-}
-
-template <realm::type_info::Persistable T>
-persisted_base<T>& persisted_base<T>::operator=(const T& o) {
-    if (auto obj = m_object) {
-        // if parent is managed...
-        if constexpr (type_info::OptionalObjectPersistable<T>) {
-            // if object...
-            if (auto link = o) {
-                // if non-null object is being assigned...
-                if (link->m_object) {
-                    // if object is managed, we will to set the link
-                    // to the new target's key
-                    obj->obj().template set<type>(managed, link->m_object->obj().get_key());
-                } else {
-                    // else new unmanaged object is being assigned.
-                    // we must assign the values to this object's fields
-                    // TODO:
-                    REALM_UNREACHABLE();
-                }
-            } else {
-                // else null link is being assigned to this field
-                // e.g., `person.dog = std::nullopt;`
-                // set the parent column to null and unset the co
-                obj->obj().set_null(managed);
-            }
-        } else if constexpr (type_info::EmbeddedObjectPersistable<T>) {
-            // if non-null object is being assigned...
-            if (o.m_object) {
-                // if object is managed, we will to set the link
-                // to the new target's key
-                obj->obj().template set<type>(managed, o.m_object->obj().get_key());
-            } else {
-                // else new unmanaged object is being assigned.
-                // we must assign the values to this object's fields
-                // TODO:
-                REALM_UNREACHABLE();
-            }
-        } else {
-            obj->obj().template set<type>(managed, o);
-        }
-    } else {
-        new (&unmanaged) T(o);
-    }
-    return *this;
-}
-
-template <realm::type_info::Persistable T>
-persisted_base<T>& persisted_base<T>::operator=(const persisted_base& o) {
-    if (auto obj = o.m_object) {
-        m_object = obj;
-        new (&managed) ColKey(o.managed);
-    } else {
-        new (&unmanaged) T(o.unmanaged);
-    }
-    return *this;
-}
-
-template <realm::type_info::Persistable T>
-persisted_base<T>& persisted_base<T>::operator=(persisted_base&& o) {
-    if (o.m_object) {
-        m_object = o.m_object;
-        new (&managed) ColKey(std::move(o.managed));
-    } else {
-        new (&unmanaged) T(std::move(o.unmanaged));
-    }
-    return *this;
-}
-
-template <realm::type_info::Persistable T>
-T persisted_base<T>::operator *() const
-{
-    if (m_object) {
-        if constexpr (type_info::OptionalPersistable<T> || type_info::EmbeddedObjectPersistable<T>) {
-            if constexpr (type_info::EmbeddedObjectPersistable<T>) {
-                return T::schema::create(m_object->obj().get_linked_object(managed), m_object->get_realm());
-            } else if constexpr (type_info::ObjectBasePersistable<typename T::value_type>) {
-                return T::value_type::schema::create(m_object->obj().get_linked_object(managed), m_object->get_realm());
-            } else {
-                auto value = m_object->obj().template get<type>(managed);
-                // convert optionals
-                if (value) {
-                    return T(*value);
-                } else {
-                    return T();
-                }
-            }
-        } else {
-            if constexpr (type_info::ListPersistable<T>) {
-                T v;
-                auto lst = m_object->obj().template get_list_values<typename type_info::persisted_type<typename T::value_type>::type>(managed);
-                for (size_t i; i < lst.size(); i++) {
-                    if constexpr (type_info::ObjectBasePersistable<typename T::value_type>) {
-                        auto obj = lst.get_object(i);
-                        v.push_back(T::value_type::schema::create(obj, obj.get_table(), nullptr));
-                    } else {
-                        v.push_back(static_cast<typename T::value_type>(lst[i]));
-                    }
-                }
-
-                return v;
-            } if constexpr (std::is_same_v<realm::BinaryData, type>) {
-                realm::BinaryData binary = m_object->obj().template get<type>(managed);
-                return std::vector<uint8_t>(binary.data(), binary.data() + binary.size());
-            } else {
-                return static_cast<T>(m_object->obj().template get<type>(managed));
-            }
-        }
-    } else {
-        return unmanaged;
-    }
-}
 
 // MARK: rbool
+
 class rbool {
     bool is_for_queries = false;
     rbool(Query&& q) : q(std::move(q)), is_for_queries(true) {}
@@ -715,32 +436,61 @@ class rbool {
             b = r.b;
     }
     friend rbool operator &&(const rbool& lhs, const rbool& rhs);
-    template <realm::type_info::Persistable T>
-    friend rbool operator==(const persisted<T>& a, const T& b) requires (Equatable<T>);
-    template <realm::type_info::Persistable T>
-    friend rbool operator==(const persisted<T>& a, const persisted<T>& b) requires (Equatable<T>);
-    template <realm::type_info::Persistable T>
-    friend rbool operator==(const persisted<T>& a, const char* b) requires (Equatable<T>);
+    template <typename T>
+    friend rbool operator==(const persisted<T>& a, const T& b);
+    template <typename T>
+    friend rbool operator==(const persisted<T>& a, const persisted<T>& b);
+    template <typename T>
+    friend rbool operator==(const persisted<T>& a, const char* b);
+    template <template <typename ...> typename Variant, typename ...Ts, typename V>
+    std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
+    friend operator==(const persisted<Variant<Ts...>>& a, const V& b);
 
-    template <realm::type_info::NonContainerPersistable T>
+    template <typename T, typename>
     friend struct persisted_noncontainer_base;
+    template <typename T, typename>
+    friend struct persisted;
     template <typename T>
     friend struct results;
 
-    template <realm::type_info::Persistable T>
-    friend rbool operator!=(const persisted<T>& a, const T& b) requires (Equatable<T>);
-    template <realm::type_info::Persistable T>
-    friend rbool operator!=(const persisted<T>& a, const persisted<T>& b) requires (Equatable<T>);
-    template <realm::type_info::Persistable T>
-    friend rbool operator!=(const persisted<T>& a, const char* b) requires (Equatable<T>);
+    template <typename T>
+    friend rbool operator!=(const persisted<T>& a, const T& b);
+    template <typename T>
+    friend rbool operator!=(const persisted<T>& a, const persisted<T>& b);
+    template <typename T>
+    friend rbool operator!=(const persisted<T>& a, const char* b);
 
     friend rbool operator ||(const rbool& lhs, const rbool& rhs);
+    template <typename V>
+    std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
+    friend inline operator <(const persisted<V>& lhs, const V& a);
+    template <typename V>
+    std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
+    friend inline operator >(const persisted<V>& lhs, const V& a);
+    template <typename V>
+    std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
+    friend inline operator <=(const persisted<V>& lhs, const V& a);
+    template <typename V>
+    std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
+    friend inline operator >=(const persisted<V>& lhs, const V& a);
+    template <typename V>
+    std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
+    friend inline operator >(const persisted<V>& lhs, const persisted<V>& a);
+    template <typename V>
+    std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
+    friend inline operator <(const persisted<V>& lhs, const persisted<V>& a);
+    template <typename V>
+    std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
+    friend inline operator >=(const persisted<V>& lhs, const persisted<V>& a);
+    template <typename V>
+    std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
+    friend inline operator <=(const persisted<V>& lhs, const persisted<V>& a);
 public:
     ~rbool() {
         if (is_for_queries)
             q.~Query();
     }
-    operator bool() {
+    operator bool() const {
         return b;
     }
     union {
@@ -748,8 +498,8 @@ public:
         mutable Query q;
     };
 };
-
-// MARK: Equatable
+//
+//// MARK: Equatable
 
 inline rbool operator &&(const rbool& lhs, const rbool& rhs) {
     if (lhs.is_for_queries) {
@@ -766,19 +516,19 @@ inline rbool operator ||(const rbool& lhs, const rbool& rhs) {
     return lhs.b && rhs.b;
 }
 
-template <realm::type_info::Persistable T>
-rbool operator==(const persisted<T>& a, const T& b) requires (Equatable<T>)
+template <typename T>
+rbool operator==(const persisted<T>& a, const T& b)
 {
     if (a.should_detect_usage_for_queries) {
         auto query = Query(a.query->get_table());
-        query.equal(a.managed, type_info::convert_if_required<T>(b));
+        query.equal(a.managed, type_info::persisted_type<T>::convert_if_required(b));
         return {std::move(query)};
     }
     return *a == b;
 }
 
-template <realm::type_info::Persistable T>
-rbool operator==(const persisted<T>& a, const persisted<T>& b) requires (Equatable<T>)
+template <typename T>
+rbool operator==(const persisted<T>& a, const persisted<T>& b)
 {
     if (a.should_detect_usage_for_queries) {
         auto query = Query(a.query->get_table());
@@ -788,19 +538,38 @@ rbool operator==(const persisted<T>& a, const persisted<T>& b) requires (Equatab
     return *a == *b;
 }
 
-template <realm::type_info::Persistable T>
-rbool operator!=(const persisted<T>& a, const T& b) requires (Equatable<T>)
+template <template <typename ...> typename Variant, typename ...Ts, typename V>
+std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
+operator==(const persisted<Variant<Ts...>>& a, const V& b)
 {
     if (a.should_detect_usage_for_queries) {
         auto query = Query(a.query->get_table());
-        query.not_equal(a.managed, type_info::convert_if_required<T >(b));
+        query.equal(a.managed, type_info::persisted_type<V>::convert_if_required(b));
+        return {std::move(query)};
+    }
+    return std::visit([&b](auto&& arg) {
+        using M = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_convertible_v<M, V>) {
+            return arg == b;
+        } else {
+            return false;
+        }
+    }, *a);
+}
+
+template <typename T>
+rbool operator!=(const persisted<T>& a, const T& b)
+{
+    if (a.should_detect_usage_for_queries) {
+        auto query = Query(a.query->get_table());
+        query.not_equal(a.managed, type_info::persisted_type<T>::convert_if_required(b));
         return {std::move(query)};
     }
     return !(a == b);
 }
 
-template <realm::type_info::Persistable T>
-rbool operator!=(const persisted<T>& a, const persisted<T>& b) requires (Equatable<T>)
+template <typename T>
+rbool operator!=(const persisted<T>& a, const persisted<T>& b)
 {
     if (a.should_detect_usage_for_queries) {
         auto query = Query(a.query->get_table());
@@ -809,18 +578,20 @@ rbool operator!=(const persisted<T>& a, const persisted<T>& b) requires (Equatab
     }
     return !(a == b);
 }
-template <realm::type_info::Persistable T>
-rbool operator==(const persisted<T>& a, const char* b) requires (Equatable<T>)
+
+template <typename T>
+rbool operator==(const persisted<T>& a, const char* b)
 {
     if (a.should_detect_usage_for_queries) {
         auto query = Query(a.query->get_table());
         query.equal(a.managed, b);
         return {std::move(query)};
     }
-    return *a == b;
+    return type_info::persisted_type<T>::convert_if_required(*a) == b;
 }
-template <realm::type_info::Persistable T>
-rbool operator!=(const persisted<T>& a, const char* b) requires (Equatable<T>)
+
+template <typename T>
+rbool operator!=(const persisted<T>& a, const char* b)
 {
     if (a.should_detect_usage_for_queries) {
         auto query = Query(a.query->get_table());
@@ -829,194 +600,123 @@ rbool operator!=(const persisted<T>& a, const char* b) requires (Equatable<T>)
     }
     return !(a == b);
 }
-template <realm::type_info::Persistable T>
-typename persisted_base<T>::type persisted_base<T>::as_core_type() const
-{
-    if constexpr (type_info::ObjectBasePersistable<T>) {
-        if (m_object) {
-            return m_object->obj().template get<type>(managed);
-        } else {
-            REALM_ASSERT(false);
-        }
-    } else {
-        if (m_object) {
-            if constexpr (type_info::ListPersistable<T>) {
-                return m_object->obj().template get_list_values<typename type_info::persisted_type<typename T::value_type>::type>(managed);
-            } else {
-                return m_object->obj().template get<type>(managed);
-            }
-        } else {
-            return type_info::convert_if_required<T>(unmanaged);
-        }
-    }
-}
 
-// MARK: Arithmetics
-template <type_info::NonContainerPersistable T>
-void persisted_noncontainer_base<T>::operator -=(const T& a) requires (type_info::IntPersistable<T> || type_info::DoublePersistable<T>) {
-    if (this->m_obj) {
-        this->m_obj->template set<type>(this->managed, *(*this) - a);
-    } else {
-        this->unmanaged -= a;
-    }
-}
-
-template <realm::type_info::NonContainerPersistable T>
-void persisted_noncontainer_base<T>::operator --() requires (type_info::IntPersistable<T> || type_info::DoublePersistable<T>) {
-    *this -= 1;
-}
-
-template <realm::type_info::NonContainerPersistable T>
-T persisted_noncontainer_base<T>::operator -() requires (type_info::IntPersistable<T> || type_info::DoublePersistable<T>) {
-    return *this * -1;
-}
-
-template <realm::type_info::NonContainerPersistable T>
-void persisted_noncontainer_base<T>::operator +=(const T& a) requires (type_info::AddAssignable<T>) {
-    if (this->m_object) {
-        this->m_object->obj().template set<type>(this->managed, *(*this) + a);
-    } else {
-        this->unmanaged += a;
-    }
-}
-
-template <realm::type_info::NonContainerPersistable T>
-T persisted_noncontainer_base<T>::operator *(const T& a) requires (type_info::AddAssignable<T>) {
-    return **this * a;
-}
-
-template <realm::type_info::NonContainerPersistable T>
-void persisted_noncontainer_base<T>::operator ++() requires (type_info::AddAssignable<T>) {
-    *this += 1;
-}
-
-// MARK: Comparisons
-
-template <realm::type_info::NonContainerPersistable T>
-rbool persisted_noncontainer_base<T>::operator <(const T& a) requires (type_info::Comparable<T>) {
-    if (this->should_detect_usage_for_queries) {
-        auto query = Query(this->query->get_table());
-        query.less(this->managed, type_info::convert_if_required<T >(a));
+// MARK: Comparable
+template <typename T>
+std::enable_if_t<type_info::ComparableConcept<T>::value, rbool>
+inline operator <(const persisted<T>& lhs, const T& a) {
+    if (lhs.should_detect_usage_for_queries) {
+        auto query = Query(lhs.query->get_table());
+        query.less(lhs.managed, type_info::persisted_type<T>::convert_if_required(a));
         return {std::move(query)};
     }
-    return **this < a;
+    return *lhs < a;
 }
-template <realm::type_info::NonContainerPersistable T>
-rbool persisted_noncontainer_base<T>::operator >(const T& a) requires (type_info::Comparable<T>) {
-    if (this->should_detect_usage_for_queries) {
-        auto query = Query(this->query->get_table());
-        query.greater(this->managed, type_info::convert_if_required<T >(a));
+template <typename T>
+std::enable_if_t<type_info::ComparableConcept<T>::value, rbool>
+inline operator >(const persisted<T>& lhs, const T& a) {
+    if (lhs.should_detect_usage_for_queries) {
+        auto query = Query(lhs.query->get_table());
+        query.greater(lhs.managed, type_info::persisted_type<T>::convert_if_required(a));
         return {std::move(query)};
     }
-    return **this > a;
+    return *lhs > a;
 }
-template <realm::type_info::NonContainerPersistable T>
-rbool persisted_noncontainer_base<T>::operator <=(const T& a) requires (type_info::Comparable<T>) {
-    if (this->should_detect_usage_for_queries) {
-        auto query = Query(this->query->get_table());
-        query.less_equal(this->managed, type_info::convert_if_required<T >(a));
+template <typename T>
+std::enable_if_t<type_info::ComparableConcept<T>::value, rbool>
+inline operator <=(const persisted<T>& lhs, const T& a) {
+    if (lhs.should_detect_usage_for_queries) {
+        auto query = Query(lhs.query->get_table());
+        query.less_equal(lhs.managed, type_info::persisted_type<T>::convert_if_required(a));
         return {std::move(query)};
     }
-    return **this <= a;
+    return *lhs <= a;
 }
-template <realm::type_info::NonContainerPersistable T>
-rbool persisted_noncontainer_base<T>::operator >=(const T& a) requires (type_info::Comparable<T>) {
-    if (this->should_detect_usage_for_queries) {
-        auto query = Query(this->query->get_table());
-        query.greater_equal(this->managed, type_info::convert_if_required<T >(a));
+template <typename T>
+std::enable_if_t<type_info::ComparableConcept<T>::value, rbool>
+inline operator >=(const persisted<T>& lhs, const T& a) {
+    if (lhs.should_detect_usage_for_queries) {
+        auto query = Query(lhs.query->get_table());
+        query.greater_equal(lhs.managed, type_info::persisted_type<T>::convert_if_required(a));
         return {std::move(query)};
     }
-    return **this >= a;
+    return *lhs >= a;
 }
 
-template <realm::type_info::NonContainerPersistable T>
-rbool persisted_noncontainer_base<T>::operator <(const persisted<T>& a) requires (type_info::Comparable<T>) {
-    if (this->should_detect_usage_for_queries) {
-        auto query = Query(this->query->get_table());
-        query.less(this->managed, a.managed);
+template <typename T>
+std::enable_if_t<type_info::ComparableConcept<T>::value, rbool>
+inline operator <(const persisted<T>& lhs, const persisted<T>& a) {
+    if (lhs.should_detect_usage_for_queries) {
+        auto query = Query(lhs.query->get_table());
+        query.less(lhs.managed, a.managed);
         return {std::move(query)};
     }
-    return **this < *a;
+    return *lhs < *a;
 }
-template <realm::type_info::NonContainerPersistable T>
-rbool persisted_noncontainer_base<T>::operator >(const persisted<T>& a) requires (type_info::Comparable<T>) {
-    if (this->should_detect_usage_for_queries) {
-        auto query = Query(this->query->get_table());
-        query.greater(this->managed, a.managed);
+template <typename T>
+std::enable_if_t<type_info::ComparableConcept<T>::value, rbool>
+inline operator >(const persisted<T>& lhs, const persisted<T>& a) {
+    if (lhs.should_detect_usage_for_queries) {
+        auto query = Query(lhs.query->get_table());
+        query.greater(lhs.managed, a.managed);
         return {std::move(query)};
     }
-    return **this > *a;
+    return *lhs > *a;
 }
-template <realm::type_info::NonContainerPersistable T>
-rbool persisted_noncontainer_base<T>::operator <=(const persisted<T>& a) requires (type_info::Comparable<T>) {
-    if (this->should_detect_usage_for_queries) {
-        auto query = Query(this->query->get_table());
-        query.less_equal(this->managed, a.managed);
+template <typename T>
+std::enable_if_t<type_info::ComparableConcept<T>::value, rbool>
+inline operator <=(const persisted<T>& lhs, const persisted<T>& a) {
+    if (lhs.should_detect_usage_for_queries) {
+        auto query = Query(lhs.query->get_table());
+        query.less_equal(lhs.managed, a.managed);
         return {std::move(query)};
     }
-    return **this <= *a;
+    return *lhs <= *a;
 }
-template <realm::type_info::NonContainerPersistable T>
-rbool persisted_noncontainer_base<T>::operator >=(const persisted<T>& a) requires (type_info::Comparable<T>) {
-    if (this->should_detect_usage_for_queries) {
-        auto query = Query(this->query->get_table());
-        query.greater_equal(this->managed, a.managed);
+template <typename T>
+std::enable_if_t<type_info::ComparableConcept<T>::value, rbool>
+inline operator >=(const persisted<T>& lhs, const persisted<T>& a) {
+    if (lhs.should_detect_usage_for_queries) {
+        auto query = Query(lhs.query->get_table());
+        query.greater_equal(lhs.managed, a.managed);
         return {std::move(query)};
     }
-    return **this >= *a;
+    return *lhs >= *a;
 }
 
-template <type_info::NonContainerPersistable T>
-rbool persisted_noncontainer_base<T>::contains(const char *str) requires(std::is_same_v<T, std::string>) {
-    if (this->should_detect_usage_for_queries) {
-        auto query = Query(this->query->get_table());
-        query.contains(this->managed, StringData(str));
-        return {std::move(query)};
-    } else if (auto m_obj = this->m_object) {
-        StringData actual = m_obj->obj().template get<StringData>(this->managed);
-        return actual.contains(str);
-    } else {
-        return this->unmanaged.find(str) != std::string::npos;
-    }
-}
-
-template <realm::type_info::Persistable T>
-void persisted_base<T>::assign(const Obj& object, const ColKey& col_key, SharedRealm realm) {
-    m_object = Object(realm, object);
-    managed = ColKey(col_key);
-}
-
-template <realm::type_info::ListPersistable T>
-void persisted_container_base<T>::assign(const Obj& object, const ColKey& col_key, SharedRealm realm) {
-    this->m_object = Object(realm, object);
-    this->managed = ColKey(col_key);
-    m_backing_list = List(realm, object, this->managed);
-}
-
-template <realm::type_info::Persistable T>
+template <typename T>
 std::ostream& operator<< (std::ostream& stream, const persisted<T>& value)
 {
-    return stream << *value;
+    return stream << type_info::persisted_type<T>::convert_if_required(*value);
 }
 
-template <realm::type_info::ObjectBasePersistable T>
-std::ostream& operator<< (std::ostream& stream, const T& object)
+template <typename T>
+typename std::enable_if<std::is_base_of<realm::object_base, T>::value, std::ostream>::type&
+operator<< (std::ostream& stream, const T& object)
 {
+    static_assert(type_info::ObjectBasePersistableConcept<T>::value);
     if (object.m_object) {
         return stream << object.m_object->obj();
     }
-
+//    for (int i = 0; i < std::tuple_size<decltype(T::schema.properties)>{}; i++) {
+//        auto props = std::get<i>(T::schema.properties);
+//        auto name = T::schema.names[i];
+//        stream << "{\n";
+//        (stream << "\t" << name << ": " << *(object.*props.ptr) << "\n");
+//        stream << "}";
+//    }
     std::apply([&stream, &object](auto&&... props) {
         stream << "{\n";
         ((stream << "\t" << props.name << ": " << *(object.*props.ptr) << "\n"), ...);
         stream << "}";
-    }, T::schema::properties);
+    }, T::schema.properties);
 
     return stream;
 }
 
-template <realm::type_info::BinaryPersistable T>
-std::ostream& operator<< (std::ostream& stream, const T& binary)
+template <typename T>
+typename std::enable_if_t<type_info::BinaryPersistableConcept<T>::value, std::ostream>&
+        operator<< (std::ostream& stream, const T& binary)
 {
     return stream << binary;
 }

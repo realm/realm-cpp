@@ -19,6 +19,11 @@
 #ifndef REALM_ADMIN_UTILS_HPP
 #define REALM_ADMIN_UTILS_HPP
 
+#if __APPLE__
+#include <TargetConditionals.h>
+#endif
+
+#if TARGET_OS_SIMULATOR == 0 && TARGET_OS_IPHONE == 0 && TARGET_OS_WATCH == 0 && TARGET_OS_TV == 0
 #include <cstdio>
 #include <filesystem>
 #include <iostream>
@@ -40,9 +45,6 @@
 #include <realm/object-store/property.hpp>
 #include <realm/util/scope_exit.hpp>
 
-#if __APPLE__
-#include <CoreFoundation/CFBundle.h>
-#endif
 using namespace std::filesystem;
 
 namespace {
@@ -50,85 +52,43 @@ namespace {
     using namespace realm;
 
     realm::app::Response do_http_request(app::Request &&request) {
-        app::Response r_response;
-        std::condition_variable cv;
-        std::mutex m;
-        bool ready = false;
-        std::unique_lock lk(m);
+        std::promise<app::Response> p;
         transport.send_request_to_server(std::move(request),
-                                         [&r_response, &ready, &lk, &cv](auto request, auto response){
-            r_response = std::move(response);
-            ready = true;
-            lk.unlock();
-            cv.notify_one();
+                                         [&p](auto request, auto response){
+            p.set_value(std::move(response));
         });
-        cv.wait(lk, [&ready]{return ready;});
-        return r_response;
+        return p.get_future().get();
     }
 
     struct Process {
         std::string launch_path;
         std::map<std::string, std::string> environment = {};
         std::vector<std::string> arguments = {};
-        std::thread thread;
-        std::atomic<FILE*> pipe;
-        std::atomic<bool> is_running;
-        std::atomic<bool> is_cancelled;
-        int termination_status = -1;
-        std::atomic<int> pid = -1;
 
-        ~Process() {
-            is_running = false;
-            is_cancelled = true;
-
-            if (thread.joinable()) {
-                thread.join();
-            }
-        }
         void run() {
-            auto command = std::string();
-            if (!environment.empty()) {
-                command += "" + std::accumulate(environment.begin(),
-                                                environment.end(),
-                                                std::string(),
-                                                [&](auto one, auto &two) {
-                                                    return one + " " + two.first + "=" + two.second;
-                                                });
-                command += " ";
+            auto command = launch_path;
+            std::vector<const char*> args;
+            args.push_back(launch_path.data());
+            for (auto& arg : arguments) {
+                args.push_back(arg.data());
             }
-            command += launch_path;
-            if (!arguments.empty()) {
-                command += std::accumulate(arguments.begin(),
-                                           arguments.end(),
-                                           std::string(),
-                                           [](auto one, auto &two) {
-                                               return one + " " + two;
-                                           });
+            args.push_back(nullptr);
+            std::vector<const char*> env;
+            std::vector<std::string> env_hold;
+            for (auto &[k,v] : environment) {
+                std::string cat;
+                cat.append(k).append("=").append(v);
+                env_hold.push_back(cat);
+                env.push_back(env_hold[env_hold.size() - 1].data());
             }
+            env.push_back(nullptr);
 
-            if (!environment.empty()) {
-                command += "";
+            int ev = execve(command.data(),
+                            const_cast<char* const*>(args.data()),
+                            const_cast<char* const*>(env.data()));
+            if (ev == -1) {
+                std::cout<<errno<<std::endl;
             }
-
-            thread = std::thread([&, command] {
-                is_running = true;
-                pipe = popen(command.c_str(), "w");
-                int child_pid;
-                fscanf(pipe, "%d", &child_pid);
-                pid = child_pid;
-                char path[PATH_MAX];
-                while (pipe != nullptr && fgets(path, PATH_MAX, pipe) != nullptr && !is_cancelled) {
-                    std::cout<<path<<std::endl;
-                }
-
-                is_running = false;
-            });
-        }
-
-        void wait_until_exit() noexcept {
-            while (pipe == nullptr || pid == -1) {
-            }
-            waitpid(pid, nullptr, 0);
         }
     };
 
@@ -260,7 +220,6 @@ namespace {
 
 struct Admin {
     struct Session {
-        static Admin::Session shared;
         std::string access_token;
         std::string group_id;
 
@@ -352,7 +311,7 @@ struct Admin {
             return session;
         }
 
-        template <type_info::ObjectBasePersistable ...Ts>
+        template <typename ...Ts>
         [[nodiscard]] std::string create_app(bson::BsonArray queryable_fields = {}) const {
             auto info = static_cast<bson::BsonDocument>(apps.post({{"name", "test"}}));
             auto app_id = static_cast<std::string>(info["_id"]);
@@ -421,7 +380,7 @@ struct Admin {
             bson::BsonDocument schema_ids;
             bson::BsonArray asymmetric_tables;
             std::vector<ObjectSchema> schema;
-            (schema.push_back(Ts::schema::to_core_schema()), ...);
+            (schema.push_back(Ts::schema.to_core_schema()), ...);
             for (auto& os : schema) {
                 if (os.table_type == ObjectSchema::ObjectType::TopLevelAsymmetric) {
                     asymmetric_tables.push_back(os.name);
@@ -461,129 +420,163 @@ struct Admin {
             return static_cast<std::string>(info["client_app_id"]);
         }
     };
+    static inline std::optional<Admin::Session> _shared = std::nullopt;
+    static Admin::Session shared();
 };
-namespace {
-    class RealmServer {
-        static inline path root_url = current_path();
-        static inline path build_dir = root_url.string() + "/.baas";
-        static inline path bin_dir = build_dir.string() + "/bin";
-        Process server_process;
-        Process mongo_process;
 
-        void launch_server_process() {
-            auto lib_dir = build_dir.string() + "/lib";
-            auto bin_path = "$PATH:" + bin_dir.string();
-            auto aws_access_key_id = getenv("AWS_ACCESS_KEY_ID");
-            auto aws_secret_access_key = getenv("AWS_SECRET_ACCESS_KEY");
-            std::map<std::string, std::string> env = {
-                    {"PATH",                  bin_path},
-                    {"DYLD_LIBRARY_PATH",     lib_dir},
-                    {"LD_LIBRARY_PATH",       lib_dir},
-                    {"AWS_ACCESS_KEY_ID",     aws_access_key_id},
-                    {"AWS_SECRET_ACCESS_KEY", aws_secret_access_key}
-            };
-            auto stitch_root = build_dir.string() + "/go/src/github.com/10gen/stitch";
+struct RealmServer {
+    static inline path root_url = current_path();
+    static inline path build_dir = root_url.string() + "/.baas";
+    static inline path bin_dir = build_dir.string() + "/bin";
 
-            for (auto i = 0; i < 5; i++) {
-                auto user_process = Process{
-                        .launch_path = bin_dir.string() + "/create_user",
-                        .environment = env,
-                        .arguments = {
-                                "addUser",
-                                "-domainID",
-                                "000000000000000000000000",
-                                "-mongoURI", "mongodb://localhost:26000",
-                                "-salt", "DQOWene1723baqD!_@#",
-                                "-id", "unique_user@domain.com",
-                                "-password", "password"
-                        }
-                };
-                user_process.run();
-                user_process.wait_until_exit();
-                if (user_process.termination_status == 0) {
-                    break;
+    static Process launch_add_user_process() {
+        auto lib_dir = build_dir.string() + "/lib";
+        auto bin_path = "$PATH:" + bin_dir.string();
+        auto aws_access_key_id = getenv("AWS_ACCESS_KEY_ID");
+        auto aws_secret_access_key = getenv("AWS_SECRET_ACCESS_KEY");
+        std::map<std::string, std::string> env = {
+                {"PATH",                  bin_path},
+                {"DYLD_LIBRARY_PATH",     lib_dir},
+                {"LD_LIBRARY_PATH",       lib_dir},
+                {"AWS_ACCESS_KEY_ID",     aws_access_key_id},
+                {"AWS_SECRET_ACCESS_KEY", aws_secret_access_key}
+        };
+        auto stitch_root = build_dir.string() + "/go/src/github.com/10gen/stitch";
+
+        auto user_process = Process{
+                .launch_path = bin_dir.string() + "/create_user",
+                .environment = env,
+                .arguments = {
+                        "addUser",
+                        "-domainID",
+                        "000000000000000000000000",
+                        "-mongoURI", "mongodb://localhost:26000",
+                        "-salt", "DQOWene1723baqD!_@#",
+                        "-id", "unique_user@domain.com",
+                        "-password", "password"
                 }
+        };
+        std::string command = "";
+        auto arguments = user_process.arguments;
+        auto environment = user_process.environment;
+            if (!environment.empty()) {
+                command += "" + std::accumulate(environment.begin(),
+                                                environment.end(),
+                                                std::string(),
+                                                [&](auto one, auto &two) {
+                                                    return one + " " + two.first + "=" + two.second;
+                                                });
+                command += " ";
             }
-
-            server_process.environment = env;
-            std::filesystem::create_directory(temp_directory_path());
-            server_process.launch_path = bin_dir.string() + "/stitch_server";
-            std::string config_overrides = "config_overrides.json";
-            for (const auto& dirEntry : recursive_directory_iterator(std::filesystem::current_path())) {
-                if (dirEntry.path().string().find("config_overrides.json") != std::string::npos) {
-                    config_overrides = dirEntry.path().string();
-                }
-            }
-            server_process.arguments = {
-                    "--configFile",
-                    stitch_root + "/etc/configs/test_config.json",
-                    "--configFile",
-                    config_overrides
-            };
-
-            server_process.run();
-            wait_for_server_to_start();
-        }
-
-        static inline void wait_for_server_to_start() {
-            auto response = do_http_request({
-                                                    .url="http://localhost:9090/api/admin/v3.0/groups/groupId/apps/appId"
-                                            });
-            while (response.body.empty()) {
-                std::cout << "Server not up" << std::endl;
-                std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-                response = do_http_request({
-                                                   .url="http://localhost:9090/api/admin/v3.0/groups/groupId/apps/appId"
+            command += user_process.launch_path;
+            if (!arguments.empty()) {
+                command += std::accumulate(arguments.begin(),
+                                           arguments.end(),
+                                           std::string(),
+                                           [](auto one, auto &two) {
+                                               return one + " " + two;
                                            });
             }
-            std::cout << "Server started!" << std::endl;
+
+            if (!environment.empty()) {
+                command += "";
+            }
+
+        if (system(command.c_str()) == 1) {
+            abort();
         }
+        return user_process;
+    }
 
-        void launch_mongo_process() {
-            create_directory(temp_directory_path());
+    static Process launch_server_process() {
+        auto lib_dir = build_dir.string() + "/lib";
+        auto bin_path = "$PATH:" + bin_dir.string();
+        auto aws_access_key_id = getenv("AWS_ACCESS_KEY_ID");
+        auto aws_secret_access_key = getenv("AWS_SECRET_ACCESS_KEY");
+        std::map<std::string, std::string> env = {
+                {"PATH",                  bin_path},
+                {"DYLD_LIBRARY_PATH",     lib_dir},
+                {"LD_LIBRARY_PATH",       lib_dir},
+                {"AWS_ACCESS_KEY_ID",     aws_access_key_id},
+                {"AWS_SECRET_ACCESS_KEY", aws_secret_access_key}
+        };
+        auto stitch_root = build_dir.string() + "/go/src/github.com/10gen/stitch";
+        Process server_process;
+        server_process.environment = env;
+        std::filesystem::create_directory(temp_directory_path());
+        server_process.launch_path = bin_dir.string() + "/stitch_server";
+        std::string config_overrides = "config_overrides.json";
+        for (const auto& dirEntry : recursive_directory_iterator(std::filesystem::current_path())) {
+            if (dirEntry.path().string().find("config_overrides.json") != std::string::npos) {
+                config_overrides = dirEntry.path().string();
+            }
+        }
+        server_process.arguments = {
+                "--configFile",
+                stitch_root + "/etc/configs/test_config.json",
+                "--configFile",
+                config_overrides
+        };
 
-            mongo_process.launch_path = bin_dir.string() + "/mongod";
-            mongo_process.arguments = {
-                    "--quiet",
-                    "--dbpath", build_dir.string() + "/db_files",
-                    "--bind_ip", "localhost",
-                    "--port", "26000",
-                    "--replSet", "test"
-            };
-            mongo_process.run();
+        server_process.run();
+        return server_process;
+    }
 
-            Process init_process;
-            init_process.launch_path = bin_dir.string() + "/mongo";
-            init_process.arguments = {
+    static inline void wait_for_server_to_start() {
+        auto response = do_http_request({
+                                                .url="http://localhost:9090/api/admin/v3.0/groups/groupId/apps/appId"
+                                        });
+        while (response.body.empty()) {
+            std::cout << "Server not up" << std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+            response = do_http_request({
+                                               .url="http://localhost:9090/api/admin/v3.0/groups/groupId/apps/appId"
+                                       });
+        }
+        std::cout << "Server started!" << std::endl;
+    }
+
+    static Process launch_mongo_process() {
+        create_directory(temp_directory_path());
+        Process mongo_process;
+        mongo_process.launch_path = bin_dir.string() + "/mongod";
+        mongo_process.arguments = {
+                "--quiet",
+                "--dbpath", build_dir.string() + "/db_files",
+                "--bind_ip", "localhost",
                 "--port", "26000",
-                "--eval", "'rs.initiate()'"
-            };
-            init_process.run();
-            init_process.wait_until_exit();
-        }
+                "--replSet", "test"
+        };
+        mongo_process.run();
 
-        RealmServer() = default;
-    public:
-        Admin::Session login() {
-            auto setup_process = Process();
-            for (const auto& dirEntry : recursive_directory_iterator(std::filesystem::current_path())) {
-                if (dirEntry.path().string().find("setup_baas.rb") != std::string::npos) {
-                    setup_process.launch_path = "ruby " + dirEntry.path().string();
+        Process init_process;
+        init_process.launch_path = bin_dir.string() + "/mongo";
+        init_process.arguments = {
+            "--port", "26000",
+            "--eval", "'rs.initiate()'"
+        };
+        init_process.run();
+        return mongo_process;
+    }
+
+    RealmServer() = default;
+public:
+    static void setup() {
+        for (const auto& dirEntry : recursive_directory_iterator(std::filesystem::current_path())) {
+            if (dirEntry.path().string().find("setup_baas.rb") != std::string::npos) {
+                if (system(dirEntry.path().string().c_str()) == -1) {
+                    abort();
                 }
             }
-            setup_process.run();
-            setup_process.wait_until_exit();
-
-            launch_mongo_process();
-            launch_server_process();
-            return Admin::Session::login();
         }
+    }
 
-    public:
-        static RealmServer shared;
-    };
+    Admin::Session login() {
+        return Admin::Session::login();
+    }
 
-    RealmServer RealmServer::shared = RealmServer();
-}
-
+public:
+    static RealmServer shared;
+};
+#endif // #if TARGET_OS_IOS == 0 && TARGET_OS_WATCH == 0
 #endif //REALM_ADMIN_UTILS_HPP

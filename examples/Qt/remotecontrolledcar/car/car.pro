@@ -1,8 +1,7 @@
 QT += widgets
 
-CONFIG+=c++2a
-QMAKE_CXXFLAGS+="-std=c++2a"
-linux-g++*: QMAKE_CXXFLAGS += "-fcoroutines -fconcepts"
+CONFIG+=c++17
+QMAKE_CXXFLAGS+="-std=c++17"
 
 HEADERS += car.h
 SOURCES += car.cpp main.cpp

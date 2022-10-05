@@ -1,3 +1,6 @@
 [submodule "realm-core"]
 	path = realm-core
 	url = https://github.com/realm/realm-core.git
+[submodule "Catch2"]
+	path = Catch2
+	url = https://github.com/catchorg/Catch2/

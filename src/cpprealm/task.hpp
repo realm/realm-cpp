@@ -21,7 +21,7 @@
 
 // since C++ 20
 #include <version>
-
+#if __cpp_coroutines
 #ifdef __cpp_lib_coroutine
 #include <coroutine>
 namespace coro = std;
@@ -261,5 +261,5 @@ auto make_awaitable(F&& func) {
 }
 
 }
-
+#endif
 #endif /* realm_task_hpp */
