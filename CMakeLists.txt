@@ -147,5 +147,5 @@ file(COPY tests/dependencies.list DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY tests/config_overrides.json DESTINATION ${CMAKE_BINARY_DIR})
 
 #add_subdirectory(examples/cmake)
-#add_test(cpprealm_tests cpprealm_exe_tests)
+add_test(cpprealm_tests cpprealm_exe_tests)
 enable_testing()

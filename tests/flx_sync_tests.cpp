@@ -5,11 +5,9 @@
 
 using namespace realm;
 
-#if TARGET_OS_SIMULATOR == 0 && TARGET_OS_IPHONE == 0 && TARGET_OS_WATCH == 0 && TARGET_OS_TV == 0
-TEST_CASE("flx_sync", "[flx]") {
+TEST_CASE("flx_sync", "[flx][sync]") {
     SECTION("all") {
-        auto app = realm::App(Admin::shared().create_app<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(
-                {"str_col", "_id"}), "http://localhost:9090");
+        auto app = realm::App(Admin::shared().create_app({"str_col", "_id"}), Admin::shared().base_url());
         auto user = app.login(realm::App::Credentials::anonymous()).get_future().get();
         auto flx_sync_config = user.flexible_sync_configuration();
         auto tsr = realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(
@@ -89,7 +87,6 @@ TEST_CASE("flx_sync", "[flx]") {
         std::cout<<"TEST COMPLETE"<<std::endl;
     }
 }
-#endif
 
 TEST_CASE("tsr") {
     realm_path path;

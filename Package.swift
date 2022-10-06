@@ -87,7 +87,8 @@ let package = Package(
             publicHeadersPath: ".",
             cxxSettings: ([
                 .headerSearchPath("catch2"),
-                .define("CATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS")
+                .define("CATCH_CONFIG_NO_CPP17_UNCAUGHT_EXCEPTIONS"),
+                .define("CATCH_CONFIG_NO_POSIX_SIGNALS", .when(platforms: [.tvOS])),
             ] + cxxSettings) as [CXXSetting]),
         .executableTarget(
             name: "realm-cpp-sdkTests",
