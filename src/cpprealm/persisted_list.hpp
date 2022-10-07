@@ -180,9 +180,8 @@ public:
             if constexpr (realm::type_info::BinaryPersistableConcept<typename T::value_type>::value) {
                 auto binary_data = this->m_backing_list.template get<BinaryData>(a);
                 return std::vector<uint8_t>(binary_data.data(), binary_data.data()+binary_data.size());
-            } else if constexpr (type_info::ObjectBasePersistableConcept<typename T::value_type>::value) {
-                auto key = this->m_backing_list.template get<typename type_info::persisted_type<typename T::value_type>::type>(a);
-
+            } else if constexpr (type_info::MixedPersistableConcept<typename T::value_type>::value) {
+                return type_info::mixed_to_variant<typename T::value_type>(this->m_backing_list.template get<typename type_info::persisted_type<typename T::value_type>::type>(a));
             } else {
                 return static_cast<typename T::value_type>(
                         this->m_backing_list.template get<typename type_info::persisted_type<typename T::value_type>::type>(a));
@@ -352,6 +351,27 @@ notification_token persisted_container_base<T>::observe(std::function<void(colle
         using persisted_object_container_base<T>::find;
         using persisted_object_container_base<T>::operator[];
         using persisted_object_container_base<T>::observe;
+    };
+    template <typename T>
+    struct persisted<T, std::enable_if_t<
+            std::is_same_v<std::vector<typename T::value_type>, T> &&
+            type_info::MixedPersistableConcept<typename T::value_type>::value
+    >> : public persisted_primitive_container_base<T> {
+        using persisted_primitive_container_base<T>::persisted_primitive_container_base;
+        using persisted_primitive_container_base<T>::operator=;
+        using value_type = typename T::value_type;
+        using size_type = typename T::size_type;
+        using typename persisted_primitive_container_base<T>::iterator;
+        using persisted_primitive_container_base<T>::end;
+        using persisted_primitive_container_base<T>::size;
+        using persisted_primitive_container_base<T>::pop_back;
+        using persisted_primitive_container_base<T>::erase;
+        using persisted_primitive_container_base<T>::clear;
+        using persisted_primitive_container_base<T>::push_back;
+        using persisted_primitive_container_base<T>::set;
+        using persisted_primitive_container_base<T>::find;
+        using persisted_primitive_container_base<T>::operator[];
+        using persisted_primitive_container_base<T>::observe;
     };
 }
 

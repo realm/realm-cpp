@@ -67,8 +67,11 @@ struct property {
             if constexpr (type_info::EmbeddedObjectPersistableConcept<Result>::value) {
                 return realm::Property(name, type, Result::schema.name);
             } else if constexpr (type_info::is_optional<Result>::value) {
-                if (type_info::ObjectBasePersistableConcept<typename Result::value_type>::value) {
+                if constexpr (type_info::ObjectBasePersistableConcept<typename Result::value_type>::value) {
                     return realm::Property(name, type, Result::value_type::schema.name);
+                } else if constexpr (type_info::PrimitivePersistableConcept<typename Result::value_type>::value ||
+                                    type_info::MixedPersistableConcept<typename Result::value_type>::value) {
+                    return realm::Property(name, type);
                 }
             } else {
                 return realm::Property(name, type, is_primary_key);
@@ -120,7 +123,9 @@ struct property {
 
                     auto realm = object.m_object->get_realm();
                     if constexpr (decltype(Result::value_type::schema)::HasPrimaryKeyProperty) {
-                        target_cls->m_object = Object(realm, target_table->create_object_with_primary_key((**field).*Result::value_type::schema::PrimaryKeyProperty::ptr));
+                        using Schema = decltype(Result::value_type::schema);
+                        auto val = (**field).*Schema::PrimaryKeyProperty::ptr;
+                        target_cls->m_object = Object(realm, target_table->create_object_with_primary_key(*val));
                     } else {
                         target_cls->m_object = Object(realm, target_table->create_object());
                     }
@@ -147,7 +152,13 @@ struct property {
             } else {
                 object.m_object->obj().set_list_values(col_key, (object.*ptr).as_core_type());
             }
-        } else {
+        } else if constexpr (type_info::OptionalPersistableConcept<Result>::value) {
+            auto val = (object.*ptr).as_core_type();
+            if (val) {
+                object.m_object->template set_column_value(property_name, *val);
+            }
+        }
+        else {
             object.m_object->template set_column_value(property_name, (object.*ptr).as_core_type());
         }
     }

@@ -132,6 +132,7 @@ else()
     )
 endif()
 
+#if (!REALM_CPP_NO_TESTS)
 Include(FetchContent)
 FetchContent_Declare(
         Catch2
@@ -140,12 +141,12 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-add_executable(cpprealm_exe_tests tests/str_tests.cpp tests/list_tests.cpp tests/query_tests.cpp tests/main.hpp tests/sync_test_utils.hpp tests/test_objects.hpp tests/main.cpp tests/admin_utils.hpp tests/admin_utils.cpp tests/date_tests.cpp tests/mixed_tests.cpp tests/results_tests.cpp tests/binary_tests.cpp tests/flx_sync_tests.cpp tests/app_tests.cpp tests/embedded_object_tests.cpp)
+add_executable(cpprealm_exe_tests tests/str_tests.cpp tests/list_tests.cpp tests/query_tests.cpp tests/main.hpp tests/sync_test_utils.hpp tests/test_objects.hpp tests/main.cpp tests/admin_utils.hpp tests/admin_utils.cpp tests/date_tests.cpp tests/mixed_tests.cpp tests/results_tests.cpp tests/binary_tests.cpp tests/flx_sync_tests.cpp tests/app_tests.cpp tests/embedded_object_tests.cpp tests/opt_tests.cpp)
 target_link_libraries(cpprealm_exe_tests cpprealm Catch2::Catch2)
 file(COPY tests/setup_baas.rb DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY tests/dependencies.list DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY tests/config_overrides.json DESTINATION ${CMAKE_BINARY_DIR})
 
-#add_subdirectory(examples/cmake)
 add_test(cpprealm_tests cpprealm_exe_tests)
 enable_testing()
+#endif()
