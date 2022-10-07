@@ -119,7 +119,13 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
             } else if constexpr (type_info::OptionalPersistableConcept<T>::value) {
                 using UnwrappedType = typename type_info::persisted_type<typename T::value_type>::type;
                 if (o) {
-                    obj->obj().template set<UnwrappedType>(managed, type_info::persisted_type<UnwrappedType>::convert_if_required(*o));
+                    if constexpr (type_info::EnumPersistableConcept<typename T::value_type>::value) {
+                        obj->obj().template set<Int>(managed, static_cast<Int>(*o));
+                    } else {
+                        obj->obj().template set<UnwrappedType>(managed,
+                                                               type_info::persisted_type<UnwrappedType>::convert_if_required(
+                                                                       *o));
+                    }
                 } else {
                     obj->obj().set_null(managed);
                 }
@@ -157,7 +163,12 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
                 if constexpr (type_info::EmbeddedObjectPersistableConcept<T>::value) {
                     return T::schema.create(m_object->obj().get_linked_object(managed), m_object->get_realm());
                 } else if constexpr (type_info::ObjectBasePersistableConcept<typename T::value_type>::value) {
-                    return T::value_type::schema.create(m_object->obj().get_linked_object(managed), m_object->get_realm());
+                    if (m_object->obj().is_null(managed)) {
+                        return std::nullopt;
+                    } else {
+                        return T::value_type::schema.create(m_object->obj().get_linked_object(managed),
+                                                            m_object->get_realm());
+                    }
                 } else {
                     using UnwrappedType = typename type_info::persisted_type<typename T::value_type>::type;
                     // convert optionals
@@ -165,8 +176,13 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
                         return std::nullopt;
                     } else {
                         auto value = m_object->obj().template get<UnwrappedType>(managed);
-                        return T(value);
-
+                        if constexpr (std::is_same_v<UnwrappedType, BinaryData>) {
+                            return std::vector<u_int8_t>(value.data(), value.data() + value.size());
+                        } else if constexpr (type_info::EnumPersistableConcept<typename T::value_type>::value) {
+                            return std::optional<typename T::value_type>(static_cast<typename T::value_type>(value));
+                        } else {
+                            return T(value);
+                        }
                     }
                 }
             } else {
