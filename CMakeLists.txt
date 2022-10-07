@@ -132,6 +132,7 @@ else()
     )
 endif()
 
+#if (!REALM_CPP_NO_TESTS)
 Include(FetchContent)
 FetchContent_Declare(
         Catch2
@@ -146,6 +147,6 @@ file(COPY tests/setup_baas.rb DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY tests/dependencies.list DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY tests/config_overrides.json DESTINATION ${CMAKE_BINARY_DIR})
 
-#add_subdirectory(examples/cmake)
 add_test(cpprealm_tests cpprealm_exe_tests)
 enable_testing()
+#endif()
