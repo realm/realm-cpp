@@ -252,7 +252,9 @@ struct persisted_type<T, ObjectBasePersistable<T>> {
     }
 };
 template <typename T>
-using PrimitivePersistableConcept = std::disjunction<
+using PrimitivePersistableConcept =
+        std::conjunction<std::negation<is_optional<T>>,
+        std::disjunction<
         IntPersistableConcept<T>,
         BoolPersistableConcept<T>,
         StringPersistableConcept<T>,
@@ -260,7 +262,7 @@ using PrimitivePersistableConcept = std::disjunction<
         DoublePersistableConcept<T>,
         TimestampPersistableConcept<T>,
         UUIDPersistableConcept<T>,
-        BinaryPersistableConcept<T>>;
+        BinaryPersistableConcept<T>>>;
 template <typename T>
 using PrimitivePersistable = std::enable_if_t<PrimitivePersistableConcept<T>::value>;
 
@@ -485,10 +487,17 @@ template <typename T>
 using OptionalPersistable = std::enable_if_t<OptionalPersistableConcept<T>::value>;
 template <typename T>
 struct persisted_type<T, OptionalPersistable<T>> {
-    using type = util::Optional<persisted_type<typename T::value_type>>;
+    using type = util::Optional<typename persisted_type<typename T::value_type>::type>;
 
     static constexpr PropertyType property_type() {
         return persisted_type<typename T::value_type>::property_type() | PropertyType::Nullable;
+    }
+    static constexpr type convert_if_required(const T& a)
+    {
+        if (!a) {
+            return util::none;
+        }
+        return type(persisted_type<typename T::value_type>::convert_if_required(*a));
     }
 };
 template <typename T>

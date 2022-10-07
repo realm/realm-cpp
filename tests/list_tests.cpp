@@ -66,7 +66,7 @@ TEST_CASE("list", "[list]") {
         obj.list_obj_col.push_back(AllTypesObjectLink{.str_col="Fido"});
         CHECK(obj.list_obj_col[0].str_col == "Fido");
         CHECK(obj.list_int_col.size() == 1);
-        for (auto& i : obj.list_int_col) {
+        for (auto &i: obj.list_int_col) {
             CHECK(i == 42);
         }
 
@@ -88,7 +88,7 @@ TEST_CASE("list", "[list]") {
             obj.list_embedded_obj_col.push_back(AllTypesObjectEmbedded{.str_col="Rex"});
         });
         size_t idx = 0;
-        for (auto& i : obj.list_int_col) {
+        for (auto &i: obj.list_int_col) {
             CHECK(i == obj.list_int_col[idx]);
             ++idx;
         }
@@ -336,7 +336,7 @@ TEST_CASE("list", "[list]") {
             obj.list_int_col.push_back(456);
         });
 
-        realm.write([] { });
+        realm.write([] {});
 
         CHECK(change.insertions.size() == 1);
 
@@ -344,7 +344,7 @@ TEST_CASE("list", "[list]") {
             obj.list_int_col.push_back(456);
         });
 
-        realm.write([] { });
+        realm.write([] {});
 
         CHECK(change.insertions.size() == 1);
         CHECK(callback_count == 3);
@@ -375,7 +375,7 @@ TEST_CASE("list", "[list]") {
         realm.write([&realm, &obj] {
             obj.list_int_col.erase(0);
         });
-        realm.write([] { });
+        realm.write([] {});
         CHECK(change.deletions.size() == 1);
         CHECK(did_run == true);
     }
@@ -406,7 +406,7 @@ TEST_CASE("list", "[list]") {
         realm.write([&realm, &obj] {
             obj.list_int_col.set(1, 345);
         });
-        realm.write([] { });
+        realm.write([] {});
 
         CHECK(change.modifications.size() == 1);
         CHECK(change.modifications[0] == 1);
@@ -423,13 +423,78 @@ TEST_CASE("list", "[list]") {
         auto str_list_obj = AllTypesObject();
         test_list(str_list_obj.list_str_col, std::vector<std::string>({"foo", "bar"}), realm, str_list_obj);
         auto uuid_list_obj = AllTypesObject();
-        test_list(uuid_list_obj.list_uuid_col, std::vector<realm::uuid>({realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120000"),
-                                                                         realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002")}), realm, uuid_list_obj);
+        test_list(uuid_list_obj.list_uuid_col,
+                  std::vector<realm::uuid>({realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120000"),
+                                            realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002")}), realm,
+                  uuid_list_obj);
         auto binary_list_obj = AllTypesObject();
-        test_list(binary_list_obj.list_binary_col, std::vector<std::vector<uint8_t>>({{0}, {1}}), realm, binary_list_obj);
+        test_list(binary_list_obj.list_binary_col, std::vector<std::vector<uint8_t>>({{0},
+                                                                                      {1}}), realm, binary_list_obj);
         auto date_list_obj = AllTypesObject();
         auto date1 = std::chrono::system_clock::now();
         auto date2 = date1 + std::chrono::hours(24);
-        test_list(date_list_obj.list_date_col, std::vector<std::chrono::time_point<std::chrono::system_clock>>({date1, date2}), realm, date_list_obj);
+        test_list(date_list_obj.list_date_col,
+                  std::vector<std::chrono::time_point<std::chrono::system_clock>>({date1, date2}), realm,
+                  date_list_obj);
+    }
+
+    SECTION("list_mixed") {
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
+
+        auto obj = AllTypesObject();
+        obj.list_mixed_col.push_back(42);
+        obj.list_mixed_col.push_back(true);
+        obj.list_mixed_col.push_back("hello world");
+        obj.list_mixed_col.push_back(42.42);
+        obj.list_mixed_col.push_back(std::vector<uint8_t>{0,1,2});
+        auto ts = std::chrono::time_point<std::chrono::system_clock>();
+        obj.list_mixed_col.push_back(ts);
+
+        CHECK(std::holds_alternative<int64_t>(obj.list_mixed_col[0]));
+        CHECK(std::get<int64_t>(obj.list_mixed_col[0]) == 42);
+
+        CHECK(std::holds_alternative<bool>(obj.list_mixed_col[1]));
+        CHECK(std::get<bool>(obj.list_mixed_col[1]) == true);
+
+        CHECK(std::holds_alternative<std::string>(obj.list_mixed_col[2]));
+        CHECK(std::get<std::string>(obj.list_mixed_col[2]) == "hello world");
+
+        CHECK(std::holds_alternative<double>(obj.list_mixed_col[3]));
+        CHECK(std::get<double>(obj.list_mixed_col[3]) == 42.42);
+
+        CHECK(std::holds_alternative<std::vector<uint8_t>>(obj.list_mixed_col[4]));
+        CHECK(std::get<std::vector<uint8_t>>(obj.list_mixed_col[4]) == std::vector<uint8_t>{0,1,2});
+
+        CHECK(std::holds_alternative<std::chrono::time_point<std::chrono::system_clock>>(obj.list_mixed_col[5]));
+        CHECK(std::get<std::chrono::time_point<std::chrono::system_clock>>(obj.list_mixed_col[5]) == ts);
+
+        realm.write([&realm, &obj] {
+            realm.add(obj);
+        });
+
+        CHECK(std::holds_alternative<int64_t>(obj.list_mixed_col[0]));
+        CHECK(std::get<int64_t>(obj.list_mixed_col[0]) == 42);
+
+        CHECK(std::holds_alternative<bool>(obj.list_mixed_col[1]));
+        CHECK(std::get<bool>(obj.list_mixed_col[1]) == true);
+
+        CHECK(std::holds_alternative<std::string>(obj.list_mixed_col[2]));
+        CHECK(std::get<std::string>(obj.list_mixed_col[2]) == "hello world");
+
+        CHECK(std::holds_alternative<double>(obj.list_mixed_col[3]));
+        CHECK(std::get<double>(obj.list_mixed_col[3]) == 42.42);
+
+        CHECK(std::holds_alternative<std::vector<uint8_t>>(obj.list_mixed_col[4]));
+        CHECK(std::get<std::vector<uint8_t>>(obj.list_mixed_col[4]) == std::vector<uint8_t>{0,1,2});
+
+        CHECK(std::holds_alternative<std::chrono::time_point<std::chrono::system_clock>>(obj.list_mixed_col[5]));
+        CHECK(std::get<std::chrono::time_point<std::chrono::system_clock>>(obj.list_mixed_col[5]) == ts);
+
+        realm.write([&obj] {
+            obj.list_mixed_col.push_back(realm::uuid());
+        });
+
+        CHECK(std::holds_alternative<realm::uuid>(obj.list_mixed_col[6]));
+        CHECK(std::get<realm::uuid>(obj.list_mixed_col[6]) == realm::uuid());
     }
 }
