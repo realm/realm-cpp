@@ -436,7 +436,7 @@ struct persisted_type<T, ListPersistable<T>> {
     using type = std::vector<typename persisted_type<typename T::value_type>::type>;
 
     static constexpr PropertyType property_type() {
-        return PropertyType::Array | (persisted_type<typename T::value_type>::property_type() & ~PropertyType::Flags);
+        return PropertyType::Array | (persisted_type<typename T::value_type>::property_type() & ~PropertyType::Nullable);
     }
 
     static constexpr type convert_if_required(const T& a)
