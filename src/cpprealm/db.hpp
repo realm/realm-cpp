@@ -91,7 +91,7 @@ static std::shared_ptr<realm::util::Scheduler> make_qt()
 
 struct db_config {
 
-    std::string path = std::filesystem::current_path();
+    std::string path = std::filesystem::current_path().u8string();
 
     std::shared_ptr<SyncConfig> sync_config;
 private:

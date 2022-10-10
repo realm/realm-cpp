@@ -34,5 +34,13 @@ add_custom_command(TARGET cpprealm-tests POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${TEST_RESOURCES} $<TARGET_FILE_DIR:cpprealm-tests> WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+if(CMAKE_SYSTEM_NAME MATCHES "^Windows")
+    # Windows doesn't have anything like RPATH so in order to run the tests we need the shared library dependencies to be copied
+    add_custom_command(TARGET cpprealm-tests POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:cpprealm-tests> $<TARGET_FILE_DIR:cpprealm-tests>
+        COMMAND_EXPAND_LISTS
+    )
+endif()
+
 add_test(cpprealm-tests cpprealm-tests)
 enable_testing()

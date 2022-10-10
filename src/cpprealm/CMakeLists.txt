@@ -45,7 +45,7 @@ if (APPLE)
 else()
     if(VCPKG_TOOLCHAIN)
         find_package(libuv CONFIG)
-        set(UV_LIBRARY uv_a)
+        set(UV_LIBRARY $<IF:$<TARGET_EXISTS:uv_a>,uv_a,uv>)
     endif()
 
     if(NOT libuv_FOUND)

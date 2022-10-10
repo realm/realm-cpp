@@ -150,34 +150,35 @@ public:
         #if QT_CORE_LIB
         util::Scheduler::set_default_factory(util::make_qt);
         #endif
-        SyncClientConfig config;
+        SyncClientConfig sync_client_config;
         #ifdef __APPLE__ // we have automatic metadata encryption key management only for the Apple Keychain
         bool should_encrypt = !getenv("REALM_DISABLE_METADATA_ENCRYPTION");
-        config.metadata_mode = should_encrypt ? SyncManager::MetadataMode::Encryption : SyncManager::MetadataMode::NoEncryption;
+        sync_client_config.metadata_mode = should_encrypt ? SyncManager::MetadataMode::Encryption : SyncManager::MetadataMode::NoEncryption;
         #else
-        config.metadata_mode = SyncManager::MetadataMode::NoEncryption;
+        sync_client_config.metadata_mode = SyncManager::MetadataMode::NoEncryption;
         #endif
-        config.logger_factory = defaultSyncLogger;
+        sync_client_config.logger_factory = defaultSyncLogger;
         #ifdef QT_CORE_LIB
         auto qt_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
         if (!std::filesystem::exists(qt_path)) {
             std::filesystem::create_directory(qt_path);
         }
-        config.base_file_path = qt_path;
+        sync_client_config.base_file_path = qt_path;
         #else
-        config.base_file_path = std::filesystem::current_path();
+        sync_client_config.base_file_path = std::filesystem::current_path().u8string();
         #endif
-        config.user_agent_binding_info = "RealmCpp/0.0.1";
-        config.user_agent_application_info = app_id;
+        sync_client_config.user_agent_binding_info = "RealmCpp/0.0.1";
+        sync_client_config.user_agent_application_info = app_id;
 
-        m_app = app::App::get_shared_app(app::App::Config{
-            .app_id=app_id,
-            .transport = std::make_shared<internal::DefaultTransport>(),
-            .base_url = base_url ? base_url : util::Optional<std::string>(),
-            .platform="Realm Cpp",
-            .platform_version="?",
-            .sdk_version="0.0.1",
-        }, config);
+        app::App::Config app_config;
+        app_config.app_id = app_id;
+        app_config.transport = std::make_shared<internal::DefaultTransport>();
+        app_config.base_url = base_url ? base_url : util::Optional<std::string>();
+        app_config.platform = "Realm Cpp";
+        app_config.platform_version = "?";
+        app_config.sdk_version = "0.0.1";
+
+        m_app = app::App::get_shared_app(app_config, sync_client_config);
     }
 
     struct Credentials {
