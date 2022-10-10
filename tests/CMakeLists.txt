@@ -12,6 +12,7 @@ add_executable(cpprealm-tests
     main.cpp
     main.hpp
     mixed_tests.cpp
+    opt_tests.cpp
     query_tests.cpp
     results_tests.cpp
     str_tests.cpp

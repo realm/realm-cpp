@@ -151,7 +151,7 @@ public:
         util::Scheduler::set_default_factory(util::make_qt);
         #endif
         SyncClientConfig config;
-        #ifdef __APPLE__
+        #ifdef __APPLE__ // we have automatic metadata encryption key management only for the Apple Keychain
         bool should_encrypt = !getenv("REALM_DISABLE_METADATA_ENCRYPTION");
         config.metadata_mode = should_encrypt ? SyncManager::MetadataMode::Encryption : SyncManager::MetadataMode::NoEncryption;
         #else
@@ -163,7 +163,7 @@ public:
         if (!std::filesystem::exists(qt_path)) {
             std::filesystem::create_directory(qt_path);
         }
-        config.base_file_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
+        config.base_file_path = qt_path;
         #else
         config.base_file_path = std::filesystem::current_path();
         #endif
