@@ -263,7 +263,8 @@ RealmServer RealmServer::shared = RealmServer();
 
 app::Response Admin::Endpoint::request(app::HttpMethod method, bson::BsonDocument&& body) const
 {
-    auto body_str = (std::stringstream() << body).str();
+    std::stringstream body_stream;
+    body_stream << body;
     std::string url = m_url + "?bypass_service_change=DestructiveSyncProtocolVersionIncrease";
     auto response = do_http_request({
         .method = method,
@@ -274,7 +275,7 @@ app::Response Admin::Endpoint::request(app::HttpMethod method, bson::BsonDocumen
             {"Content-Type",  "application/json;charset=utf-8"},
             {"Accept",        "application/json"}
         },
-        .body = std::move(body_str)
+        .body = body_stream.str()
     });
 
     if (response.http_status_code >= 400) {
