@@ -151,13 +151,13 @@ public:
         util::Scheduler::set_default_factory(util::make_qt);
         #endif
         SyncClientConfig config;
+        #ifdef __APPLE__
         bool should_encrypt = !getenv("REALM_DISABLE_METADATA_ENCRYPTION");
-        config.logger_factory = defaultSyncLogger;
-        #if REALM_DISABLE_METADATA_ENCRYPTION
-        config.metadata_mode = SyncManager::MetadataMode::NoEncryption;
+        config.metadata_mode = should_encrypt ? SyncManager::MetadataMode::Encryption : SyncManager::MetadataMode::NoEncryption;
         #else
-        config.metadata_mode = SyncManager::MetadataMode::Encryption;
+        config.metadata_mode = SyncManager::MetadataMode::NoEncryption;
         #endif
+        config.logger_factory = defaultSyncLogger;
         #ifdef QT_CORE_LIB
         auto qt_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
         if (!std::filesystem::exists(qt_path)) {
