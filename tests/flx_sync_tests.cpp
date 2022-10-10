@@ -84,7 +84,6 @@ TEST_CASE("flx_sync", "[flx][sync]") {
         synced_realm.write([]() {}); // refresh realm
         objs = synced_realm.objects<AllTypesObject>();
         CHECK(objs.size() == 2);
-        std::cout<<"TEST COMPLETE"<<std::endl;
     }
 }
 
@@ -100,14 +99,14 @@ TEST_CASE("tsr") {
     });
 
     auto tsr = realm::thread_safe_reference<Person>(person);
-    std::condition_variable cv;
-    std::mutex cv_m;
-    bool done;
-    auto t = std::thread([&cv, &tsr, &done, &path]() {
+    std::promise<void> p;
+    auto t = std::thread([&tsr, &p, &path]() {
         auto realm = realm::open<Person, Dog>({.path=path});
         auto person = realm.resolve(std::move(tsr));
         CHECK(*person.age == 17);
         realm.write([&] { realm.remove(person); });
+        p.set_value();
     });
     t.join();
+    p.get_future().get();
 }

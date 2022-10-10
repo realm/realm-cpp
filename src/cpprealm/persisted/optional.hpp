@@ -28,6 +28,56 @@ namespace realm {
         using persisted_noncontainer_base<T>::operator=;
         using persisted_noncontainer_base<T>::operator*;
     };
+    template <typename T>
+    std::enable_if_t<type_info::is_optional<T>::value, rbool>
+    inline operator==(const persisted<T>& a, const T& b)
+    {
+        if (a.should_detect_usage_for_queries) {
+            auto query = Query(a.query->get_table());
+            if (b) {
+                query.equal(a.managed, type_info::persisted_type<T>::convert_if_required(*b));
+            } else {
+                query.equal(a.managed, realm::null{});
+            }
+            return {std::move(query)};
+        }
+
+        if (a && b) {
+            return *a == *b;
+        } else if (!a && !b) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    template <typename T>
+    std::enable_if_t<type_info::is_optional<T>::value, rbool>
+    inline operator==(const persisted<T>& a, const typename T::value_type& b)
+    {
+        if (a.should_detect_usage_for_queries) {
+            auto query = Query(a.query->get_table());
+            query.equal(a.managed, type_info::persisted_type<typename T::value_type>::convert_if_required(b));
+            return {std::move(query)};
+        }
+
+        if (*a) {
+            return **a == b;
+        } else {
+            return false;
+        }
+    }
+    template <typename T>
+    std::enable_if_t<type_info::is_optional<T>::value, rbool>
+    inline operator==(const persisted<T>& a, const std::nullopt_t&)
+    {
+        if (a.should_detect_usage_for_queries) {
+            auto query = Query(a.query->get_table());
+            query.equal(a.managed, std::nullopt);
+            return {std::move(query)};
+        }
+
+        return !*a;
+    }
 }
 
 #endif //REALM_PERSISTED_OPTIONAL_HPP

@@ -64,12 +64,22 @@ struct AllTypesObject: realm::object {
         std::vector<uint8_t>
     >> mixed_col;
 
+    realm::persisted<std::optional<int>> opt_int_col;
+    realm::persisted<std::optional<std::string>> opt_str_col;
+    realm::persisted<std::optional<bool>> opt_bool_col;
+    realm::persisted<std::optional<Enum>> opt_enum_col;
+    realm::persisted<std::optional<std::chrono::time_point<std::chrono::system_clock>>> opt_date_col;
+    realm::persisted<std::optional<realm::uuid>> opt_uuid_col;
+    realm::persisted<std::optional<std::vector<uint8_t>>> opt_binary_col;
+    realm::persisted<std::optional<AllTypesObjectLink>> opt_obj_col;
+
     realm::persisted<std::vector<int>> list_int_col;
     realm::persisted<std::vector<bool>> list_bool_col;
     realm::persisted<std::vector<std::string>> list_str_col;
     realm::persisted<std::vector<realm::uuid>> list_uuid_col;
     realm::persisted<std::vector<std::vector<std::uint8_t>>> list_binary_col;
     realm::persisted<std::vector<std::chrono::time_point<std::chrono::system_clock>>> list_date_col;
+    realm::persisted<std::vector<realm::mixed>> list_mixed_col;
 
     realm::persisted<std::vector<AllTypesObjectLink>> list_obj_col;
     realm::persisted<std::vector<AllTypesObjectEmbedded>> list_embedded_obj_col;
@@ -83,12 +93,23 @@ struct AllTypesObject: realm::object {
         realm::property<&AllTypesObject::uuid_col>("uuid_col"),
         realm::property<&AllTypesObject::binary_col>("binary_col"),
         realm::property<&AllTypesObject::mixed_col>("mixed_col"),
+
+        realm::property<&AllTypesObject::opt_int_col>("opt_int_col"),
+        realm::property<&AllTypesObject::opt_str_col>("opt_str_col"),
+        realm::property<&AllTypesObject::opt_bool_col>("opt_bool_col"),
+        realm::property<&AllTypesObject::opt_binary_col>("opt_binary_col"),
+        realm::property<&AllTypesObject::opt_date_col>("opt_date_col"),
+        realm::property<&AllTypesObject::opt_enum_col>("opt_enum_col"),
+        realm::property<&AllTypesObject::opt_obj_col>("opt_obj_col"),
+        realm::property<&AllTypesObject::opt_uuid_col>("opt_uuid_col"),
+
         realm::property<&AllTypesObject::list_int_col>("list_int_col"),
         realm::property<&AllTypesObject::list_bool_col>("list_bool_col"),
         realm::property<&AllTypesObject::list_str_col>("list_str_col"),
         realm::property<&AllTypesObject::list_uuid_col>("list_uuid_col"),
         realm::property<&AllTypesObject::list_binary_col>("list_binary_col"),
         realm::property<&AllTypesObject::list_date_col>("list_date_col"),
+        realm::property<&AllTypesObject::list_mixed_col>("list_mixed_col"),
         realm::property<&AllTypesObject::list_obj_col>("list_obj_col"),
         realm::property<&AllTypesObject::list_embedded_obj_col>("list_embedded_obj_col"));
 };

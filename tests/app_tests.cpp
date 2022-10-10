@@ -3,18 +3,18 @@
 #include "main.hpp"
 
 TEST_CASE("app", "[app]") {
-    SECTION("pbs") {
-        auto app = realm::App("car-wsney");
-        auto user = app.login(realm::App::Credentials::anonymous()).get_future().get();
-
-        auto tsr = user.realm<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>("foo").get_future().get();
-        auto synced_realm = tsr.resolve();
-        synced_realm.write([&synced_realm]() {
-            synced_realm.add(AllTypesObject{._id=1});
-        });
-
-        CHECK(*synced_realm.object<AllTypesObject>(1)._id == 1);
-    }
+//    SECTION("pbs") {
+//        auto app = realm::App("car-wsney");
+//        auto user = app.login(realm::App::Credentials::anonymous()).get_future().get();
+//
+//        auto tsr = user.realm<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>("foo").get_future().get();
+//        auto synced_realm = tsr.resolve();
+//        synced_realm.write([&synced_realm]() {
+//            synced_realm.add(AllTypesObject{._id=1});
+//        });
+//
+//        CHECK(*synced_realm.object<AllTypesObject>(1)._id == 1);
+//    }
 
     SECTION("login_username_password") {
         auto app_id = Admin::shared().create_app();

@@ -116,6 +116,19 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
                     // set the parent column to null and unset the co
                     obj->obj().set_null(managed);
                 }
+            } else if constexpr (type_info::OptionalPersistableConcept<T>::value) {
+                using UnwrappedType = typename type_info::persisted_type<typename T::value_type>::type;
+                if (o) {
+                    if constexpr (type_info::EnumPersistableConcept<typename T::value_type>::value) {
+                        obj->obj().template set<Int>(managed, static_cast<Int>(*o));
+                    } else {
+                        obj->obj().template set<UnwrappedType>(managed,
+                                                               type_info::persisted_type<UnwrappedType>::convert_if_required(
+                                                                       *o));
+                    }
+                } else {
+                    obj->obj().set_null(managed);
+                }
             } else {
                 obj->obj().template set<type>(managed, o);
             }
@@ -150,14 +163,26 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
                 if constexpr (type_info::EmbeddedObjectPersistableConcept<T>::value) {
                     return T::schema.create(m_object->obj().get_linked_object(managed), m_object->get_realm());
                 } else if constexpr (type_info::ObjectBasePersistableConcept<typename T::value_type>::value) {
-                    return T::value_type::schema.create(m_object->obj().get_linked_object(managed), m_object->get_realm());
-                } else {
-                    auto value = m_object->obj().template get<type>(managed);
-                    // convert optionals
-                    if (value) {
-                        return T(*value);
+                    if (m_object->obj().is_null(managed)) {
+                        return std::nullopt;
                     } else {
-                        return T();
+                        return T::value_type::schema.create(m_object->obj().get_linked_object(managed),
+                                                            m_object->get_realm());
+                    }
+                } else {
+                    using UnwrappedType = typename type_info::persisted_type<typename T::value_type>::type;
+                    // convert optionals
+                    if (m_object->obj().is_null(managed)) {
+                        return std::nullopt;
+                    } else {
+                        auto value = m_object->obj().template get<UnwrappedType>(managed);
+                        if constexpr (std::is_same_v<UnwrappedType, BinaryData>) {
+                            return std::vector<u_int8_t>(value.data(), value.data() + value.size());
+                        } else if constexpr (type_info::EnumPersistableConcept<typename T::value_type>::value) {
+                            return std::optional<typename T::value_type>(static_cast<typename T::value_type>(value));
+                        } else {
+                            return T(value);
+                        }
                     }
                 }
             } else {
@@ -221,6 +246,13 @@ protected:
                     return m_object->obj().template get<type>(managed);
                 } else if  constexpr (type_info::ListPersistableConcept<T>::value) {
                     return m_object->obj().template get_list_values<typename type_info::persisted_type<typename T::value_type>::type>(managed);
+                } else if constexpr (type_info::OptionalPersistableConcept<T>::value) {
+                    using UnwrappedType = typename type_info::persisted_type<typename T::value_type>::type;
+                    if (m_object->obj().is_null(managed)) {
+                        return std::nullopt;
+                    } else {
+                        return m_object->obj().template get<UnwrappedType>(managed);
+                    }
                 } else {
                     return m_object->obj().template get<type>(managed);
                 }
@@ -262,6 +294,9 @@ protected:
     template <template <typename ...> typename Variant, typename ...Ts, typename V>
     std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
     friend operator==(const persisted<Variant<Ts...>>& a, const V& b);
+    template <template <typename ...> typename Variant, typename ...Ts, typename V>
+    std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
+    friend operator==(const persisted<Variant<Ts...>>& a, V&& b);
     template <typename V>
     std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
     friend inline operator <(const persisted<V>& lhs, const V& a);
@@ -286,6 +321,15 @@ protected:
     template <typename V>
     std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
     friend inline operator <=(const persisted<V>& lhs, const persisted<V>& a);
+    template <typename V>
+    std::enable_if_t<type_info::is_optional<V>::value, rbool>
+    friend inline operator==(const persisted<V>& a, const std::nullopt_t&);
+    template <typename V>
+    std::enable_if_t<type_info::is_optional<V>::value, rbool>
+    friend inline operator==(const persisted<V>& a, const V&);
+    template <typename V>
+    std::enable_if_t<type_info::is_optional<V>::value, rbool>
+    friend inline operator==(const persisted<V>& a, const typename V::value_type&);
 };
 
 /// `realm::persisted` is used to declare properties on `realm::object` subclasses which should be
@@ -445,6 +489,9 @@ class rbool {
     template <template <typename ...> typename Variant, typename ...Ts, typename V>
     std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
     friend operator==(const persisted<Variant<Ts...>>& a, const V& b);
+    template <template <typename ...> typename Variant, typename ...Ts, typename V>
+    std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
+    friend operator==(const persisted<Variant<Ts...>>& a, V&& b);
 
     template <typename T, typename>
     friend struct persisted_noncontainer_base;
@@ -485,6 +532,15 @@ class rbool {
     template <typename V>
     std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
     friend inline operator <=(const persisted<V>& lhs, const persisted<V>& a);
+    template <typename V>
+    std::enable_if_t<type_info::is_optional<V>::value, rbool>
+    friend inline operator==(const persisted<V>& a, const std::nullopt_t&);
+    template <typename V>
+    std::enable_if_t<type_info::is_optional<V>::value, rbool>
+    friend inline operator==(const persisted<V>& a, const V&);
+    template <typename V>
+    std::enable_if_t<type_info::is_optional<V>::value, rbool>
+    friend inline operator==(const persisted<V>& a, const typename V::value_type&);
 public:
     ~rbool() {
         if (is_for_queries)
@@ -536,25 +592,6 @@ rbool operator==(const persisted<T>& a, const persisted<T>& b)
         return {std::move(query)};
     }
     return *a == *b;
-}
-
-template <template <typename ...> typename Variant, typename ...Ts, typename V>
-std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
-operator==(const persisted<Variant<Ts...>>& a, const V& b)
-{
-    if (a.should_detect_usage_for_queries) {
-        auto query = Query(a.query->get_table());
-        query.equal(a.managed, type_info::persisted_type<V>::convert_if_required(b));
-        return {std::move(query)};
-    }
-    return std::visit([&b](auto&& arg) {
-        using M = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_convertible_v<M, V>) {
-            return arg == b;
-        } else {
-            return false;
-        }
-    }, *a);
 }
 
 template <typename T>
@@ -688,6 +725,15 @@ template <typename T>
 std::ostream& operator<< (std::ostream& stream, const persisted<T>& value)
 {
     return stream << type_info::persisted_type<T>::convert_if_required(*value);
+}
+
+template <typename T>
+std::ostream& operator<< (std::ostream& stream, const persisted<std::optional<T>>& value)
+{
+    if (*value) {
+        return stream << "null";
+    }
+    return stream << type_info::persisted_type<T>::convert_if_required(**value);
 }
 
 template <typename T>
