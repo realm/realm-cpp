@@ -120,9 +120,9 @@ jobs:
       matrix:
         compiler:
           - name: gcc
-            version: 9
+            version: 10
           - name: clang
-            version: 11
+            version: 12
         configuration:
           - Debug
           - Release

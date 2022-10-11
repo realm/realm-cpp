@@ -17,10 +17,13 @@ using namespace realm;
 TEST_CASE("date", "[date]") {
     realm_path path;
     SECTION("unmanaged_managed_ts_time_since_epoch", "[date]") {
+        realm::db_config config;
+        config.path = path;
         auto realm = open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(
-                {.path=path});
+                std::move(config));
         auto ts = std::chrono::time_point<std::chrono::system_clock>();
-        auto object = AllTypesObject({.date_col=ts});
+        AllTypesObject object;
+        object.date_col = ts;
         CHECK(object.date_col.time_since_epoch() == ts.time_since_epoch());
         realm.write([&] {
             realm.add(object);
@@ -28,7 +31,9 @@ TEST_CASE("date", "[date]") {
         CHECK(object.date_col.time_since_epoch() == ts.time_since_epoch());
     }
     SECTION("add") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({.path=path});
+        realm::db_config config;
+        config.path = path;
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
         auto obj = AllTypesObject();
         CHECK(obj.date_col == std::chrono::time_point<std::chrono::system_clock>{});
         auto now = std::chrono::system_clock::now();
