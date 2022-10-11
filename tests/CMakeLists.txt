@@ -1,6 +1,3 @@
-set(CATCH_CONFIG_NO_POSIX_SIGNALS ON)
-add_compile_definitions(CATCH_CONFIG_NO_POSIX_SIGNALS=1)
-
 add_subdirectory(../Catch2 ${CMAKE_CURRENT_BINARY_DIR}/Catch2 EXCLUDE_FROM_ALL)
 
 add_executable(cpprealm-tests
