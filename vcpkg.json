@@ -1,0 +1,20 @@
+{
+    "dependencies": [
+        {
+            "name": "curl",
+            "platform": "!osx & !linux"
+        },
+        {
+            "name": "openssl",
+            "platform": "!osx & !linux"
+        },
+        {
+            "name": "zlib",
+            "platform": "windows"
+        },
+        {
+            "name": "libuv",
+            "platform": "!osx & !linux"
+        }
+    ]
+}
