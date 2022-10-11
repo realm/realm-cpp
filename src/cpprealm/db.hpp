@@ -36,7 +36,9 @@
 #include <utility>
 #include "thread_safe_reference.hpp"
 
-#ifdef QT_CORE_LIB
+#if defined(CPPREALM_USE_LIBUV) && CPPREALM_USE_LIBUV
+#include <realm/object-store/util/uv/scheduler.hpp>
+#elif defined(QT_CORE_LIB)
 #include <QStandardPaths>
 #include <QMetaObject>
 #include <QTimer>
@@ -102,6 +104,8 @@ private:
 
 #if QT_CORE_LIB
 static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::make_qt;
+#elif defined(CPPREALM_USE_LIBUV) && CPPREALM_USE_LIBUV
+static std::function<std::shared_ptr<util::Scheduler>()> scheduler = [] { return std::make_shared<util::UvMainLoopScheduler>(); };
 #else
 static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::Scheduler::make_default;
 #endif
@@ -233,6 +237,7 @@ static inline std::promise<thread_safe_reference<db<Ts...>>> async_open(const db
                                                                                            .schema_mode = SchemaMode::AdditiveExplicit,
                                                                                            .schema = Schema(schema),
                                                                                            .schema_version = 0,
+                                                                                           .scheduler = scheduler(),
                                                                                            .sync_config = config.sync_config
                                                                                    });
     async_open_task->start([&p](auto tsr, auto ex) {

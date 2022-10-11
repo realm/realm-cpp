@@ -63,4 +63,8 @@ else()
     target_sources(cpprealm PRIVATE
         internal/curl/network_transport.cpp
     )
+
+    target_compile_definitions(cpprealm PUBLIC
+        CPPREALM_USE_LIBUV=1
+    )
 endif()
