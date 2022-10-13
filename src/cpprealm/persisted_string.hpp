@@ -31,6 +31,16 @@ namespace realm {
         persisted(const char* value) {
             new (&this->unmanaged) std::string(value);
         }
+        persisted& operator=(const T& o) override {
+            if (auto obj = this->m_object) {
+                obj->obj().template set<String>(
+                        this->managed,
+                        type_info::persisted_type<T>::convert_if_required(o));
+            } else {
+                new (&this->unmanaged) T(o);
+            }
+            return *this;
+        }
         persisted& operator=(const char* o) {
             if (auto obj = persisted_noncontainer_base<T>::m_object) {
                 std::string convert = type_info::persisted_type<T>::convert_if_required(T(o));

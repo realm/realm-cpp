@@ -27,6 +27,7 @@ set(HEADERS
     cpprealm/persisted_embedded.hpp
     cpprealm/persisted_binary.hpp
     cpprealm/persisted_mixed.hpp
+    cpprealm/persisted_map.hpp
     cpprealm/analytics.hpp
     cpprealm/internal/generic_network_transport.hpp) # REALM_INSTALL_HEADERS
 

@@ -59,13 +59,6 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
 
     persisted_base(const T& value);
     persisted_base(T&& value);
-//
-//    template <typename S, std::enable_if_t<type_info::ObjectPersistableConcept<S>::value && std::is_same_v<S, typename T::value_type>>>
-//    persisted_base(std::optional<S> value) {
-//        unmanaged = value;
-//    }
-//    template <typename S, type_info::ObjectBasePersistable<T>>
-//    persisted_base(std::optional<S> value);
 
     persisted_base();
     ~persisted_base();
@@ -76,67 +69,8 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
         *this = std::move(o);
     }
 
-    persisted_base& operator=(const T& o) {
-        if (auto obj = m_object) {
-            if constexpr (type_info::PrimitivePersistableConcept<T>::value) {
-                obj->obj().template set<type>(managed, o);
-            } else if constexpr (type_info::MixedPersistableConcept<T>::value) {
-                obj->obj().set_any(managed, type_info::persisted_type<T>::convert_if_required(o));
-            }
-            // if parent is managed...
-            else if constexpr (type_info::EmbeddedObjectPersistableConcept<T>::value) {
-                // if non-null object is being assigned...
-                if (o.m_object) {
-                    // if object is managed, we will to set the link
-                    // to the new target's key
-                    obj->obj().template set<type>(managed, o.m_object->obj().get_key());
-                } else {
-                    // else new unmanaged object is being assigned.
-                    // we must assign the values to this object's fields
-                    // TODO:
-                    REALM_UNREACHABLE();
-                }
-            } else if constexpr (type_info::OptionalObjectPersistableConcept<T>::value) {
-                // if object...
-                if (auto link = o) {
-                    // if non-null object is being assigned...
-                    if (link->m_object) {
-                        // if object is managed, we will to set the link
-                        // to the new target's key
-                        obj->obj().template set<ObjKey>(managed, link->m_object->obj().get_key());
-                    } else {
-                        // else new unmanaged object is being assigned.
-                        // we must assign the values to this object's fields
-                        // TODO:
-                        REALM_UNREACHABLE();
-                    }
-                } else {
-                    // else null link is being assigned to this field
-                    // e.g., `person.dog = std::nullopt;`
-                    // set the parent column to null and unset the co
-                    obj->obj().set_null(managed);
-                }
-            } else if constexpr (type_info::OptionalPersistableConcept<T>::value) {
-                using UnwrappedType = typename type_info::persisted_type<typename T::value_type>::type;
-                if (o) {
-                    if constexpr (type_info::EnumPersistableConcept<typename T::value_type>::value) {
-                        obj->obj().template set<Int>(managed, static_cast<Int>(*o));
-                    } else {
-                        obj->obj().template set<UnwrappedType>(managed,
-                                                               type_info::persisted_type<UnwrappedType>::convert_if_required(
-                                                                       *o));
-                    }
-                } else {
-                    obj->obj().set_null(managed);
-                }
-            } else {
-                obj->obj().template set<type>(managed, o);
-            }
-        } else {
-            new (&unmanaged) T(o);
-        }
-        return *this;
-    }
+    virtual persisted_base& operator=(const T& o) = 0;
+
     persisted_base& operator=(const persisted_base& o) {
         if (auto obj = o.m_object) {
             m_object = obj;
@@ -233,6 +167,8 @@ protected:
                     } else {
                         return m_object->obj().template get<UnwrappedType>(managed);
                     }
+                } else if constexpr (type_info::MapPersistableConcept<T>::value) {
+                    return m_object->obj().get_dictionary(managed);
                 } else {
                     return m_object->obj().template get<type>(managed);
                 }
@@ -363,7 +299,6 @@ protected:
 template <typename T, typename = type_info::NonContainerPersistable<T>>
 struct persisted_noncontainer_base : public persisted_base<T> {
     using persisted_base<T>::persisted_base;
-    using persisted_base<T>::operator=;
     using persisted_base<T>::operator*;
     using type = typename realm::type_info::persisted_type<T>::type;
 };

@@ -27,6 +27,17 @@ namespace realm {
         using persisted_noncontainer_base<T>::persisted_noncontainer_base;
         using persisted_noncontainer_base<T>::operator*;
         using persisted_noncontainer_base<T>::operator=;
+
+        persisted& operator=(const T& o) override {
+            if (auto obj = this->m_object) {
+                obj->obj().template set<Int>(
+                        this->managed,
+                        type_info::persisted_type<T>::convert_if_required(o));
+            } else {
+                new (&this->unmanaged) T(o);
+            }
+            return *this;
+        }
     };
 }
 

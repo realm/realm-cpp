@@ -20,13 +20,17 @@
 #define notifications_hpp
 
 #include <cpprealm/type_info.hpp>
+#include <cpprealm/thread_safe_reference.hpp>
 
+#include <realm/object-store/dictionary.hpp>
 #include <realm/object-store/list.hpp>
 #include <realm/object-store/object.hpp>
 #include <realm/object-store/object_store.hpp>
 #include <realm/object-store/shared_realm.hpp>
 
 #include <any>
+#include <future>
+#include <utility>
 #include "persisted.hpp"
 
 namespace realm {
@@ -40,14 +44,20 @@ struct ObjectChange;
 
 template <typename T>
 struct persisted_container_base;
+
 /**
  A token which is returned from methods which subscribe to changes to a `realm::object`.
  */
 struct notification_token {
+    notification_token(notification_token&& nt) noexcept = default;
     notification_token() = default;
 private:
-    explicit notification_token(realm::NotificationToken&& token)
+    explicit notification_token(realm::NotificationToken&& token,
+                                realm::Object object,
+                                SharedRealm realm)
     : m_token(std::move(token))
+    , m_object(std::move(object))
+    , m_realm(std::move(realm))
     {
     }
 
@@ -55,14 +65,19 @@ private:
     template <typename T>
     friend struct persisted_container_base;
     template <typename T>
+    friend struct persisted_map_base;
+    template <typename T>
     friend struct results;
     realm::NotificationToken m_token;
+    realm::Object m_object;
+    realm::object_store::Dictionary m_dictionary;
+    SharedRealm m_realm;
 };
 
 template <typename T>
 struct collection_change {
     /// The list being observed.
-    const persisted_container_base<T>* collection;
+    const persisted<T>* collection;
     std::vector<uint64_t> deletions;
     std::vector<uint64_t> insertions;
     std::vector<uint64_t> modifications;
@@ -81,7 +96,6 @@ struct collection_change {
 
 template <typename T>
 struct collection_callback_wrapper {
-    static_assert(realm::type_info::ListPersistableConcept<T>::value);
     util::UniqueFunction<void(collection_change<T>)> handler;
     persisted<T>& collection;
     bool ignoreChangesInInitialNotification;

@@ -80,9 +80,19 @@ struct AllTypesObject: realm::object {
     realm::persisted<std::vector<std::vector<std::uint8_t>>> list_binary_col;
     realm::persisted<std::vector<std::chrono::time_point<std::chrono::system_clock>>> list_date_col;
     realm::persisted<std::vector<realm::mixed>> list_mixed_col;
-
     realm::persisted<std::vector<AllTypesObjectLink>> list_obj_col;
     realm::persisted<std::vector<AllTypesObjectEmbedded>> list_embedded_obj_col;
+
+    realm::persisted<std::map<std::string, int>> map_int_col;
+    realm::persisted<std::map<std::string, bool>> map_bool_col;
+    realm::persisted<std::map<std::string, std::string>> map_str_col;
+    realm::persisted<std::map<std::string, realm::uuid>> map_uuid_col;
+    realm::persisted<std::map<std::string, std::vector<std::uint8_t>>> map_binary_col;
+    realm::persisted<std::map<std::string, std::chrono::time_point<std::chrono::system_clock>>> map_date_col;
+    realm::persisted<std::map<std::string, Enum>> map_enum_col;
+    realm::persisted<std::map<std::string, realm::mixed>> map_mixed_col;
+    realm::persisted<std::map<std::string, AllTypesObjectLink>> map_link_col;
+    realm::persisted<std::map<std::string, AllTypesObjectEmbedded>> map_embedded_col;
 
     static constexpr auto schema = realm::schema("AllTypesObject",
         realm::property<&AllTypesObject::_id, true>("_id"),
@@ -111,7 +121,17 @@ struct AllTypesObject: realm::object {
         realm::property<&AllTypesObject::list_date_col>("list_date_col"),
         realm::property<&AllTypesObject::list_mixed_col>("list_mixed_col"),
         realm::property<&AllTypesObject::list_obj_col>("list_obj_col"),
-        realm::property<&AllTypesObject::list_embedded_obj_col>("list_embedded_obj_col"));
+        realm::property<&AllTypesObject::list_embedded_obj_col>("list_embedded_obj_col"),
+
+        realm::property<&AllTypesObject::map_int_col>("map_int_col"),
+        realm::property<&AllTypesObject::map_str_col>("map_str_col"),
+        realm::property<&AllTypesObject::map_bool_col>("map_bool_col"),
+        realm::property<&AllTypesObject::map_enum_col>("map_enum_col"),
+        realm::property<&AllTypesObject::map_date_col>("map_date_col"),
+        realm::property<&AllTypesObject::map_uuid_col>("map_uuid_col"),
+        realm::property<&AllTypesObject::map_mixed_col>("map_mixed_col"),
+        realm::property<&AllTypesObject::map_link_col>("map_link_col"),
+        realm::property<&AllTypesObject::map_embedded_col>("map_embedded_col"));
 };
 
 struct EmbeddedFoo: realm::embedded_object {

@@ -45,6 +45,8 @@
 #include <QTimer>
 #include <QThread>
 #include <QtWidgets/QApplication>
+#else
+#include <realm/object-store/util/scheduler.hpp>
 #endif
 
 namespace realm {
@@ -216,9 +218,10 @@ private:
 template <typename ...Ts>
 static db<Ts...> open(db_config config = {})
 {
-    // TODO: Add these flags to core
 #if QT_CORE_LIB
     util::Scheduler::set_default_factory(util::make_qt);
+#else
+    util::Scheduler::set_default_factory(util::Scheduler::make_platform_default);
 #endif
     return db<Ts...>(std::move(config));
 }
@@ -228,6 +231,8 @@ static inline std::promise<thread_safe_reference<db<Ts...>>> async_open(const db
     // TODO: Add these flags to core
 #if QT_CORE_LIB
     util::Scheduler::set_default_factory(util::make_qt);
+#else
+    util::Scheduler::set_default_factory(util::Scheduler::make_platform_default);
 #endif
     std::vector<ObjectSchema> schema;
     (schema.push_back(Ts::schema.to_core_schema()), ...);
