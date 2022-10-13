@@ -15,11 +15,11 @@ TEST_CASE("embedded_objects") {
         });
 
         CHECK((*foo.foo).bar == 42);
-        bool did_run;
         EmbeddedFoo e_foo = (*foo.foo);
-        auto token = e_foo.observe<EmbeddedFoo>([&did_run](auto change) {
+        std::promise<bool> p;
+        auto token = e_foo.observe<EmbeddedFoo>([&p](auto change) {
             CHECK(change.object->bar == 84);
-            did_run = true;
+            p.set_value(true);
         });
         realm.write([&foo]() {
             (*foo.foo).bar = 84;
@@ -28,6 +28,13 @@ TEST_CASE("embedded_objects") {
         realm.write([&foo, &realm] {
             realm.remove(foo);
         });
-        CHECK(did_run);
+        auto future = p.get_future();
+        switch (future.wait_for(std::chrono::seconds(5))) {
+            case std::__1::future_status::ready:
+                CHECK(future.get());
+                break;
+            default:
+                FAIL("observation timed out");
+        }
     }
 }

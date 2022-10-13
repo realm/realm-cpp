@@ -25,8 +25,49 @@ namespace realm {
     template<typename T>
     struct persisted<T, type_info::OptionalPersistable<T>> : public persisted_noncontainer_base<T> {
         using persisted_noncontainer_base<T>::persisted_noncontainer_base;
-        using persisted_noncontainer_base<T>::operator=;
         using persisted_noncontainer_base<T>::operator*;
+
+        persisted& operator=(const T& o) override {
+            if (auto& obj = this->m_object) {
+                if constexpr (type_info::OptionalObjectPersistableConcept<T>::value) {
+                    // if object...
+                    if (auto link = o) {
+                        // if non-null object is being assigned...
+                        if (link->m_object) {
+                            // if object is managed, we will to set the link
+                            // to the new target's key
+                            obj->obj().template set<ObjKey>(this->managed, link->m_object->obj().get_key());
+                        } else {
+                            // else new unmanaged object is being assigned.
+                            // we must assign the values to this object's fields
+                            // TODO:
+                            REALM_UNREACHABLE();
+                        }
+                    } else {
+                        // else null link is being assigned to this field
+                        // e.g., `person.dog = std::nullopt;`
+                        // set the parent column to null and unset the co
+                        obj->obj().set_null(this->managed);
+                    }
+                } else {
+                    using UnwrappedType = typename type_info::persisted_type<typename T::value_type>::type;
+                    if (o) {
+                        if constexpr (type_info::EnumPersistableConcept<typename T::value_type>::value) {
+                            obj->obj().template set<Int>(this->managed, static_cast<Int>(*o));
+                        } else {
+                            obj->obj().template set<UnwrappedType>(this->managed,
+                                                                   type_info::persisted_type<typename T::value_type>::convert_if_required(
+                                                                           *o));
+                        }
+                    } else {
+                        obj->obj().set_null(this->managed);
+                    }
+                }
+            } else {
+                new (&this->unmanaged) T(o);
+            }
+            return *this;
+        }
     };
     template <typename T>
     std::enable_if_t<type_info::is_optional<T>::value, rbool>

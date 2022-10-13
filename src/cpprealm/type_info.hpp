@@ -23,6 +23,7 @@
 #include <variant>
 
 #include <realm/object-store/property.hpp>
+#include <realm/dictionary.hpp>
 #include <realm/obj.hpp>
 
 namespace realm {
@@ -31,9 +32,8 @@ namespace realm {
     struct object;
     struct embedded_object;
 }
+
 namespace realm::type_info {
-
-
 template <typename T>
 using AddAssignable = typename std::enable_if<
     T::operator +=
@@ -428,9 +428,8 @@ using ListPersistableConcept = std::conditional_t<
 >;
 static_assert(ListPersistableConcept<std::vector<int>>::value);
 template <typename T>
-using ListPersistable = std::enable_if_t<
-       ListPersistableConcept<T>::value
->;
+using ListPersistable = std::enable_if_t<ListPersistableConcept<T>::value>;
+
 template <typename T>
 struct persisted_type<T, ListPersistable<T>> {
     using type = std::vector<typename persisted_type<typename T::value_type>::type>;
@@ -455,7 +454,7 @@ struct persisted_type<T, ListPersistable<T>> {
         } else {
             std::transform(a.begin(), a.end(), std::back_inserter(v), [](auto& value) {
                 if constexpr (ObjectBasePersistableConcept<typename T::value_type>::value) {
-                    return value.m_obj->get_key();
+                    return value.m_object->obj().get_key();
                 } else if constexpr (BinaryPersistableConcept<T>::value) {
                     return BinaryData(reinterpret_cast<const char *>(value.data()), value.size());
                 } else {
@@ -467,7 +466,100 @@ struct persisted_type<T, ListPersistable<T>> {
     }
 };
 
-template <typename T>
+//// MARK: MapPersistable
+    namespace {
+        template <typename T, typename = void>
+        struct is_map : std::false_type {};
+        template <typename T>
+        struct is_map<std::map<std::string, T>, std::enable_if_t<true>> : std::true_type {
+        };
+    }
+
+    template <typename T>
+    using MapPrimitivePersistableConcept = std::conjunction<
+            std::is_same<std::map<typename T::key_type, typename T::mapped_type>, T>,
+            std::is_same<typename T::key_type, std::string>,
+            PrimitivePersistableConcept<typename T::mapped_type>
+    >;
+    template <typename T>
+    using MapPrimitivePersistable = std::enable_if_t<MapPrimitivePersistableConcept<T>::value>;
+    template <typename T>
+    using MapObjectPersistableConcept = std::conjunction<
+            std::is_same<std::map<typename T::key_type, typename T::mapped_type>, T>,
+            std::is_same<typename T::key_type, std::string>,
+            ObjectBasePersistableConcept<typename T::mapped_type>
+    >;
+    template <typename T>
+    using MapObjectPersistable = std::enable_if_t<
+            MapObjectPersistableConcept<T>::value
+    >;
+    template <typename T>
+    using MapMixedPersistableConcept = std::conjunction<
+            std::is_same<std::map<typename T::key_type, typename T::mapped_type>, T>,
+            std::is_same<typename T::key_type, std::string>,
+            MixedPersistableConcept<typename T::mapped_type>
+    >;
+    template <typename T>
+    using MapMixedPersistable = std::enable_if_t<
+            MapMixedPersistableConcept<T>::value
+    >;
+    template <typename T>
+    constexpr bool strip_map() {
+        if constexpr (is_map<T>::value) {
+            return MapPrimitivePersistableConcept<T>::value
+                || MapObjectPersistableConcept<T>::value
+                || MapMixedPersistableConcept<T>::value;
+        } else {
+            return false;
+        }
+    }
+    template <typename T>
+    using MapPersistableConcept = std::conditional_t<
+            strip_map<T>(), std::true_type, std::false_type
+    >;
+    template <typename T>
+    using MapPersistable = std::enable_if_t<MapPersistableConcept<T>::value>;
+
+
+    template <typename T>
+    struct persisted_type<T, MapPersistable<T>> {
+        using type = realm::Dictionary;
+
+        static constexpr PropertyType property_type() {
+            if constexpr (MixedPersistableConcept<typename T::value_type>::value) {
+                return PropertyType::Dictionary | (persisted_type<typename T::mapped_type>::property_type());
+            }
+            else if constexpr (ObjectBasePersistableConcept<typename T::mapped_type>::value) {
+                return PropertyType::Dictionary | (persisted_type<typename T::mapped_type>::property_type()) | PropertyType::Nullable;
+            }
+            else {
+                return PropertyType::Dictionary |
+                       (persisted_type<typename T::mapped_type>::property_type() & ~PropertyType::Flags);
+            }
+        }
+
+        static type convert_if_required(const T& a)
+        {
+            type v;
+
+            if constexpr (BoolPersistableConcept<typename T::mapped_type>::value) {
+                for (auto& [key, value] : a )
+                    v.insert(key, static_cast<typename persisted_type<typename T::value_type>::type>(value));
+            } else {
+                for (auto& [key, value] : a) {
+                    if constexpr (ObjectBasePersistableConcept<typename T::value_type>::value) {
+                        v[key] = value.m_obj->get_key();
+                    } else if constexpr (BinaryPersistableConcept<T>::value) {
+                        v[key] = BinaryData(reinterpret_cast<const char *>(value.data()), value.size());
+                    } else {
+                        v.insert(key, persisted_type<typename T::mapped_type>::convert_if_required(value));
+                    }
+                }
+            }
+            return v;
+        }
+    };
+    template <typename T>
 using OptionalObjectPersistableConcept = std::conjunction<
         is_optional<T>, ObjectPersistableConcept<typename T::value_type>>;
 
@@ -520,7 +612,8 @@ using NonContainerPersistable = typename std::enable_if<NonContainerPersistableC
 template <typename T>
 using PersistableConcept = std::disjunction<
         NonContainerPersistableConcept<T>,
-        ListPersistableConcept<T>
+        ListPersistableConcept<T>,
+        MapPersistableConcept<T>
 >;
 
 template <typename T>

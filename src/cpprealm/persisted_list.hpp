@@ -332,6 +332,16 @@ notification_token persisted_container_base<T>::observe(std::function<void(colle
         using persisted_primitive_container_base<T>::find;
         using persisted_primitive_container_base<T>::operator[];
         using persisted_primitive_container_base<T>::observe;
+
+        persisted& operator=(const T& o) override {
+            if (std::optional<Object>& obj = this->m_object) {
+                obj->obj().set_list_values(this->managed,
+                                           type_info::persisted_type<T>::convert_if_required(o));
+            } else {
+                new (&this->unmanaged) T(o);
+            }
+            return *this;
+        }
     };
 
     template <typename T>
@@ -351,6 +361,16 @@ notification_token persisted_container_base<T>::observe(std::function<void(colle
         using persisted_object_container_base<T>::find;
         using persisted_object_container_base<T>::operator[];
         using persisted_object_container_base<T>::observe;
+
+        persisted& operator=(const T& o) override {
+            if (auto obj = this->m_object) {
+                obj->obj().set_list_values(this->managed,
+                                           type_info::persisted_type<T>::convert_if_required(o));
+            } else {
+                new (&this->unmanaged) T(o);
+            }
+            return *this;
+        }
     };
     template <typename T>
     struct persisted<T, std::enable_if_t<
@@ -372,6 +392,16 @@ notification_token persisted_container_base<T>::observe(std::function<void(colle
         using persisted_primitive_container_base<T>::find;
         using persisted_primitive_container_base<T>::operator[];
         using persisted_primitive_container_base<T>::observe;
+
+        persisted& operator=(const T& o) override {
+            if (auto obj = this->m_object) {
+                obj->obj().set_list_values(this->managed,
+                                           type_info::persisted_type<T>::convert_if_required(o));
+            } else {
+                new (&this->unmanaged) T(o);
+            }
+            return *this;
+        }
     };
 }
 

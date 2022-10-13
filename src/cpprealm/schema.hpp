@@ -84,7 +84,17 @@ struct property {
             } else {
                 return realm::Property(name, type, is_primary_key);
             }
-        } else {
+        }
+        else if constexpr (type_info::MapPersistableConcept<Result>::value) {
+            if constexpr (type_info::EmbeddedObjectPersistableConcept<Result>::value) {
+                return realm::Property(name, type, Result::schema.name);
+            } else if constexpr (type_info::ObjectBasePersistableConcept<typename Result::mapped_type>::value) {
+                return realm::Property(name, type, Result::mapped_type::schema.name);
+            } else {
+                return realm::Property(name, type, is_primary_key);
+            }
+        }
+        else {
             return realm::Property(name, type, is_primary_key);
         }
     }
@@ -156,6 +166,13 @@ struct property {
             auto val = (object.*ptr).as_core_type();
             if (val) {
                 object.m_object->template set_column_value(property_name, *val);
+            }
+        } else if constexpr (type_info::MapPersistableConcept<Result>::value) {
+            auto val = (object.*ptr);
+            Dictionary dictionary = object.m_object->obj().get_dictionary(property_name);
+            for (auto [k,v] : val.unmanaged) {
+                Mixed mixed = type_info::persisted_type<typename Result::mapped_type>::convert_if_required(v);
+                dictionary.insert(k, mixed);
             }
         }
         else {
