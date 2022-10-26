@@ -40,6 +40,8 @@ TEST_CASE("map", "[map]") {
         CHECK(obj.map_enum_col["a"] == AllTypesObject::Enum::one);
         CHECK(obj.map_uuid_col["a"] == realm::uuid());
         CHECK(obj.map_binary_col["a"] == std::vector<uint8_t>{0, 1, 2});
+        CHECK(obj.map_link_col["a"] == AllTypesObjectLink());
+        CHECK(obj.map_embedded_col["a"] == AllTypesObjectEmbedded());
         auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({.path=path});
         realm.write([&realm, &obj] {
             realm.add(obj);
@@ -50,6 +52,8 @@ TEST_CASE("map", "[map]") {
         CHECK(obj.map_enum_col["a"] == AllTypesObject::Enum::one);
         CHECK(obj.map_uuid_col["a"] == realm::uuid());
         CHECK(obj.map_binary_col["a"] == std::vector<uint8_t>{0, 1, 2});
+        CHECK(obj.map_link_col["a"] == AllTypesObjectLink());
+        CHECK(obj.map_embedded_col["a"] == AllTypesObjectEmbedded());
 
         realm.write([&obj] {
             obj.map_int_col["b"] = 84;
@@ -58,6 +62,8 @@ TEST_CASE("map", "[map]") {
             obj.map_enum_col["b"] = AllTypesObject::Enum::two;
             obj.map_uuid_col["b"] = realm::uuid();
             obj.map_binary_col["b"] = std::vector<uint8_t>{3,4,5};
+            obj.map_link_col["b"] = AllTypesObjectLink();
+            obj.map_embedded_col["b"] = AllTypesObjectEmbedded();
         });
         CHECK(obj.map_int_col["a"] == 42);
         CHECK(obj.map_int_col["b"] == 84);
@@ -71,6 +77,8 @@ TEST_CASE("map", "[map]") {
         CHECK(obj.map_uuid_col["b"] == realm::uuid());
         CHECK(obj.map_binary_col["a"] == std::vector<uint8_t>{0, 1, 2});
         CHECK(obj.map_binary_col["b"] == std::vector<uint8_t>{3, 4, 5});
+        CHECK(obj.map_link_col["b"] == AllTypesObjectLink());
+        CHECK(obj.map_embedded_col["b"] == AllTypesObjectEmbedded());
     }
 
     SECTION("unmanaged_managed_map_iter", "[mixed]") {

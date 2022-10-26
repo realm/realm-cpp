@@ -320,7 +320,7 @@ struct persisted_add_assignable_base : public persisted_noncontainer_base<T> {
     }
     void operator -=(const T& a) {
         if (this->m_object) {
-            this->m_object->obj().template set<typename persisted_base<T>::type>(this->managed, *(*this) - a);
+            this->m_object->obj().add_int(this->managed, -a);
         } else {
             this->unmanaged -= a;
         }
@@ -330,7 +330,7 @@ struct persisted_add_assignable_base : public persisted_noncontainer_base<T> {
     }
     void operator +=(const T& a) {
         if (this->m_object) {
-            this->m_object->obj().template set<typename persisted_base<T>::type>(this->managed, *(*this) + a);
+            this->m_object->obj().add_int(this->managed, a);
         } else {
             this->unmanaged += a;
         }
@@ -338,8 +338,12 @@ struct persisted_add_assignable_base : public persisted_noncontainer_base<T> {
     void operator ++() {
         *this += 1;
     }
-    T operator *(const T& a);
-    void operator *=(const T& a);
+    T operator *(const T& a) {
+        return *this * a;
+    }
+    void operator *=(const T& a) {
+
+    }
     T operator /(const T& a);
     void operator /=(const T& a);
 };

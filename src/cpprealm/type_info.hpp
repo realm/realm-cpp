@@ -34,9 +34,23 @@ namespace realm {
 }
 
 namespace realm::type_info {
+
+    template <typename T, typename = void>
+    struct is_add_assignable : std::false_type {};
+    template <typename T>
+    struct is_add_assignable<T>: std::true_type {
+        auto test() {
+            auto v = std::declval<T>();
+            return v += v;
+        }
+    };
+    template <typename T>
+    using AddAssignableConcept = std::conjunction<
+            is_add_assignable<T>
+    >;
 template <typename T>
 using AddAssignable = typename std::enable_if<
-    T::operator +=
+        AddAssignableConcept<T>::value
 >::type;
 template <typename T>
 using ComparableConcept = std::conjunction<

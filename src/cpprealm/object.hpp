@@ -277,7 +277,6 @@ struct object_base {
 
     template <typename T>
     notification_token observe(std::function<void(ObjectChange<T>)> block, dispatch_queue_t queue) {
-
         struct ObjectChangeCallbackWrapper {
             ObjectNotificationCallback<T> block{};
             const T* object;
@@ -401,6 +400,123 @@ struct object_base {
         });
         return std::move(token);
     }
+
+    template <typename T>
+    notification_token observe(std::function<void(ObjectChange<T>)> block, bool queue) {
+        struct ObjectChangeCallbackWrapper {
+            ObjectNotificationCallback<T> block{};
+            const T* object;
+            const Object m_object;
+
+            std::optional<std::vector<std::string>> property_names = std::nullopt;
+            std::optional<std::vector<typename decltype(T::schema)::variant_t>> old_values = std::nullopt;
+            bool deleted = false;
+
+            void populateProperties(realm::CollectionChangeSet const& c)
+            {
+                if (property_names) {
+                    return;
+                }
+                if (!c.deletions.empty()) {
+                    deleted = true;
+                    return;
+                }
+                if (c.columns.empty()) {
+                    return;
+                }
+
+                // FIXME: It's possible for the column key of a persisted property
+                // to equal the column key of a computed property.
+                auto properties = std::vector<std::string>();
+                ConstTableRef table = m_object.obj().get_table();
+
+                for (auto i = 0; i < std::tuple_size<decltype(T::schema.properties)>{}; i++) {
+                    if (c.columns.count(table->get_column_key(T::schema.names[i]).value)) {
+                        properties.push_back(T::schema.names[i]);
+                    }
+                }
+
+                if (!properties.empty()) {
+                    property_names = properties;
+                }
+            }
+
+            std::optional<std::vector<typename decltype(T::schema)::variant_t>> readValues(realm::CollectionChangeSet const& c) {
+                if (c.empty()) {
+                    return std::nullopt;
+                }
+                populateProperties(c);
+                if (!property_names) {
+                    return std::nullopt;
+                }
+
+                std::vector<typename decltype(T::schema)::variant_t> values;
+                for (auto& name : *property_names) {
+                    auto value = T::schema.property_value_for_name(name, *object);
+                    values.push_back(value);
+                }
+                return values;
+            }
+
+            void before(realm::CollectionChangeSet const& c)
+            {
+                old_values = readValues(c);
+            }
+
+            void after(realm::CollectionChangeSet const& c)
+            {
+                auto new_values = readValues(c);
+                if (deleted) {
+                    block(nullptr, {}, {}, {}, nullptr);
+                } else if (new_values) {
+                    block(object,
+                          *property_names,
+                          old_values ? *old_values : std::vector<typename decltype(T::schema)::variant_t>{},
+                          *new_values,
+                          nullptr);
+                }
+                property_names = std::nullopt;
+                old_values = std::nullopt;
+            }
+
+            void error(std::exception_ptr err) {
+                block(nullptr, {}, {}, {}, err);
+            }
+        };
+        if (!is_managed()) {
+            throw std::runtime_error("Only objects which are managed by a Realm support change notifications");
+        }
+        notification_token token;
+        token.m_realm = m_object->get_realm();
+        token.m_object = *m_object;
+        token.m_token = token.m_object.add_notification_callback(ObjectChangeCallbackWrapper {
+                    [block](const T* ptr,
+                            std::vector<std::string> property_names,
+                            std::vector<typename decltype(T::schema)::variant_t> old_values,
+                            std::vector<typename decltype(T::schema)::variant_t> new_values,
+                            const std::exception_ptr& error) {
+                        if (!ptr) {
+                            if (error) {
+                                block(ObjectChange<T> { .error = error });
+                            } else {
+                                block(ObjectChange<T> { .is_deleted = true });
+                            }
+                        } else {
+                            for (size_t i = 0; i < property_names.size(); i++) {
+                                PropertyChange<T> property;
+                                property.name = property_names[i];
+                                if (!old_values.empty()) {
+                                    property.old_value = old_values[i];
+                                }
+                                if (!new_values.empty()) {
+                                    property.new_value = new_values[i];
+                                }
+                                block(ObjectChange<T> { .object = ptr, .property = property });
+                            }
+                        }
+                    }, static_cast<T*>(this), token.m_object});
+        return std::move(token);
+    }
 protected:
     std::optional<Object> m_object;
     template <typename T, typename>
@@ -497,6 +613,21 @@ struct object : public object_base {
 struct embedded_object : public object_base {
 };
 
+namespace {
+    template <size_t N, typename T>
+    static constexpr bool check_equals(const T& lhs, const T& rhs) {
+        if constexpr (N + 1 >= std::tuple_size<decltype(T::schema.properties)>{}) {
+            return true;
+        } else {
+            auto ptr = std::get<N>(T::schema.properties).ptr;
+            if ((lhs.*ptr) != (rhs.*ptr)) {
+                return false;
+            } else {
+                return check_equals<N + 1>(lhs, rhs);
+            }
+        }
+    }
+}
 template <typename T>
 inline auto operator==(const T& lhs,
                        const T& rhs) -> std::enable_if_t<type_info::ObjectBasePersistableConcept<T>::value, bool> {
@@ -513,9 +644,9 @@ inline auto operator==(const T& lhs,
         // if table and index are the same
         return obj1.get_table() == obj2.get_table()
             && obj1.get_key() == obj2.get_key();
+    } else {
+        return check_equals<0>(lhs, rhs);
     }
-
-    return false;
 }
 
 } // namespace realm
