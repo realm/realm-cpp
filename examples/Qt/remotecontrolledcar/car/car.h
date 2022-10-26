@@ -81,12 +81,14 @@ private:
     realm::persisted<qreal> speed; // delta movement along the body axis
     realm::persisted<Qt::GlobalColor> color;
 public:
-    using schema = realm::schema<
-        "Car",
-        realm::property<"_id", &Car::_id, true>,
-        realm::property<"wheelsAngle", &Car::wheelsAngle>,
-        realm::property<"speed", &Car::speed>,
-        realm::property<"color", &Car::color>>;
+    static constexpr auto schema() {
+        return realm::schema(
+            "Car",
+            realm::property<&Car::_id, true>("_id"),
+            realm::property<&Car::wheelsAngle>("wheelsAngle"),
+            realm::property<&Car::speed>("speed"),
+            realm::property<&Car::color>("color"));
+    }
 };
 
 #endif // CAR_H

@@ -21,7 +21,7 @@ LIBS += -L/usr/local/lib \
     -lz -lcurl
 linux-g++*: LIBS += -lssl -lcrypto
 macos: LIBS += -framework Foundation -framework Security
-DEFINES += REALM_ENABLE_SYNC
+DEFINES += REALM_ENABLE_SYNC REALM_PLATFORM_APPLE=0
 
 RESOURCES += \
     resources.qrc

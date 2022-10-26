@@ -52,26 +52,23 @@
 
 #include "controller.h"
 
-realm::task<void> get_car(Controller& controller)
+void get_car(Controller& controller)
 {
     auto realm_app = realm::App("car-wsney");
-    auto user = co_await realm_app.login(realm::App::Credentials::anonymous());
+    const auto user = realm_app.login(realm::App::Credentials::anonymous()).get_future().get();
 
-    auto tsr = co_await user.realm<Car>("foo");
+    auto tsr = user.realm<Car>("foo");
     QMetaObject::invokeMethod(qApp, [tsr = std::move(tsr), &controller]() mutable {
         auto realm = tsr.resolve();
         controller.car = realm.object_new<Car>(0);
     });
-    co_return;
 }
-
-realm::task<void> task;
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
     Controller controller;
-    task = get_car(controller);
+    get_car(controller);
     controller.show();
     return app.exec();
 }

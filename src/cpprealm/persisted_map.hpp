@@ -304,7 +304,12 @@ namespace realm {
             }
         }
     };
-
+    template <typename V>
+    struct box<V, type_info::ObjectBasePersistable<V>> : public box_base<V> {
+        using box_base<V>::box_base;
+        using box_base<V>::operator=;
+        using box_base<V>::operator==;
+    };
     template <typename T>
     struct persisted<T, type_info::MapPrimitivePersistable<T>> : public persisted_primitive_map_base<T> {
         using persisted_primitive_map_base<T>::persisted_primitive_map_base;

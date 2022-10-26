@@ -1,7 +1,7 @@
 QT += widgets
 
-CONFIG+=c++2a
-QMAKE_CXXFLAGS+="-std=c++2a"
+//CONFIG+=c++2a
+QMAKE_CXXFLAGS+="-std=c++17"
 linux-g++*: QMAKE_CXXFLAGS += "-fcoroutines -fconcepts"
 INCLUDEPATH += $$PWD/../
 FORMS += controller.ui
@@ -29,4 +29,4 @@ linux-g++*: LIBS += -lssl -lcrypto
 macos: LIBS += -framework Foundation -framework Security
 DEPENDPATH += $$PWD/../car/
 INCLUDEPATH += $$PWD/../car/
-DEFINES += REALM_ENABLE_SYNC
+DEFINES += REALM_ENABLE_SYNC REALM_PLATFORM_APPLE=0

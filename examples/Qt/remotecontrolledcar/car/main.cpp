@@ -58,11 +58,11 @@
 realm::notification_token token;
 realm::task<void> task;
 
-realm::task<void> add_car(Car* car)
+void add_car(Car* car)
 {
     auto realm_app = realm::App("car-wsney");
-    auto user = co_await realm_app.login(realm::App::Credentials::anonymous());
-    auto tsr = co_await user.realm<Car>("foo");
+    auto user = realm_app.login(realm::App::Credentials::anonymous()).get_future().get();
+    auto tsr = user.realm<Car>("foo");
 
     // invoke on the main thread
     QMetaObject::invokeMethod(qApp, [tsr = std::move(tsr), car]() mutable {
@@ -75,7 +75,6 @@ realm::task<void> add_car(Car* car)
             car->on_change();
         });
     });
-    co_return;
 }
 
 int main(int argc, char *argv[])
