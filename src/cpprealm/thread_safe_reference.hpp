@@ -73,36 +73,16 @@ struct thread_safe_reference<db<Ts...>> {
     {
         return db<Ts...>(Realm::get_shared_realm(std::move(m_tsr)));
     }
+
+    explicit operator bool() const noexcept
+    {
+        return m_tsr.operator bool();
+    }
 private:
     ThreadSafeReference m_tsr;
     template <typename ...>
     friend struct db;
 };
-#if __cpp_coroutines
-    //template <typename ...Ts>
-//static inline task<thread_safe_reference<db<Ts...>>> async_open(const db_config& config) {
-//    // TODO: Add these flags to core
-//#if QT_CORE_LIB
-//    util::Scheduler::set_default_factory(util::make_qt);
-//#endif
-//    std::vector<ObjectSchema> schema;
-//    (schema.push_back(Ts::schema::to_core_schema()), ...);
-//
-//    auto tsr = co_await make_awaitable<ThreadSafeReference>([config, schema](auto cb) {
-//        std::shared_ptr<AsyncOpenTask> async_open_task = Realm::get_synchronized_realm({
-//                                                                                               .path = config.path,
-//                                                                                               .schema_mode = SchemaMode::AdditiveExplicit,
-//                                                                                               .schema = Schema(schema),
-//                                                                                               .schema_version = 0,
-//                                                                                               .sync_config = config.sync_config
-//                                                                                       });
-//        async_open_task->start(cb);
-//    });
-//    co_return thread_safe_reference<db<Ts...>>(std::move(tsr));
-//}
-#else
-
-#endif
 }
 
 

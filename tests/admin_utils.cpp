@@ -354,8 +354,46 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
         mongodb_service_type = "mongodb";
     }
 
+    app["functions"].post({
+        {"name", "updateUserData"},
+        {"private", false},
+        {"can_evaluate", {}},
+        {"source",
+         R"(
+           exports = async function(data) {
+               const user = context.user;
+               const mongodb = context.services.get("mongodb1");
+               const userDataCollection = mongodb.db("test_data").collection("UserData");
+               doc = await userDataCollection.updateOne(
+                                                       { "user_id": user.id },
+                                                       { "$set": data },
+                                                       { "upsert": true }
+                                                       );
+               return doc;
+           };
+           )"
+        }});
+
+    bson::BsonDocument userData = {
+        {"schema", bson::BsonDocument {
+                       {"properties", bson::BsonDocument {
+                                          {"_id", bson::BsonDocument {{"bsonType", "objectId"}}},
+                                          {"name", bson::BsonDocument {{"bsonType", "string"}}},
+                                          {"user_id", bson::BsonDocument {{"bsonType", "string"}}},
+                                      }},
+                       {"required", bson::BsonArray {"_id", "name", "user_id"}},
+                       {"title", "UserData"}
+                   }},
+        {"metadata", bson::BsonDocument {
+                         {"data_source", "mongodb1"},
+                         {"database", "test_data"},
+                         {"collection", "UserData"}}
+        },
+    };
+    app["schemas"].post(std::move(userData));
+
     bson::BsonDocument mongodb_service_response(app["services"].post({
-        {"name", util::format("db-%1", app_name)},
+        {"name", "mongodb1"},
         {"type", mongodb_service_type},
         {"config", mongodb_service_config}
     }));
@@ -399,6 +437,28 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
 
     auto config = app["sync"]["config"];
     config.put({{"development_mode_enabled", true}});
+
+    bson::BsonDocument rules = {
+        {"database", "test_data"},
+        {"collection", "UserData"},
+        {"roles", bson::BsonArray {
+                      bson::BsonDocument {{"name", "default"},
+                                         {"apply_when", {}},
+                                         {"insert", true},
+                                         {"delete", true},
+                                         {"additional_fields", {}}},
+                  }
+        }
+    };
+
+    app["services"][static_cast<std::string>(mongodb_service_id)]["rules"].post(rules);
+    app["custom_user_data"].patch(bson::BsonDocument {
+        {"mongo_service_id", mongodb_service_id},
+        {"enabled", true},
+        {"database_name", "test_data"},
+        {"collection_name", "UserData"},
+        {"user_id_field", "user_id"},
+    });
     return static_cast<std::string>(info["client_app_id"]);
 }
 
