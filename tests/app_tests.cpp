@@ -69,8 +69,7 @@ static std::string create_jwt(const std::string& appId)
 }
 
 TEST_CASE("app", "[app]") {
-
-    SECTION("auth_providers_completion_handler") {
+    SECTION("auth_providers_promise") {
         auto app_id = Admin::shared().create_app();
         auto app = realm::App(app_id, Admin::shared().base_url());
 
@@ -79,6 +78,24 @@ TEST_CASE("app", "[app]") {
             CHECK(!user.access_token().empty());
         };
 
+        app.register_user("foo@mongodb.com", "foobar").get_future().get();
+        run_login(realm::App::Credentials::username_password("foo@mongodb.com", "foobar"));
+        run_login(realm::App::Credentials::anonymous());
+        run_login(realm::App::Credentials::custom(create_jwt(app_id)));
+    }
+
+    SECTION("auth_providers_completion_hander") {
+        auto app_id = Admin::shared().create_app();
+        auto app = realm::App(app_id, Admin::shared().base_url());
+
+        auto run_login = [&app](realm::App::Credentials&& credentials) {
+            std::promise<realm::User> p;
+            app.login(std::move(credentials), [&](auto user, auto err){
+              p.set_value(user);
+            });
+            CHECK(!p.get_future().get().access_token().empty());
+        };
+  
         app.register_user("foo@mongodb.com", "foobar").get_future().get();
         run_login(realm::App::Credentials::username_password("foo@mongodb.com", "foobar"));
         run_login(realm::App::Credentials::anonymous());
@@ -109,6 +126,22 @@ TEST_CASE("app", "[app]") {
         CHECK(user.state() == realm::User::state::logged_out);
     }
 
+    SECTION("logout_completion_handler") {
+        auto app_id = Admin::shared().create_app();
+        auto app = realm::App(app_id, Admin::shared().base_url());
+        auto user = app.login(realm::App::Credentials::anonymous()).get_future().get();
+        CHECK(!user.access_token().empty());
+        CHECK(user.state() == realm::User::state::logged_in);
+
+        std::promise<void> p;
+        user.log_out([&p](auto err){
+          p.set_value();
+        });
+        p.get_future().get();
+
+        CHECK(user.state() == realm::User::state::removed);
+    }
+
     SECTION("function_and_custom_user_data") {
         auto app_id = Admin::shared().create_app();
         auto app = realm::App(app_id, Admin::shared().base_url());
@@ -120,9 +153,17 @@ TEST_CASE("app", "[app]") {
 
         user.refresh_custom_user_data().get_future().get();
         CHECK((*user.custom_data())["name"] == "john");
-        result = user.call_function("updateUserData", {realm::bson::BsonDocument({{"name", "jane"}})}).get_future().get();
+        std::promise<std::optional<realm::bson::Bson>> function_promise;
+        user.call_function("updateUserData", {realm::bson::BsonDocument({{"name", "jane"}})}, [&function_promise](auto result, auto err) {
+          function_promise.set_value(result);
+        });
+        auto results = function_promise.get_future().get();
         CHECK(result);
-        user.refresh_custom_user_data().get_future().get();
+        std::promise<void> refresh_promise;
+        user.refresh_custom_user_data([&refresh_promise](auto err){
+          refresh_promise.set_value();
+        });
+        refresh_promise.get_future().get();
         CHECK((*user.custom_data())["name"] == "jane");
     }
 }

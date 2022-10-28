@@ -401,11 +401,11 @@ public:
         {
             return Credentials(app::AppCredentials::user_api_key(key));
         }
-        static Credentials facebook(const std::string access_token)
+        static Credentials facebook(const std::string& access_token)
         {
             return Credentials(app::AppCredentials::facebook(access_token));
         }
-        static Credentials apple(const std::string id_token)
+        static Credentials apple(const std::string& id_token)
         {
             return Credentials(app::AppCredentials::apple(id_token));
         }
@@ -417,11 +417,11 @@ public:
         {
             return Credentials(app::AppCredentials::google(std::move(id_token)));
         }
-        static Credentials custom(const std::string token)
+        static Credentials custom(const std::string& token)
         {
             return Credentials(app::AppCredentials::custom(token));
         }
-        static Credentials username_password(const std::string username, const std::string password)
+        static Credentials username_password(const std::string& username, const std::string& password)
         {
             return Credentials(app::AppCredentials::username_password(username, password));
         }
@@ -478,6 +478,14 @@ std::promise<User> login(const Credentials& credentials) {
         else p.set_value(User{std::move(user), m_app});
     });
     return p;
+}
+
+void login(const Credentials& credentials, util::UniqueFunction<void(User, std::optional<app_error>)>&& callback) {
+  m_app->log_in_with_credentials(
+      credentials.m_credentials,
+      [cb = std::move(callback), this](auto &u, auto error) {
+        cb(User{std::move(u), m_app}, error ? std::optional<app_error>{app_error(*error)} : std::nullopt);
+      });
 }
 #endif
 private:
