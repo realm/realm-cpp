@@ -354,7 +354,7 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
         mongodb_service_type = "mongodb";
     }
 
-    app["functions"].post({
+    static_cast<void>(app["functions"].post({
         {"name", "updateUserData"},
         {"private", false},
         {"can_evaluate", {}},
@@ -362,7 +362,7 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
          R"(
            exports = async function(data) {
                const user = context.user;
-               const mongodb = context.services.get("mongodb1");
+               const mongodb = context.services.get(")" + util::format("db-%1", app_name) + R"(");
                const userDataCollection = mongodb.db("test_data").collection("UserData");
                doc = await userDataCollection.updateOne(
                                                        { "user_id": user.id },
@@ -372,7 +372,7 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
                return doc;
            };
            )"
-        }});
+        }}));
 
     bson::BsonDocument userData = {
         {"schema", bson::BsonDocument {
@@ -385,15 +385,15 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
                        {"title", "UserData"}
                    }},
         {"metadata", bson::BsonDocument {
-                         {"data_source", "mongodb1"},
+                         {"data_source", util::format("db-%1", app_name)},
                          {"database", "test_data"},
                          {"collection", "UserData"}}
         },
     };
-    app["schemas"].post(std::move(userData));
+    static_cast<void>(app["schemas"].post(std::move(userData)));
 
     bson::BsonDocument mongodb_service_response(app["services"].post({
-        {"name", "mongodb1"},
+        {"name", util::format("db-%1", app_name)},
         {"type", mongodb_service_type},
         {"config", mongodb_service_config}
     }));
@@ -451,7 +451,7 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
         }
     };
 
-    app["services"][static_cast<std::string>(mongodb_service_id)]["rules"].post(rules);
+    static_cast<void>(app["services"][static_cast<std::string>(mongodb_service_id)]["rules"].post(rules));
     app["custom_user_data"].patch(bson::BsonDocument {
         {"mongo_service_id", mongodb_service_id},
         {"enabled", true},

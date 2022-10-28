@@ -84,6 +84,18 @@ TEST_CASE("flx_sync", "[flx][sync]") {
         synced_realm.write([]() {}); // refresh realm
         objs = synced_realm.objects<AllTypesObject>();
         CHECK(objs.size() == 2);
+
+        // Open realm with completion handler.
+        std::promise<void> p;
+        realm::async_open_realm<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config, [&](realm::thread_safe_reference<realm::db<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>> t, std::exception_ptr e) {
+            tsr = std::move(t);
+            p.set_value();
+        });
+        p.get_future().get();
+
+        synced_realm = tsr.resolve();
+        objs = synced_realm.objects<AllTypesObject>();
+        CHECK(objs.size() == 2);
     }
 }
 
@@ -109,24 +121,4 @@ TEST_CASE("tsr") {
     });
     t.join();
     p.get_future().get();
-}
-
-TEST_CASE("async_open_completion_handler") {
-  auto app_id = Admin::shared().create_app();
-  auto app = realm::App(app_id, Admin::shared().base_url());
-  app.register_user("foo@mongodb.com", "foobar").get_future().get();
-  auto user = app.login(realm::App::Credentials::username_password("foo@mongodb.com", "foobar")).get_future().get();
-  auto flx_sync_config = user.flexible_sync_configuration();
-  realm::thread_safe_reference<realm::db<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>> tsr;
-
-  std::promise<void> p;
-
-  realm::async_open_realm<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config, [&](realm::thread_safe_reference<realm::db<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>> t, std::exception_ptr e) {
-    tsr = std::move(t);
-    p.set_value();
-  });
-  p.get_future().get();
-
-  auto synced_realm = tsr.resolve();
-  CHECK(synced_realm.objects<AllTypesObject>().size() == 0);
 }

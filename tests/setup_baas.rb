@@ -37,7 +37,7 @@ end
 
 def run_mongod
     puts "starting mongod..."
-    puts `rm -r '#{BUILD_DIR}'/db_files`
+    puts `rm -f '#{BUILD_DIR}'/db_files`
     puts `mkdir '#{BUILD_DIR}'/db_files`
     puts `#{MONGOD_EXE} --quiet \
         --dbpath '#{BUILD_DIR}'/db_files \
