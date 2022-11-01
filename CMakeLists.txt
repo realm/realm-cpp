@@ -60,7 +60,6 @@ set(HEADERS
     src/cpprealm/persisted_mixed.hpp) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm SHARED ${SOURCES} ${HEADERS})
-#add_test(cpprealm_tests)
 
 target_include_directories(cpprealm PUBLIC src)
 

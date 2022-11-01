@@ -84,6 +84,18 @@ TEST_CASE("flx_sync", "[flx][sync]") {
         synced_realm.write([]() {}); // refresh realm
         objs = synced_realm.objects<AllTypesObject>();
         CHECK(objs.size() == 2);
+
+        // Open realm with completion handler.
+        std::promise<void> p;
+        realm::async_open_realm<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config, [&](realm::thread_safe_reference<realm::db<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>> t, std::exception_ptr e) {
+            tsr = std::move(t);
+            p.set_value();
+        });
+        p.get_future().get();
+
+        synced_realm = tsr.resolve();
+        objs = synced_realm.objects<AllTypesObject>();
+        CHECK(objs.size() == 2);
     }
 }
 

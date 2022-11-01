@@ -241,5 +241,28 @@ static inline std::promise<thread_safe_reference<db<Ts...>>> async_open(const db
     });
     return p;
 }
+
+template <typename ...Ts>
+struct async_open_realm {
+    async_open_realm(const db_config& config, util::UniqueFunction<void(thread_safe_reference<db<Ts...>>, std::exception_ptr e)> &&callback) {
+        // TODO: Add these flags to core
+#if QT_CORE_LIB
+        util::Scheduler::set_default_factory(util::make_qt);
+#endif
+        std::vector<ObjectSchema> schema;
+        (schema.push_back(Ts::schema.to_core_schema()), ...);
+        std::promise<thread_safe_reference<db<Ts...>>> p;
+
+        std::shared_ptr<AsyncOpenTask> async_open_task = Realm::get_synchronized_realm({
+            .path = config.path,
+            .schema_mode = SchemaMode::AdditiveExplicit,
+            .schema = Schema(schema),
+            .schema_version = 0,
+            .sync_config = config.sync_config
+        });
+
+        async_open_task->start(std::move(callback));
+    }
+};
 }
 #endif /* realm_realm_hpp */
