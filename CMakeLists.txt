@@ -32,7 +32,7 @@ add_compile_definitions(REALM_VERSION_PATCH=1)
 
 set(SOURCES
     src/cpprealm/sdk.cpp
-) # REALM_SOURCES
+    src/cpprealm/analytics.cpp) # REALM_SOURCES
 
 set(HEADERS
     src/cpprealm/sdk.hpp
@@ -57,7 +57,8 @@ set(HEADERS
     src/cpprealm/persisted_list.hpp
     src/cpprealm/persisted_embedded.hpp
     src/cpprealm/persisted_binary.hpp
-    src/cpprealm/persisted_mixed.hpp) # REALM_INSTALL_HEADERS
+    src/cpprealm/persisted_mixed.hpp
+    src/cpprealm/analytics.hpp) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm SHARED ${SOURCES} ${HEADERS})
 

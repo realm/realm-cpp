@@ -22,6 +22,7 @@
 #include <filesystem>
 #include <iostream>
 
+#include <cpprealm/analytics.hpp>
 #include <cpprealm/type_info.hpp>
 #include <cpprealm/results.hpp>
 #include <cpprealm/task.hpp>
@@ -105,7 +106,6 @@ static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::make
 #else
 static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::Scheduler::make_default;
 #endif
-
 
 template <typename ...Ts>
 struct db {
@@ -200,6 +200,12 @@ private:
     {
         config.path = realm->config().path;
         config.sync_config = realm->config().sync_config;
+
+        static bool initialized;
+        if (!initialized) {
+            realm_analytics::send();
+            initialized = true;
+        }
     }
     friend struct object;
     template <typename T, typename>
