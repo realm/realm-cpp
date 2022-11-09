@@ -58,7 +58,8 @@ set(HEADERS
     src/cpprealm/persisted_embedded.hpp
     src/cpprealm/persisted_binary.hpp
     src/cpprealm/persisted_mixed.hpp
-    src/cpprealm/analytics.hpp) # REALM_INSTALL_HEADERS
+    src/cpprealm/analytics.hpp
+    src/cpprealm/internal/generic_network_transport.hpp) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm SHARED ${SOURCES} ${HEADERS})
 

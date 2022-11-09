@@ -7,6 +7,7 @@ env:
   REALM_ATLAS_PRIVATE_API_KEY: ${{ secrets.ATLAS_QA_PRIVATE_API_KEY }}
   REALM_ATLAS_PROJECT_ID: ${{ secrets.ATLAS_QA_PROJECT_ID}}
   REALM_CI: true
+  REALM_DISABLE_ANALYTICS: true
 
 on:
   push:
