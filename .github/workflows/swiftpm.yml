@@ -2,6 +2,7 @@ name: SwiftPM Build
 
 env:
   REALM_CI: true
+  REALM_DISABLE_ANALYTICS: true
 
 on:
   push:

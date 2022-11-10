@@ -22,6 +22,9 @@
 #include <filesystem>
 #include <iostream>
 
+#if !defined(REALM_DISABLE_ANALYTICS)
+#include <cpprealm/analytics.hpp>
+#endif
 #include <cpprealm/type_info.hpp>
 #include <cpprealm/results.hpp>
 #include <cpprealm/task.hpp>
@@ -106,7 +109,6 @@ static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::make
 static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::Scheduler::make_default;
 #endif
 
-
 template <typename ...Ts>
 struct db {
     explicit db(db_config config = {}) : config(std::move(config))
@@ -117,12 +119,18 @@ struct db {
 
         m_realm = Realm::get_shared_realm({
             .path = this->config.path.append(".realm"),
-	        .schema_mode = SchemaMode::AdditiveExplicit,
+            .schema_mode = SchemaMode::AdditiveExplicit,
             .schema = Schema(schema),
             .schema_version = 0,
             .scheduler = scheduler(),
             .sync_config = this->config.sync_config
         });
+
+        static bool initialized;
+        if (!initialized) {
+            realm_analytics::send();
+            initialized = true;
+        }
     }
 
     SyncSubscriptionSet subscriptions()
@@ -200,6 +208,12 @@ private:
     {
         config.path = realm->config().path;
         config.sync_config = realm->config().sync_config;
+
+        static bool initialized;
+        if (!initialized) {
+            realm_analytics::send();
+            initialized = true;
+        }
     }
     friend struct object;
     template <typename T, typename>
@@ -239,6 +253,12 @@ static inline std::promise<thread_safe_reference<db<Ts...>>> async_open(const db
         if (ex) p.set_exception(ex);
         else p.set_value(thread_safe_reference<db<Ts...>>(std::move(tsr)));
     });
+
+    static bool initialized;
+    if (!initialized) {
+        realm_analytics::send();
+        initialized = true;
+    }
     return p;
 }
 
@@ -261,6 +281,11 @@ struct async_open_realm {
             .sync_config = config.sync_config
         });
 
+        static bool initialized;
+        if (!initialized) {
+            realm_analytics::send();
+            initialized = true;
+        }
         async_open_task->start(std::move(callback));
     }
 };

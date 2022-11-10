@@ -26,21 +26,12 @@
 #include <cpprealm/type_info.hpp>
 #include <cpprealm/task.hpp>
 #include <cpprealm/db.hpp>
+#include <cpprealm/internal/generic_network_transport.hpp>
+
 #include <utility>
 #include <future>
 
 namespace realm {
-
-namespace internal {
-
-class DefaultTransport : public app::GenericNetworkTransport {
-public:
-    void send_request_to_server(app::Request&& request,
-                                app::HttpCompletion&& completion_block) override;
-};
-
-} // namespace internal
-
 
 // MARK: User
 template <typename ...Ts>
