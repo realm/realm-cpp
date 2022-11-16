@@ -40,15 +40,15 @@ static std::string authenticate(const std::string& baas_url, const std::string& 
 {
     std::stringstream body;
     body << credentials;
-    auto result = do_http_request({
-        .method = realm::app::HttpMethod::post,
-        .url = util::format("%1/api/admin/v3.0/auth/providers/%2/login", baas_url, provider_type),
-        .headers = {
+    realm::app::Request request;
+    request.method = realm::app::HttpMethod::post;
+    request.url = util::format("%1/api/admin/v3.0/auth/providers/%2/login", baas_url, provider_type);
+    request.headers = {
             {"Content-Type", "application/json;charset=utf-8"},
             {"Accept",       "application/json"}
-        },
-        .body = body.str()
-    });
+    };
+    request.body = body.str();
+    auto result = do_http_request(std::move(request));
     if (result.http_status_code != 200) {
         REALM_TERMINATE(util::format("Unable to authenticate at %1 with provider '%2': %3", baas_url, provider_type, result.body).c_str());
     }
@@ -265,17 +265,16 @@ app::Response Admin::Endpoint::request(app::HttpMethod method, bson::BsonDocumen
 {
     auto body_str = (std::stringstream() << body).str();
     std::string url = m_url + "?bypass_service_change=DestructiveSyncProtocolVersionIncrease";
-    auto response = do_http_request({
-        .method = method,
-        .url = url,
-
-        .headers = {
+    app::Request request;
+    request.method = method;
+    request.url = url;
+    request.headers = {
             {"Authorization", "Bearer " + m_access_token},
             {"Content-Type",  "application/json;charset=utf-8"},
             {"Accept",        "application/json"}
-        },
-        .body = std::move(body_str)
-    });
+    };
+    request.body = std::move(body_str);
+    auto response = do_http_request(std::move(request));
 
     if (response.http_status_code >= 400) {
         throw std::runtime_error(util::format("An error occurred while calling %1: %2", url, response.body));
@@ -411,13 +410,12 @@ Admin::Session Admin::Session::local(std::optional<std::string> baas_url)
         {"password", "password"}
     };
     std::string access_token = authenticate(base_url, "local-userpass", std::move(credentials));
-
-    auto result = do_http_request({
-        .url = base_url + "/api/admin/v3.0/auth/profile",
-        .headers = {
+    app::Request request;
+    request.url = base_url + "/api/admin/v3.0/auth/profile";
+    request.headers = {
             {"Authorization", "Bearer " + access_token}
-        }
-    });
+    };
+    auto result = do_http_request(std::move(request));
     auto parsed_response = static_cast<bson::BsonDocument>(bson::parse(result.body));
     auto roles = static_cast<bson::BsonArray>(parsed_response["roles"]);
     auto group_id = static_cast<std::string>(static_cast<bson::BsonDocument>(roles[0])["group_id"]);

@@ -5,14 +5,14 @@ using namespace realm;
 
 template <size_t N, typename T>
 void check_prop_default(const T& obj) {
-    if constexpr (N + 1 >= std::tuple_size<decltype(T::schema.properties)>{}) {
+    if constexpr (N + 1 >= std::tuple_size<decltype(T::schema().properties)>{}) {
         return;
     } else {
-        using Property = std::decay_t<decltype(std::get<N>(T::schema.properties))>;
-        if constexpr (type_info::OptionalPersistableConcept<typename Property::Result>::value) {
-            if constexpr (type_info::IntPersistableConcept<typename Property::Result::value_type>::value) {
+        using Property = std::decay_t<decltype(std::get<N>(T::schema().properties))>;
+        if constexpr (realm::type_info::OptionalPersistableConcept<typename Property::Result>::value) {
+            if constexpr (realm::type_info::IntPersistableConcept<typename Property::Result::value_type>::value) {
                 CHECK((obj.*Property::ptr) == 42);
-            } else if constexpr (type_info::StringPersistableConcept<typename Property::Result::value_type>::value) {
+            } else if constexpr (realm::type_info::StringPersistableConcept<typename Property::Result::value_type>::value) {
                 CHECK((obj.*Property::ptr) == "hello world");
             }
         }
@@ -22,11 +22,11 @@ void check_prop_default(const T& obj) {
 
 template <size_t N, typename T>
 void check_nulls(const T& obj) {
-    if constexpr (N + 1 >= std::tuple_size<decltype(T::schema.properties)>{}) {
+    if constexpr (N + 1 >= std::tuple_size<decltype(T::schema().properties)>{}) {
         return;
     } else {
-        using Property = std::decay_t<decltype(std::get<N>(T::schema.properties))>;
-        if constexpr (type_info::OptionalPersistableConcept<typename Property::Result>::value) {
+        using Property = std::decay_t<decltype(std::get<N>(T::schema().properties))>;
+        if constexpr (realm::type_info::OptionalPersistableConcept<typename Property::Result>::value) {
             auto val = (obj.*Property::ptr);
             CHECK(val == std::nullopt);
         }
@@ -37,7 +37,7 @@ TEST_CASE("optional") {
     realm_path path;
 
     SECTION("unmanaged_managed_optional_get_set") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
         {
             auto obj = AllTypesObject();
             check_nulls<0>(obj);

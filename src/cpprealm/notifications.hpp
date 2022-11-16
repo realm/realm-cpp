@@ -137,13 +137,13 @@ struct PropertyChange {
      object, and you will need to check `isInvalidated` before accessing any
      of its properties.
     */
-    std::optional<typename decltype(T::schema)::variant_t> old_value;
+    std::optional<typename decltype(T::schema())::variant_t> old_value;
 
     /**
      The value of the property after the change occurred. This is not supplied
      for `List` properties and will always be nil.
     */
-    std::optional<typename decltype(T::schema)::variant_t> new_value;
+    std::optional<typename decltype(T::schema())::variant_t> new_value;
 };
 
 } // namespace realm

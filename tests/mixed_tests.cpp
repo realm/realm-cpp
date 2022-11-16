@@ -7,14 +7,14 @@ TEST_CASE("mixed", "[mixed]") {
     realm_path path;
     SECTION("unmanaged_managed_mixed_get_set", "[mixed]") {
         auto obj = AllTypesObject();
-        obj.mixed_col = 42;
-        CHECK(obj.mixed_col == 42);
+        obj.mixed_col = 42LL;
+        CHECK(obj.mixed_col == 42LL);
         auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(
-                {.path=path});
+                {path});
         realm.write([&realm, &obj] {
             realm.add(obj);
         });
-        CHECK(obj.mixed_col == 42);
+        CHECK(obj.mixed_col == 42LL);
         realm.write([&obj] {
             obj.mixed_col = "hello world";
         });

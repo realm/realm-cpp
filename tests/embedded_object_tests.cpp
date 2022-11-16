@@ -5,10 +5,10 @@
 TEST_CASE("embedded_objects") {
     realm_path path;
     SECTION("observe") {
-        auto realm = realm::open<Foo, EmbeddedFoo>({.path=path});
+        auto realm = realm::open<Foo, EmbeddedFoo>({path});
 
         auto foo = Foo();
-        foo.foo = EmbeddedFoo{.bar=42};
+        foo.foo = EmbeddedFoo(42);
 
         realm.write([&foo, &realm]() {
             realm.add(foo);

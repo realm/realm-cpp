@@ -147,7 +147,7 @@ public:
             this->unmanaged.push_back(a);
         }
     }
-    void push_back(const typename T::value_type&& a) {
+    void push_back(typename T::value_type&& a) {
         if (this->m_object) {
             this->m_backing_list.add(type_info::persisted_type<value_type>::convert_if_required(std::move(a)));
         } else {
@@ -211,9 +211,9 @@ public:
                 if (this->m_object->obj().get_table()->get_link_target(this->managed)->is_embedded()) {
                     a.m_object = Object(this->m_backing_list.get_realm(),
                                         this->m_backing_list.add_embedded());
-                    T::value_type::schema.set(a);
+                    T::value_type::schema().set(a);
                 } else {
-                    T::value_type::schema.add(a, this->m_object->obj().get_table()->get_link_target(this->managed),
+                    T::value_type::schema().add(a, this->m_object->obj().get_table()->get_link_target(this->managed),
                                                this->m_backing_list.get_realm());
                 }
             }
@@ -262,7 +262,7 @@ public:
     }
     typename T::value_type operator[](typename T::size_type idx) {
         if (this->m_object) {
-            return T::value_type::schema.create(this->m_backing_list.get(idx), this->m_backing_list.get_realm());
+            return T::value_type::schema().create(this->m_backing_list.get(idx), this->m_backing_list.get_realm());
         } else {
             return this->unmanaged[idx];
         }

@@ -165,19 +165,19 @@ public:
         }
         config.base_file_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
         #else
-        config.base_file_path = std::filesystem::current_path();
+        config.base_file_path = std::filesystem::current_path().string();
         #endif
         config.user_agent_binding_info = "RealmCpp/0.0.1";
         config.user_agent_application_info = app_id;
 
-        m_app = app::App::get_shared_app(app::App::Config{
-            .app_id=app_id,
-            .transport = std::make_shared<internal::DefaultTransport>(),
-            .base_url = base_url ? base_url : util::Optional<std::string>(),
-            .platform="Realm Cpp",
-            .platform_version="?",
-            .sdk_version="0.0.1",
-        }, config);
+        app::App::Config app_config;
+        app_config.app_id = app_id;
+        app_config.transport = std::make_shared<internal::DefaultTransport>();
+        app_config.base_url = base_url ? base_url : util::Optional<std::string>();
+        app_config.platform = "Realm Cpp";
+        app_config.platform_version = "?";
+        app_config.sdk_version = "0.0.1";
+        m_app = app::App::get_shared_app(app_config, config);
     }
 
     struct Credentials {

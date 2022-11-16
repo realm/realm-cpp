@@ -4,42 +4,78 @@
 #include <cpprealm/sdk.hpp>
 
 struct Dog: realm::object {
+    Dog() = default;
+    Dog(std::string name)
+    : name(name)
+    {
+    }
     realm::persisted<std::string> name;
     realm::persisted<int> age;
 
-    static constexpr auto schema = realm::schema("Dog",
+    static constexpr auto schema() {
+        return realm::schema("Dog",
             realm::property<&Dog::name>("name"),
             realm::property<&Dog::age>("age")
-    );
+        );
+    }
 };
 
 struct Person: realm::object {
+    Person() = default;
+    Person(std::string name, int age, std::optional<Dog> dog = std::nullopt)
+        : name(name)
+        , age(age)
+        , dog(dog)
+    {
+    }
     realm::persisted<std::string> name;
     realm::persisted<int> age;
     realm::persisted<std::optional<Dog>> dog;
 
-    static constexpr auto schema = realm::schema("Person",
+    static constexpr auto schema() {
+        return realm::schema("Person",
             realm::property<&Person::name>("name"),
             realm::property<&Person::age>("age"),
             realm::property<&Person::dog>("dog")
-    );
+        );
+    }
 };
+
 //
 struct AllTypesObjectEmbedded: realm::embedded_object {
+    AllTypesObjectEmbedded() = default;
+    AllTypesObjectEmbedded(std::string str_col)
+    : str_col(str_col) 
+    {
+    }
     realm::persisted<std::string> str_col;
 
-    static constexpr auto schema = realm::schema("AllTypesObjectEmbedded",
-        realm::property<&AllTypesObjectEmbedded::str_col>("str_col"));
+    static constexpr auto schema() {
+        return realm::schema("AllTypesObjectEmbedded",
+            realm::property<&AllTypesObjectEmbedded::str_col>("str_col"));
+    }
 };
 
 struct AllTypesObjectLink: realm::object {
+    AllTypesObjectLink() = default;
+    AllTypesObjectLink(std::string str_col)
+        : _id(0)
+        , str_col(str_col)
+    {
+    }
+    AllTypesObjectLink(int id, std::string str_col)
+    : _id(id)
+    ,str_col(str_col) 
+    {
+    }
     realm::persisted<int> _id;
     realm::persisted<std::string> str_col;
 
-    static constexpr auto schema =
-            realm::schema("AllTypesObjectLink",
-                            realm::property<&AllTypesObjectLink::_id, true>("_id"),
-                            realm::property<&AllTypesObjectLink::str_col>("str_col"));
+    static constexpr auto schema() {
+        return realm::schema("AllTypesObjectLink",
+            realm::property<&AllTypesObjectLink::_id, true>("_id"),
+            realm::property<&AllTypesObjectLink::str_col>("str_col"));
+    }
 };
 
 struct AllTypesObject: realm::object {
@@ -47,6 +83,16 @@ struct AllTypesObject: realm::object {
         one, two
     };
 
+    AllTypesObject() = default;
+    AllTypesObject(int id)
+    : _id(id)
+    {
+    }
+    AllTypesObject(int id, std::string str_col)
+            : _id(id)
+            , str_col(str_col)
+    {
+    }
     realm::persisted<int> _id;
     realm::persisted<bool> bool_col;
     realm::persisted<std::string> str_col;
@@ -84,40 +130,47 @@ struct AllTypesObject: realm::object {
     realm::persisted<std::vector<AllTypesObjectLink>> list_obj_col;
     realm::persisted<std::vector<AllTypesObjectEmbedded>> list_embedded_obj_col;
 
-    static constexpr auto schema = realm::schema("AllTypesObject",
-        realm::property<&AllTypesObject::_id, true>("_id"),
-        realm::property<&AllTypesObject::bool_col>("bool_col"),
-        realm::property<&AllTypesObject::str_col>("str_col"),
-        realm::property<&AllTypesObject::enum_col>("enum_col"),
-        realm::property<&AllTypesObject::date_col>("date_col"),
-        realm::property<&AllTypesObject::uuid_col>("uuid_col"),
-        realm::property<&AllTypesObject::binary_col>("binary_col"),
-        realm::property<&AllTypesObject::mixed_col>("mixed_col"),
+    static constexpr auto schema() {
+        return realm::schema("AllTypesObject",
+            realm::property<&AllTypesObject::_id, true>("_id"),
+            realm::property<&AllTypesObject::bool_col>("bool_col"),
+            realm::property<&AllTypesObject::str_col>("str_col"),
+            realm::property<&AllTypesObject::enum_col>("enum_col"),
+            realm::property<&AllTypesObject::date_col>("date_col"),
+            realm::property<&AllTypesObject::uuid_col>("uuid_col"),
+            realm::property<&AllTypesObject::binary_col>("binary_col"),
+            realm::property<&AllTypesObject::mixed_col>("mixed_col"),
 
-        realm::property<&AllTypesObject::opt_int_col>("opt_int_col"),
-        realm::property<&AllTypesObject::opt_str_col>("opt_str_col"),
-        realm::property<&AllTypesObject::opt_bool_col>("opt_bool_col"),
-        realm::property<&AllTypesObject::opt_binary_col>("opt_binary_col"),
-        realm::property<&AllTypesObject::opt_date_col>("opt_date_col"),
-        realm::property<&AllTypesObject::opt_enum_col>("opt_enum_col"),
-        realm::property<&AllTypesObject::opt_obj_col>("opt_obj_col"),
-        realm::property<&AllTypesObject::opt_uuid_col>("opt_uuid_col"),
+            realm::property<&AllTypesObject::opt_int_col>("opt_int_col"),
+            realm::property<&AllTypesObject::opt_str_col>("opt_str_col"),
+            realm::property<&AllTypesObject::opt_bool_col>("opt_bool_col"),
+            realm::property<&AllTypesObject::opt_binary_col>("opt_binary_col"),
+            realm::property<&AllTypesObject::opt_date_col>("opt_date_col"),
+            realm::property<&AllTypesObject::opt_enum_col>("opt_enum_col"),
+            realm::property<&AllTypesObject::opt_obj_col>("opt_obj_col"),
+            realm::property<&AllTypesObject::opt_uuid_col>("opt_uuid_col"),
 
-        realm::property<&AllTypesObject::list_int_col>("list_int_col"),
-        realm::property<&AllTypesObject::list_bool_col>("list_bool_col"),
-        realm::property<&AllTypesObject::list_str_col>("list_str_col"),
-        realm::property<&AllTypesObject::list_uuid_col>("list_uuid_col"),
-        realm::property<&AllTypesObject::list_binary_col>("list_binary_col"),
-        realm::property<&AllTypesObject::list_date_col>("list_date_col"),
-        realm::property<&AllTypesObject::list_mixed_col>("list_mixed_col"),
-        realm::property<&AllTypesObject::list_obj_col>("list_obj_col"),
-        realm::property<&AllTypesObject::list_embedded_obj_col>("list_embedded_obj_col"));
+            realm::property<&AllTypesObject::list_int_col>("list_int_col"),
+            realm::property<&AllTypesObject::list_bool_col>("list_bool_col"),
+            realm::property<&AllTypesObject::list_str_col>("list_str_col"),
+            realm::property<&AllTypesObject::list_uuid_col>("list_uuid_col"),
+            realm::property<&AllTypesObject::list_binary_col>("list_binary_col"),
+            realm::property<&AllTypesObject::list_date_col>("list_date_col"),
+            realm::property<&AllTypesObject::list_mixed_col>("list_mixed_col"),
+            realm::property<&AllTypesObject::list_obj_col>("list_obj_col"),
+            realm::property<&AllTypesObject::list_embedded_obj_col>("list_embedded_obj_col"));
+    }
 };
 
 struct EmbeddedFoo: realm::embedded_object {
+    EmbeddedFoo() = default;
+    EmbeddedFoo(int bar)
+    : bar(bar)
+    {
+    }
     realm::persisted<int> bar;
 
-    static constexpr auto schema = realm::schema("EmbeddedFoo", realm::property<&EmbeddedFoo::bar>("bar"));
+    static constexpr auto schema() { return realm::schema("EmbeddedFoo", realm::property<&EmbeddedFoo::bar>("bar")); }
 };
 
 struct Foo: realm::object {
@@ -126,9 +179,11 @@ struct Foo: realm::object {
 
     Foo() = default;
     Foo(const Foo&) = delete;
-    static constexpr auto schema = realm::schema("Foo",
-        realm::property<&Foo::bar>("bar"),
-        realm::property<&Foo::foo>("foo"));
+    static constexpr auto schema() {
+        return realm::schema("Foo",
+            realm::property<&Foo::bar>("bar"),
+            realm::property<&Foo::foo>("foo"));
+    }
 };
 
 struct UppercaseString {
@@ -151,8 +206,10 @@ private:
 };
 struct CustomStringObject : realm::object {
     realm::persisted<UppercaseString> str_col;
-    static constexpr auto schema = realm::schema("CustomStringObject",
-                                                    realm::property<&CustomStringObject::str_col>("str_col"));
+    static constexpr auto schema() {
+        return realm::schema("CustomStringObject",
+            realm::property<&CustomStringObject::str_col>("str_col"));
+    }
 };
 struct IntTypesObject: realm::object {
     realm::persisted<int8_t> int8_col;
@@ -161,8 +218,10 @@ struct IntTypesObject: realm::object {
     realm::persisted<int64_t> int64_col;
     realm::persisted<size_t> size_col;
 
-    static constexpr auto schema = realm::schema("IntTypesObject",
-                                                    realm::property<&Foo::bar>("bar"),
-                                                    realm::property<&Foo::foo>("foo"));
+    static constexpr auto schema() {
+        return realm::schema("IntTypesObject",
+            realm::property<&Foo::bar>("bar"),
+            realm::property<&Foo::foo>("foo"));
+    }
 };
 #endif //REALM_TEST_OBJECTS_HPP

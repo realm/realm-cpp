@@ -50,6 +50,9 @@ struct property {
     using Result = typename ptr_type_extractor<Ptr>::member_type::Result;
     using Class = typename ptr_type_extractor<Ptr>::class_type;
     const char* name = "";
+    PropertyType type;
+    static constexpr bool is_primary_key = IsPrimaryKey;
+
     constexpr property()
             : type(type_info::persisted_type<Result>::property_type())
     {
@@ -60,32 +63,32 @@ struct property {
     {
     }
 
-    realm::Property to_property(const char* name) const {
+    realm::Property to_property(std::string name) const {
         if constexpr (type_info::NonOptionalPersistableConcept<Result>::value
                       || type_info::EmbeddedObjectPersistableConcept<Result>::value
                       || type_info::OptionalPersistableConcept<Result>::value) {
             if constexpr (type_info::EmbeddedObjectPersistableConcept<Result>::value) {
-                return realm::Property(name, type, Result::schema.name);
+                return realm::Property(name, type, Result::schema().name);
             } else if constexpr (type_info::is_optional<Result>::value) {
                 if constexpr (type_info::ObjectBasePersistableConcept<typename Result::value_type>::value) {
-                    return realm::Property(name, type, Result::value_type::schema.name);
+                    return realm::Property(name, type, Result::value_type::schema().name);
                 } else if constexpr (type_info::PrimitivePersistableConcept<typename Result::value_type>::value ||
                                     type_info::MixedPersistableConcept<typename Result::value_type>::value) {
                     return realm::Property(name, type);
                 }
             } else {
-                return realm::Property(name, type, is_primary_key);
+                return realm::Property(name, type, Property::IsPrimary{is_primary_key});
             }
         } else if constexpr (type_info::ListPersistableConcept<Result>::value) {
             if constexpr (type_info::EmbeddedObjectPersistableConcept<Result>::value) {
-                return realm::Property(name, type, Result::schema.name);
+                return realm::Property(name, type, Result::schema().name);
             } else if constexpr (type_info::ObjectBasePersistableConcept<typename Result::value_type>::value) {
-                return realm::Property(name, type, Result::value_type::schema.name);
+                return realm::Property(name, type, Result::value_type::schema().name);
             } else {
-                return realm::Property(name, type, is_primary_key);
+                return realm::Property(name, type, Property::IsPrimary{is_primary_key});
             }
         } else {
-            return realm::Property(name, type, is_primary_key);
+            return realm::Property(name, type, Property::IsPrimary{is_primary_key});
         }
     }
 
@@ -96,7 +99,7 @@ struct property {
     static void set(Class& object, const std::string& property_name) {
         if constexpr (type_info::PrimitivePersistableConcept<Result>::value
                         || type_info::MixedPersistableConcept<Result>::value) {
-            object.m_object->template set_column_value(property_name, (object.*ptr).as_core_type());
+            object.m_object->set_column_value(property_name, (object.*ptr).as_core_type());
         }
         else if constexpr (type_info::EmbeddedObjectPersistableConcept<Result>::value) {
             auto field = (object.*ptr);
@@ -109,7 +112,7 @@ struct property {
 
                 auto realm = object.m_object->get_realm();
                 target_cls.m_object = Object(realm, object.m_object->obj().create_and_set_linked_object(col_key));
-                Result::schema.set(target_cls);
+                Result::schema().set(target_cls);
             }
         } else if constexpr (type_info::OptionalObjectPersistableConcept<Result>::value) {
             auto field = (object.*ptr);
@@ -122,14 +125,14 @@ struct property {
                     auto target_cls = *field;
 
                     auto realm = object.m_object->get_realm();
-                    if constexpr (decltype(Result::value_type::schema)::HasPrimaryKeyProperty) {
-                        using Schema = decltype(Result::value_type::schema);
+                    if constexpr (decltype(Result::value_type::schema())::HasPrimaryKeyProperty) {
+                        using Schema = decltype(Result::value_type::schema());
                         auto val = (**field).*Schema::PrimaryKeyProperty::ptr;
                         target_cls->m_object = Object(realm, target_table->create_object_with_primary_key(*val));
                     } else {
                         target_cls->m_object = Object(realm, target_table->create_object());
                     }
-                    Result::value_type::schema.set(*target_cls);
+                    Result::value_type::schema().set(*target_cls);
                     object.m_object->obj().set(col_key, target_cls->m_object->obj().get_key());
                 }
             }
@@ -142,10 +145,10 @@ struct property {
                     if (table->is_embedded()) {
                         list_obj.m_object = Object(object.m_object->get_realm(),
                                                    object.m_object->obj().get_linklist(col_key).create_and_insert_linked_object(i));
-                        Result::value_type::schema.set(list_obj);
+                        Result::value_type::schema().set(list_obj);
                         i++;
                     } else {
-                        Result::value_type::schema.add(list_obj, table, object.m_object->get_realm());
+                        Result::value_type::schema().add(list_obj, table, object.m_object->get_realm());
                         object.m_object->obj().get_linklist(col_key).add(list_obj.m_object->obj().get_key());
                     }
                 }
@@ -155,17 +158,15 @@ struct property {
         } else if constexpr (type_info::OptionalPersistableConcept<Result>::value) {
             auto val = (object.*ptr).as_core_type();
             if (val) {
-                object.m_object->template set_column_value(property_name, *val);
+                object.m_object->set_column_value(property_name, *val);
             }
         }
         else {
-            object.m_object->template set_column_value(property_name, (object.*ptr).as_core_type());
+            object.m_object->set_column_value(property_name, (object.*ptr).as_core_type());
         }
     }
 //    static constexpr const char* name = Name;
     static constexpr persisted</*typename*/ Result/*::value*/> Class::*ptr = Ptr;
-    PropertyType type;
-    static constexpr bool is_primary_key = IsPrimaryKey;
 };
 namespace {
     constexpr std::size_t split(char const *str, char sep) {
@@ -190,7 +191,6 @@ constexpr auto make_subpack_tuple(Ts&&... xs)
 namespace internal {
     template<typename Class, typename ...Properties>
     struct schema {
-
         const char *name;
         const char *names[sizeof...(Properties)] = {};
         const char *primary_key_name = "";
@@ -350,12 +350,13 @@ namespace internal {
 
 template <typename ...T>
 static constexpr auto schema(const char * name,
-                                T&&... props) {
+                             T&&... props) {
     auto tup = make_subpack_tuple(props...);
     auto i = std::get<0>(tup);
     using i2 = typename decltype(i)::Class;
     return internal::schema<i2, T...>(name, std::move(props)...);
 }
+
 }
 
 #endif /* realm_schema_hpp */

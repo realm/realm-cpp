@@ -102,7 +102,7 @@ struct persisted_type<T, EnumPersistable<T>> {
     }
     static constexpr type convert_if_required(const T& a)
     {
-        return reinterpret_cast<int>(static_cast<std::underlying_type_t<T>>(a));
+        return static_cast<std::underlying_type_t<T>>(a);
     }
 };
 
@@ -322,7 +322,7 @@ using PrimitivePersistable = std::enable_if_t<PrimitivePersistableConcept<T>::va
                 }
             } else if constexpr (TimestampPersistableConcept<std::variant_alternative_t<N, Variant>>::value) {
                 if (mixed.get_type().m_type == DataType::Type::Timestamp) {
-                    return mixed.get_timestamp().template get_time_point();
+                    return mixed.get_timestamp().get_time_point();
                 } else {
                     return check_if_returnable<N + 1, Variant>(mixed);
                 }

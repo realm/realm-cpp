@@ -71,8 +71,8 @@ struct ObjectChangeCallbackWrapper;
 template <typename T>
 using ObjectNotificationCallback = std::function<void(const T*,
                                                       std::vector<std::string> property_names,
-                                                      std::vector<typename decltype(T::schema)::variant_t> old_values,
-                                                      std::vector<typename decltype(T::schema)::variant_t> new_values,
+                                                      std::vector<typename decltype(T::schema())::variant_t> old_values,
+                                                      std::vector<typename decltype(T::schema())::variant_t> new_values,
                                                       const std::exception_ptr error)>;
 } // anonymous namespace
 
@@ -136,7 +136,7 @@ struct object_base {
             const Object& m_object;
 
             std::optional<std::vector<std::string>> property_names = std::nullopt;
-            std::optional<std::vector<typename decltype(T::schema)::variant_t>> old_values = std::nullopt;
+            std::optional<std::vector<typename decltype(T::schema())::variant_t>> old_values = std::nullopt;
             bool deleted = false;
 
             void populateProperties(realm::CollectionChangeSet const& c)
@@ -157,9 +157,9 @@ struct object_base {
                 auto properties = std::vector<std::string>();
                 const TableRef table = m_object.obj().get_table();
 
-                for (auto i = 0; i < std::tuple_size<decltype(T::schema.properties)>{}; i++) {
-                    if (c.columns.count(table->get_column_key(T::schema.names[i]).value)) {
-                        properties.push_back(T::schema.names[i]);
+                for (auto i = 0; i < std::tuple_size<decltype(T::schema().properties)>{}; i++) {
+                    if (c.columns.count(table->get_column_key(T::schema().names[i]).value)) {
+                        properties.push_back(T::schema().names[i]);
                     }
                 }
 
@@ -168,7 +168,7 @@ struct object_base {
                 }
             }
 
-            std::optional<std::vector<typename decltype(T::schema)::variant_t>> readValues(realm::CollectionChangeSet const& c) {
+            std::optional<std::vector<typename decltype(T::schema())::variant_t>> readValues(realm::CollectionChangeSet const& c) {
                 if (c.empty()) {
                     return std::nullopt;
                 }
@@ -177,9 +177,9 @@ struct object_base {
                     return std::nullopt;
                 }
 
-                std::vector<typename decltype(T::schema)::variant_t> values;
+                std::vector<typename decltype(T::schema())::variant_t> values;
                 for (auto& name : *property_names) {
-                    auto value = T::schema.property_value_for_name(name, object);
+                    auto value = T::schema().property_value_for_name(name, object);
                     values.push_back(value);
                 }
                 return values;
@@ -198,7 +198,7 @@ struct object_base {
                 } else if (new_values) {
                     block(&object,
                           *property_names,
-                          old_values ? *old_values : std::vector<typename decltype(T::schema)::variant_t>{},
+                          old_values ? *old_values : std::vector<typename decltype(T::schema())::variant_t>{},
                           *new_values,
                           nullptr);
                 }
@@ -216,14 +216,17 @@ struct object_base {
         return notification_token(m_object->add_notification_callback(ObjectChangeCallbackWrapper {
                 [block](const T* ptr,
                         std::vector<std::string> property_names,
-                        std::vector<typename decltype(T::schema)::variant_t> old_values,
-                        std::vector<typename decltype(T::schema)::variant_t> new_values,
+                        std::vector<typename decltype(T::schema())::variant_t> old_values,
+                        std::vector<typename decltype(T::schema())::variant_t> new_values,
                         const std::exception_ptr& error) {
                     if (!ptr) {
+                        auto change = ObjectChange<T>();
                         if (error) {
-                            block(ObjectChange<T> { .error = error });
+                            change.error = error;
+                            block(change);
                         } else {
-                            block(ObjectChange<T> { .is_deleted = true });
+                            change.is_deleted = true;
+                            block(change);
                         }
                     } else {
                         for (size_t i = 0; i < property_names.size(); i++) {
@@ -235,7 +238,10 @@ struct object_base {
                             if (!new_values.empty()) {
                                 property.new_value = new_values[i];
                             }
-                            block(ObjectChange<T> { .object = ptr, .property = property });
+                            ObjectChange<T> change;
+                            change.object = ptr;
+                            change.property = property;
+                            block(change);
                         }
                     }
                 }, *static_cast<T*>(this), *m_object}));

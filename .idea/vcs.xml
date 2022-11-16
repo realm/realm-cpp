@@ -3,6 +3,11 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Catch2" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug-visual-studio/_deps/catch2-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug-visual-studio/_deps/curl-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug-visual-studio/_deps/libuv-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug-visual-studio/_deps/openssl-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug-visual-studio/_deps/zlib-src" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/catch2-src" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/examples/cmake/cmake-build-debug/_deps/catch2-src" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/realm-core" vcs="Git" />

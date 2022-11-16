@@ -58,19 +58,21 @@ void test_list(Col& list, std::vector<Value> values, Realm& realm, Object& obj) 
 TEST_CASE("list", "[list]") {
     realm_path path;
     SECTION("list_tests") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
         auto obj = AllTypesObject{};
         obj.list_int_col.push_back(42);
         CHECK(obj.list_int_col[0] == 42);
 
-        obj.list_obj_col.push_back(AllTypesObjectLink{.str_col="Fido"});
+        obj.list_obj_col.push_back(AllTypesObjectLink("Fido"));
         CHECK(obj.list_obj_col[0].str_col == "Fido");
         CHECK(obj.list_int_col.size() == 1);
         for (auto &i: obj.list_int_col) {
             CHECK(i == 42);
         }
 
-        obj.list_embedded_obj_col.push_back(AllTypesObjectEmbedded{.str_col="Fido"});
+        AllTypesObjectEmbedded embedded;
+        embedded.str_col = "Fido";
+        obj.list_embedded_obj_col.push_back(embedded);
         CHECK(obj.list_embedded_obj_col[0].str_col == "Fido");
         CHECK(obj.list_embedded_obj_col.size() == 1);
 
@@ -84,8 +86,8 @@ TEST_CASE("list", "[list]") {
 
         realm.write([&obj]() {
             obj.list_int_col.push_back(84);
-            obj.list_obj_col.push_back(AllTypesObjectLink{._id=1, .str_col="Rex"});
-            obj.list_embedded_obj_col.push_back(AllTypesObjectEmbedded{.str_col="Rex"});
+            obj.list_obj_col.push_back(AllTypesObjectLink(1, "Rex"));
+            obj.list_embedded_obj_col.push_back(AllTypesObjectEmbedded("Rex"));
         });
         size_t idx = 0;
         for (auto &i: obj.list_int_col) {
@@ -122,7 +124,7 @@ TEST_CASE("list", "[list]") {
         CHECK(obj.list_int_col.find(4) == 1);
         CHECK(obj.list_int_col[1] == 4);
 
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
         realm.write([&realm, &obj] {
             realm.add(obj);
         });
@@ -197,7 +199,7 @@ TEST_CASE("list", "[list]") {
         CHECK(obj.list_obj_col.find(o4) == realm::npos);
         CHECK(obj.list_obj_col[3].str_col == o4.str_col);
 
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
         realm.write([&realm, &obj] {
             realm.add(obj);
         });
@@ -270,7 +272,7 @@ TEST_CASE("list", "[list]") {
         CHECK(obj.list_embedded_obj_col.find(o4) == realm::npos);
         CHECK(obj.list_embedded_obj_col[3].str_col == o4.str_col);
 
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
         realm.write([&realm, &obj] {
             realm.add(obj);
         });
@@ -311,7 +313,7 @@ TEST_CASE("list", "[list]") {
     SECTION("notifications_insertions", "[list]") {
         auto obj = AllTypesObject();
 
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
         realm.write([&realm, &obj] {
             realm.add(obj);
         });
@@ -353,7 +355,7 @@ TEST_CASE("list", "[list]") {
     SECTION("notifications_deletions") {
         auto obj = AllTypesObject();
 
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
         realm.write([&realm, &obj] {
             realm.add(obj);
             obj.list_int_col.push_back(456);
@@ -383,7 +385,7 @@ TEST_CASE("list", "[list]") {
     SECTION("notifications_modifications", "[list]") {
         auto obj = AllTypesObject();
 
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
         realm.write([&realm, &obj] {
             realm.add(obj);
             obj.list_int_col.push_back(123);
@@ -414,7 +416,7 @@ TEST_CASE("list", "[list]") {
     }
 
     SECTION("list_all_primitive_types") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
 
         auto int_list_obj = AllTypesObject();
         test_list(int_list_obj.list_int_col, std::vector<int>({1, 2}), realm, int_list_obj);
@@ -439,10 +441,10 @@ TEST_CASE("list", "[list]") {
     }
 
     SECTION("list_mixed") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
 
         auto obj = AllTypesObject();
-        obj.list_mixed_col.push_back(42);
+        obj.list_mixed_col.push_back(42LL);
         obj.list_mixed_col.push_back(true);
         obj.list_mixed_col.push_back("hello world");
         obj.list_mixed_col.push_back(42.42);

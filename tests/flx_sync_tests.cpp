@@ -37,7 +37,7 @@ TEST_CASE("flx_sync", "[flx][sync]") {
         CHECK((non_existent_sub == std::nullopt) == true);
 
         synced_realm.write([&synced_realm]() {
-            synced_realm.add(AllTypesObject{._id=1, .str_col="foo"});
+            synced_realm.add(AllTypesObject(1, "foo"));
         });
 
         test::wait_for_sync_uploads(user).get_future().get();
@@ -59,7 +59,7 @@ TEST_CASE("flx_sync", "[flx][sync]") {
         CHECK(sub.query_string() == "str_col == \"bar\" and _id == 123");
 
         synced_realm.write([&synced_realm]() {
-            synced_realm.add(AllTypesObject{._id=123, .str_col="bar"});
+            synced_realm.add(AllTypesObject(123, "bar"));
         });
 
         test::wait_for_sync_uploads(user).get_future().get();
@@ -89,10 +89,10 @@ TEST_CASE("flx_sync", "[flx][sync]") {
 
 TEST_CASE("tsr") {
     realm_path path;
-    auto realm = realm::open<Person, Dog>({.path=path});
+    auto realm = realm::open<Person, Dog>({path});
 
-    auto person = Person { .name = "John", .age = 17 };
-    person.dog = Dog {.name = "Fido"};
+    auto person = Person("John", 17);
+    person.dog = Dog("Fido");
 
     realm.write([&realm, &person] {
         realm.add(person);
@@ -101,7 +101,7 @@ TEST_CASE("tsr") {
     auto tsr = realm::thread_safe_reference<Person>(person);
     std::promise<void> p;
     auto t = std::thread([&tsr, &p, &path]() {
-        auto realm = realm::open<Person, Dog>({.path=path});
+        auto realm = realm::open<Person, Dog>({path});
         auto person = realm.resolve(std::move(tsr));
         CHECK(*person.age == 17);
         realm.write([&] { realm.remove(person); });

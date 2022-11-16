@@ -39,19 +39,19 @@ private:
     template <size_t N, typename P>
     constexpr auto prepare_for_query(Query& query, ObjectSchema& schema, P& property)
     {
-        if constexpr (N + 1 == std::tuple_size_v<decltype(T::schema.properties)>) {
+        if constexpr (N + 1 == std::tuple_size_v<decltype(T::schema().properties)>) {
             (this->*property.ptr).prepare_for_query(query);
-            set_managed((this->*property.ptr), schema.property_for_name(T::schema.names[N])->column_key);
+            set_managed((this->*property.ptr), schema.property_for_name(T::schema().names[N])->column_key);
             return;
         } else {
             (this->*property.ptr).prepare_for_query(query);
-            set_managed((this->*property.ptr), schema.property_for_name(T::schema.names[N])->column_key);
-            return prepare_for_query<N + 1>(query, schema, std::get<N + 1>(T::schema.properties));
+            set_managed((this->*property.ptr), schema.property_for_name(T::schema().names[N])->column_key);
+            return prepare_for_query<N + 1>(query, schema, std::get<N + 1>(T::schema().properties));
         }
     }
 public:
     query(Query& query, ObjectSchema&& schema) {
-        prepare_for_query<0>(query, schema, std::get<0>(T::schema.properties));
+        prepare_for_query<0>(query, schema, std::get<0>(T::schema().properties));
     }
 };
 
@@ -151,7 +151,7 @@ struct results {
         if (index >= m_parent.size())
             throw std::out_of_range("Index out of range.");
         auto obj = m_parent.template get<Obj>(index);
-        return T::schema.create_unique(std::move(obj), m_parent.get_realm());
+        return T::schema().create_unique(std::move(obj), m_parent.get_realm());
     }
 
     size_t size()
@@ -168,7 +168,7 @@ struct results {
     results& where(std::function<rbool(T&)> fn)
     {
         auto builder = Query(m_parent.get_table());
-        auto schema = *m_parent.get_realm()->schema().find(T::schema.name);
+        auto schema = *m_parent.get_realm()->schema().find(T::schema().name);
         auto q = query<T>(builder, std::move(schema));
         auto full_query = fn(q).q;
         m_parent = realm::Results(m_parent.get_realm(), full_query);

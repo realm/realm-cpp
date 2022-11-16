@@ -91,7 +91,7 @@ static std::shared_ptr<realm::util::Scheduler> make_qt()
 
 struct db_config {
 
-    std::string path = std::filesystem::current_path();
+    std::string path = std::filesystem::current_path().string();
 
     std::shared_ptr<SyncConfig> sync_config;
 private:
@@ -113,16 +113,16 @@ struct db {
     {
         std::vector<ObjectSchema> schema;
 
-        (schema.push_back(Ts::schema.to_core_schema()), ...);
+        (schema.push_back(Ts::schema().to_core_schema()), ...);
 
-        m_realm = Realm::get_shared_realm({
-            .path = this->config.path.append(".realm"),
-	        .schema_mode = SchemaMode::AdditiveExplicit,
-            .schema = Schema(schema),
-            .schema_version = 0,
-            .scheduler = scheduler(),
-            .sync_config = this->config.sync_config
-        });
+        Realm::Config realm_config;
+        realm_config.path = this->config.path.append(".realm");
+        realm_config.schema_mode = SchemaMode::AdditiveExplicit;
+        realm_config.schema = Schema(schema);
+        realm_config.schema_version = 0;
+        realm_config.scheduler = scheduler();
+        realm_config.sync_config = this->config.sync_config;
+        m_realm = Realm::get_shared_realm(std::move(realm_config));
     }
 
     SyncSubscriptionSet subscriptions()
@@ -141,10 +141,10 @@ struct db {
     void add(T& object)
     {
         static_assert(type_info::ObjectPersistableConcept<T>::value && (std::is_same_v<T, Ts> || ...));
-        auto actual_schema = *m_realm->schema().find(T::schema.name);
+        auto actual_schema = *m_realm->schema().find(T::schema().name);
         auto& group = m_realm->read_group();
         auto table = group.get_table(actual_schema.table_key);
-        T::schema.add(object, table, m_realm);
+        T::schema().add(object, table, m_realm);
     }
 
     template <typename T>
@@ -169,7 +169,7 @@ struct db {
     {
         static_assert(type_info::ObjectPersistableConcept<T>::value && (std::is_same_v<T, Ts> || ...),
                 "Object type not available in this realm");
-        return results<T>(Results(m_realm, m_realm->read_group().get_table(ObjectStore::table_name_for_object_type(T::schema.name))));
+        return results<T>(Results(m_realm, m_realm->read_group().get_table(ObjectStore::table_name_for_object_type(T::schema().name))));
     }
 
     template <typename T>
@@ -184,7 +184,7 @@ struct db {
     T resolve(thread_safe_reference<T>&& tsr) const
     {
         Object object = tsr.m_tsr.template resolve<Object>(m_realm);
-        return T::schema.create(object.obj(), object.realm());
+        return T::schema().create(object.obj(), object.realm());
     }
 
 #if QT_CORE_LIB
@@ -224,17 +224,16 @@ static inline std::promise<thread_safe_reference<db<Ts...>>> async_open(const db
     util::Scheduler::set_default_factory(util::make_qt);
 #endif
     std::vector<ObjectSchema> schema;
-    (schema.push_back(Ts::schema.to_core_schema()), ...);
+    (schema.push_back(Ts::schema().to_core_schema()), ...);
 
     std::promise<thread_safe_reference<db<Ts...>>> p;
-
-    std::shared_ptr<AsyncOpenTask> async_open_task = Realm::get_synchronized_realm({
-                                                                                           .path = config.path,
-                                                                                           .schema_mode = SchemaMode::AdditiveExplicit,
-                                                                                           .schema = Schema(schema),
-                                                                                           .schema_version = 0,
-                                                                                           .sync_config = config.sync_config
-                                                                                   });
+    Realm::Config realm_config;
+    realm_config.path = config.path;
+    realm_config.schema_mode = SchemaMode::AdditiveExplicit;
+    realm_config.schema = Schema(schema);
+    realm_config.schema_version = 0;
+    realm_config.sync_config = config.sync_config;
+    std::shared_ptr<AsyncOpenTask> async_open_task = Realm::get_synchronized_realm(std::move(realm_config));
     async_open_task->start([&p](auto tsr, auto ex) {
         if (ex) p.set_exception(ex);
         else p.set_value(thread_safe_reference<db<Ts...>>(std::move(tsr)));

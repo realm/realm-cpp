@@ -11,6 +11,21 @@ set(CMAKE_CXX_STANDARD 17)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
 
 set(REALM_BUILD_LIB_ONLY ON)
+Include(FetchContent)
+
+FetchContent_Declare(
+        Zlib
+        GIT_REPOSITORY https://github.com/madler/zlib
+        GIT_TAG        v1.2.11 # or a later release
+)
+FetchContent_MakeAvailable(Zlib)
+#
+#FetchContent_Declare(
+#        OpenSSL
+#        GIT_REPOSITORY https://github.com/janbar/openssl-cmake/
+#        GIT_TAG 1.1.1n-20220327
+#)
+#FetchContent_MakeAvailable(OpenSSL)
 add_subdirectory(realm-core EXCLUDE_FROM_ALL)
 
 set(REALM_INCLUDE_CERTS 0)
@@ -59,8 +74,11 @@ set(HEADERS
     src/cpprealm/persisted_binary.hpp
     src/cpprealm/persisted_mixed.hpp) # REALM_INSTALL_HEADERS
 
+include(GenerateExportHeader)
+
 add_library(cpprealm SHARED ${SOURCES} ${HEADERS})
 #add_test(cpprealm_tests)
+generate_export_header(cpprealm)
 
 target_include_directories(cpprealm PUBLIC src)
 
@@ -123,7 +141,12 @@ if (APPLE)
         src/cpprealm/internal/apple/network_transport.mm
     )
 else()
-    find_package(CURL REQUIRED)
+FetchContent_Declare(
+        CURL
+        GIT_REPOSITORY https://github.com/curl/curl
+        GIT_TAG        curl-7_85_0 # or a later release
+)
+FetchContent_MakeAvailable(CURL)
     target_link_libraries(cpprealm PUBLIC
         CURL::libcurl
     )
@@ -133,7 +156,7 @@ else()
 endif()
 
 #if (!REALM_CPP_NO_TESTS)
-Include(FetchContent)
+
 FetchContent_Declare(
         Catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
@@ -141,8 +164,42 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
+if(MSVC)
+    add_compile_options(
+        /MP # Enable multi-processor compilation
+    )
+    if(WINDOWS_STORE)
+        # Removing LNK4075 warnings for debug UWP builds
+        # "LNK4075: ignoring '/INCREMENTAL' due to '/OPT:ICF' specification"
+        # "LNK4075: ignoring '/INCREMENTAL' due to '/OPT:REF' specification"
+
+        # Optional verification checks since we don't know existing contents of variables below
+        string(REPLACE "/OPT:ICF " "/OPT:NOICF " CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG}")
+        string(REPLACE "/OPT:REF " "/OPT:NOREF " CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG}")
+        string(REPLACE "/INCREMENTAL:YES " "/INCREMENTAL:NO " CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG}")
+        string(REPLACE "/INCREMENTAL " "/INCREMENTAL:NO " CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG}")
+
+        # Mandatory
+        set(CMAKE_MODULE_LINKER_FLAGS_DEBUG  "${CMAKE_MODULE_LINKER_FLAGS_DEBUG} /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF")
+        set(CMAKE_EXE_LINKER_FLAGS_DEBUG     "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF")
+        set(CMAKE_SHARED_LINKER_FLAGS_DEBUG  "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF")
+    else()
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        string(REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    endif()
+
+    # Let the compiler optimize debug builds ever so slightly.
+    # /Ob1: This allows the compiler to inline functions marked __inline.
+    # /Oi:  This enables (faster) intrinsic functions.
+    string(REPLACE "/Ob0" "/Ob1" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+    add_compile_options($<$<CONFIG:Debug>:/Oi>)
+
+    # Prevent warnings abount non-existing .pdb files
+    add_link_options($<$<CONFIG:Debug>:/ignore:4099>)
+endif()
+
 add_executable(cpprealm_exe_tests tests/str_tests.cpp tests/list_tests.cpp tests/query_tests.cpp tests/main.hpp tests/sync_test_utils.hpp tests/test_objects.hpp tests/main.cpp tests/admin_utils.hpp tests/admin_utils.cpp tests/date_tests.cpp tests/mixed_tests.cpp tests/results_tests.cpp tests/binary_tests.cpp tests/flx_sync_tests.cpp tests/app_tests.cpp tests/embedded_object_tests.cpp tests/opt_tests.cpp)
-target_link_libraries(cpprealm_exe_tests cpprealm Catch2::Catch2)
+target_link_libraries(cpprealm_exe_tests PUBLIC cpprealm Realm::ObjectStore Catch2::Catch2)
 file(COPY tests/setup_baas.rb DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY tests/dependencies.list DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY tests/config_overrides.json DESTINATION ${CMAKE_BINARY_DIR})

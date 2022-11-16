@@ -79,7 +79,7 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
     persisted_base& operator=(const T& o) {
         if (auto obj = m_object) {
             if constexpr (type_info::PrimitivePersistableConcept<T>::value) {
-                obj->obj().template set<type>(managed, o);
+                obj->obj().template set<type>(managed, type_info::persisted_type<T>::convert_if_required(o));
             } else if constexpr (type_info::MixedPersistableConcept<T>::value) {
                 obj->obj().set_any(managed, type_info::persisted_type<T>::convert_if_required(o));
             }
@@ -161,12 +161,12 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
         if (m_object) {
             if constexpr (type_info::OptionalPersistableConcept<T>::value || type_info::EmbeddedObjectPersistableConcept<T>::value) {
                 if constexpr (type_info::EmbeddedObjectPersistableConcept<T>::value) {
-                    return T::schema.create(m_object->obj().get_linked_object(managed), m_object->get_realm());
+                    return T::schema().create(m_object->obj().get_linked_object(managed), m_object->get_realm());
                 } else if constexpr (type_info::ObjectBasePersistableConcept<typename T::value_type>::value) {
                     if (m_object->obj().is_null(managed)) {
                         return std::nullopt;
                     } else {
-                        return T::value_type::schema.create(m_object->obj().get_linked_object(managed),
+                        return T::value_type::schema().create(m_object->obj().get_linked_object(managed),
                                                             m_object->get_realm());
                     }
                 } else {
@@ -177,7 +177,7 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
                     } else {
                         auto value = m_object->obj().template get<UnwrappedType>(managed);
                         if constexpr (std::is_same_v<UnwrappedType, BinaryData>) {
-                            return std::vector<u_int8_t>(value.data(), value.data() + value.size());
+                            return std::vector<uint8_t>(value.data(), value.data() + value.size());
                         } else if constexpr (type_info::EnumPersistableConcept<typename T::value_type>::value) {
                             return std::optional<typename T::value_type>(static_cast<typename T::value_type>(value));
                         } else {
@@ -208,7 +208,7 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
                 }
                 if constexpr (std::is_same_v<realm::BinaryData, type>) {
                     realm::BinaryData binary = m_object->obj().template get<type>(managed);
-                    return std::vector<u_int8_t>(binary.data(), binary.data() + binary.size());
+                    return std::vector<uint8_t>(binary.data(), binary.data() + binary.size());
                 } else if constexpr (type_info::MixedPersistableConcept<T>::value) {
                     Mixed mixed = m_object->obj().template get<type>(managed);
                     return type_info::mixed_to_variant<T>(mixed);
@@ -294,9 +294,9 @@ protected:
     template <template <typename ...> typename Variant, typename ...Ts, typename V>
     std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
     friend operator==(const persisted<Variant<Ts...>>& a, const V& b);
-    template <template <typename ...> typename Variant, typename ...Ts, typename V>
-    std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
-    friend operator==(const persisted<Variant<Ts...>>& a, V&& b);
+//    template <template <typename ...> typename Variant, typename ...Ts, typename V>
+//    std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
+//    friend operator==(const persisted<Variant<Ts...>>& a, V&& b);
     template <typename V>
     std::enable_if_t<type_info::ComparableConcept<V>::value, rbool>
     friend inline operator <(const persisted<V>& lhs, const V& a);
@@ -489,9 +489,9 @@ class rbool {
     template <template <typename ...> typename Variant, typename ...Ts, typename V>
     std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
     friend operator==(const persisted<Variant<Ts...>>& a, const V& b);
-    template <template <typename ...> typename Variant, typename ...Ts, typename V>
-    std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
-    friend operator==(const persisted<Variant<Ts...>>& a, V&& b);
+//    template <template <typename ...> typename Variant, typename ...Ts, typename V>
+//    std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
+//    friend operator==(const persisted<Variant<Ts...>>& a, V&& b);
 
     template <typename T, typename>
     friend struct persisted_noncontainer_base;
@@ -755,7 +755,7 @@ operator<< (std::ostream& stream, const T& object)
         stream << "{\n";
         ((stream << "\t" << props.name << ": " << *(object.*props.ptr) << "\n"), ...);
         stream << "}";
-    }, T::schema.properties);
+    }, T::schema().properties);
 
     return stream;
 }

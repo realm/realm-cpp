@@ -67,7 +67,7 @@ public:
     template <typename T>
     std::enable_if_t<type_info::ObjectBasePersistableConcept<T>::value>
             add(const std::string& name, std::optional<std::function<rbool(T&)>> query_fn = std::nullopt) {
-        auto schema = *m_realm->schema().find(T::schema.name);
+        auto schema = *m_realm->schema().find(T::schema().name);
         auto& group = m_realm->read_group();
         auto table_ref = group.get_table(schema.table_key);
         auto builder = Query(table_ref);

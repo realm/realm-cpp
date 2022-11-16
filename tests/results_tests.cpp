@@ -7,9 +7,9 @@ using namespace realm;
 TEST_CASE("results", "[results]") {
     realm_path path;
     SECTION("results_notifications") {
-        auto realm = realm::open<Person, Dog>({.path=path});
+        auto realm = realm::open<Person, Dog>({path});
 
-        auto person = Person{.name = "John", .age = 42};
+        auto person = Person("John", 42);
         realm.write([&realm, &person]() {
             realm.add(person);
         });
@@ -28,7 +28,7 @@ TEST_CASE("results", "[results]") {
         };
 
         auto token = require_change();
-        auto person2 = Person{.name = "Jane", .age = 24};
+        auto person2 = Person("Jane", 24);
         realm.write([&realm, &person2]() {
             realm.add(person2);
         });
@@ -40,9 +40,11 @@ TEST_CASE("results", "[results]") {
     }
 
     SECTION("results_notifications_insertions") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
         realm.write([&realm] {
-            realm.add(AllTypesObject{._id = 1});
+            AllTypesObject obj;
+            obj._id = 1;
+            realm.add(AllTypesObject(1));
         });
 
         bool did_run = false;
@@ -62,7 +64,9 @@ TEST_CASE("results", "[results]") {
 
         auto token = require_change();
         realm.write([&realm] {
-            realm.add(AllTypesObject{._id = 2});
+            AllTypesObject obj;
+            obj._id = 2;
+            realm.add(AllTypesObject(2));
         });
 
         realm.write([] {});
@@ -72,8 +76,8 @@ TEST_CASE("results", "[results]") {
         CHECK(change.modifications.size() == 0);
 
         realm.write([&realm] {
-            realm.add(AllTypesObject{._id = 3});
-            realm.add(AllTypesObject{._id = 4});
+            realm.add(AllTypesObject(3));
+            realm.add(AllTypesObject(4));
         });
 
         realm.write([] {});
@@ -87,7 +91,7 @@ TEST_CASE("results", "[results]") {
     SECTION("results_notifications_deletions") {
         auto obj = AllTypesObject();
 
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
         realm.write([&realm, &obj] {
             realm.add(obj);
         });
@@ -118,7 +122,7 @@ TEST_CASE("results", "[results]") {
     SECTION("results_notifications_modifications") {
         auto obj = AllTypesObject();
 
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
         realm.write([&realm, &obj] {
             realm.add(obj);
         });

@@ -44,7 +44,7 @@ namespace realm {
         if (auto& object = a.m_object) {
             auto obj = object->obj();
             auto ts = obj.template get<Timestamp>(a.managed);
-            obj.template set(a.managed, Timestamp(ts.get_time_point() + b));
+            obj.set(a.managed, Timestamp(ts.get_time_point() + b));
         } else {
             a.unmanaged += b;
         }
