@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD 17)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
 
 set(REALM_BUILD_LIB_ONLY ON)
-add_subdirectory(realm-core EXCLUDE_FROM_ALL)
+add_subdirectory(realm-core)
 
 set(REALM_INCLUDE_CERTS 0)
 set(REALM_NO_CONFIG)
@@ -30,39 +30,9 @@ add_compile_definitions(REALM_VERSION_MAJOR=0)
 add_compile_definitions(REALM_VERSION_MINOR=0)
 add_compile_definitions(REALM_VERSION_PATCH=1)
 
-set(SOURCES
-    src/cpprealm/sdk.cpp
-    src/cpprealm/analytics.cpp) # REALM_SOURCES
 
-set(HEADERS
-    src/cpprealm/sdk.hpp
-    src/cpprealm/app.hpp
-    src/cpprealm/db.hpp
-    src/cpprealm/notifications.hpp
-    src/cpprealm/object.hpp
-    src/cpprealm/persisted.hpp
-    src/cpprealm/results.hpp
-    src/cpprealm/schema.hpp
-    src/cpprealm/task.hpp
-    src/cpprealm/thread_safe_reference.hpp
-    src/cpprealm/type_info.hpp
-    src/cpprealm/flex_sync.hpp
-    src/cpprealm/persisted_string.hpp
-    src/cpprealm/persisted_bool.hpp
-    src/cpprealm/persisted_int.hpp
-    src/cpprealm/persisted_optional.hpp
-    src/cpprealm/persisted_enum.hpp
-    src/cpprealm/persisted_timestamp.hpp
-    src/cpprealm/persisted_uuid.hpp
-    src/cpprealm/persisted_list.hpp
-    src/cpprealm/persisted_embedded.hpp
-    src/cpprealm/persisted_binary.hpp
-    src/cpprealm/persisted_mixed.hpp
-    src/cpprealm/analytics.hpp
-    src/cpprealm/internal/generic_network_transport.hpp) # REALM_INSTALL_HEADERS
 
-add_library(cpprealm SHARED ${SOURCES} ${HEADERS})
-
+add_subdirectory(src)
 target_include_directories(cpprealm PUBLIC src)
 
 # on Apple platforms we use the built-in CFRunLoop
@@ -112,11 +82,6 @@ target_compile_options(cpprealm PUBLIC -fcoroutines)
 endif()
 
 target_link_libraries(cpprealm PUBLIC Realm::ObjectStore)
-
-set_target_properties(cpprealm PROPERTIES PUBLIC_HEADER "${HEADERS}")
-
-install(TARGETS cpprealm
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm)
 set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
 
 if (APPLE)

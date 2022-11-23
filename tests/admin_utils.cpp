@@ -30,7 +30,7 @@ static app::Response do_http_request(app::Request &&request) {
 
     std::promise<app::Response> p;
     transport.send_request_to_server(std::move(request),
-                                        [&p](auto request, auto response){
+                                        [&p](auto&& response){
         p.set_value(std::move(response));
     });
     return p.get_future().get();
