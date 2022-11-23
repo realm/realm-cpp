@@ -33,8 +33,6 @@ add_library(cpprealm SHARED ${SOURCES} ${HEADERS})
 
 set_target_properties(cpprealm PROPERTIES PUBLIC_HEADER "${HEADERS}")
 
-#install(TARGETS cpprealm
-#        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm)
 foreach(FILE ${HEADERS})
     get_filename_component(DIR ${FILE} DIRECTORY)
     INSTALL(FILES ${FILE}

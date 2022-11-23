@@ -30,8 +30,6 @@ add_compile_definitions(REALM_VERSION_MAJOR=0)
 add_compile_definitions(REALM_VERSION_MINOR=0)
 add_compile_definitions(REALM_VERSION_PATCH=1)
 
-
-
 add_subdirectory(src)
 target_include_directories(cpprealm PUBLIC src)
 

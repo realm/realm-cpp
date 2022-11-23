@@ -188,12 +188,6 @@ struct db {
         return T::schema.create(object.obj(), object.realm());
     }
 
-#if QT_CORE_LIB
-    void schedule(std::function<void()>&& fn)
-    {
-        //static_cast<util::QtMainLoopScheduler&>(*m_realm->scheduler()).schedule(std::move(fn));
-    }
-#endif
     db_config config;
 private:
     db(const SharedRealm& realm)
