@@ -57,7 +57,7 @@ QRectF Car::boundingRect() const
     return QRectF(-35, -81, 70, 115);
 }
 
-Car::Car() : wheelsAngle(0), speed(0), color(Qt::green)
+Car::Car() : wheelsAngle(0), speed(0)//, color(Qt::green)
 {
     startTimer(1000 / 33);
     setFlag(QGraphicsItem::ItemIsMovable, true);
@@ -66,26 +66,26 @@ Car::Car() : wheelsAngle(0), speed(0), color(Qt::green)
 
 void Car::accelerate()
 {
-    if (speed < 10)
+    if (speed < 10.0)
         ++speed;
 }
 
 void Car::decelerate()
 {
-    if (speed > -10)
+    if (speed > -10.0)
         --speed;
 }
 
 void Car::turnLeft()
 {
-    if (wheelsAngle > -40)
-        wheelsAngle -= 10;
+    if (wheelsAngle > -40.0) { }
+        wheelsAngle -= 10.0;
 }
 
 void Car::turnRight()
 {
-    if (wheelsAngle < 40)
-       wheelsAngle += 10;
+    if (wheelsAngle < 40.0)
+       wheelsAngle += 10.0;
 }
 
 void Car::setColor(Qt::GlobalColor color)
@@ -140,10 +140,10 @@ void Car::on_change()
     qreal turnDistance = ::cos(wheelsAngleRads) * axelDistance * 2;
     qreal turnRateRads = wheelsAngleRads / turnDistance;  // rough estimate
     qreal turnRate = qRadiansToDegrees(turnRateRads);
-    qreal rotation = speed * turnRate;
+    qreal rotation = *speed * turnRate;
 
     setTransform(QTransform().rotate(rotation), true);
-    setTransform(QTransform::fromTranslate(0, -speed), true);
+    setTransform(QTransform::fromTranslate(0, -(*speed)), true);
     update();
 }
 
