@@ -190,36 +190,13 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
                     }
                 }
             } else {
-                if constexpr (!type_info::PrimitivePersistableConcept<T>::value
-                                && !type_info::MixedPersistableConcept<T>::value) {
-                    if constexpr (type_info::ListPersistableConcept<T>::value) {
-                        T v;
-//                        auto lst = m_object->obj().template get_list_values<typename type_info::persisted_type<typename T::value_type>::type>(
-//                                managed);
-//                        for (size_t i; i < lst.size(); i++) {
-//                            if constexpr (type_info::ObjectBasePersistableConcept<typename T::value_type>::value) {
-//                                auto obj = lst.get_object(i);
-//                                v.push_back(T::value_type::schema::create(obj, obj.get_table(), nullptr));
-//                            } else {
-//                                v.push_back(static_cast<typename T::value_type>(lst[i]));
-//                            }
-//                        }
-
-                        return v;
-                    } else {
-                        REALM_UNREACHABLE();
-                    }
-                } else if constexpr (std::is_same_v<realm::BinaryData, type>) {
+                if constexpr (std::is_same_v<realm::BinaryData, type>) {
                     realm::BinaryData binary = m_object->obj().template get<type>(managed);
                     return std::vector<u_int8_t>(binary.data(), binary.data() + binary.size());
                 } else if constexpr (type_info::MixedPersistableConcept<T>::value) {
                     Mixed mixed = m_object->obj().template get<type>(managed);
                     return type_info::mixed_to_variant<T>(mixed);
-                }
-//                else if constexpr (is_vector_v<T>) {
-//                    return {};
-//                }
-                else {
+                } else {
                     return static_cast<T>(m_object->obj().template get<type>(managed));
                 }
             }
