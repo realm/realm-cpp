@@ -296,9 +296,6 @@ namespace internal {
                 }
                 return variant_t{};
             } else {
-                if (property_name == std::string_view(names[N])) {
-                    return *(cls.*property.ptr);
-                }
                 return property_value_for_name<N + 1>(property_name, cls, std::get<N + 1>(properties));
             }
         }

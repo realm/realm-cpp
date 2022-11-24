@@ -44,8 +44,8 @@ struct persisted_container_base;
  A token which is returned from methods which subscribe to changes to a `realm::object`.
  */
 struct notification_token {
-private:
     notification_token() = default;
+private:
     explicit notification_token(realm::NotificationToken&& token)
     : m_token(std::move(token))
     {

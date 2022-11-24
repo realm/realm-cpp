@@ -18,6 +18,7 @@ set(HEADERS
     cpprealm/persisted_string.hpp
     cpprealm/persisted_bool.hpp
     cpprealm/persisted_int.hpp
+    cpprealm/persisted_double.hpp
     cpprealm/persisted_optional.hpp
     cpprealm/persisted_enum.hpp
     cpprealm/persisted_timestamp.hpp

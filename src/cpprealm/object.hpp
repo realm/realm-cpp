@@ -157,7 +157,7 @@ struct object_base {
                 auto properties = std::vector<std::string>();
                 const TableRef table = m_object.obj().get_table();
 
-                for (auto i = 0; i < std::tuple_size<decltype(T::schema.properties)>{}; i++) {
+                for (size_t i = 0; i < std::tuple_size<decltype(T::schema.properties)>{}; i++) {
                     if (c.columns.count(table->get_column_key(T::schema.names[i]).value)) {
                         properties.push_back(T::schema.names[i]);
                     }
