@@ -52,10 +52,6 @@ class rbool;
 template <typename, typename = void>
 struct persisted_base;
 
-template <typename C> struct is_vector : std::false_type {};
-template <typename U,typename A> struct is_vector< std::vector<U, A> > : std::true_type {};
-template <typename C> inline constexpr bool is_vector_v = is_vector<C>::value;
-
 template <typename T>
 struct persisted_base<T, realm::type_info::Persistable<T>> {
     using Result = T;
