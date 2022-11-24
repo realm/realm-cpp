@@ -52,19 +52,6 @@
 
 #include "controller.h"
 
-#include <realm/object-store/util/scheduler.hpp>
-//#include <utility>
-//#include "thread_safe_reference.hpp"
-
-#ifdef QT_CORE_LIB
-#include <QStandardPaths>
-#include <QMetaObject>
-#include <QTimer>
-#include <QThread>
-#include <QtWidgets/QApplication>
-#endif
-
-
 void get_car(Controller& controller)
 {
     auto realm_app = realm::App("qt-car-demo-tdbmy");

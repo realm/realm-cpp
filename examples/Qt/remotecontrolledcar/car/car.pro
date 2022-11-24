@@ -8,21 +8,21 @@ SOURCES += car.cpp main.cpp
 INCLUDEPATH += /usr/local/include/ /usr/include/
 
 QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.15
-#CONFIG += system-zlib
+CONFIG += system-zlib
 # install
 target.path = $$PWD
 INSTALLS += target
 LIBS += -L/usr/local/lib \
     -lcpprealm \
-    -lz -lcurl \
     -lrealm-object-store-dbg \
     -lrealm-sync-dbg \
     -lrealm-dbg \
-    -lrealm-parser-dbg
+    -lrealm-parser-dbg \
+    -lz -lcurl
 
 linux-g++*: LIBS += -lssl -lcrypto
 macos: LIBS += -framework Foundation -framework Security -lcompression
-DEFINES += REALM_ENABLE_SYNC REALM_PLATFORM_APPLE=1
+DEFINES += REALM_ENABLE_SYNC REALM_PLATFORM_APPLE=0
 
 RESOURCES += \
     resources.qrc
