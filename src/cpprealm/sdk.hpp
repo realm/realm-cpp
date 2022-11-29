@@ -25,6 +25,7 @@
 #include <cpprealm/persisted.hpp>
 #include <cpprealm/persisted_binary.hpp>
 #include <cpprealm/persisted_bool.hpp>
+#include <cpprealm/persisted_double.hpp>
 #include <cpprealm/persisted_embedded.hpp>
 #include <cpprealm/persisted_enum.hpp>
 #include <cpprealm/persisted_int.hpp>

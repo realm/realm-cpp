@@ -24,7 +24,8 @@
 #include <Foundation/NSURLSession.h>
 
 namespace realm::internal {
-    void DefaultTransport::send_request_to_server(app::Request &&request, app::HttpCompletion&& completion_block) {
+void DefaultTransport::send_request_to_server(const app::Request& request,
+                                              util::UniqueFunction<void(const app::Response&)>&& completion_block) {
         NSURL* url = [NSURL URLWithString:[NSString stringWithCString:request.url.c_str()
                                                              encoding:NSUTF8StringEncoding]];
         NSMutableURLRequest *urlRequest = [[NSMutableURLRequest alloc] initWithURL:url];
@@ -59,7 +60,7 @@ namespace realm::internal {
         NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:urlRequest
                                                     completionHandler:[request = std::move(request),
                                                                        completion_ptr = completion_block.release()](NSData *data, NSURLResponse *response, NSError *error) {
-            util::UniqueFunction<void(const app::Request&, const app::Response&)> completion(completion_ptr);
+            util::UniqueFunction<void(const app::Response&)>&& completion(completion_ptr);
             auto httpResponse = (NSHTTPURLResponse *)response;
             std::string body;
             if (data) {
@@ -72,7 +73,7 @@ namespace realm::internal {
                 status_code = static_cast<int>(httpResponse.statusCode);
             }
 
-            completion(request, app::Response {
+            completion(app::Response {
                 .http_status_code=status_code,
                 .body=body
             });

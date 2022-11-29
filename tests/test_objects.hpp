@@ -124,11 +124,16 @@ struct Foo: realm::object {
     realm::persisted<int> bar;
     realm::persisted<EmbeddedFoo> foo;
 
+    realm::persisted<int> bar2;
+    realm::persisted<EmbeddedFoo> foo2;
+
     Foo() = default;
     Foo(const Foo&) = delete;
     static constexpr auto schema = realm::schema("Foo",
         realm::property<&Foo::bar>("bar"),
-        realm::property<&Foo::foo>("foo"));
+        realm::property<&Foo::foo>("foo"),
+        realm::property<&Foo::bar2>("bar2"),
+        realm::property<&Foo::foo2>("foo2"));
 };
 
 struct UppercaseString {

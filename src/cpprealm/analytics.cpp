@@ -310,7 +310,7 @@ namespace realm {
         transport->send_request_to_server({
                                         .method = realm::app::HttpMethod::get,
                                         .url = util::format("https://data.mongodb-api.com/app/realmsdkmetrics-zmhtm/endpoint/metric_webhook/metric?data=%1", base64_str),
-        }, [](const app::Request&, const app::Response&) {
+        }, [](auto) {
             // noop
         });
     }

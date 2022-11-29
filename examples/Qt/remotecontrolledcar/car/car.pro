@@ -19,9 +19,10 @@ LIBS += -L/usr/local/lib \
     -lrealm-dbg \
     -lrealm-parser-dbg \
     -lz -lcurl
+
 linux-g++*: LIBS += -lssl -lcrypto
-macos: LIBS += -framework Foundation -framework Security
-DEFINES += REALM_ENABLE_SYNC
+macos: LIBS += -framework Foundation -framework Security -lcompression
+DEFINES += REALM_ENABLE_SYNC REALM_PLATFORM_APPLE=0
 
 RESOURCES += \
     resources.qrc

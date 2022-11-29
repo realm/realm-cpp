@@ -100,7 +100,7 @@ static app::Response do_http_request(const app::Request& request)
     });
 
     std::string response;
-    util::HTTPHeaders response_headers;
+    app::HttpHeaders response_headers;
 
     /* First set the URL that is about to receive our POST. This URL can
      just as well be a https:// URL if that is what should receive the
@@ -157,9 +157,10 @@ static app::Response do_http_request(const app::Request& request)
 }
 } // namespace
 
-void DefaultTransport::send_request_to_server(app::Request&& request, app::HttpCompletion&& completion_block)
+void DefaultTransport::send_request_to_server(const app::Request& request,
+                                              util::UniqueFunction<void(const app::Response&)>&& completion_block)
 {
-    completion_block(request, do_http_request(request));
+    completion_block(do_http_request(request));
 }
  
 

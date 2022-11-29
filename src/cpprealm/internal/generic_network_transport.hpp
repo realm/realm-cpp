@@ -26,8 +26,8 @@ namespace internal {
 
 class DefaultTransport : public app::GenericNetworkTransport {
 public:
-    void send_request_to_server(app::Request &&request,
-                                app::HttpCompletion &&completion_block) override;
+    void send_request_to_server(const app::Request& request,
+                                util::UniqueFunction<void(const app::Response&)>&& completion);
 };
 
 } // namespace internal

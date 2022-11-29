@@ -102,7 +102,7 @@ struct persisted_type<T, EnumPersistable<T>> {
     }
     static constexpr type convert_if_required(const T& a)
     {
-        return reinterpret_cast<int>(static_cast<std::underlying_type_t<T>>(a));
+        return static_cast<std::underlying_type_t<T>>(a);
     }
 };
 

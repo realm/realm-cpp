@@ -55,29 +55,6 @@
 #include <QtWidgets/QGraphicsScene>
 #include <QMetaObject>
 
-realm::notification_token token;
-realm::task<void> task;
-
-realm::task<void> add_car(Car* car)
-{
-    auto realm_app = realm::App("car-wsney");
-    auto user = co_await realm_app.login(realm::App::Credentials::anonymous());
-    auto tsr = co_await user.realm<Car>("foo");
-
-    // invoke on the main thread
-    QMetaObject::invokeMethod(qApp, [tsr = std::move(tsr), car]() mutable {
-        auto realm = tsr.resolve();
-        realm.write([&realm, car] {
-            realm.add(*car);
-        });
-
-        token = car->observe<Car>([car](auto&&) {
-            car->on_change();
-        });
-    });
-    co_return;
-}
-
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
@@ -86,12 +63,37 @@ int main(int argc, char *argv[])
     scene.setSceneRect(-500, -500, 1000, 1000);
     scene.setItemIndexMethod(QGraphicsScene::NoIndex);
 
-    Car *car = new Car();
+    realm::notification_token token;
+    auto realm_app = realm::App("qt-car-demo-tdbmy");
+    auto user = realm_app.login(realm::App::Credentials::anonymous()).get_future().get();
+    auto realm = realm::open<Car>(user.flexible_sync_configuration());
+    realm.subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
+        if (!subs.find("foo")) {
+            subs.add<Car>("foo"); // Subscription to get all cars
+        }
+    }).get_future().get();
+
+    auto car = std::make_shared<Car>();
+    // invoke on the main thread
+    QMetaObject::invokeMethod(qApp, [&realm, &car, &token]() mutable {
+        auto results = realm.objects<Car>();
+        if (results.size() > 0) {
+            car = results[0];
+        } else {
+            realm.write([&realm, car] {
+                realm.add(*car);
+            });
+        }
+
+        token = car->observe<Car>([car](auto) {
+            car->on_change();
+        });
+    });
+
     auto item = scene.addPixmap(QPixmap(":/images/circuit.png"));
     item->setOffset(-500, -500);
-    scene.addItem(car);
+    scene.addItem(car.get());
 
-    task = add_car(car);
     QGraphicsView view(&scene);
     view.setRenderHint(QPainter::Antialiasing);
     view.setWindowTitle(QT_TRANSLATE_NOOP(QGraphicsView, "Qt Realm Controlled Car"));

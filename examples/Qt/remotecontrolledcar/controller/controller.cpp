@@ -68,35 +68,35 @@ void Controller::timerEvent(QTimerEvent *event)
 
 void Controller::on_accelerate_clicked()
 {
-    car->write([this]{ car->accelerate(); });
+    realm->write([this]{ car->accelerate(); });
 }
 
 void Controller::on_decelerate_clicked()
 {
-    car->write([this]{ car->decelerate(); });
+    realm->write([this]{ car->decelerate(); });
 }
 
 void Controller::on_left_clicked()
 {
-    car->write([this]{ car->turnLeft(); });
+    realm->write([this]{ car->turnLeft(); });
 }
 
 void Controller::on_right_clicked()
 {
-    car->write([this]{ car->turnRight(); });
+    realm->write([this]{ car->turnRight(); });
 }
 
 void Controller::on_red_clicked()
 {
-    car->write([this]{ car->setColor(Qt::GlobalColor::red); });
+    realm->write([this]{ car->setColor(Qt::GlobalColor::red); });
 }
 
 void Controller::on_green_clicked()
 {
-    car->write([this]{ car->setColor(Qt::GlobalColor::green); });
+    realm->write([this]{ car->setColor(Qt::GlobalColor::green); });
 }
 
 void Controller::on_blue_clicked()
 {
-    car->write([this]{ car->setColor(Qt::GlobalColor::blue); });
+    realm->write([this]{ car->setColor(Qt::GlobalColor::blue); });
 }

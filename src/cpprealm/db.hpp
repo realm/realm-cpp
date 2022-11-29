@@ -50,10 +50,17 @@
 namespace realm {
 struct object;
 #if QT_CORE_LIB
-
 namespace util {
 struct QtMainLoopScheduler : public QObject, public realm::util::Scheduler {
 
+    bool can_invoke() const noexcept override
+    {
+        return true;
+    }
+    void invoke(UniqueFunction<void()>&& fn) override
+    {
+        QMetaObject::invokeMethod(this, std::move(fn));
+    }
     bool is_on_thread() const noexcept override
     {
         return m_id == std::this_thread::get_id();
@@ -63,23 +70,9 @@ struct QtMainLoopScheduler : public QObject, public realm::util::Scheduler {
         auto o = dynamic_cast<const QtMainLoopScheduler*>(other);
         return (o && (o->m_id == m_id));
     }
-    bool can_deliver_notifications() const noexcept override
+    bool can_deliver_notifications() const noexcept
     {
         return QThread::currentThread()->eventDispatcher();
-    }
-
-    void set_notify_callback(std::function<void()> fn) override
-    {
-        m_callback = std::move(fn);
-    }
-
-    void notify() override
-    {
-        schedule(m_callback);
-    }
-
-    void schedule(std::function<void()> fn) {
-        QMetaObject::invokeMethod(this, fn);
     }
 private:
     std::function<void()> m_callback;
@@ -195,12 +188,6 @@ struct db {
         return T::schema.create(object.obj(), object.realm());
     }
 
-#if QT_CORE_LIB
-    void schedule(std::function<void()>&& fn)
-    {
-        static_cast<util::QtMainLoopScheduler&>(*m_realm->scheduler()).schedule(std::move(fn));
-    }
-#endif
     db_config config;
 private:
     db(const SharedRealm& realm)

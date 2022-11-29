@@ -52,26 +52,35 @@
 
 #include "controller.h"
 
-realm::task<void> get_car(Controller& controller)
+void get_car(Controller& controller)
 {
-    auto realm_app = realm::App("car-wsney");
-    auto user = co_await realm_app.login(realm::App::Credentials::anonymous());
+    auto realm_app = realm::App("qt-car-demo-tdbmy");
+    auto user = realm_app.login(realm::App::Credentials::anonymous()).get_future().get();
+    auto realm = realm::open<Car>(user.flexible_sync_configuration());
+    realm.subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
+        if (!subs.find("foo")) {
+            subs.add<Car>("foo");
+        }
+    }).get_future().get();
 
-    auto tsr = co_await user.realm<Car>("foo");
-    QMetaObject::invokeMethod(qApp, [tsr = std::move(tsr), &controller]() mutable {
-        auto realm = tsr.resolve();
-        controller.car = realm.object_new<Car>(0);
-    });
-    co_return;
+    auto results = realm.objects<Car>();
+    if (results.size() > 0) {
+        controller.car = results[0];
+    } else {
+        auto car = std::make_unique<Car>();
+        realm.write([&realm, &car]() {
+            realm.add(*car);
+        });
+        controller.car = std::move(car);
+    }
+    controller.realm = std::make_unique<realm::db<Car>>(std::move(realm));
 }
-
-realm::task<void> task;
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
     Controller controller;
-    task = get_car(controller);
+    get_car(controller);
     controller.show();
     return app.exec();
 }
