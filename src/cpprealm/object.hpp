@@ -62,7 +62,7 @@ struct ObjectChange {
     /**
      One or more of the properties of the object have been changed.
      */
-    PropertyChange<T> property;
+    std::vector<PropertyChange<T>> property_changes;
 };
 
 namespace {
@@ -227,6 +227,7 @@ struct object_base {
                         }
                     } else {
                         for (size_t i = 0; i < property_names.size(); i++) {
+                            std::vector<PropertyChange<T>> property_changes;
                             PropertyChange<T> property;
                             property.name = property_names[i];
                             if (!old_values.empty()) {
@@ -235,7 +236,8 @@ struct object_base {
                             if (!new_values.empty()) {
                                 property.new_value = new_values[i];
                             }
-                            block(ObjectChange<T> { .object = ptr, .property = property });
+                            property_changes.push_back(property);
+                            block(ObjectChange<T> { .object = ptr, .property_changes = property_changes });
                         }
                     }
                 }, *static_cast<T*>(this), *m_object}));

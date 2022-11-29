@@ -292,7 +292,7 @@ namespace internal {
         property_value_for_name(std::string_view property_name, const Class &cls, P &property) const {
             if constexpr (N + 1 == sizeof...(Properties)) {
                 if (property_name == std::string_view(names[N])) {
-                    return *(cls.*property.ptr);
+                    return variant_t { std::in_place_index<N>, *(cls.*property.ptr) };
                 }
                 return variant_t{};
             } else {

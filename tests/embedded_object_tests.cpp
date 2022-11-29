@@ -18,6 +18,9 @@ TEST_CASE("embedded_objects") {
         bool did_run;
         EmbeddedFoo e_foo = (*foo.foo);
         auto token = e_foo.observe<EmbeddedFoo>([&did_run](auto change) {
+            CHECK(change.property_changes.size() == 1);
+            CHECK(change.property_changes[0].old_value == std::nullopt);
+            CHECK(std::get<int>(*(change.property_changes[0].new_value)) == 84);
             CHECK(change.object->bar == 84);
             did_run = true;
         });
