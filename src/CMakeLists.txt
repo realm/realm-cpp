@@ -40,3 +40,6 @@ foreach(FILE ${HEADERS})
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${DIR}
             COMPONENT devel)
 endforeach()
+
+install(TARGETS cpprealm
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm)
