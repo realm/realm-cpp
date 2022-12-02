@@ -1,0 +1,24 @@
+name: Publish Doxygen Docs
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Build docs
+        uses: mattnotmitt/doxygen-action@1.9.4
+      - name: Upload docs
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --acl public-read --delete
+        env:
+          AWS_S3_BUCKET: ${{ secrets.DOCS_AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.DOCS_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.DOCS_AWS_SECRET_ACCESS_KEY }}
+          SOURCE_DIR: docs/html
+          DEST_DIR: docs/realm-sdks/cpp/latest
