@@ -50,19 +50,21 @@ public:
     // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
     // for the templated class type.
     template <typename T>
-    std::enable_if_t<type_info::ObjectBasePersistableConcept<T>::value>
+    std::enable_if_t<std::is_base_of_v<object, T>>
             add(const std::string& name, std::optional<std::function<rbool(T&)>> query_fn = std::nullopt) {
         auto schema = *m_realm->schema().find(T::schema.name);
         auto& group = m_realm->read_group();
         auto table_ref = group.get_table(schema.table_key);
-        auto builder = Query(table_ref);
+        auto builder = internal::bridge::query(table_ref);
 
         if (query_fn) {
             auto q = query<T>(builder, std::move(schema));
             auto full_query = (*query_fn)(q).q;
-            m_subscription_set.insert_or_assign(name, full_query);
+//            m_subscription_set.insert_or_assign(name, full_query);
+abort();
         } else {
-            m_subscription_set.insert_or_assign(name, builder);
+            abort();
+//            m_subscription_set.insert_or_assign(name, builder);
         }
     }
 
@@ -97,7 +99,7 @@ public:
     // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
     // for the templated class type.
     template <typename T>
-    std::enable_if_t<type_info::ObjectBasePersistableConcept<T>::value>
+    std::enable_if_t<std::is_base_of_v<object, T>>
     update_subscription(const std::string& name, std::optional<std::function<rbool(T&)>> query_fn = std::nullopt) {
         remove(name);
         add(name, query_fn);

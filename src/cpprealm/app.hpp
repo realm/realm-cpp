@@ -34,7 +34,7 @@
 namespace realm {
 // MARK: User
 template <typename ...Ts>
-static inline std::promise<thread_safe_reference<db<Ts...>>> async_open(const db_config& config);
+static inline std::promise<thread_safe_reference<db<Ts...>>> async_open(const typename db<Ts...>::config& config);
 
 // Represents an error state from the server.
 struct app_error {
@@ -154,16 +154,17 @@ struct User {
         return m_user->refresh_token();
     }
 
-    db_config flexible_sync_configuration() const
+    template <typename ...Ts>
+    typename db<Ts...>::config flexible_sync_configuration() const
     {
-        db_config config;
-        config.sync_config = std::make_shared<SyncConfig>(m_user, SyncConfig::FLXSyncEnabled{});
-        config.sync_config->error_handler = [](std::shared_ptr<SyncSession> session, SyncError error) {
-            std::cerr<<"sync error: "<<error.message<<std::endl;
-        };
-        config.path = m_user->sync_manager()->path_for_realm(*config.sync_config);
-        config.sync_config->client_resync_mode = realm::ClientResyncMode::Manual;
-        config.sync_config->stop_policy = SyncSessionStopPolicy::AfterChangesUploaded;
+        typename db<Ts...>::config config;
+//        config.sync_config = std::make_shared<SyncConfig>(m_user, SyncConfig::FLXSyncEnabled{});
+//        config.sync_config->error_handler = [](std::shared_ptr<SyncSession> session, SyncError error) {
+//            std::cerr<<"sync error: "<<error.message<<std::endl;
+//        };
+//        config.path = m_user->sync_manager()->path_for_realm(*config.sync_config);
+//        config.sync_config->client_resync_mode = realm::ClientResyncMode::Manual;
+//        config.sync_config->stop_policy = SyncSessionStopPolicy::AfterChangesUploaded;
         return config;
     }
 

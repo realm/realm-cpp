@@ -19,48 +19,60 @@
 #ifndef REALM_PERSISTED_TIMESTAMP_HPP
 #define REALM_PERSISTED_TIMESTAMP_HPP
 
+#include "cpprealm/internal/bridge/obj.hpp"
 #include <cpprealm/persisted.hpp>
 
 namespace realm {
-    template<typename T>
-    struct persisted<T, type_info::TimestampPersistable<T>> : public persisted_noncontainer_base<T> {
-        using persisted_noncontainer_base<T>::persisted_noncontainer_base;
-        using persisted_noncontainer_base<T>::operator*;
-        using persisted_noncontainer_base<T>::operator=;
+    template <typename C, typename D>
+    struct persisted<std::chrono::time_point<C, D>> : public persisted_base<std::chrono::time_point<C, D>> {
+        using persisted_base<std::chrono::time_point<C, D>>::persisted_base;
 
-        persisted& operator=(const T& o) override {
-            if (auto obj = this->m_object) {
-                obj->obj().template set<Timestamp>(
+        persisted& operator=(const std::chrono::time_point<C, D>& o) {
+            if (this->is_managed()) {
+                this->m_object->obj().template set(
                         this->managed,
-                        type_info::persisted_type<T>::convert_if_required(o));
+                        internal::bridge::timestamp(o));
             } else {
-                new (&this->unmanaged) T(o);
+                new (&this->unmanaged) std::chrono::time_point<C, D>(o);
             }
             return *this;
         }
 
-        template <typename C, typename U, typename V>
-        friend persisted<C>& operator +=(persisted<C>& a, std::chrono::duration<U, V> b);
-        constexpr auto time_since_epoch() const {
-            if (auto& object = this->m_object) {
-                auto obj = object->obj();
-                auto ts = static_cast<T>(obj.template get<Timestamp>(this->managed));
-                return ts.time_since_epoch();
+        auto time_since_epoch() const {
+            if (this->is_managed()) {
+                auto ts = this->m_object->obj().template get<internal::bridge::timestamp>(this->managed);
+                return ts.get_time_point().time_since_epoch();
             } else {
                 return this->unmanaged.time_since_epoch();
             }
         }
+    private:
+        template <typename U, typename V, typename S>
+        friend persisted<std::chrono::time_point<U, V>>& operator +=(
+                persisted<std::chrono::time_point<U, V>>& lhs,
+                std::chrono::duration<S> rhs);
     };
-    template <typename T, typename U, typename V>
-    persisted<T>& operator +=(persisted<T>& a, std::chrono::duration<U, V> b) {
-        if (auto& object = a.m_object) {
-            auto obj = object->obj();
-            auto ts = obj.template get<Timestamp>(a.managed);
-            obj.template set(a.managed, Timestamp(ts.get_time_point() + b));
+
+    template <typename U, typename V, typename S>
+    persisted<std::chrono::time_point<U, V>>& operator +=(
+            persisted<std::chrono::time_point<U, V>>& lhs,
+            std::chrono::duration<S> rhs)
+    {
+        if (lhs.is_managed()) {
+            auto ts = lhs.m_object->obj().template get<internal::bridge::timestamp>(lhs.managed);
+            lhs.m_object->obj().template set(lhs.managed, internal::bridge::timestamp(ts.get_time_point() + rhs));
         } else {
-            a.unmanaged += b;
+            lhs.unmanaged += rhs;
         }
-        return a;
+        return lhs;
+    }
+
+    template <typename U, typename V, typename S>
+    rbool operator ==(
+            persisted<std::chrono::time_point<U, V>>& lhs,
+            std::chrono::duration<S> rhs)
+    {
+        return lhs == rhs;
     }
 }
 

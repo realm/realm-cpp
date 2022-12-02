@@ -22,23 +22,28 @@
 #include <cpprealm/persisted.hpp>
 
 namespace realm {
-    template<typename T>
-    struct persisted<T, type_info::EnumPersistable<T>> : public persisted_noncontainer_base<T> {
-        using persisted_noncontainer_base<T>::persisted_noncontainer_base;
-        using persisted_noncontainer_base<T>::operator*;
-        using persisted_noncontainer_base<T>::operator=;
+    template <typename T>
+    struct persisted<T, std::enable_if_t<std::is_enum_v<T>>> : public persisted_base<T> {
+        using persisted_base<T>::persisted_base;
 
-        persisted& operator=(const T& o) override {
-            if (auto obj = this->m_object) {
-                obj->obj().template set<Int>(
-                        this->managed,
-                        type_info::persisted_type<T>::convert_if_required(o));
+        persisted& operator=(const T& o) {
+            if (this->is_managed()) {
+                this->m_object->obj().template set<int64_t>(this->managed,
+                        static_cast<int64_t>(o));
             } else {
                 new (&this->unmanaged) T(o);
             }
             return *this;
         }
     };
+
+    namespace {
+        enum class test_enum {
+            one, two
+        };
+        static_assert(sizeof(persisted<test_enum>));
+        static_assert(sizeof(persisted<test_enum>{}.operator=(test_enum::one)));
+    }
 }
 
 #endif //REALM_PERSISTED_ENUM_HPP

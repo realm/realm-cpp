@@ -5,7 +5,7 @@
 TEST_CASE("embedded_objects") {
     realm_path path;
     SECTION("observe") {
-        auto realm = realm::open<Foo, EmbeddedFoo>({.path=path});
+        auto realm = realm::open<Foo, EmbeddedFoo>(path);
 
         auto foo = Foo();
         foo.foo = EmbeddedFoo{.bar=42};
@@ -14,7 +14,7 @@ TEST_CASE("embedded_objects") {
             realm.add(foo);
         });
 
-        CHECK((*foo.foo).bar == 42);
+        CHECK(foo.foo->bar == 42);
         EmbeddedFoo e_foo = (*foo.foo);
         std::promise<bool> p;
         auto token = e_foo.observe<EmbeddedFoo>([&p](auto change) {
@@ -22,7 +22,7 @@ TEST_CASE("embedded_objects") {
             p.set_value(true);
         });
         realm.write([&foo]() {
-            (*foo.foo).bar = 84;
+            foo.foo->bar = 84;
         });
         CHECK((*foo.foo).bar == 84);
         realm.write([&foo, &realm] {

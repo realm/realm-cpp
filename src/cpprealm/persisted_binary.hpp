@@ -23,53 +23,11 @@
 #include <cpprealm/persisted.hpp>
 
 namespace realm {
-    template<typename T>
-    struct persisted<T, type_info::BinaryPersistable<T>> : public persisted_noncontainer_base<T> {
-        using persisted_noncontainer_base<T>::persisted_noncontainer_base;
-        using persisted_noncontainer_base<T>::operator*;
-        using persisted_noncontainer_base<T>::operator=;
-
-        persisted& operator=(const T& o) override {
-            if (auto obj = this->m_object) {
-                obj->obj().template set<Binary>(
-                        this->managed,
-                        type_info::persisted_type<T>::convert_if_required(o));
-            } else {
-                new (&this->unmanaged) T(o);
-            }
-            return *this;
-        }
-
-        typename T::value_type operator[](typename T::size_type idx) {
-            if (this->m_object) {
-                realm::BinaryData binary = this->m_object->obj().template get<BinaryData>(this->managed);
-                return binary[idx];
-            } else {
-                return this->unmanaged[idx];
-            }
-        }
-        void push_back(const typename T::value_type& a) {
-            if (this->m_object) {
-                std::string data = this->m_object->obj().template get<BinaryData>(this->managed).data();
-                data = data + reinterpret_cast<char&>(a);
-                auto binary = BinaryData(data);
-                this->m_object->obj()
-                        .template set<BinaryData>(this->managed, binary);
-            } else {
-                this->unmanaged.push_back(a);
-            }
-        }
-        void push_back(typename T::value_type&& a) {
-            if (this->m_object) {
-                std::string data = this->m_object->obj().template get<BinaryData>(this->managed).data();
-                data = data + reinterpret_cast<char&>(a);
-                auto binary = BinaryData(data);
-                this->m_object->obj()
-                        .template set<BinaryData>(this->managed, binary);
-            } else {
-                this->unmanaged.push_back(a);
-            }
-        }
+    template <>
+    struct persisted<std::vector<uint8_t>> : public persisted_base<std::vector<uint8_t>> {
+        persisted& operator=(const std::vector<uint8_t>&);
+        uint8_t operator[](size_t idx);
+        void push_back(uint8_t);
     };
 }
 

@@ -20,6 +20,9 @@
 #define REALM_PERSISTED_MIXED_HPP
 
 #include <cpprealm/persisted.hpp>
+#include <cpprealm/persisted_uuid.hpp>
+#include <cpprealm/type_info.hpp>
+#include <cpprealm/persisted_custom.hpp>
 
 namespace realm {
     using mixed = std::variant<
@@ -32,14 +35,10 @@ namespace realm {
             uuid>;
 
     template<typename T>
-    struct persisted<T, type_info::MixedPersistable<T>> : public persisted_noncontainer_base<T> {
-        using persisted_noncontainer_base<T>::persisted_noncontainer_base;
-        using persisted_noncontainer_base<T>::operator*;
-        using persisted_noncontainer_base<T>::operator=;
-
-        persisted& operator=(const T& o) override {
+    struct persisted<T, std::enable_if_t<realm::internal::type_info::MixedPersistableConcept<T>::value>> : public persisted_base<T> {
+        persisted& operator=(const T& o) {
             if (auto obj = this->m_object) {
-                obj->obj().set_any(this->managed, type_info::persisted_type<T>::convert_if_required(o));
+                obj->obj().set_any(this->managed, internal::type_info::serialize(o));
             } else {
                 new (&this->unmanaged) T(o);
             }
@@ -49,12 +48,12 @@ namespace realm {
 
 
     template <template <typename ...> typename Variant, typename ...Ts, typename V>
-    std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
+    std::enable_if_t<internal::type_info::is_variant_t<Variant<Ts...>>::value, rbool>
     operator==(const persisted<Variant<Ts...>>& a, V&& b)
     {
         if (a.should_detect_usage_for_queries) {
-            auto query = Query(a.query->get_table());
-            query.equal(a.managed, type_info::persisted_type<std::decay_t<V>>::convert_if_required(b));
+            auto query = internal::bridge::query(a.query->get_table());
+            query.equal(a.managed, internal::type_info::serialize<V>(b));
             return {std::move(query)};
         }
         return std::visit([&b](auto&& arg) {
@@ -68,15 +67,15 @@ namespace realm {
     }
 
     template <template <typename ...> typename Variant, typename ...Ts, typename V>
-    std::enable_if_t<type_info::is_variant_t<Variant<Ts...>>::value, rbool>
+    std::enable_if_t<internal::type_info::is_variant_t<Variant<Ts...>>::value, rbool>
     operator==(const persisted<Variant<Ts...>>& a, const V& b)
     {
         if (a.should_detect_usage_for_queries) {
-            auto query = Query(a.query->get_table());
-            query.equal(a.managed, type_info::persisted_type<V>::convert_if_required(b));
+            auto query = internal::bridge::query(a.query->get_table());
+            query.equal(a.managed, internal::type_info::serialize<V>(b));
             return {std::move(query)};
         }
-        return std::visit([&b](auto&& arg) {
+        return std::visit([&b](auto&& arg) -> rbool {
             using M = std::decay_t<decltype(arg)>;
             if constexpr (std::is_convertible_v<M, V>) {
                 return arg == b;

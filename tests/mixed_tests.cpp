@@ -9,8 +9,7 @@ TEST_CASE("mixed", "[mixed]") {
         auto obj = AllTypesObject();
         obj.mixed_col = 42;
         CHECK(obj.mixed_col == 42);
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(
-                {.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(path);
         realm.write([&realm, &obj] {
             realm.add(obj);
         });

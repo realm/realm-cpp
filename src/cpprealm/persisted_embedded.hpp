@@ -22,33 +22,36 @@
 #include <cpprealm/persisted.hpp>
 
 namespace realm {
-    template<typename T>
-    struct persisted<T, type_info::EmbeddedObjectPersistable<T>> : public persisted_noncontainer_base<T> {
-        using persisted_noncontainer_base<T>::persisted_noncontainer_base;
-        using persisted_noncontainer_base<T>::operator=;
-        using persisted_noncontainer_base<T>::operator*;
-
-        persisted& operator=(const T& o) override {
-            if (auto obj = this->m_object) {
-                // if non-null object is being assigned...
-                if (o.m_object) {
-                    // if object is managed, we will to set the link
-                    // to the new target's key
-                    obj->obj().template set<typename persisted_noncontainer_base<T>::type>(
-                            this->managed,
-                            o.m_object->obj().get_key());
-                } else {
-                    // else new unmanaged object is being assigned.
-                    // we must assign the values to this object's fields
-                    // TODO:
-                    REALM_UNREACHABLE();
-                }
-            } else {
-                new (&this->unmanaged) T(o);
-            }
-            return *this;
-        }
-    };
+    namespace internal {
+//        template <typename T>
+//        struct type_info<std::chrono::time_point<C, D>> {
+//            using internal_type = bridge::timestamp;
+//        };
+    }
+//    template<typename T>
+//    struct persisted<T, std::enable_if_t<std::is_base_of_v<embedded_object, T>>> : public persisted_base<T> {
+//
+//        persisted& operator=(const T& o) override {
+//            if (auto obj = this->m_object) {
+//                // if non-null object is being assigned...
+//                if (o.m_object) {
+//                    // if object is managed, we will to set the link
+//                    // to the new target's key
+//                    obj->obj().template set<typename persisted_base<T>::type>(
+//                            this->managed,
+//                            o.m_object->obj().get_key());
+//                } else {
+//                    // else new unmanaged object is being assigned.
+//                    // we must assign the values to this object's fields
+//                    // TODO:
+//                    REALM_UNREACHABLE();
+//                }
+//            } else {
+//                new (&this->unmanaged) T(o);
+//            }
+//            return *this;
+//        }
+//    };
 }
 
 #endif //REALM_PERSISTED_EMBEDDED_HPP
