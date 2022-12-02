@@ -50,12 +50,13 @@ struct persisted_container_base;
  */
 struct notification_token {
     notification_token(notification_token&& nt) noexcept = default;
+    notification_token& operator=(notification_token&&) = default;
 private:
     notification_token() = default;
 
-    explicit notification_token(realm::NotificationToken&& token,
-                                realm::Object object,
-                                SharedRealm realm)
+    explicit notification_token(internal::bridge::notification_token&& token,
+                                internal::bridge::object object,
+                                internal::bridge::realm realm)
     : m_token(std::move(token))
     , m_object(std::move(object))
     , m_realm(std::move(realm))
@@ -69,10 +70,10 @@ private:
     friend struct persisted_map_base;
     template <typename T>
     friend struct results;
-    realm::NotificationToken m_token;
-    realm::Object m_object;
+    internal::bridge::notification_token m_token;
+    internal::bridge::object m_object;
     realm::object_store::Dictionary m_dictionary;
-    SharedRealm m_realm;
+    internal::bridge::realm m_realm;
 };
 
 template <typename T>

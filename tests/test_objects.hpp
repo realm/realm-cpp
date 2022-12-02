@@ -5,7 +5,7 @@
 
 struct Dog: realm::object {
     realm::persisted<std::string> name;
-    realm::persisted<int> age;
+    realm::persisted<int64_t> age;
 
     static constexpr auto schema = realm::schema("Dog",
             realm::property<&Dog::name>("name"),
@@ -15,7 +15,7 @@ struct Dog: realm::object {
 
 struct Person: realm::object {
     realm::persisted<std::string> name;
-    realm::persisted<int> age;
+    realm::persisted<int64_t> age;
     realm::persisted<std::optional<Dog>> dog;
 
     static constexpr auto schema = realm::schema("Person",
@@ -33,7 +33,7 @@ struct AllTypesObjectEmbedded: realm::embedded_object {
 };
 
 struct AllTypesObjectLink: realm::object {
-    realm::persisted<int> _id;
+    realm::persisted<int64_t> _id;
     realm::persisted<std::string> str_col;
 
     static constexpr auto schema =
@@ -47,7 +47,7 @@ struct AllTypesObject: realm::object {
         one, two
     };
 
-    realm::persisted<int> _id;
+    realm::persisted<int64_t> _id;
     realm::persisted<bool> bool_col;
     realm::persisted<std::string> str_col;
     realm::persisted<Enum> enum_col;
@@ -64,7 +64,7 @@ struct AllTypesObject: realm::object {
         std::vector<uint8_t>
     >> mixed_col;
 
-    realm::persisted<std::optional<int>> opt_int_col;
+    realm::persisted<std::optional<int64_t>> opt_int_col;
     realm::persisted<std::optional<std::string>> opt_str_col;
     realm::persisted<std::optional<bool>> opt_bool_col;
     realm::persisted<std::optional<Enum>> opt_enum_col;
@@ -73,7 +73,7 @@ struct AllTypesObject: realm::object {
     realm::persisted<std::optional<std::vector<uint8_t>>> opt_binary_col;
     realm::persisted<std::optional<AllTypesObjectLink>> opt_obj_col;
 
-    realm::persisted<std::vector<int>> list_int_col;
+    realm::persisted<std::vector<int64_t>> list_int_col;
     realm::persisted<std::vector<bool>> list_bool_col;
     realm::persisted<std::vector<std::string>> list_str_col;
     realm::persisted<std::vector<realm::uuid>> list_uuid_col;
@@ -83,7 +83,7 @@ struct AllTypesObject: realm::object {
     realm::persisted<std::vector<AllTypesObjectLink>> list_obj_col;
     realm::persisted<std::vector<AllTypesObjectEmbedded>> list_embedded_obj_col;
 
-    realm::persisted<std::map<std::string, int>> map_int_col;
+    realm::persisted<std::map<std::string, int64_t>> map_int_col;
     realm::persisted<std::map<std::string, bool>> map_bool_col;
     realm::persisted<std::map<std::string, std::string>> map_str_col;
     realm::persisted<std::map<std::string, realm::uuid>> map_uuid_col;
@@ -135,14 +135,14 @@ struct AllTypesObject: realm::object {
 };
 
 struct EmbeddedFoo: realm::embedded_object {
-    realm::persisted<int> bar;
+    realm::persisted<int64_t> bar;
 
     static constexpr auto schema = realm::schema("EmbeddedFoo", realm::property<&EmbeddedFoo::bar>("bar"));
 };
 
 struct Foo: realm::object {
-    realm::persisted<int> bar;
-    realm::persisted<EmbeddedFoo> foo;
+    realm::persisted<int64_t> bar;
+    realm::persisted<std::optional<EmbeddedFoo>> foo;
 
     Foo() = default;
     Foo(const Foo&) = delete;
@@ -163,23 +163,24 @@ struct UppercaseString {
     {
     }
 
-    operator std::string_view() const { // NOLINT(google-explicit-constructor)
+    operator std::string() const { // NOLINT(google-explicit-constructor)
         return m_str;
     }
 private:
     std::string m_str;
 };
+
+bool operator==(const UppercaseString& lhs, const char* rhs) {
+    return static_cast<std::string>(lhs) == rhs;
+}
+
 struct CustomStringObject : realm::object {
     realm::persisted<UppercaseString> str_col;
     static constexpr auto schema = realm::schema("CustomStringObject",
                                                     realm::property<&CustomStringObject::str_col>("str_col"));
 };
 struct IntTypesObject: realm::object {
-    realm::persisted<int8_t> int8_col;
-    realm::persisted<int16_t> int16_col;
-    realm::persisted<int32_t> int32_col;
     realm::persisted<int64_t> int64_col;
-    realm::persisted<size_t> size_col;
 
     static constexpr auto schema = realm::schema("IntTypesObject",
                                                     realm::property<&Foo::bar>("bar"),

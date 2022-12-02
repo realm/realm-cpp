@@ -4,7 +4,7 @@
 TEST_CASE("binary", "[binary]") {
     realm_path path;
     SECTION("push_back") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(path);
         auto obj = AllTypesObject();
         obj.binary_col.push_back(1);
         obj.binary_col.push_back(2);

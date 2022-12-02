@@ -19,49 +19,38 @@
 #ifndef REALM_PERSISTED_OPTIONAL_HPP
 #define REALM_PERSISTED_OPTIONAL_HPP
 
+#include "cpprealm/internal/bridge/obj.hpp"
 #include <cpprealm/persisted.hpp>
 
 namespace realm {
-    template<typename T>
-    struct persisted<T, type_info::OptionalPersistable<T>> : public persisted_noncontainer_base<T> {
-        using persisted_noncontainer_base<T>::persisted_noncontainer_base;
-        using persisted_noncontainer_base<T>::operator*;
+    template <typename T>
+    struct persisted<std::optional<T>, std::enable_if_t<internal::type_info::is_primitive<T>::value>> :
+            public persisted_base<std::optional<T>> {
 
-        persisted& operator=(const T& o) override {
+        persisted& operator=(std::optional<T>&& o) {
             if (auto& obj = this->m_object) {
-                if constexpr (type_info::OptionalObjectPersistableConcept<T>::value) {
-                    // if object...
-                    if (auto link = o) {
-                        // if non-null object is being assigned...
-                        if (link->m_object) {
-                            // if object is managed, we will to set the link
-                            // to the new target's key
-                            obj->obj().template set<ObjKey>(this->managed, link->m_object->obj().get_key());
-                        } else {
-                            // else new unmanaged object is being assigned.
-                            // we must assign the values to this object's fields
-                            // TODO:
-                            REALM_UNREACHABLE();
-                        }
-                    } else {
-                        // else null link is being assigned to this field
-                        // e.g., `person.dog = std::nullopt;`
-                        // set the parent column to null and unset the co
-                        obj->obj().set_null(this->managed);
-                    }
+                if (o) {
+                    obj->obj().set(this->managed,
+                                   internal::type_info::serialize(*o));
                 } else {
-                    using UnwrappedType = typename type_info::persisted_type<typename T::value_type>::type;
-                    if (o) {
-                        if constexpr (type_info::EnumPersistableConcept<typename T::value_type>::value) {
-                            obj->obj().template set<Int>(this->managed, static_cast<Int>(*o));
-                        } else {
-                            obj->obj().template set<UnwrappedType>(this->managed,
-                                                                   type_info::persisted_type<typename T::value_type>::convert_if_required(
-                                                                           *o));
-                        }
-                    } else {
-                        obj->obj().set_null(this->managed);
-                    }
+                    obj->obj().set_null(this->managed);
+                }
+            } else {
+                if (o)
+                    new (&this->unmanaged) T(std::move(*o));
+                else
+                    new (&this->unmanaged) std::optional<T>();
+            }
+            return *this;
+        }
+
+        persisted& operator=(const std::optional<T>& o) {
+            if (auto& obj = this->m_object) {
+                if (o) {
+                    obj->obj().set(this->managed,
+                                   internal::type_info::serialize(*o));
+                } else {
+                    obj->obj().set_null(this->managed);
                 }
             } else {
                 new (&this->unmanaged) T(o);
@@ -69,14 +58,64 @@ namespace realm {
             return *this;
         }
     };
+
     template <typename T>
-    std::enable_if_t<type_info::is_optional<T>::value, rbool>
-    inline operator==(const persisted<T>& a, const T& b)
+    struct persisted<std::optional<T>, std::enable_if_t<std::is_base_of_v<object_base, T>>> :
+            public persisted_base<std::optional<T>> {
+        struct box {
+            box(T&& v)
+            : m_t(std::move(v))
+            {}
+            T* operator ->() {
+                return &m_t;
+            }
+        private:
+            T m_t;
+        };
+        operator bool() const {
+            if (this->is_managed()) {
+                return this->m_object->obj().is_null(this->managed);
+            } else {
+                return static_cast<bool>(this->unmanaged);
+            }
+        }
+        box operator ->() const {
+            return box(this->operator*());
+        }
+        persisted& operator=(const std::optional<T>& o) {
+            if (auto& obj = this->m_object) {
+                if (auto link = o) {
+                    // if non-null object is being assigned...
+                    if (link->m_object) {
+                        // if object is managed, we will to set the link
+                        // to the new target's key
+                        obj->obj().template set<internal::bridge::obj_key>(this->managed,
+                                link->m_object->obj().get_key());
+                    } else {
+                        // else new unmanaged object is being assigned.
+                        // we must assign the values to this object's fields
+                        // TODO:
+                        REALM_UNREACHABLE();
+                    }
+                } else {
+                    // else null link is being assigned to this field
+                    // e.g., `person.dog = std::nullopt;`
+                    // set the parent column to null and unset the co
+                    obj->obj().set_null(this->managed);
+                }
+            } else {
+                new (&this->unmanaged) std::optional<T>(o);
+            }
+            return *this;
+        }
+    };
+    template <typename T>
+    rbool inline operator==(const persisted<std::optional<T>>& a, const std::optional<T>& b)
     {
         if (a.should_detect_usage_for_queries) {
-            auto query = Query(a.query->get_table());
+            auto query = internal::bridge::query(a.query->get_table());
             if (b) {
-                query.equal(a.managed, type_info::persisted_type<T>::convert_if_required(*b));
+                query.equal(a.managed, internal::type_info::serialize(*b));
             } else {
                 query.equal(a.managed, realm::null{});
             }
@@ -90,34 +129,6 @@ namespace realm {
         } else {
             return false;
         }
-    }
-    template <typename T>
-    std::enable_if_t<type_info::is_optional<T>::value, rbool>
-    inline operator==(const persisted<T>& a, const typename T::value_type& b)
-    {
-        if (a.should_detect_usage_for_queries) {
-            auto query = Query(a.query->get_table());
-            query.equal(a.managed, type_info::persisted_type<typename T::value_type>::convert_if_required(b));
-            return {std::move(query)};
-        }
-
-        if (*a) {
-            return **a == b;
-        } else {
-            return false;
-        }
-    }
-    template <typename T>
-    std::enable_if_t<type_info::is_optional<T>::value, rbool>
-    inline operator==(const persisted<T>& a, const std::nullopt_t&)
-    {
-        if (a.should_detect_usage_for_queries) {
-            auto query = Query(a.query->get_table());
-            query.equal(a.managed, std::nullopt);
-            return {std::move(query)};
-        }
-
-        return !*a;
     }
 }
 

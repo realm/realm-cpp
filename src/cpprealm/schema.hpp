@@ -20,170 +20,29 @@
 #define realm_schema_hpp
 
 #include <variant>
-#include <cpprealm/persisted.hpp>
-
-#include <realm/object-store/object_schema.hpp>
-#include <realm/object-store/shared_realm.hpp>
+#include <cpprealm/internal/bridge/object_schema.hpp>
+#include <cpprealm/internal/bridge/table.hpp>
+#include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/internal/type_info.hpp>
 
 namespace realm {
-
+    template <typename, typename>
+    struct persisted;
 namespace {
+    template <typename T>
+    struct ptr_type_extractor_base;
+    template <typename Result, typename Class>
+    struct ptr_type_extractor_base<Result Class::*>
+    {
+        using class_type = Class;
+        using member_type = Result;
+    };
 
-template <typename T>
-struct ptr_type_extractor_base;
-template <typename Result, typename Class>
-struct ptr_type_extractor_base<Result Class::*>
-{
-    using class_type = Class;
-    using member_type = Result;
-};
-
-template <auto T>
-struct ptr_type_extractor : ptr_type_extractor_base<decltype(T)> {
-};
+    template <auto T>
+    struct ptr_type_extractor : ptr_type_extractor_base<decltype(T)> {
+    };
 }
 
-// MARK: property
-
-template <auto Ptr, bool IsPrimaryKey = false>
-struct property {
-    using Result = typename ptr_type_extractor<Ptr>::member_type::Result;
-    using Class = typename ptr_type_extractor<Ptr>::class_type;
-    const char* name = "";
-    constexpr property()
-            : type(type_info::persisted_type<Result>::property_type())
-    {
-    }
-    constexpr property(const char* name)
-    : type(type_info::persisted_type<Result>::property_type())
-    , name(name)
-    {
-    }
-
-    realm::Property to_property(const char* name) const {
-        if constexpr (type_info::NonOptionalPersistableConcept<Result>::value
-                      || type_info::EmbeddedObjectPersistableConcept<Result>::value
-                      || type_info::OptionalPersistableConcept<Result>::value) {
-            if constexpr (type_info::EmbeddedObjectPersistableConcept<Result>::value) {
-                return realm::Property(name, type, Result::schema.name);
-            } else if constexpr (type_info::is_optional<Result>::value) {
-                if constexpr (type_info::ObjectBasePersistableConcept<typename Result::value_type>::value) {
-                    return realm::Property(name, type, Result::value_type::schema.name);
-                } else if constexpr (type_info::PrimitivePersistableConcept<typename Result::value_type>::value ||
-                                    type_info::MixedPersistableConcept<typename Result::value_type>::value) {
-                    return realm::Property(name, type);
-                }
-            } else {
-                return realm::Property(name, type, is_primary_key);
-            }
-        } else if constexpr (type_info::ListPersistableConcept<Result>::value) {
-            if constexpr (type_info::EmbeddedObjectPersistableConcept<Result>::value) {
-                return realm::Property(name, type, Result::schema.name);
-            } else if constexpr (type_info::ObjectBasePersistableConcept<typename Result::value_type>::value) {
-                return realm::Property(name, type, Result::value_type::schema.name);
-            } else {
-                return realm::Property(name, type, is_primary_key);
-            }
-        }
-        else if constexpr (type_info::MapPersistableConcept<Result>::value) {
-            if constexpr (type_info::EmbeddedObjectPersistableConcept<Result>::value) {
-                return realm::Property(name, type, Result::schema.name);
-            } else if constexpr (type_info::ObjectBasePersistableConcept<typename Result::mapped_type>::value) {
-                return realm::Property(name, type, Result::mapped_type::schema.name);
-            } else {
-                return realm::Property(name, type, is_primary_key);
-            }
-        }
-        else {
-            return realm::Property(name, type, is_primary_key);
-        }
-    }
-
-    static void assign(Class& object, ColKey col_key, SharedRealm realm) {
-        (object.*Ptr).assign(object.m_object->obj(), col_key, realm);
-    }
-
-    static void set(Class& object, const std::string& property_name) {
-        if constexpr (type_info::PrimitivePersistableConcept<Result>::value
-                        || type_info::MixedPersistableConcept<Result>::value) {
-            object.m_object->template set_column_value(property_name, (object.*ptr).as_core_type());
-        }
-        else if constexpr (type_info::EmbeddedObjectPersistableConcept<Result>::value) {
-            auto field = (object.*ptr);
-            if (field.m_object) {
-                object.m_object->set_column_value(property_name, field.m_object->obj().get_key());
-            } else {
-                auto col_key = object.m_object->obj().get_table()->get_column_key(property_name);
-                auto target_table = object.m_object->obj().get_table()->get_link_target(col_key);
-                auto target_cls = *field;
-
-                auto realm = object.m_object->get_realm();
-                target_cls.m_object = Object(realm, object.m_object->obj().create_and_set_linked_object(col_key));
-                Result::schema.set(target_cls);
-            }
-        } else if constexpr (type_info::OptionalObjectPersistableConcept<Result>::value) {
-            auto field = (object.*ptr);
-            if (*field) {
-                if (field.m_object) {
-                    object.m_object->set_column_value(property_name, field.m_object->obj().get_key());
-                } else {
-                    auto col_key = object.m_object->obj().get_table()->get_column_key(property_name);
-                    auto target_table = object.m_object->obj().get_table()->get_link_target(col_key);
-                    auto target_cls = *field;
-
-                    auto realm = object.m_object->get_realm();
-                    if constexpr (decltype(Result::value_type::schema)::HasPrimaryKeyProperty) {
-                        using Schema = decltype(Result::value_type::schema);
-                        auto val = (**field).*Schema::PrimaryKeyProperty::ptr;
-                        target_cls->m_object = Object(realm, target_table->create_object_with_primary_key(*val));
-                    } else {
-                        target_cls->m_object = Object(realm, target_table->create_object());
-                    }
-                    Result::value_type::schema.set(*target_cls);
-                    object.m_object->obj().set(col_key, target_cls->m_object->obj().get_key());
-                }
-            }
-        } else if constexpr (type_info::ListPersistableConcept<Result>::value) {
-            auto col_key = object.m_object->obj().get_table()->get_column_key(property_name);
-            if constexpr (type_info::ObjectBasePersistableConcept<typename Result::value_type>::value) {
-                auto table = object.m_object->obj().get_table()->get_link_target(col_key);
-                auto i = 0;
-                for (auto& list_obj : (object.*ptr).unmanaged) {
-                    if (table->is_embedded()) {
-                        list_obj.m_object = Object(object.m_object->get_realm(),
-                                                   object.m_object->obj().get_linklist(col_key).create_and_insert_linked_object(i));
-                        Result::value_type::schema.set(list_obj);
-                        i++;
-                    } else {
-                        Result::value_type::schema.add(list_obj, table, object.m_object->get_realm());
-                        object.m_object->obj().get_linklist(col_key).add(list_obj.m_object->obj().get_key());
-                    }
-                }
-            } else {
-                object.m_object->obj().set_list_values(col_key, (object.*ptr).as_core_type());
-            }
-        } else if constexpr (type_info::OptionalPersistableConcept<Result>::value) {
-            auto val = (object.*ptr).as_core_type();
-            if (val) {
-                object.m_object->template set_column_value(property_name, *val);
-            }
-        } else if constexpr (type_info::MapPersistableConcept<Result>::value) {
-            auto val = (object.*ptr);
-            Dictionary dictionary = object.m_object->obj().get_dictionary(property_name);
-            for (auto [k,v] : val.unmanaged) {
-                Mixed mixed = type_info::persisted_type<typename Result::mapped_type>::convert_if_required(v);
-                dictionary.insert(k, mixed);
-            }
-        }
-        else {
-            object.m_object->template set_column_value(property_name, (object.*ptr).as_core_type());
-        }
-    }
-//    static constexpr const char* name = Name;
-    static constexpr persisted</*typename*/ Result/*::value*/> Class::*ptr = Ptr;
-    PropertyType type;
-    static constexpr bool is_primary_key = IsPrimaryKey;
-};
 namespace {
     constexpr std::size_t split(char const *str, char sep) {
         std::size_t ret{1u};
@@ -197,14 +56,175 @@ namespace {
 }
 
 
-template<typename... Ts>
-constexpr auto make_subpack_tuple(Ts&&... xs)
-{
-    return std::tuple<Ts...>(std::forward<Ts>(xs)...);
-}
+    template<typename... Ts>
+    constexpr auto make_subpack_tuple(Ts&&... xs)
+    {
+        return std::tuple<Ts...>(std::forward<Ts>(xs)...);
+    }
 
 // MARK: schema
-namespace internal {
+namespace schemagen {
+    template <auto Ptr, typename Class, typename Result, typename = void>
+    struct property_deducer {
+        static void set_object_link(internal::bridge::property& property) {}
+        static void manage(Class& object, const std::string& property_name) {
+            auto persisted = *(object.*Ptr);
+            object.m_object->template set_column_value(property_name, internal::type_info::serialize<Result>(persisted));
+        }
+    };
+    template <auto Ptr, typename Class, typename ValueType>
+    struct property_deducer<Ptr, Class, std::optional<ValueType>, std::enable_if_t<std::negation_v<std::is_base_of<object_base, ValueType>>>> {
+        static void set_object_link(internal::bridge::property& property) {}
+        static void manage(Class& object, const std::string& property_name) {
+            auto val = internal::type_info::serialize<std::optional<ValueType>>(*(object.*Ptr));
+            if (val) {
+                object.m_object->template set_column_value(property_name, *val);
+            }
+        }
+    };
+    template <auto Ptr, typename Class, typename ValueType>
+    struct property_deducer<Ptr, Class, std::optional<ValueType>, std::enable_if_t<std::is_base_of_v<object, ValueType>>> {
+        static void set_object_link(internal::bridge::property& property) {
+            property.set_object_link(ValueType::schema.name);
+        }
+        static void manage(Class& object, const std::string& property_name) {
+            persisted<std::optional<ValueType>, void> field = (object.*Ptr);
+            if (field) {
+                if (field.m_object) {
+                    object.m_object->set_column_value(property_name, field.m_object->obj().get_key());
+                } else {
+                    auto col_key = object.m_object->obj().get_table().get_column_key(property_name);
+                    auto target_table = object.m_object->obj().get_table().get_link_target(col_key);
+                    ValueType target_cls = *field;
+
+                    auto realm = object.m_object->get_realm();
+                    if constexpr (decltype(ValueType::schema)::HasPrimaryKeyProperty) {
+                        using Schema = decltype(ValueType::schema);
+                        auto val = (*field).*Schema::PrimaryKeyProperty::ptr;
+                        target_cls.m_object = internal::bridge::object(realm, target_table.create_object_with_primary_key(*val));
+                    } else {
+                        target_cls.m_object = internal::bridge::object(realm, target_table.create_object());
+                    }
+                    ValueType::schema.set(target_cls);
+                    object.m_object->obj().set(col_key, target_cls.m_object->obj().get_key());
+                }
+            }
+        }
+    };
+    template <auto Ptr, typename Class, typename ValueType>
+    struct property_deducer<Ptr, Class, std::optional<ValueType>, std::enable_if_t<std::is_base_of_v<embedded_object, ValueType>>> {
+        static void set_object_link(internal::bridge::property& property) {
+            property.set_object_link(ValueType::schema.name);
+        }
+        static void manage(Class& object, const std::string& property_name) {
+            auto field = (object.*Ptr);
+            if (field.m_object) {
+                object.m_object->set_column_value(property_name, field.m_object->obj().get_key());
+            } else {
+                auto col_key = object.m_object->obj().get_table().get_column_key(property_name);
+                auto target_table = object.m_object->obj().get_table().get_link_target(col_key);
+                auto target_cls = *field;
+
+                auto realm = object.m_object->get_realm();
+                target_cls.m_object = internal::bridge::object(realm,
+                                                               object.m_object->obj().create_and_set_linked_object(col_key));
+                ValueType::schema.set(target_cls);
+            }
+        }
+    };
+    template <auto Ptr, typename Class, typename ValueType>
+    struct property_deducer<Ptr, Class, std::vector<ValueType>, std::enable_if_t<std::negation<std::is_base_of<object_base, ValueType>>::value>> {
+        static void set_object_link(internal::bridge::property& property) {
+        }
+        static void manage(Class& object, const std::string& property_name) {
+            auto col_key = object.m_object->obj().get_table().get_column_key(property_name);
+            if constexpr (std::is_same_v<uint8_t, ValueType>) {
+
+            } else {
+                std::vector<typename internal::type_info::type_info<ValueType>::internal_type> v;
+                for (auto& e : object.*Ptr) {
+                    v.push_back(internal::type_info::serialize(e));
+                }
+                object.m_object->obj().set_list_values(col_key, v);
+            }
+
+        }
+    };
+    template <auto Ptr, typename Class, typename ValueType>
+    struct property_deducer<Ptr, Class, std::vector<ValueType>, std::enable_if_t<std::disjunction_v<std::is_base_of<object, ValueType>, std::is_base_of<embedded_object, ValueType>>>> {
+        static void set_object_link(internal::bridge::property& property) {
+            property.set_object_link(ValueType::schema.name);
+        }
+        static void manage(Class& object, const std::string& property_name) {
+            auto col_key = object.m_object->obj().get_table().get_column_key(property_name);
+            auto table = object.m_object->obj().get_table().get_link_target(col_key);
+            auto i = 0;
+            for (auto& list_obj : (object.*Ptr).unmanaged) {
+                if (table.is_embedded()) {
+                    list_obj.m_object = internal::bridge::object(object.m_object->get_realm(),
+                                                            object.m_object->obj().get_linklist(col_key).create_and_insert_linked_object(i));
+                    ValueType::schema.set(list_obj);
+                    i++;
+                } else {
+                    ValueType::schema.add(list_obj, table, object.m_object->get_realm());
+                    object.m_object->obj().get_linklist(col_key).add(list_obj.m_object->obj().get_key());
+                }
+            }
+        }
+    };
+    template <auto Ptr, typename Class, typename ValueType>
+    struct property_deducer<Ptr, Class, std::map<std::string, ValueType>> {
+        static void set_object_link(internal::bridge::property& property) {
+            if constexpr (std::is_base_of_v<object_base, ValueType>)
+                property.set_object_link(ValueType::schema.name);
+        }
+        static void manage(Class& object, const std::string& property_name) {
+            auto val = (object.*Ptr);
+            auto dictionary = object.m_object->obj().get_dictionary(property_name);
+            for (auto [k, v] : val.unmanaged) {
+                internal::bridge::mixed mixed = internal::type_info::serialize(v);
+                dictionary.insert(k, mixed);
+            }
+        }
+    };
+
+    template <auto Ptr, bool IsPrimaryKey = false>
+    struct property {
+        using Result = typename ptr_type_extractor<Ptr>::member_type::Result;
+        using Class = typename ptr_type_extractor<Ptr>::class_type;
+        const char* name = "";
+        constexpr property() : type(internal::type_info::type_info<Result>::type())
+        {
+        }
+        constexpr property(const char* name)
+                : type(internal::type_info::type_info<Result>::type())
+                , name(name)
+        {
+        }
+
+        internal::bridge::property to_property(const char* name) const {
+            internal::bridge::property property(name, type, is_primary_key);
+            property_deducer<Ptr, Class, Result>::set_object_link(property);
+            return property;
+        }
+
+        static void assign(Class& object, internal::bridge::col_key col_key, internal::bridge::realm realm) {
+            (object.*Ptr).manage(object.m_object->obj(), col_key, realm);
+        }
+
+        static void set(Class& object, const std::string& property_name) {
+            property_deducer<Ptr, Class, Result>::manage(object, property_name);
+        }
+        static constexpr persisted<Result, void> Class::*ptr = Ptr;
+        internal::bridge::property::type type;
+        static constexpr bool is_primary_key = IsPrimaryKey;
+    };
+
+
+    template <auto Ptr, bool IsPrimaryKey>
+    internal::bridge::property to_property(schemagen::property<Ptr, IsPrimaryKey> persisted_property,
+                                           const char* name);
+
     template<typename Class, typename ...Properties>
     struct schema {
 
@@ -245,7 +265,6 @@ namespace internal {
 
         template<size_t N, typename P>
         static constexpr auto primary_key(P &) {
-//        static_assert(type_info::Propertyable<P>::value, "Type P is not a supported Property type");
             if constexpr (P::is_primary_key) {
                 return P();
             } else {
@@ -266,25 +285,25 @@ namespace internal {
         static constexpr bool IsEmbedded = std::is_base_of_v<embedded_object, Class>;
 
         template<size_t N, typename P>
-        constexpr auto to_property(realm::ObjectSchema &schema, P &p) const {
+        constexpr auto to_property(internal::bridge::object_schema &schema, P &p) const {
             if constexpr (N + 1 == sizeof...(Properties)) {
-                schema.persisted_properties.push_back(p.to_property(names[N]));
+                schema.add_property(p.to_property(names[N]));
                 return;
             } else {
-                schema.persisted_properties.push_back(p.to_property(names[N]));
+                schema.add_property(p.to_property(names[N]));
                 return to_property<N + 1>(schema, std::get<N + 1>(properties));
             }
         }
 
-        realm::ObjectSchema to_core_schema() const {
-            realm::ObjectSchema schema;
-            schema.name = name;
+        internal::bridge::object_schema to_core_schema() const {
+            internal::bridge::object_schema schema;
+            schema.set_name(name);
             to_property<0>(schema, std::get<0>(properties));
             if constexpr (HasPrimaryKeyProperty) {
-                schema.primary_key = primary_key_name;
+                schema.set_primary_key(primary_key_name);
             }
             if constexpr (IsEmbedded) {
-                schema.table_type = ObjectSchema::ObjectType::Embedded;
+                schema.set_object_type(internal::bridge::object_schema::object_type::Embedded);
             }
             return schema;
         }
@@ -327,42 +346,47 @@ namespace internal {
         template<size_t N, typename P>
         constexpr auto assign(Class &object, P &property) const {
             if constexpr (N + 1 == sizeof...(Properties)) {
-                property.assign(object, object.m_object->obj().get_table()->get_column_key(names[N]),
-                                object.m_object->realm());
+                property.assign(object, object.m_object->obj().get_table().get_column_key(names[N]),
+                                object.m_object->get_realm());
                 return;
             } else {
-                property.assign(object, object.m_object->obj().get_table()->get_column_key(names[N]),
-                                object.m_object->realm());
+                property.assign(object, object.m_object->obj().get_table().get_column_key(names[N]),
+                                object.m_object->get_realm());
                 return assign<N + 1>(object, std::get<N + 1>(properties));
             }
         }
 
-        Class create(Obj &&obj, const SharedRealm &realm) const {
+        Class create(internal::bridge::obj &&obj, const internal::bridge::realm &realm) const {
             Class cls;
-            cls.m_object = Object(realm, obj);
+            cls.m_object = internal::bridge::object(realm, obj);
             assign<0>(cls, std::get<0>(properties));
             return cls;
         }
 
-        std::unique_ptr<Class> create_unique(Obj &&obj, const SharedRealm &realm) const {
+        std::unique_ptr<Class> create_unique(internal::bridge::obj &&obj, const internal::bridge::realm &realm) const {
             auto cls = std::make_unique<Class>();
-            cls->m_object = Object(realm, obj);
+            cls->m_object = internal::bridge::object(realm, obj);
             assign<0>(*cls, std::get<0>(properties));
             return cls;
         }
 
-        void add(Class &object, TableRef table, SharedRealm realm) const {
+        void add(Class &object, internal::bridge::table table, internal::bridge::realm realm) const {
             if constexpr (HasPrimaryKeyProperty) {
                 auto pk = *(object.*PrimaryKeyProperty::ptr);
-                object.m_object = Object(realm, table->create_object_with_primary_key(pk));
+                object.m_object = internal::bridge::object(realm, table.create_object_with_primary_key(pk));
             } else {
-                object.m_object = Object(realm, table->create_object(ObjKey{}));
+                object.m_object = internal::bridge::object(realm, table.create_object());
             }
 
             set(object);
             assign<0>(object, std::get<0>(properties));
         }
     };
+}
+template <auto Ptr, bool IsPrimaryKey = false>
+static constexpr auto property(const char* name)
+{
+    return schemagen::property<Ptr, IsPrimaryKey>(name);
 }
 
 template <typename ...T>
@@ -371,8 +395,9 @@ static constexpr auto schema(const char * name,
     auto tup = make_subpack_tuple(props...);
     auto i = std::get<0>(tup);
     using i2 = typename decltype(i)::Class;
-    return internal::schema<i2, T...>(name, std::move(props)...);
+    return schemagen::schema<i2, T...>(name, std::move(props)...);
 }
+
 }
 
 #endif /* realm_schema_hpp */

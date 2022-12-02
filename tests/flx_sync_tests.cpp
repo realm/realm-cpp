@@ -9,9 +9,8 @@ TEST_CASE("flx_sync", "[flx][sync]") {
     SECTION("all") {
         auto app = realm::App(Admin::shared().create_app({"str_col", "_id"}), Admin::shared().base_url());
         auto user = app.login(realm::App::Credentials::anonymous()).get_future().get();
-        auto flx_sync_config = user.flexible_sync_configuration();
-        auto tsr = realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(
-                flx_sync_config).get_future().get();
+        auto flx_sync_config = user.flexible_sync_configuration<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>();
+        auto tsr = realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config).get_future().get();
         auto synced_realm = tsr.resolve();
 
         auto update_success = synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
@@ -45,7 +44,7 @@ TEST_CASE("flx_sync", "[flx][sync]") {
         synced_realm.write([]() {}); // refresh realm
         auto objs = synced_realm.objects<AllTypesObject>();
 
-        CHECK(objs[0]->_id == 1);
+        CHECK(objs[0]._id == 1);
 
         synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
             subs.update_subscription<AllTypesObject>("foo-strings", [](auto &obj) {
@@ -86,11 +85,8 @@ TEST_CASE("flx_sync", "[flx][sync]") {
         CHECK(objs.size() == 2);
 
         // Open realm with completion handler.
-        std::promise<void> p;
-        realm::async_open_realm<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config, [&](realm::thread_safe_reference<realm::db<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>> t, std::exception_ptr e) {
-            tsr = std::move(t);
-            p.set_value();
-        });
+//        std::promise<void> p;
+        auto p = realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config);
         p.get_future().get();
 
         synced_realm = tsr.resolve();
@@ -101,7 +97,7 @@ TEST_CASE("flx_sync", "[flx][sync]") {
 
 TEST_CASE("tsr") {
     realm_path path;
-    auto realm = realm::open<Person, Dog>({.path=path});
+    auto realm = realm::open<Person, Dog>(path);
 
     auto person = Person { .name = "John", .age = 17 };
     person.dog = Dog {.name = "Fido"};
@@ -113,7 +109,7 @@ TEST_CASE("tsr") {
     auto tsr = realm::thread_safe_reference<Person>(person);
     std::promise<void> p;
     auto t = std::thread([&tsr, &p, &path]() {
-        auto realm = realm::open<Person, Dog>({.path=path});
+        auto realm = realm::open<Person, Dog>(path);
         auto person = realm.resolve(std::move(tsr));
         CHECK(*person.age == 17);
         realm.write([&] { realm.remove(person); });

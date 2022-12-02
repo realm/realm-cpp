@@ -42,7 +42,7 @@ TEST_CASE("map", "[map]") {
         CHECK(obj.map_binary_col["a"] == std::vector<uint8_t>{0, 1, 2});
         CHECK(obj.map_link_col["a"] == AllTypesObjectLink());
         CHECK(obj.map_embedded_col["a"] == AllTypesObjectEmbedded());
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(path);
         realm.write([&realm, &obj] {
             realm.add(obj);
         });
@@ -91,7 +91,7 @@ TEST_CASE("map", "[map]") {
             if (k == "a") CHECK(v == "foo");
             else if (k == "b") CHECK(v == "bar");
         }
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(path);
         realm.write([&realm, &obj] {
             realm.add(obj);
         });
@@ -106,7 +106,7 @@ TEST_CASE("map", "[map]") {
         obj.map_str_col = {
                 {"a", "foo"}
         };
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({.path=path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(path);
         realm.write([&realm, &obj] {
             realm.add(obj);
         });

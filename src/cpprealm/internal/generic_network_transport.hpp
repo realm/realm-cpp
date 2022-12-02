@@ -21,8 +21,7 @@
 
 #include <realm/object-store/sync/impl/sync_client.hpp>
 
-namespace realm {
-namespace internal {
+namespace realm::internal {
 
 class DefaultTransport : public app::GenericNetworkTransport {
 public:
@@ -30,7 +29,6 @@ public:
                                 app::HttpCompletion &&completion_block) override;
 };
 
-} // namespace internal
 } // namespace realm
 
 #endif //realm_cpp_generic_network_transport

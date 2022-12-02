@@ -1,44 +1,33 @@
-////////////////////////////////////////////////////////////////////////////
-//
-// Copyright 2022 Realm Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-////////////////////////////////////////////////////////////////////////////
+#ifndef CPP_REALM_UUID_HPP
+#define CPP_REALM_UUID_HPP
 
-#ifndef REALM_PERSISTED_UUID_HPP
-#define REALM_PERSISTED_UUID_HPP
-
+#include <string>
+#include <cpprealm/type_info.hpp>
 #include <cpprealm/persisted.hpp>
 
 namespace realm {
-    template<typename T>
-    struct persisted<T, type_info::UUIDPersistable<T>> : public persisted_noncontainer_base<T> {
-        using persisted_noncontainer_base<T>::persisted_noncontainer_base;
-        using persisted_noncontainer_base<T>::operator*;
-        using persisted_noncontainer_base<T>::operator=;
+    struct uuid {
+        explicit uuid(const std::string &);
+        [[nodiscard]] std::string to_string() const;
+        uuid() = default;
+    private:
+        uuid(const internal::bridge::uuid&);
+        template <typename T, typename>
+        friend typename internal::type_info::type_info<std::decay_t<T>>::internal_type internal::type_info::serialize(T);
+        template <typename T, typename>
+        friend T internal::type_info::deserialize(typename internal::type_info::type_info<T>::internal_type&&);
+        internal::bridge::uuid m_uuid;
+        template <typename mapped_type>
+        friend struct box_base;
+    };
 
-        persisted& operator=(const T& o) override {
-            if (auto obj = this->m_object) {
-                obj->obj().template set<UUID>(
-                        this->managed,
-                        type_info::persisted_type<T>::convert_if_required(o));
-            } else {
-                new (&this->unmanaged) T(o);
-            }
-            return *this;
-        }
+    rbool operator ==(const uuid& lhs, const uuid& rhs);
+    rbool operator !=(const uuid& lhs, const uuid& rhs);
+
+    template <>
+    struct persisted<uuid> : persisted_base<uuid> {
+        using persisted_base<uuid>::persisted_base;
     };
 }
 
-#endif //REALM_PERSISTED_UUID_HPP
+#endif // CPP_REALM_UUID_HPP

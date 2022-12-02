@@ -21,11 +21,11 @@
 
 #include <cpprealm/persisted.hpp>
 #include <cpprealm/notifications.hpp>
+#include <cpprealm/internal/bridge/dictionary.hpp>
 
-#include <realm/object-store/dictionary.hpp>
+#include <utility>
 
 namespace realm {
-
     template <typename T>
     class persisted_map_base : public persisted_base<T> {
     public:
@@ -55,8 +55,7 @@ namespace realm {
             {
                 if (m_parent->m_object) {
                     auto pair = (*m_parent).m_object->obj().get_dictionary(m_parent->managed).get_pair(m_i);
-                    return { pair.first.template get<StringData>(),
-                            pair.second.template get<typename type_info::persisted_type<mapped_type>::type>() };
+                    return { pair.first, internal::type_info::deserialize<mapped_type>(pair.second) };
                 } else {
                     return *m_idx;
                 }
@@ -137,10 +136,10 @@ namespace realm {
         /// @param object The parent object
         /// @param col_key The column key for this property
         /// @param realm The Realm instance managing the parent.
-        void assign(const Obj& object, const ColKey& col_key, SharedRealm realm) {
-            this->m_object = Object(realm, object);
-            this->managed = ColKey(col_key);
-            m_backing_map = object_store::Dictionary(realm, object, this->managed);
+        void assign(const internal::bridge::obj& object, const int64_t& col_key, internal::bridge::realm realm) {
+            this->m_object = internal::bridge::object(realm, object);
+            this->managed = col_key;
+            m_backing_map = internal::bridge::dictionary(realm, object, this->managed);
         }
 
         typename T::mapped_type operator[](typename T::key_type& key) {
@@ -160,7 +159,7 @@ namespace realm {
         }
 
     protected:
-        object_store::Dictionary m_backing_map;
+        internal::bridge::dictionary m_backing_map;
         template <typename>
         friend class persisted_primitive_container_base;
         template <typename>
@@ -192,28 +191,28 @@ namespace realm {
     template <typename T>
     notification_token persisted_map_base<T>::observe(std::function<void(collection_change<T>)> handler)
     {
-        if (!this->m_object) {
-            throw std::runtime_error("Only collections which are managed by a Realm support change notifications");
-        }
-
-        if (!this->m_object->is_valid()) {
-            throw std::runtime_error("Only collections which are managed by a Realm support change notifications");
-        }
-
-        notification_token token;
-        Realm::Config config = this->m_object->realm()->config();
-        auto tsr = ThreadSafeReference(m_backing_map);
-        auto tsr_o = ThreadSafeReference(*this->m_object);
-        config.scheduler = LooperScheduler::make();
-        auto realm = Realm::get_shared_realm(config);
-        token.m_realm = realm;
-        auto scheduler = std::reinterpret_pointer_cast<LooperScheduler>(token.m_realm->scheduler());
-        scheduler->l.push(std::packaged_task<void()>([&token, &handler, &tsr, &tsr_o, this]() {
-            token.m_object = tsr_o.template resolve<Object>(token.m_realm);
-            token.m_dictionary = tsr.template resolve<object_store::Dictionary>(token.m_realm);
-            token.m_token = token.m_dictionary.add_notification_callback(collection_callback_wrapper<T> { std::move(handler), *static_cast<persisted<T>*>(this), false });
-        })).get_future().get();
-        return std::move(token);
+//        if (!this->m_object) {
+//            throw std::runtime_error("Only collections which are managed by a Realm support change notifications");
+//        }
+//
+//        if (!this->m_object->is_valid()) {
+//            throw std::runtime_error("Only collections which are managed by a Realm support change notifications");
+//        }
+//
+//        notification_token token;
+//        Realm::Config config = this->m_object->realm()->config();
+//        auto tsr = ThreadSafeReference(m_backing_map);
+//        auto tsr_o = ThreadSafeReference(*this->m_object);
+//        config.scheduler = LooperScheduler::make();
+//        auto realm = Realm::get_shared_realm(config);
+//        token.m_realm = realm;
+//        auto scheduler = std::reinterpret_pointer_cast<LooperScheduler>(token.m_realm->scheduler());
+//        scheduler->l.push(std::packaged_task<void()>([&token, &handler, &tsr, &tsr_o, this]() {
+//            token.m_object = tsr_o.template resolve<Object>(token.m_realm);
+//            token.m_dictionary = tsr.template resolve<object_store::Dictionary>(token.m_realm);
+//            token.m_token = token.m_dictionary.add_notification_callback(collection_callback_wrapper<T> { std::move(handler), *static_cast<persisted<T>*>(this), false });
+//        })).get_future().get();
+//        return std::move(token);
     }
 
     template <typename mapped_type>
@@ -223,10 +222,10 @@ namespace realm {
         {
             is_managed = false;
         }
-        box_base(realm::object_store::Dictionary& backing_map,
+        box_base(internal::bridge::dictionary& backing_map,
                  std::string key)
                 : m_backing_map(backing_map)
-                , m_key(key)
+                , m_key(std::move(key))
         {
             is_managed = true;
         }
@@ -241,7 +240,7 @@ namespace realm {
         box_base& operator=(mapped_type&& o) {
             if (is_managed) {
                 m_backing_map.get().insert(m_key,
-                                           type_info::persisted_type<mapped_type>::convert_if_required(std::move(o)));
+                                           internal::type_info::serialize<mapped_type>(std::move(o)));
             } else {
                 m_val.get() = std::move(o);
             }
@@ -250,15 +249,15 @@ namespace realm {
 
         bool operator==(const mapped_type& rhs) const {
             if (is_managed) {
-                return type_info::persisted_type<mapped_type>::convert_if_required(rhs) ==
-                       this->m_backing_map.get().template get<typename type_info::persisted_type<mapped_type>::type>(this->m_key);
+                return internal::type_info::serialize<mapped_type>(rhs) ==
+                       this->m_backing_map.get().template get<typename internal::type_info::type_info<mapped_type>::internal_type>(this->m_key);
             } else {
                 return rhs == m_val.get();
             }
         }
 
         union {
-            std::reference_wrapper<realm::object_store::Dictionary> m_backing_map;
+            std::reference_wrapper<internal::bridge::dictionary> m_backing_map;
             std::reference_wrapper<mapped_type> m_val;
         };
         bool is_managed;
@@ -266,83 +265,80 @@ namespace realm {
     };
     template <typename V, typename = void>
     struct box;
+    template <>
+    struct box<int64_t> : public box_base<int64_t> {
+        using box_base<int64_t>::box_base;
+        using box_base<int64_t>::operator=;
+    };
+    template <>
+    struct box<bool> : public box_base<bool> {
+        using box_base<bool>::box_base;
+        using box_base<bool>::operator=;
+    };
     template <typename V>
-    struct box<V, type_info::IntPersistable<V>> : public box_base<V> {
+    struct box<V, std::enable_if_t<std::is_enum_v<V>>> : public box_base<V> {
         using box_base<V>::box_base;
         using box_base<V>::operator=;
     };
-    template <typename V>
-    struct box<V, type_info::BoolPersistable<V>> : public box_base<V> {
-        using box_base<V>::box_base;
-        using box_base<V>::operator=;
+    template <>
+    struct box<uuid> : public box_base<uuid> {
+        using box_base<uuid>::box_base;
+        using box_base<uuid>::operator=;
+    };
+    template <>
+    struct box<std::vector<uint8_t>> : public box_base<std::vector<uint8_t>> {
+        using box_base<std::vector<uint8_t>>::box_base;
+        using box_base<std::vector<uint8_t>>::operator=;
+    };
+    template <>
+    struct box<std::string> : public box_base<std::string> {
+        using box_base<std::string>::box_base;
+        using box_base<std::string>::operator=;
     };
     template <typename V>
-    struct box<V, type_info::EnumPersistable<V>> : public box_base<V> {
-        using box_base<V>::box_base;
-        using box_base<V>::operator=;
-    };
-    template <typename V>
-    struct box<V, type_info::UUIDPersistable<V>> : public box_base<V> {
-        using box_base<V>::box_base;
-        using box_base<V>::operator=;
-    };
-    template <typename V>
-    struct box<V, type_info::BinaryPersistable<V>> : public box_base<V> {
-        using box_base<V>::box_base;
-        using box_base<V>::operator=;
-    };
-    template <typename V>
-    struct box<V, type_info::StringPersistable<V>> : public box_base<V> {
-        using box_base<V>::box_base;
-        using box_base<V>::operator=;
-
-        bool operator==(const char* rhs) const {
-            if (this->is_managed) {
-                return rhs == this->m_backing_map.get().template get<typename type_info::persisted_type<V>::type>(this->m_key);
-            } else {
-                return rhs == this->m_val.get();
-            }
-        }
-    };
-    template <typename V>
-    struct box<V, type_info::ObjectBasePersistable<V>> : public box_base<V> {
+    struct box<V, std::enable_if_t<std::is_base_of_v<object_base, V>>> : public box_base<V> {
         using box_base<V>::box_base;
         using box_base<V>::operator=;
         using box_base<V>::operator==;
     };
-    template <typename T>
-    struct persisted<T, type_info::MapPrimitivePersistable<T>> : public persisted_primitive_map_base<T> {
-        using persisted_primitive_map_base<T>::persisted_primitive_map_base;
-        using persisted_primitive_map_base<T>::operator=;
-        using value_type = typename T::value_type;
-        using mapped_type = typename T::mapped_type;
-        using size_type = typename T::size_type;
-        using typename persisted_map_base<T>::iterator;
-        using persisted_primitive_map_base<T>::end;
-        using persisted_primitive_map_base<T>::size;
-        using persisted_primitive_map_base<T>::erase;
-        using persisted_primitive_map_base<T>::clear;
-        using persisted_primitive_map_base<T>::observe;
 
-        persisted& operator=(const T& o) override {
-            if (std::optional<Object>& obj = this->m_object) {
-                realm::Dictionary dictionary = obj->obj().get_dictionary(this->managed);
+    template <typename T>
+    struct persisted<std::map<std::string, T>> : public persisted_map_base<std::map<std::string, T>> {
+        using persisted_map_base<std::map<std::string, T>>::persisted_map_base;
+        using persisted_map_base<std::map<std::string, T>>::operator=;
+        using value_type = typename std::map<std::string, T>::value_type;
+        using mapped_type = typename std::map<std::string, T>::mapped_type;
+        using size_type = typename std::map<std::string, T>::size_type;
+        using typename persisted_map_base<std::map<std::string, T>>::iterator;
+        using persisted_map_base<std::map<std::string, T>>::end;
+        using persisted_map_base<std::map<std::string, T>>::size;
+        using persisted_map_base<std::map<std::string, T>>::erase;
+        using persisted_map_base<std::map<std::string, T>>::clear;
+        using persisted_map_base<std::map<std::string, T>>::observe;
+
+        persisted& operator=(const std::map<std::string, T>& o) {
+            if (this->is_managed()) {
+                auto dictionary = this->m_object->obj().get_dictionary(this->managed);
                 dictionary.clear();
                 for (auto& [k, v] : o) {
-                    dictionary.insert(k, type_info::persisted_type<mapped_type>::convert_if_required(v));
+                    dictionary.insert(k, internal::type_info::serialize<mapped_type>(v));
                 }
             } else {
-                new (&this->unmanaged) T(o);
+                new (&this->unmanaged) std::map<std::string, T>(o);
             }
             return *this;
         }
 
-        T operator *() const {
-            if (std::optional<Object>& obj = this->m_object) {
-                Dictionary dictionary = obj->obj().get_dictionary(this->managed);
-                T map;
-                for (auto [k, v] : dictionary) {
-                    map.insert(k, v);
+        std::map<std::string, T> operator *() const {
+            if (this->is_managed()) {
+                internal::bridge::dictionary dictionary = this->m_object->obj().get_dictionary(this->managed);
+                std::map<std::string, T> map;
+                for (size_t i = 0; i < dictionary.size(); i++) {
+                    auto pair = dictionary.get_pair(i);
+
+                    map.insert({pair.first, internal::type_info::deserialize<T>(
+                            static_cast<typename internal::type_info::type_info<T>::internal_type>(pair.second)
+                    )});
                 }
                 return map;
             } else {
@@ -350,111 +346,7 @@ namespace realm {
             }
         }
 
-        box<mapped_type> operator[](typename T::key_type a) {
-            if (this->m_object) {
-                return box<mapped_type>(this->m_backing_map, a);
-            } else {
-                return box<mapped_type>(this->unmanaged[a]);
-            }
-        }
-    };
-
-    template <typename T>
-    struct persisted<T, type_info::MapMixedPersistable<T>> : public persisted_map_base<T> {
-        using persisted_map_base<T>::persisted_map_base;
-        using persisted_map_base<T>::operator=;
-        using value_type = typename T::value_type;
-        using mapped_type = typename T::mapped_type;
-        using size_type = typename T::size_type;
-        using typename persisted_map_base<T>::iterator;
-        using persisted_map_base<T>::end;
-        using persisted_map_base<T>::size;
-        using persisted_map_base<T>::erase;
-        using persisted_map_base<T>::clear;
-        using persisted_map_base<T>::observe;
-
-        persisted& operator=(const T& o) override {
-            if (std::optional<Object>& obj = this->m_object) {
-                realm::Dictionary dictionary = obj->obj().get_dictionary(this->managed);
-                dictionary.clear();
-                for (auto& [k, v] : o) {
-                    dictionary.insert(k, type_info::persisted_type<mapped_type>::convert_if_required(v));
-                }
-            } else {
-                new (&this->unmanaged) T(o);
-            }
-            return *this;
-        }
-
-        T operator *() const {
-            if (std::optional<Object>& obj = this->m_object) {
-                Dictionary dictionary = obj->obj().get_dictionary(this->managed);
-                T map;
-                for (auto [k, v] : dictionary) {
-                    map.insert(k, v);
-                }
-                return map;
-            } else {
-                return this->unmanaged;
-            }
-        }
-
-        box<mapped_type> operator[](typename T::key_type a) {
-            if (this->m_object) {
-                if constexpr (realm::type_info::BinaryPersistableConcept<typename T::mapped_type>::value) {
-                    return box<mapped_type>(this->m_backing_map, a);
-                } else if constexpr (type_info::MixedPersistableConcept<typename T::mapped_type>::value) {
-                    return type_info::mixed_to_variant<typename T::mapped_type>(this->m_backing_map.template get<typename type_info::persisted_type<typename T::value_type>::type>(a));
-                } else {
-                    return box<mapped_type>(this->m_backing_map, a);
-                }
-            } else {
-                return box<mapped_type>(this->unmanaged[a]);
-            }
-        }
-    };
-
-    template <typename T>
-    struct persisted<T, type_info::MapObjectPersistable<T>> : public persisted_map_base<T> {
-        using persisted_map_base<T>::persisted_map_base;
-        using persisted_map_base<T>::operator=;
-        using value_type = typename T::value_type;
-        using mapped_type = typename T::mapped_type;
-        using size_type = typename T::size_type;
-        using typename persisted_map_base<T>::iterator;
-        using persisted_map_base<T>::end;
-        using persisted_map_base<T>::size;
-        using persisted_map_base<T>::erase;
-        using persisted_map_base<T>::clear;
-        using persisted_map_base<T>::observe;
-
-        persisted& operator=(const T& o) override {
-            if (std::optional<Object>& obj = this->m_object) {
-                realm::Dictionary dictionary = obj->obj().get_dictionary(this->managed);
-                dictionary.clear();
-                for (auto& [k, v] : o) {
-                    dictionary.insert(k, type_info::persisted_type<mapped_type>::convert_if_required(v));
-                }
-            } else {
-                new (&this->unmanaged) T(o);
-            }
-            return *this;
-        }
-
-        T operator *() const {
-            if (std::optional<Object>& obj = this->m_object) {
-                Dictionary dictionary = obj->obj().get_dictionary(this->managed);
-                T map;
-                for (auto [k, v] : dictionary) {
-                    map.insert(k, v);
-                }
-                return map;
-            } else {
-                return this->unmanaged;
-            }
-        }
-
-        box<mapped_type> operator[](typename T::key_type a) {
+        box<mapped_type> operator[](const std::string& a) {
             if (this->m_object) {
                 return box<mapped_type>(this->m_backing_map, a);
             } else {

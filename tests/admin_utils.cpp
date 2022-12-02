@@ -19,6 +19,7 @@
 #include <thread>
 #include <filesystem>
 #include <sstream>
+#include <numeric>
 
 #include "admin_utils.hpp"
 
