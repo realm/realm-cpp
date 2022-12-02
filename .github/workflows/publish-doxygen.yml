@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+env:
+  DOXYGEN_PROJECT_NUMBER: Pre-alpha version ${{ github.ref_name }}@${{ github.sha }}
+
 jobs:
   publish:
     runs-on: ubuntu-latest
