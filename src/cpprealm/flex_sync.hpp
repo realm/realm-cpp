@@ -30,31 +30,31 @@ namespace realm {
 struct SyncSubscription {
     // Returns the unique ID for this subscription.
     const std::string identifier() const {
-        return m_subscription->id().to_string();
+        return m_subscription.id.to_string();
     }
 
     // The name representing this subscription.
     std::string_view name() const {
-        return m_subscription->name();
+        return m_subscription.name ? *m_subscription.name : "";
     }
     // Returns the timestamp of when this subscription was originally created.
     const std::chrono::time_point<std::chrono::system_clock> created_at() const {
-        return m_subscription->created_at().get_time_point();
+        return m_subscription.created_at.get_time_point();
     }
     // Returns the timestamp of the last time this subscription was updated by calling update_query.
     const std::chrono::time_point<std::chrono::system_clock> updated_at() const {
-        return m_subscription->updated_at().get_time_point();
+        return m_subscription.updated_at.get_time_point();
     }
     // Returns a stringified version of the query associated with this subscription.
     std::string_view query_string() const {
-        return m_subscription->query_string();
+        return m_subscription.query_string;
     }
     // Returns the name of the object class of the query for this subscription.
     std::string_view object_class_name() const {
-        return m_subscription->object_class_name();
+        return m_subscription.object_class_name;
     }
 
-    std::unique_ptr<sync::Subscription> m_subscription;
+    const sync::Subscription& m_subscription;
 };
 
 // A MutableSyncSubscriptionSet represents a single query that may be OR'd with other queries on the same object class to be
@@ -84,20 +84,18 @@ public:
     // Removes a subscription for a given name. Will throw if subscription does
     // not exist.
     void remove(const std::string& name) {
-        auto it = m_subscription_set.find(name);
-        if (it != m_subscription_set.end()) {
-            m_subscription_set.erase(it);
+        bool success = m_subscription_set.erase(name);
+        if (success)
             return;
-        }
         throw std::logic_error("Subscription cannot be found");
     }
 
     // Finds a subscription for a given name. Will return `std::nullopt` is subscription does
     // not exist.
     std::optional<SyncSubscription> find(const std::string& name) {
-        auto it = m_subscription_set.find(name);
-        if (it != m_subscription_set.end()) {
-            return SyncSubscription {std::make_unique<realm::sync::Subscription>(*it)};
+        const sync::Subscription* sub = m_subscription_set.find(name);
+        if (sub != nullptr) {
+            return SyncSubscription {*sub};
         }
         return std::nullopt;
     }
@@ -142,9 +140,9 @@ public:
     // Finds a subscription for a given name. Will return `std::nullopt` is subscription does
     // not exist.
     std::optional<SyncSubscription> find(const std::string& name) {
-        auto it = m_subscription_set.find(name);
-        if (it != m_subscription_set.end()) {
-            return SyncSubscription {std::make_unique<realm::sync::Subscription>(*it)};
+        const sync::Subscription* sub = m_subscription_set.find(name);
+        if (sub != nullptr) {
+            return SyncSubscription {*sub};
         }
         return std::nullopt;
     }

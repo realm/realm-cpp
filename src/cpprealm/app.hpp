@@ -32,7 +32,6 @@
 #include <future>
 
 namespace realm {
-
 // MARK: User
 template <typename ...Ts>
 static inline std::promise<thread_safe_reference<db<Ts...>>> async_open(const db_config& config);
@@ -327,7 +326,7 @@ static_assert((int)User::state::removed    == (int)SyncUser::State::Removed);
 
 class App {
     static std::unique_ptr<util::Logger> defaultSyncLogger(util::Logger::Level level) {
-        struct SyncLogger : public util::RootLogger {
+    struct SyncLogger : public util::Logger {
             void do_log(Level level, const std::string& message) override {
                 std::string copy = message;
                 switch (level) {
@@ -348,7 +347,10 @@ class App {
         return std::move(logger);
     }
 public:
-    explicit App(const std::string& app_id, const std::optional<std::string>& base_url = {})
+    explicit App(const std::string& app_id,
+                 const std::optional<std::string>& base_url = std::nullopt,
+                 const std::optional<std::string>& file_path = std::nullopt,
+                 std::optional<std::shared_ptr<app::GenericNetworkTransport>> network_transport = std::nullopt)
     {
         #if QT_CORE_LIB
         util::Scheduler::set_default_factory(util::make_qt);
@@ -368,15 +370,18 @@ public:
         }
         config.base_file_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
         #else
-        config.base_file_path = std::filesystem::current_path();
+        if (file_path)
+            config.base_file_path = *file_path;
+        else
+            config.base_file_path = std::filesystem::current_path();
         #endif
         config.user_agent_binding_info = "RealmCpp/0.0.1";
         config.user_agent_application_info = app_id;
 
         m_app = app::App::get_shared_app(app::App::Config{
             .app_id=app_id,
-            .transport = std::make_shared<internal::DefaultTransport>(),
-            .base_url = base_url ? base_url : util::Optional<std::string>(),
+            .transport = network_transport ? *network_transport : std::make_shared<internal::DefaultTransport>(),
+            .base_url = base_url ? base_url : std::nullopt,
             .platform="Realm Cpp",
             .platform_version="?",
             .sdk_version="0.0.1",

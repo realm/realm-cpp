@@ -82,21 +82,24 @@ endif()
 target_link_libraries(cpprealm PUBLIC Realm::ObjectStore)
 set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
 
-if (APPLE)
-    target_sources(cpprealm PRIVATE 
-        src/cpprealm/internal/apple/network_transport.mm
-    )
-else()
-    find_package(CURL REQUIRED)
-    target_link_libraries(cpprealm PUBLIC
-        CURL::libcurl
-    )
-    target_sources(cpprealm PRIVATE
-        src/cpprealm/internal/curl/network_transport.cpp
-    )
-endif()
+#if (APPLE)
+#    target_sources(cpprealm PRIVATE
+#        src/cpprealm/internal/apple/network_transport.mm
+#    )
+#else()
+    target_sources(cpprealm PUBLIC src/cpprealm/internal/android/network_transport.cpp)
+    message(STATUS "Is Android")
+#else()
+#    find_package(CURL REQUIRED)
+#    target_link_libraries(cpprealm PUBLIC
+#        CURL::libcurl
+#    )
+#    target_sources(cpprealm PRIVATE
+#        src/cpprealm/internal/curl/network_transport.cpp
+#    )
+#endif()
 
-#if (!REALM_CPP_NO_TESTS)
+if (!REALM_CPP_NO_TESTS)
 Include(FetchContent)
 FetchContent_Declare(
         Catch2
@@ -113,4 +116,4 @@ file(COPY tests/config_overrides.json DESTINATION ${CMAKE_BINARY_DIR})
 
 add_test(cpprealm_tests cpprealm_exe_tests)
 enable_testing()
-#endif()
+endif()
