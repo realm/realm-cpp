@@ -32,10 +32,9 @@ struct SyncSubscription {
     const std::string identifier() const {
         return m_subscription.id.to_string();
     }
-
-    // The name representing this subscription.
-    std::string_view name() const {
-        return m_subscription.name ? *m_subscription.name : "";
+    // The name representing this subscription, or std::nullopt if not set.
+    std::optional<std::string> name() const {
+        return m_subscription.name;
     }
     // Returns the timestamp of when this subscription was originally created.
     const std::chrono::time_point<std::chrono::system_clock> created_at() const {

@@ -82,22 +82,22 @@ endif()
 target_link_libraries(cpprealm PUBLIC Realm::ObjectStore)
 set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
 
-#if (APPLE)
-#    target_sources(cpprealm PRIVATE
-#        src/cpprealm/internal/apple/network_transport.mm
-#    )
-#else()
-    target_sources(cpprealm PUBLIC src/cpprealm/internal/android/network_transport.cpp)
-    message(STATUS "Is Android")
-#else()
-#    find_package(CURL REQUIRED)
-#    target_link_libraries(cpprealm PUBLIC
-#        CURL::libcurl
-#    )
-#    target_sources(cpprealm PRIVATE
-#        src/cpprealm/internal/curl/network_transport.cpp
-#    )
-#endif()
+if (APPLE)
+    target_sources(cpprealm PRIVATE
+        src/cpprealm/internal/apple/network_transport.mm
+    )
+elseif(ANDROID)
+    target_sources(cpprealm PUBLIC
+        src/cpprealm/internal/android/network_transport.cpp)
+else()
+    find_package(CURL REQUIRED)
+    target_link_libraries(cpprealm PUBLIC
+        CURL::libcurl
+    )
+    target_sources(cpprealm PRIVATE
+        src/cpprealm/internal/curl/network_transport.cpp
+    )
+endif()
 
 if (!REALM_CPP_NO_TESTS)
 Include(FetchContent)

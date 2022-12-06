@@ -75,7 +75,13 @@ namespace realm::internal {
 
     void DefaultTransport::send_request_to_server(const app::Request& request,
                                                   util::UniqueFunction<void(const app::Response&)>&& completion_block) {
-        const std::string host = "realm.mongodb.com";
+        // Get the host name.
+        size_t found = request.url.find_first_of(":");
+        std::string domain = request.url.substr(found+3); //url_new is the url excluding the http part
+        size_t found1 = domain.find_first_of(":");
+        size_t found2 = domain.find_first_of("/");
+        const std::string host = domain.substr(found1 + 1, found2 - found1 - 1);
+
         realm::util::network::Service service;
         auto resolver = realm::util::network::Resolver{service};
         auto resolved = resolver.resolve(util::network::Resolver::Query(host, "443"));
@@ -134,10 +140,10 @@ namespace realm::internal {
             auto handler = [&](std::error_code ec) {
                 if (ec.value() == 0) {
                     m_http_client.async_request({.method = method,
-                                                         .headers = headers,
-                                                         .path = request.url,
-                                                         .body = request.body.empty() ? std::nullopt : std::optional<std::string>(request.body)
-                                                 }, [cb = std::move(completion_block)](realm::util::HTTPResponse r, std::error_code e) {
+                                                 .headers = headers,
+                                                 .path = request.url,
+                                                 .body = request.body.empty() ? std::nullopt : std::optional<std::string>(request.body)
+                                                }, [cb = std::move(completion_block)](realm::util::HTTPResponse r, std::error_code e) {
                         app::Response res;
                         res.body = r.body ? *r.body : "";
                         for (auto& [k, v] : r.headers)  {

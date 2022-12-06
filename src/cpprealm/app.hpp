@@ -349,8 +349,7 @@ class App {
 public:
     explicit App(const std::string& app_id,
                  const std::optional<std::string>& base_url = std::nullopt,
-                 const std::optional<std::string>& file_path = std::nullopt,
-                 std::optional<std::shared_ptr<app::GenericNetworkTransport>> network_transport = std::nullopt)
+                 const std::optional<std::string>& file_path = std::nullopt)
     {
         #if QT_CORE_LIB
         util::Scheduler::set_default_factory(util::make_qt);
@@ -380,7 +379,7 @@ public:
 
         m_app = app::App::get_shared_app(app::App::Config{
             .app_id=app_id,
-            .transport = network_transport ? *network_transport : std::make_shared<internal::DefaultTransport>(),
+            .transport = std::make_shared<internal::DefaultTransport>(),
             .base_url = base_url ? base_url : std::nullopt,
             .platform="Realm Cpp",
             .platform_version="?",
