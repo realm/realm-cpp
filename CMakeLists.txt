@@ -35,7 +35,7 @@ target_include_directories(cpprealm PUBLIC src)
 
 # on Apple platforms we use the built-in CFRunLoop
 # everywhere else it's libuv, except UWP where it doesn't build
-if(NOT APPLE AND NOT WINDOWS_STORE)
+if(NOT APPLE AND NOT WINDOWS_STORE AND NOT ANDROID)
     set(REALM_HAVE_UV 1)
 
     option(REALM_FETCH_MISSING_DEPENDENCIES "Download missing dependencies with CMake's FetchContent where possible" ON)
@@ -87,6 +87,7 @@ if (APPLE)
         src/cpprealm/internal/apple/network_transport.mm
     )
 elseif(ANDROID)
+    set(REALM_ANDROID)
     target_sources(cpprealm PUBLIC
         src/cpprealm/internal/android/network_transport.cpp)
 else()
