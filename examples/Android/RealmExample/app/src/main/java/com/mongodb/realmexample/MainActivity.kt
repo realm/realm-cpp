@@ -17,25 +17,49 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-//        stringFromJNI(this.filesDir.path)
-        // Example of a call to a native method
-//        binding.sampleText.text = stringFromJNI(this.filesDir.path)
+        // Pass the folder path of the app so we
+        // can create a folder to store the Realm files.
+        setupRealm(this.filesDir.path)
 
-        binding.button.setOnClickListener {
-            binding.sampleText.text = stringFromJNI(this.filesDir.path)
+        binding.forwardButton.setOnClickListener {
+            moveForward()
+        }
+
+        binding.reverseButton.setOnClickListener {
+            moveBack()
+        }
+
+        binding.leftButton.setOnClickListener {
+            moveLeft()
+        }
+
+        binding.rightButton.setOnClickListener {
+            moveRight()
+        }
+
+        binding.colorButton.setOnClickListener {
+            changeColor()
+        }
+
+        binding.resetButton.setOnClickListener {
+            resetCar()
         }
     }
 
-    fun registerErrorCallback(error: String) {
-        println()
+    fun carNotificationRecieved(changed_property: String) {
+        binding.sampleText.text = changed_property
     }
 
-    /**
-     * A native method that is implemented by the 'realmexample' native library,
-     * which is packaged with this application.
-     */
-    external fun stringFromJNI(path: String): String
-    external fun observe(): Void
+    external fun setupRealm(path: String)
+    // Movement methods
+    external fun moveForward()
+    external fun moveBack()
+    external fun moveLeft()
+    external fun moveRight()
+    // Customization methods
+    external fun changeColor()
+    // Reset Car
+    external fun resetCar()
 
     companion object {
         // Used to load the 'realmexample' library on application startup.

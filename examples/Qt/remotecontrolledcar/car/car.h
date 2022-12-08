@@ -63,6 +63,11 @@ public:
     QRectF boundingRect() const;
 
     void on_change();
+
+    realm::persisted<int> _id;
+    realm::persisted<qreal> wheelsAngle; // used when applying rotation
+    realm::persisted<qreal> speed; // delta movement along the body axis
+    realm::persisted<Qt::GlobalColor> color;
 public Q_SLOTS:
     void accelerate();
     void decelerate();
@@ -76,17 +81,13 @@ protected:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = nullptr);
     void timerEvent(QTimerEvent *event);
 private:
-    realm::persisted<int> _id;
-    realm::persisted<qreal> wheelsAngle; // used when applying rotation
-    realm::persisted<qreal> speed; // delta movement along the body axis
-    realm::persisted<Qt::GlobalColor> color;
+
 public:
     static constexpr auto schema = realm::schema("Car",
             realm::property<&Car::_id, true>("_id"),
             realm::property<&Car::wheelsAngle>("wheelsAngle"),
             realm::property<&Car::speed>("speed"),
-            realm::property<&Car::color>("color")
-                                                 );
+            realm::property<&Car::color>("color"));
 };
 
 #endif // CAR_H

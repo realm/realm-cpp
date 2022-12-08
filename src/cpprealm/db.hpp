@@ -188,6 +188,11 @@ struct db {
         return T::schema.create(object.obj(), object.realm());
     }
 
+    [[maybe_unused]] bool refresh()
+    {
+        return m_realm->refresh();
+    }
+
     db_config config;
 private:
     db(const SharedRealm& realm)

@@ -159,6 +159,11 @@ struct results {
         return m_parent.size();
     }
 
+    bool empty()
+    {
+        return !m_parent.template first();
+    }
+
     results& where(const std::string& query, std::vector<Mixed> arguments)
     {
         m_parent = realm::Results(m_parent.get_realm(), m_parent.get_table()->query(query,

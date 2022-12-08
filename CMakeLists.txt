@@ -100,7 +100,7 @@ else()
     )
 endif()
 
-if (!REALM_CPP_NO_TESTS)
+if (NOT ANDROID)
 Include(FetchContent)
 FetchContent_Declare(
         Catch2

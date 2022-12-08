@@ -49,6 +49,12 @@ auto realm = realm::open<Person, Dog>();
 realm.write([&realm, &dog] {
     realm.add(dog);
 });
+
+// Query with type safety.
+auto dogs = realm.objects<Dog>();
+auto adult_dogs = dogs.where([](auto& d) {
+    return d.age > 2;
+});
 ```
 ## Live Objects: Build Reactive Apps
 Realm’s live objects mean data updated anywhere is automatically updated everywhere.

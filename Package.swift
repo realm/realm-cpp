@@ -40,6 +40,7 @@ let cppSdkTarget: Target = .target(
     path: "src/",
     exclude: [
         "cpprealm/internal/curl",
+        "cpprealm/internal/android"
     ],
     publicHeadersPath: ".",
     cxxSettings: cxxSettings,

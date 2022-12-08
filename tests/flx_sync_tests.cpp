@@ -53,10 +53,10 @@ TEST_CASE("flx_sync", "[flx][sync]") {
             });
         }).get_future().get();
 
-        sub = *synced_realm.subscriptions().find("foo-strings");
-        CHECK(sub.name() == "foo-strings");
-        CHECK(sub.object_class_name() == "AllTypesObject");
-        CHECK(sub.query_string() == "str_col == \"bar\" and _id == 123");
+        auto sub2 = *synced_realm.subscriptions().find("foo-strings");
+        CHECK(sub2.name() == "foo-strings");
+        CHECK(sub2.object_class_name() == "AllTypesObject");
+        CHECK(sub2.query_string() == "str_col == \"bar\" and _id == 123");
 
         synced_realm.write([&synced_realm]() {
             synced_realm.add(AllTypesObject{._id=123, .str_col="bar"});
@@ -73,10 +73,10 @@ TEST_CASE("flx_sync", "[flx][sync]") {
             subs.update_subscription<AllTypesObject>("foo-strings");
         }).get_future().get();
 
-        sub = *synced_realm.subscriptions().find("foo-strings");
-        CHECK(sub.name() == "foo-strings");
-        CHECK(sub.object_class_name() == "AllTypesObject");
-        CHECK(sub.query_string() == "TRUEPREDICATE");
+        auto sub3 = *synced_realm.subscriptions().find("foo-strings");
+        CHECK(sub3.name() == "foo-strings");
+        CHECK(sub3.object_class_name() == "AllTypesObject");
+        CHECK(sub3.query_string() == "TRUEPREDICATE");
 
         test::wait_for_sync_uploads(user).get_future().get();
         test::wait_for_sync_downloads(user).get_future().get();
