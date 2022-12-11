@@ -96,6 +96,19 @@ realm.write([&car](){
 });
 ```
 
+## Construct a Simple Query
+
+Realm offers an expressive and intuitive way for querying data. Here's a simple example of querying for all `Person` objects and filtering the result based on age.
+
+```cpp
+int main() {
+  auto realm = realm::open<Person, Dog>({.path=path});
+  auto results = realm.objects<Person>().where("age > $0", {20});
+
+  return results.size();
+}
+```
+
 ## Building Realm
 
 In case you don't want to use the precompiled version, you can build Realm yourself from source.
