@@ -29,31 +29,17 @@ namespace realm {
 // send to the server in a QUERY or IDENT message.
 struct SyncSubscription {
     // Returns the unique ID for this subscription.
-    const std::string identifier() const {
-        return m_subscription.id.to_string();
-    }
+    const std::string identifier;
     // The name representing this subscription, or std::nullopt if not set.
-    std::optional<std::string> name() const {
-        return m_subscription.name;
-    }
+    std::optional<std::string> name;
     // Returns the timestamp of when this subscription was originally created.
-    const std::chrono::time_point<std::chrono::system_clock> created_at() const {
-        return m_subscription.created_at.get_time_point();
-    }
+    const std::chrono::time_point<std::chrono::system_clock> created_at;
     // Returns the timestamp of the last time this subscription was updated by calling update_query.
-    const std::chrono::time_point<std::chrono::system_clock> updated_at() const {
-        return m_subscription.updated_at.get_time_point();
-    }
+    const std::chrono::time_point<std::chrono::system_clock> updated_at;
     // Returns a stringified version of the query associated with this subscription.
-    std::string_view query_string() const {
-        return m_subscription.query_string;
-    }
+    const std::string query_string;
     // Returns the name of the object class of the query for this subscription.
-    std::string_view object_class_name() const {
-        return m_subscription.object_class_name;
-    }
-
-    const sync::Subscription& m_subscription;
+    const std::string object_class_name;
 };
 
 // A MutableSyncSubscriptionSet represents a single query that may be OR'd with other queries on the same object class to be
@@ -94,7 +80,14 @@ public:
     std::optional<SyncSubscription> find(const std::string& name) {
         const sync::Subscription* sub = m_subscription_set.find(name);
         if (sub != nullptr) {
-            return SyncSubscription {*sub};
+            return SyncSubscription {
+                .identifier = sub->id.to_string(),
+                .name = sub->name,
+                .created_at = sub->created_at.get_time_point(),
+                .updated_at = sub->updated_at.get_time_point(),
+                .query_string = sub->query_string,
+                .object_class_name = sub->object_class_name
+            };
         }
         return std::nullopt;
     }
@@ -141,7 +134,14 @@ public:
     std::optional<SyncSubscription> find(const std::string& name) {
         const sync::Subscription* sub = m_subscription_set.find(name);
         if (sub != nullptr) {
-            return SyncSubscription {*sub};
+            return SyncSubscription {
+                    .identifier = sub->id.to_string(),
+                    .name = sub->name,
+                    .created_at = sub->created_at.get_time_point(),
+                    .updated_at = sub->updated_at.get_time_point(),
+                    .query_string = sub->query_string,
+                    .object_class_name = sub->object_class_name
+            };
         }
         return std::nullopt;
     }
