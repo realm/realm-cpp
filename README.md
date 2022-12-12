@@ -103,9 +103,16 @@ Realm offers an expressive and intuitive way for querying data. Here's a simple 
 ```cpp
 int main() {
   auto realm = realm::open<Person, Dog>({.path=path});
-  auto results = realm.objects<Person>().where("age > $0", {20});
+  auto results = realm.objects<Person>().where("age > $0", {17});
 
-  return results.size();
+  for (const auto& person : results) {
+    std::string name = person.get_property<std::string>("name");
+    int age = person.get_property<int>("age");
+    std::string dogPurchasePower = (age >= 18) ? "can legally buy a dog in California" : "cannot legally buy a dog in California";
+    std::cout << "Customer " << name << " is " << age << " and " << dogPurchasePower << std::endl;
+  }
+
+  return 0;
 }
 ```
 
