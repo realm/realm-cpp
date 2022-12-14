@@ -2,9 +2,14 @@
 #include <cpprealm/internal/bridge/results.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
+#include <cpprealm/internal/bridge/query.hpp>
 #include <realm/object-store/results.hpp>
 
 namespace realm::internal::bridge {
+    results::results(const realm &realm, const query &query) {
+        new (m_results) Results(realm, query);
+    }
+
     size_t results::size() {
         return reinterpret_cast<Results*>(m_results)->size();
     }
@@ -20,5 +25,13 @@ namespace realm::internal::bridge {
     template <>
     obj results::get(size_t v) {
         return reinterpret_cast<Results*>(m_results)->template get(v);
+    }
+
+    results::results(Results &&v) {
+        new (&m_results) Results(std::move(v));
+    }
+
+    notification_token results::add_notification_callback(collection_change_callback &&fn) {
+        return reinterpret_cast<Results*>(m_results)->add_notification_callback(fn);
     }
 }

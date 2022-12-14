@@ -2,6 +2,7 @@
 #define CPP_REALM_BRIDGE_MIXED_HPP
 
 #include <string>
+#include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/internal/bridge/property.hpp>
 #include <cpprealm/internal/bridge/binary.hpp>
 #include <cpprealm/internal/bridge/uuid.hpp>
@@ -13,26 +14,28 @@ namespace realm {
 }
 
 namespace realm::internal::bridge {
-    struct mixed {
-        mixed(const std::string_view&);
-        mixed(const int64_t&);
-        mixed(const struct uuid&);
-        mixed(const struct timestamp&);
-        mixed(const struct obj_key&);
-        mixed(const struct binary&);
+    struct mixed : core_binding<Mixed> {
+        explicit mixed(const std::string&);
+        mixed(const int64_t&); //NOLINT(google-explicit-constructor)
+        mixed(const struct uuid&); //NOLINT(google-explicit-constructor)
+        mixed(const struct timestamp&); //NOLINT(google-explicit-constructor)
+        mixed(const struct obj_key&); //NOLINT(google-explicit-constructor)
+        mixed(const struct binary&); //NOLINT(google-explicit-constructor)
         mixed(const mixed&) = default;
-        mixed(const Mixed&);
+        mixed(const Mixed&); //NOLINT(google-explicit-constructor)
 
-        operator std::string_view() const;
-        operator int64_t() const;
-        operator bridge::uuid() const;
-        operator bridge::timestamp() const;
-        operator bridge::obj_key() const;
-        operator bridge::binary() const;
+        operator std::string() const; //NOLINT(google-explicit-constructor)
+        operator int64_t() const; //NOLINT(google-explicit-constructor)
+        operator double() const; //NOLINT(google-explicit-constructor)
+        operator bool() const; //NOLINT(google-explicit-constructor)
+        operator bridge::uuid() const; //NOLINT(google-explicit-constructor)
+        operator bridge::timestamp() const; //NOLINT(google-explicit-constructor)
+        operator bridge::obj_key() const; //NOLINT(google-explicit-constructor)
+        operator bridge::binary() const; //NOLINT(google-explicit-constructor)
 
-        explicit operator Mixed() const;
+        explicit operator Mixed() const final;
 
-        property::type type() const noexcept;
+        [[nodiscard]] property::type type() const noexcept;
     private:
         unsigned char m_mixed[24]{};
     };

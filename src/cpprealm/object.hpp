@@ -524,13 +524,21 @@ protected:
     template <typename T>
     friend typename std::enable_if<std::is_base_of<realm::object_base, T>::value, std::ostream>::type&
     operator<< (std::ostream& stream, const T& object);
-    template <typename T, typename>
-    friend typename internal::type_info::type_info<std::decay_t<T>>::internal_type internal::type_info::serialize(T);
-    template <typename T, typename>
-    friend T internal::type_info::deserialize(typename internal::type_info::type_info<T>::internal_type&&);
-        template <typename T>
-        friend inline std::enable_if_t<std::is_base_of_v<object_base, T>, bool> operator==(const T& lhs,
-                                                                                    const T& rhs);
+    template <typename T>
+    friend inline std::enable_if_t<std::is_base_of_v<object_base, T>, bool> operator==(const T& lhs,
+                                                                                       const T& rhs);
+
+//    void manage(internal::bridge::table& table, internal::bridge::realm& realm) const {
+//        if constexpr (std::decay_t<decltype(*this)>::schema::HasPrimaryKeyProperty) {
+//            auto pk = *(object.*PrimaryKeyProperty::ptr);
+//            object.m_object = internal::bridge::object(realm, table.create_object_with_primary_key(pk));
+//        } else {
+//            object.m_object = internal::bridge::object(realm, table.create_object());
+//        }
+//
+//        set(object);
+//        assign<0>(object, std::get<0>(properties));
+//    }
 };
 // MARK: Object
 /**
@@ -603,8 +611,8 @@ struct embedded_object : public object_base {
 
 namespace {
     template <size_t N, typename T>
-    static constexpr bool check_equals(const T& lhs, const T& rhs) {
-        if constexpr (N + 1 >= std::tuple_size<decltype(T::schema.properties)>{}) {
+    constexpr bool check_equals(const T& lhs, const T& rhs) {
+        if constexpr (N + 1 >= std::tuple_size<decltype(T::schema.properties)>::value) {
             return true;
         } else {
             auto ptr = std::get<N>(T::schema.properties).ptr;

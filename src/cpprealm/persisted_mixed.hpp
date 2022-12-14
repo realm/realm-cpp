@@ -35,54 +35,77 @@ namespace realm {
             uuid>;
 
     template<typename T>
-    struct persisted<T, std::enable_if_t<realm::internal::type_info::MixedPersistableConcept<T>::value>> : public persisted_base<T> {
-        persisted& operator=(const T& o) {
-            if (auto obj = this->m_object) {
-                obj->obj().set_any(this->managed, internal::type_info::serialize(o));
-            } else {
-                new (&this->unmanaged) T(o);
-            }
-            return *this;
+    struct persisted<T, std::enable_if_t<realm::internal::type_info::MixedPersistableConcept<T>::value>> final :
+            public persisted_primitive_base<T> {
+        using persisted_primitive_base<T>::operator=;
+    protected:
+        static internal::bridge::mixed serialize(const T& value) {
+            return std::visit([](auto& arg) {
+                using M = std::decay_t<decltype(arg)>;
+                return internal::bridge::mixed(static_cast<M>(arg));
+            }, value);
         }
+        static T deserialize(const internal::bridge::mixed& value) {
+            switch (value.type()) {
+                case internal::bridge::property::type::Int: return value.operator int64_t();
+                case internal::bridge::property::type::Bool: return value.operator bool();
+                case internal::bridge::property::type::String: return static_cast<std::string>(value);
+                case internal::bridge::property::type::Data:
+                    return static_cast<std::vector<uint8_t>>(static_cast<internal::bridge::binary>(value));
+                case internal::bridge::property::type::Date: return static_cast<internal::bridge::timestamp>(value);
+                case internal::bridge::property::type::Float:
+                case internal::bridge::property::type::Double: return static_cast<double>(value);
+                case internal::bridge::property::type::UUID:
+                    return static_cast<uuid>(static_cast<internal::bridge::uuid>(value));
+                default: abort();
+            }
+        }
+        __cpp_realm_friends
     };
 
-
-    template <template <typename ...> typename Variant, typename ...Ts, typename V>
-    std::enable_if_t<internal::type_info::is_variant_t<Variant<Ts...>>::value, rbool>
-    operator==(const persisted<Variant<Ts...>>& a, V&& b)
-    {
-        if (a.should_detect_usage_for_queries) {
-            auto query = internal::bridge::query(a.query->get_table());
-            query.equal(a.managed, internal::type_info::serialize<V>(b));
-            return {std::move(query)};
-        }
-        return std::visit([&b](auto&& arg) {
-            using M = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_convertible_v<M, V>) {
-                return arg == b;
-            } else {
-                return false;
-            }
-        }, *a);
+#define __cpp_realm_generate_mixed_operator(op) \
+    template <template <typename ...> typename Variant, typename ...Ts, typename V> \
+    std::enable_if_t<internal::type_info::is_variant_t<Variant<Ts...>>::value, rbool> \
+    operator op(const persisted<Variant<Ts...>>& a, V&& b) \
+    { \
+        if (a.should_detect_usage_for_queries) { \
+            auto query = internal::bridge::query(a.query->get_table()); \
+            query.equal(a.managed, internal::bridge::mixed(persisted<std::decay_t<V>>::serialize(b))); \
+            return query; \
+        } \
+        return std::visit([&b](auto&& arg) { \
+            using M = std::decay_t<decltype(arg)>; \
+            if constexpr (std::is_convertible_v<M, V>) { \
+                return arg op b; \
+            } else { \
+                return false; \
+            } \
+        }, *a); \
     }
 
-    template <template <typename ...> typename Variant, typename ...Ts, typename V>
-    std::enable_if_t<internal::type_info::is_variant_t<Variant<Ts...>>::value, rbool>
-    operator==(const persisted<Variant<Ts...>>& a, const V& b)
+    __cpp_realm_generate_mixed_operator(==)
+
+    template <typename T>
+    inline std::ostream& operator<< (std::ostream& stream, const persisted<T, std::enable_if_t<realm::internal::type_info::MixedPersistableConcept<T>::value>>& value)
     {
-        if (a.should_detect_usage_for_queries) {
-            auto query = internal::bridge::query(a.query->get_table());
-            query.equal(a.managed, internal::type_info::serialize<V>(b));
-            return {std::move(query)};
-        }
-        return std::visit([&b](auto&& arg) -> rbool {
+        std::visit([&stream](auto&& arg) {
             using M = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_convertible_v<M, V>) {
-                return arg == b;
+            if constexpr (internal::type_info::is_vector<M>::value) {
+                stream << "{ ";
+                for (size_t i = 0; i < arg.size(); i++) {
+                    stream << arg[i];
+                    if (i < arg.size() - 1) stream << ",";
+                }
+                stream << " }";
             } else {
-                return false;
+                stream << static_cast<M>(arg);
             }
-        }, *a);
+        }, *value);
+        return stream;
+    }
+
+    namespace {
+        static_assert(sizeof(persisted<std::variant<int64_t, std::string>>{}));
     }
 }
 

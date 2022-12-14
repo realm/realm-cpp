@@ -6,6 +6,9 @@
 namespace realm::internal::bridge {
     static_assert(SizeCheck<16, sizeof(BinaryData)>{});
 
+    char binary::operator[](size_t i) const noexcept {
+        return reinterpret_cast<const BinaryData*>(m_data)->operator[](i);
+    }
     binary::binary(const realm::BinaryData &v) {
         new (&m_data) BinaryData(v);
     }

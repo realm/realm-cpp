@@ -3,6 +3,10 @@
 
 #include <string>
 
+namespace realm {
+    class Dictionary;
+}
+
 namespace realm::internal::bridge {
     struct mixed;
     struct binary;
@@ -11,6 +15,9 @@ namespace realm::internal::bridge {
     struct uuid;
 
     struct dictionary {
+        dictionary();
+        dictionary(const Dictionary& v);
+        operator Dictionary() const;
         void insert(const std::string& key, const mixed& value);
         [[nodiscard]] size_t size() const;
         void remove_all();
@@ -33,19 +40,6 @@ namespace realm::internal::bridge {
     private:
         unsigned char m_dictionary[128]{};
     };
-
-    template <>
-    std::string dictionary::get(const std::string &);
-    template <>
-    mixed dictionary::get(const std::string &);
-    template <>
-    int64_t dictionary::get(const std::string &);
-    template <>
-    binary dictionary::get(const std::string &);
-    template <>
-    timestamp dictionary::get(const std::string &);
-    template <>
-    obj_key dictionary::get(const std::string &);
 }
 
 #endif //CPP_REALM_BRIDGE_DICTIONARY_HPP

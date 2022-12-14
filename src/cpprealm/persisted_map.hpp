@@ -54,8 +54,8 @@ namespace realm {
             reference operator*() noexcept
             {
                 if (m_parent->m_object) {
-                    auto pair = (*m_parent).m_object->obj().get_dictionary(m_parent->managed).get_pair(m_i);
-                    return { pair.first, internal::type_info::deserialize<mapped_type>(pair.second) };
+                    auto pair = (*m_parent).managed.get_pair(m_i);
+                    return { pair.first, persisted<mapped_type>::deserialize(pair.second) };
                 } else {
                     return *m_idx;
                 }
@@ -101,6 +101,35 @@ namespace realm {
             value_type value;
         };
 
+
+        persisted_map_base() {
+            new (&this->unmanaged) std::map<std::string, T>();
+        }
+        persisted_map_base(const persisted_map_base& v) {
+            if (v.is_managed()) {
+                this->managed = v.managed;
+            } else {
+                this->unmanaged = v.unmanaged;
+            }
+        }
+        ~persisted_map_base() {
+            if (this->is_managed()) {
+                this->managed.~dictionary();
+            } else {
+                this->unmanaged.~map();
+            }
+        }
+        persisted_map_base& operator=(const std::map<std::string, typename T::mapped_type>& o) {
+            if (this->is_managed()) {
+                this->managed.clear();
+                for (auto& [k, v] : o) {
+                    this->managed.insert(k, internal::bridge::mixed(persisted<typename T::mapped_type>::serialize(v)));
+                }
+            } else {
+                new (&this->unmanaged) std::map<std::string, typename T::mapped_type>(o);
+            }
+            return *this;
+        }
         iterator begin()
         {
             if (this->m_object) {
@@ -122,7 +151,7 @@ namespace realm {
         size_t size()
         {
             if (this->m_object) {
-                return m_backing_map.size();
+                return managed.size();
             } else {
                 return this->unmanaged.size();
             }
@@ -131,16 +160,6 @@ namespace realm {
         void erase(size_type pos);
         void clear();
         notification_token observe(std::function<void(collection_change<T>)>);
-
-        /// Make this container property managed
-        /// @param object The parent object
-        /// @param col_key The column key for this property
-        /// @param realm The Realm instance managing the parent.
-        void assign(const internal::bridge::obj& object, const int64_t& col_key, internal::bridge::realm realm) {
-            this->m_object = internal::bridge::object(realm, object);
-            this->managed = col_key;
-            m_backing_map = internal::bridge::dictionary(realm, object, this->managed);
-        }
 
         typename T::mapped_type operator[](typename T::key_type& key) {
             if (auto& obj = this->m_object) {
@@ -159,11 +178,10 @@ namespace realm {
         }
 
     protected:
-        internal::bridge::dictionary m_backing_map;
-        template <typename>
-        friend class persisted_primitive_container_base;
-        template <typename>
-        friend class persisted_object_container_base;
+        union {
+            std::map<std::string, typename T::mapped_type> unmanaged;
+            internal::bridge::dictionary managed;
+        };
     };
 
     template <typename T>
@@ -182,7 +200,7 @@ namespace realm {
     template <typename T>
     void persisted_map_base<T>::clear() {
         if (this->m_object) {
-            m_backing_map.remove_all();
+            managed.remove_all();
         } else {
             this->unmanaged.clear();
         }
@@ -191,6 +209,7 @@ namespace realm {
     template <typename T>
     notification_token persisted_map_base<T>::observe(std::function<void(collection_change<T>)> handler)
     {
+        abort();
 //        if (!this->m_object) {
 //            throw std::runtime_error("Only collections which are managed by a Realm support change notifications");
 //        }
@@ -240,7 +259,7 @@ namespace realm {
         box_base& operator=(mapped_type&& o) {
             if (is_managed) {
                 m_backing_map.get().insert(m_key,
-                                           internal::type_info::serialize<mapped_type>(std::move(o)));
+                                           internal::bridge::mixed(persisted<mapped_type>::serialize(std::move(o))));
             } else {
                 m_val.get() = std::move(o);
             }
@@ -249,7 +268,7 @@ namespace realm {
 
         bool operator==(const mapped_type& rhs) const {
             if (is_managed) {
-                return internal::type_info::serialize<mapped_type>(rhs) ==
+                return persisted<mapped_type>::serialize(rhs) ==
                        this->m_backing_map.get().template get<typename internal::type_info::type_info<mapped_type>::internal_type>(this->m_key);
             } else {
                 return rhs == m_val.get();
@@ -316,19 +335,6 @@ namespace realm {
         using persisted_map_base<std::map<std::string, T>>::clear;
         using persisted_map_base<std::map<std::string, T>>::observe;
 
-        persisted& operator=(const std::map<std::string, T>& o) {
-            if (this->is_managed()) {
-                auto dictionary = this->m_object->obj().get_dictionary(this->managed);
-                dictionary.clear();
-                for (auto& [k, v] : o) {
-                    dictionary.insert(k, internal::type_info::serialize<mapped_type>(v));
-                }
-            } else {
-                new (&this->unmanaged) std::map<std::string, T>(o);
-            }
-            return *this;
-        }
-
         std::map<std::string, T> operator *() const {
             if (this->is_managed()) {
                 internal::bridge::dictionary dictionary = this->m_object->obj().get_dictionary(this->managed);
@@ -336,7 +342,7 @@ namespace realm {
                 for (size_t i = 0; i < dictionary.size(); i++) {
                     auto pair = dictionary.get_pair(i);
 
-                    map.insert({pair.first, internal::type_info::deserialize<T>(
+                    map.insert({pair.first, persisted<T>::deserialize(
                             static_cast<typename internal::type_info::type_info<T>::internal_type>(pair.second)
                     )});
                 }
@@ -348,11 +354,17 @@ namespace realm {
 
         box<mapped_type> operator[](const std::string& a) {
             if (this->m_object) {
-                return box<mapped_type>(this->m_backing_map, a);
+                return box<mapped_type>(this->managed, a);
             } else {
                 return box<mapped_type>(this->unmanaged[a]);
             }
         }
+    protected:
+        void manage(internal::bridge::object *object, internal::bridge::col_key &&col_key) override {
+
+        }
+
+        __cpp_realm_friends
     };
 }
 

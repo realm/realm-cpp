@@ -10,9 +10,9 @@ namespace realm::internal::bridge {
     struct object_schema;
 
     struct schema {
-        schema(const std::vector <object_schema> &);
-        schema(const Schema&);
-        operator Schema() const;
+        schema(const std::vector<object_schema>&); //NOLINT(google-explicit-constructor)
+        schema(const Schema&); //NOLINT(google-explicit-constructor)
+        operator Schema() const; //NOLINT(google-explicit-constructor)
         object_schema find(const std::string &name);
     private:
         unsigned char m_schema[24];

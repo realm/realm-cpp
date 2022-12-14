@@ -9,9 +9,10 @@ namespace realm {
 namespace realm::internal::bridge {
     struct col_key {
         col_key() noexcept;
-        col_key(int64_t);
-        col_key(const ColKey&);
-        int64_t value() const;
+        col_key(int64_t); //NOLINT(google-explicit-constructor)
+        col_key(const ColKey&); //NOLINT(google-explicit-constructor)
+        operator ColKey() const; //NOLINT(google-explicit-constructor)
+        [[nodiscard]] int64_t value() const;
     private:
         unsigned char m_col_key[8]{};
     };

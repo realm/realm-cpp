@@ -24,6 +24,7 @@
 #include <cpprealm/type_info.hpp>
 #include <cpprealm/internal/bridge/object_schema.hpp>
 #include <cpprealm/internal/bridge/results.hpp>
+#include <cpprealm/internal/bridge/schema.hpp>
 #include <cpprealm/object.hpp>
 
 namespace realm {
@@ -33,7 +34,8 @@ struct query : public T {
 private:
     template <typename V>
     void set_managed(V& prop, const internal::bridge::col_key& column_key) {
-        prop.managed = column_key;
+        if constexpr (internal::type_info::is_primitive<typename V::Result>::value)
+            prop.managed = column_key;
     }
     template <size_t N, typename P>
     constexpr auto prepare_for_query(internal::bridge::query& query, internal::bridge::object_schema& schema, P& property)
@@ -52,6 +54,7 @@ private:
     query(internal::bridge::query& query, internal::bridge::object_schema&& schema) {
         prepare_for_query<0>(query, schema, std::get<0>(T::schema.properties));
     }
+
     template <typename>
     friend struct results;
     friend struct MutableSyncSubscriptionSet;
@@ -166,8 +169,8 @@ struct results {
 
     results& where(const std::string& query, std::vector<internal::bridge::mixed> arguments)
     {
-        m_parent = internal::bridge::results(m_parent.get_realm(), m_parent.get_table().query(query,
-                                                                                   std::move(arguments)));
+        m_parent = internal::bridge::results(m_parent.get_realm(),
+                                             m_parent.get_table().query(query, std::move(arguments)));
         return *this;
     }
     results& where(std::function<rbool(T&)> fn)

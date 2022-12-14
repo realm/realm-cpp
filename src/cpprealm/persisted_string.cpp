@@ -41,4 +41,11 @@ namespace realm {
             unmanaged.push_back(c);
         }
     }
+
+    std::string persisted<std::string>::serialize(const std::string &v) {
+        return v;
+    }
+    std::string persisted<std::string>::deserialize(const std::string &v) {
+        return v;
+    }
 }

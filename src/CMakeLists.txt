@@ -1,6 +1,70 @@
 set(SOURCES
     cpprealm/sdk.cpp
-    cpprealm/analytics.cpp) # REALM_SOURCES
+    cpprealm/analytics.cpp
+    cpprealm/type_info.cpp
+    cpprealm/db.cpp
+    cpprealm/thread_safe_reference.cpp
+    cpprealm/internal/bridge/obj.hpp
+    cpprealm/internal/bridge/obj.cpp
+    cpprealm/persisted_uuid.hpp
+    cpprealm/persisted_string.hpp
+    cpprealm/persisted_string.cpp
+    cpprealm/persisted_list.hpp
+    cpprealm/persisted_custom.hpp
+    cpprealm/internal/type_info.hpp
+    cpprealm/internal/bridge/utils.hpp
+    cpprealm/internal/bridge/col_key.hpp
+    cpprealm/internal/bridge/col_key.cpp
+    cpprealm/internal/bridge/object.cpp
+    cpprealm/internal/bridge/object.hpp
+    cpprealm/internal/bridge/property.cpp
+    cpprealm/internal/bridge/property.hpp
+    cpprealm/internal/bridge/object_schema.cpp
+    cpprealm/internal/bridge/object_schema.hpp
+    cpprealm/internal/bridge/mixed.cpp
+    cpprealm/internal/bridge/mixed.hpp
+    cpprealm/internal/bridge/uuid.cpp
+    cpprealm/internal/bridge/uuid.hpp
+    cpprealm/internal/bridge/binary.cpp
+    cpprealm/internal/bridge/binary.hpp
+    cpprealm/internal/bridge/timestamp.cpp
+    cpprealm/internal/bridge/timestamp.hpp
+    cpprealm/internal/bridge/obj_key.cpp
+    cpprealm/internal/bridge/obj_key.hpp
+    cpprealm/internal/bridge/table.cpp
+    cpprealm/internal/bridge/table.hpp
+    cpprealm/internal/bridge/query.cpp
+    cpprealm/internal/bridge/query.hpp
+    cpprealm/persisted_uuid.cpp
+    cpprealm/internal/bridge/scheduler.cpp
+    cpprealm/internal/bridge/scheduler.hpp
+    cpprealm/scheduler.hpp
+    cpprealm/internal/bridge/realm.cpp
+    cpprealm/internal/bridge/realm.hpp
+    cpprealm/internal/bridge/dictionary.cpp
+    cpprealm/internal/bridge/dictionary.hpp
+    cpprealm/internal/bridge/results.cpp 
+    
+    cpprealm/internal/bridge/results.hpp
+    cpprealm/internal/bridge/schema.cpp
+    cpprealm/internal/bridge/schema.hpp
+    cpprealm/scheduler.cpp
+    cpprealm/internal/bridge/thread_safe_reference.cpp
+    cpprealm/internal/bridge/thread_safe_reference.hpp
+    cpprealm/internal/bridge/lnklst.cpp 
+    
+    
+    
+    cpprealm/internal/bridge/lnklst.hpp
+    cpprealm/internal/bridge/list.cpp
+    cpprealm/internal/bridge/list.hpp
+    cpprealm/persisted_binary.cpp
+    cpprealm/internal/type_info.cpp
+    cpprealm/persisted_int.cpp
+    cpprealm/flex_sync.cpp
+    cpprealm/persisted_bool.cpp
+    
+    ) # REALM_SOURCES
 
 set(HEADERS
     cpprealm/sdk.hpp

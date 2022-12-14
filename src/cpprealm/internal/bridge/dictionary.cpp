@@ -7,6 +7,17 @@
 namespace realm::internal::bridge {
     static_assert(SizeCheck<128, sizeof(Dictionary)>{});
 
+    dictionary::dictionary() {
+        new (m_dictionary) Dictionary();
+    }
+
+    dictionary::dictionary(const realm::Dictionary &v) {
+        new (m_dictionary) Dictionary(v);
+    }
+
+    dictionary::operator Dictionary() const {
+        return *reinterpret_cast<const Dictionary*>(m_dictionary);
+    }
     size_t dictionary::size() const {
         return reinterpret_cast<const Dictionary*>(m_dictionary)->size();
     }
@@ -47,5 +58,13 @@ namespace realm::internal::bridge {
     template <>
     int64_t dictionary::get(const std::string &key) {
         return reinterpret_cast<Dictionary*>(m_dictionary)->get(key).get<Int>();
+    }
+    template <>
+    obj_key dictionary::get(const std::string &key) {
+        return reinterpret_cast<Dictionary*>(m_dictionary)->get(key).get<ObjKey>();
+    }
+    template <>
+    bool dictionary::get(const std::string &key) {
+        return reinterpret_cast<Dictionary*>(m_dictionary)->get(key).get<Bool>();
     }
 }
