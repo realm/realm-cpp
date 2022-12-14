@@ -5,6 +5,11 @@
 #include <any>
 #include <unordered_map>
 
+namespace realm {
+    class Object;
+    class IndexSet;
+    class CollectionChangeCallback;
+}
 namespace realm::internal::bridge {
     struct realm;
     struct obj;
@@ -12,44 +17,45 @@ namespace realm::internal::bridge {
     struct notification_token;
 
     struct index_set {
+        index_set();
+        index_set(const IndexSet&); //NOLINT(google-explicit-constructor)
         [[nodiscard]] bool empty() const;
+
     private:
         unsigned char m_idx_set[24]{};
     };
     struct collection_change_set {
-        index_set deletions() const;
-        index_set modifications() const;
-        std::unordered_map<int64_t, index_set> columns() const;
-        bool empty() const;
+        [[nodiscard]] index_set deletions() const;
+        [[nodiscard]] index_set modifications() const;
+        [[nodiscard]] std::unordered_map<int64_t, index_set> columns() const;
+        [[nodiscard]] bool empty() const;
     private:
         unsigned char m_change_set[168]{};
     };
     struct collection_change_callback {
+        operator CollectionChangeCallback() const;
         virtual void before(collection_change_set const& c) = 0;
         virtual void after(collection_change_set const& c) = 0;
     };
+
     struct object {
-        object() = default;
+        object(); //NOLINT(google-explicit-constructor)
+        object(const Object&); //NOLINT(google-explicit-constructor)
+        object(const realm &realm, const obj &obj); //NOLINT(google-explicit-constructor)
 
-        ~object();
-
-        object(const realm &realm, const obj &obj);
+        operator Object() const; //NOLINT(google-explicit-constructor)
 
         [[nodiscard]] obj obj() const;
 
-        realm get_realm() const;
+        [[nodiscard]] realm get_realm() const;
 
-        bool is_valid() const;
+        [[nodiscard]] bool is_valid() const;
 
         notification_token add_notification_callback(collection_change_callback&&);
 
-        template<typename ValueType>
-        void set_column_value(const std::string &property_name, const ValueType &value);
-
-        object_schema get_object_schema() const;
-
+        [[nodiscard]] object_schema get_object_schema() const;
     private:
-        unsigned char m_object[104];
+        unsigned char m_object[104]{};
     };
 }
 

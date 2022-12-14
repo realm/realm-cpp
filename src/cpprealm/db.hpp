@@ -37,37 +37,22 @@
 
 namespace realm {
 
-
-
 #if QT_CORE_LIB
 static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::make_qt;
 #endif
 
     using sync_config = internal::bridge::realm::sync_config;
-    struct db_config {
-        db_config(std::string path = std::filesystem::current_path().append("default.realm"),
-                  std::shared_ptr<scheduler> scheduler = scheduler::make_default(),
-                  internal::bridge::realm::sync_config sync_config = {});
-        std::string path() const;
-        std::shared_ptr<scheduler> scheduler() const;
-        internal::bridge::realm::sync_config sync_config() const;
-    private:
-        friend struct User;
-        template <typename ...>
-        friend struct db;
-        internal::bridge::realm::config m_config;
-    };
+    using db_config = internal::bridge::realm::config;
 
 template <typename ...Ts>
 struct db {
     using config = db_config;
     explicit db(config&& config = {})
-    : m_realm(internal::bridge::realm(internal::bridge::realm::config(config.path(), config.scheduler(), [] {
-        std::vector<internal::bridge::object_schema> schemas;
-        (schemas.push_back(Ts::schema.to_core_schema()), ...);
-        return schemas;
-    }())))
     {
+        std::vector<internal::bridge::object_schema> schema;
+        (schema.push_back(Ts::schema.to_core_schema()), ...);
+        config.set_schema(schema);
+        m_realm = internal::bridge::realm(config);
         static bool initialized;
         if (!initialized) {
             realm_analytics::send();
@@ -77,7 +62,7 @@ struct db {
 
     SyncSubscriptionSet subscriptions()
     {
-//        return SyncSubscriptionSet(m_realm->get_active_subscription_set(), m_realm);
+        return SyncSubscriptionSet(m_realm);
     }
 
     void write(std::function<void()>&& block) const
@@ -132,6 +117,7 @@ struct db {
     {
 //        Object object = tsr.m_tsr->template resolve<Object>(m_realm);
 //        return T::schema.create(object.obj(), object.realm());
+abort();
     }
 
 #if QT_CORE_LIB
@@ -142,9 +128,10 @@ struct db {
 #endif
 
 private:
-    db(const internal::bridge::realm& realm)
-    : m_realm(realm)
+    db(internal::bridge::realm realm) //NOLINT
+    : m_realm(std::move(realm))
     {
+
         static bool initialized;
         if (!initialized) {
             realm_analytics::send();

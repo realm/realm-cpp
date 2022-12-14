@@ -12,19 +12,19 @@ namespace realm::internal::bridge {
     struct query;
     struct notification_token;
     struct obj;
+    struct collection_change_callback;
 
     struct results {
-        results(Results&&);
+        results(Results&&); //NOLINT(google-explicit-constructor)
         size_t size();
-        realm get_realm() const;
-        table get_table() const;
+        [[nodiscard]] realm get_realm() const;
+        [[nodiscard]] table get_table() const;
         template <typename T>
         T get(size_t);
         template <>
         obj get(size_t);
         results(const realm&, const query&);
-        template <typename Fn>
-        notification_token add_notification_callback(Fn&&);
+        notification_token add_notification_callback(collection_change_callback&&);
     private:
         unsigned char m_results[36]{};
     };

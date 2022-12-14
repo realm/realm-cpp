@@ -23,7 +23,31 @@ namespace realm::internal::bridge {
         return reinterpret_cast<const UUID*>(m_uuid)->to_string();
     }
 
+    uuid::operator ::realm::uuid() const {
+        return ::realm::uuid(*this);
+    }
+
     uuid::operator UUID() const {
         return *reinterpret_cast<const UUID*>(m_uuid);
     }
+
+    std::string uuid::to_base64() const {
+        return reinterpret_cast<const UUID*>(m_uuid)->to_base64();
+    }
+
+    std::array<uint8_t, 16> uuid::to_bytes() const {
+        return reinterpret_cast<const UUID*>(m_uuid)->to_bytes();
+    }
+
+#define __cpp_realm_gen_uuid_op(op) \
+    bool operator op(const uuid& a, const uuid& b) { \
+        return *reinterpret_cast<const UUID*>(a.m_uuid) op *reinterpret_cast<const UUID*>(b.m_uuid);                                        \
+    }
+
+    __cpp_realm_gen_uuid_op(==)
+    __cpp_realm_gen_uuid_op(!=)
+    __cpp_realm_gen_uuid_op(>)
+    __cpp_realm_gen_uuid_op(<)
+    __cpp_realm_gen_uuid_op(>=)
+    __cpp_realm_gen_uuid_op(<=)
 }

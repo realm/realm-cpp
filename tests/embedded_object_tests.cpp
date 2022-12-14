@@ -24,7 +24,7 @@ TEST_CASE("embedded_objects") {
         realm.write([&foo]() {
             foo.foo->bar = 84;
         });
-        CHECK((*foo.foo).bar == 84);
+        CHECK(foo.foo->bar == 84);
         realm.write([&foo, &realm] {
             realm.remove(foo);
         });

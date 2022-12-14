@@ -17,4 +17,8 @@ namespace realm::internal::bridge {
     int64_t col_key::value() const {
         return reinterpret_cast<const ColKey*>(m_col_key)->value;
     }
+
+    col_key::operator ColKey() const {
+        return *reinterpret_cast<const ColKey*>(m_col_key);
+    }
 }

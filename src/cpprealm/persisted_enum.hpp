@@ -23,19 +23,41 @@
 
 namespace realm {
     template <typename T>
-    struct persisted<T, std::enable_if_t<std::is_enum_v<T>>> : public persisted_base<T> {
-        using persisted_base<T>::persisted_base;
+    struct persisted<T, std::enable_if_t<std::is_enum_v<T>>> : public persisted_primitive_base<T> {
+        using persisted_primitive_base<T>::persisted_primitive_base;
 
-        persisted& operator=(const T& o) {
-            if (this->is_managed()) {
-                this->m_object->obj().template set<int64_t>(this->managed,
-                        static_cast<int64_t>(o));
-            } else {
-                new (&this->unmanaged) T(o);
-            }
-            return *this;
+    protected:
+        static int64_t serialize(const T& v) {
+            return static_cast<int64_t>(v);
         }
+        static T deserialize(const int64_t& v) {
+            return static_cast<T>(v);
+        }
+
+        __cpp_realm_friends
     };
+
+#define __cpp_realm_generate_enum_operator(op, name) \
+    template <typename T, typename V> \
+    std::enable_if_t<std::is_enum_v<T>, rbool> operator op(const persisted<T>& a, const V& b) { \
+        if (a.should_detect_usage_for_queries) { \
+            auto query = internal::bridge::query(a.query->get_table()); \
+            query.name(a.managed, persisted<V>::serialize(b)); \
+            return query; \
+        } \
+        return *a op b; \
+    }                                          \
+    template <typename T, typename V> \
+    std::enable_if_t<std::is_enum_v<T>, rbool> operator op(const persisted<T>& a, const persisted<V>& b) { \
+        return a op *b; \
+    }
+
+    __cpp_realm_generate_enum_operator(==, equal)
+    __cpp_realm_generate_enum_operator(!=, not_equal)
+    __cpp_realm_generate_enum_operator(>, greater)
+    __cpp_realm_generate_enum_operator(<, less)
+    __cpp_realm_generate_enum_operator(<=, less_equal)
+    __cpp_realm_generate_enum_operator(>=, greater_equal)
 
     namespace {
         enum class test_enum {

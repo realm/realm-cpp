@@ -7,6 +7,7 @@
 namespace realm {
     class TableRef;
     class ConstTableRef;
+    class Mixed;
 
     namespace internal::bridge {
         struct obj;
@@ -17,21 +18,23 @@ namespace realm {
         struct table {
             table(const TableRef &);
             table(const ConstTableRef &);
-            col_key get_column_key(const std::string &name);
+            operator TableRef() const;
+            operator ConstTableRef() const;
+
+            col_key get_column_key(const std::string &name) const;
 
             obj create_object_with_primary_key(const mixed &key);
 
-            obj create_object(const obj_key &obj_key = {});
+            obj create_object(const obj_key &obj_key = {}) const;
 
-            table get_link_target(const col_key col_key);
+            table get_link_target(const col_key col_key) const;
 
             [[nodiscard]] bool is_embedded() const;
 
-            query query(const std::string &, std::vector <mixed>);
+            query query(const std::string &, const std::vector <mixed>&) const;
 
-            void remove_object(const obj_key &);
-
-        private:
+            void remove_object(const obj_key &) const;
+            using underlying = TableRef;
             unsigned char m_table[16]{};
         };
 

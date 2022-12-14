@@ -40,6 +40,15 @@ namespace realm::internal::bridge {
         reinterpret_cast<ObjectSchema*>(m_schema)->persisted_properties.push_back(v);
     }
 
+    void object_schema::set_name(const std::string &name) {
+        reinterpret_cast<ObjectSchema*>(m_schema)->name = name;
+    }
+    property object_schema::property_for_name(const std::string &v) {
+        return *reinterpret_cast<ObjectSchema*>(m_schema)->property_for_name(v);
+    }
+    void object_schema::set_primary_key(const std::string &primary_key) {
+        reinterpret_cast<ObjectSchema*>(m_schema)->primary_key = primary_key;
+    }
     object_schema::operator ObjectSchema() const {
         return *reinterpret_cast<const ObjectSchema*>(m_schema);
     }

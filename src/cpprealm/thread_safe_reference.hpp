@@ -25,6 +25,7 @@
 
 #include <cpprealm/type_info.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
+#include <cpprealm/internal/bridge/thread_safe_reference.hpp>
 
 namespace realm {
 
@@ -74,6 +75,7 @@ struct thread_safe_reference<db<Ts...>> {
     db<Ts...> resolve()
     {
 //        return db<Ts...>(Realm::get_shared_realm(std::move(m_tsr)));
+abort();
     }
 
     explicit operator bool() const noexcept

@@ -37,6 +37,7 @@ namespace realm::internal::bridge {
             Collection = Array | Set | Dictionary,
             Flags = Nullable | Collection
         };
+        property(const Property&);
         property(const std::string& name,
                  type type,
                  bool is_primary_key);

@@ -23,20 +23,11 @@
 #include <cpprealm/persisted.hpp>
 
 namespace realm {
-    template <typename C, typename D>
-    struct persisted<std::chrono::time_point<C, D>> : public persisted_base<std::chrono::time_point<C, D>> {
-        using persisted_base<std::chrono::time_point<C, D>>::persisted_base;
+    using time_point = std::chrono::time_point<std::chrono::system_clock, std::chrono::system_clock::duration>;
+    template <>
+    struct persisted<time_point> : public persisted_primitive_base<time_point> {
+        using persisted_primitive_base<time_point>::persisted_primitive_base;
 
-        persisted& operator=(const std::chrono::time_point<C, D>& o) {
-            if (this->is_managed()) {
-                this->m_object->obj().template set(
-                        this->managed,
-                        internal::bridge::timestamp(o));
-            } else {
-                new (&this->unmanaged) std::chrono::time_point<C, D>(o);
-            }
-            return *this;
-        }
 
         auto time_since_epoch() const {
             if (this->is_managed()) {
@@ -46,30 +37,65 @@ namespace realm {
                 return this->unmanaged.time_since_epoch();
             }
         }
-    private:
+    protected:
+        static internal::bridge::timestamp serialize(const time_point& v);
+        static time_point deserialize(const internal::bridge::timestamp& v);
+
         template <typename U, typename V, typename S>
         friend persisted<std::chrono::time_point<U, V>>& operator +=(
                 persisted<std::chrono::time_point<U, V>>& lhs,
                 std::chrono::duration<S> rhs);
+
+        __cpp_realm_friends
     };
 
-    template <typename U, typename V, typename S>
-    persisted<std::chrono::time_point<U, V>>& operator +=(
-            persisted<std::chrono::time_point<U, V>>& lhs,
-            std::chrono::duration<S> rhs)
+
+#define __cpp_realm_generate_timestamp_operator(op) \
+    template <typename V> \
+    rbool operator op(const persisted<time_point>& a, const V& b) { \
+        if (a.should_detect_usage_for_queries) { \
+            auto query = internal::bridge::query(a.query->get_table()); \
+            if (#op[0] == '>')                                          \
+                query.greater(a.managed, persisted<V>::serialize(b));  \
+            else if (#op[0] == '<')                                    \
+                query.less(a.managed, persisted<V>::serialize(b));     \
+            else if (!strcmp(#op, ">="))                                \
+                query.greater_equal(a.managed, persisted<V>::serialize(b)); \
+            else if (!strcmp(#op, "<="))                                   \
+                query.less_equal(a.managed, persisted<V>::serialize(b));   \
+            return query; \
+        } \
+        return *a op b; \
+    }                                               \
+    template <typename V> \
+    rbool operator op(const persisted<time_point>& a, const persisted<V>& b) { \
+        return a op *b; \
+    }
+
+    __cpp_realm_generate_timestamp_operator(==)
+    __cpp_realm_generate_timestamp_operator(!=)
+    __cpp_realm_generate_timestamp_operator(>)
+    __cpp_realm_generate_timestamp_operator(<)
+    __cpp_realm_generate_timestamp_operator(>=)
+    __cpp_realm_generate_timestamp_operator(<=)
+
+    template <typename S>
+    inline persisted<time_point>& operator +=(
+            persisted<time_point>& lhs,
+            const std::chrono::duration<S>& rhs)
     {
         if (lhs.is_managed()) {
             auto ts = lhs.m_object->obj().template get<internal::bridge::timestamp>(lhs.managed);
-            lhs.m_object->obj().template set(lhs.managed, internal::bridge::timestamp(ts.get_time_point() + rhs));
+            lhs.m_object->obj().set(lhs.managed, internal::bridge::timestamp(ts.get_time_point() + rhs));
         } else {
             lhs.unmanaged += rhs;
         }
         return lhs;
     }
 
-    template <typename U, typename V, typename S>
+    template <typename S>
     rbool operator ==(
-            persisted<std::chrono::time_point<U, V>>& lhs,
+            persisted<time_point>& lhs,
             std::chrono::duration<S> rhs)
     {
         return lhs == rhs;

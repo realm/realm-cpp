@@ -7,6 +7,7 @@
 
 namespace realm::internal::bridge {
     static_assert(SizeCheck<24, sizeof(Schema)>{});
+
     object_schema schema::find(const std::string &name) {
         return *reinterpret_cast<Schema*>(m_schema)->find(name);
     }

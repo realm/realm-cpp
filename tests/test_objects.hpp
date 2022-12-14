@@ -16,7 +16,7 @@ struct Dog: realm::object {
 struct Person: realm::object {
     realm::persisted<std::string> name;
     realm::persisted<int64_t> age;
-    realm::persisted<std::optional<Dog>> dog;
+    realm::persisted<Dog> dog;
 
     static constexpr auto schema = realm::schema("Person",
             realm::property<&Person::name>("name"),
@@ -71,7 +71,7 @@ struct AllTypesObject: realm::object {
     realm::persisted<std::optional<std::chrono::time_point<std::chrono::system_clock>>> opt_date_col;
     realm::persisted<std::optional<realm::uuid>> opt_uuid_col;
     realm::persisted<std::optional<std::vector<uint8_t>>> opt_binary_col;
-    realm::persisted<std::optional<AllTypesObjectLink>> opt_obj_col;
+    realm::persisted<AllTypesObjectLink> opt_obj_col;
 
     realm::persisted<std::vector<int64_t>> list_int_col;
     realm::persisted<std::vector<bool>> list_bool_col;
@@ -142,7 +142,7 @@ struct EmbeddedFoo: realm::embedded_object {
 
 struct Foo: realm::object {
     realm::persisted<int64_t> bar;
-    realm::persisted<std::optional<EmbeddedFoo>> foo;
+    realm::persisted<EmbeddedFoo> foo;
 
     Foo() = default;
     Foo(const Foo&) = delete;

@@ -7,6 +7,9 @@
 namespace realm::internal::bridge {
     static_assert(SizeCheck<120, sizeof(Property)>{});
 
+    property::property(const realm::Property &v) {
+        new (m_property) Property(v);
+    }
     property::property(const std::string &name,
                        realm::internal::bridge::property::type type,
                        const std::string &object_name) {

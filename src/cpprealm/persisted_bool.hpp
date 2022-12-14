@@ -24,10 +24,17 @@
 
 namespace realm {
     template <>
-    struct persisted<bool> : persisted_base<bool> {
-        operator bool() const;
-        persisted& operator=(bool o);
+    struct persisted<bool> : public persisted_primitive_base<bool> {
+        operator bool() const; // NOLINT(google-explicit-constructor)
+    protected:
+        static bool serialize(bool v);
+        static bool deserialize(bool v);
+
+        __cpp_realm_friends
     };
+
+    __cpp_realm_generate_operator(bool, ==, equal)
+    __cpp_realm_generate_operator(bool, !=, not_equal)
 }
 
 #endif //REALM_PERSISTED_BOOL_HPP

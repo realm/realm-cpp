@@ -20,43 +20,13 @@
 #ifndef REALM_PERSISTED_INT_HPP
 #define REALM_PERSISTED_INT_HPP
 
-#include <cpprealm/type_info.hpp>
 #include <cpprealm/persisted.hpp>
 #include <cpprealm/persisted_custom.hpp>
 
 namespace realm {
-    namespace internal {
-//        template <>
-//        struct type_info<int64_t> {
-//            using internal_type = int64_t;
-//            static constexpr bridge::property::type type() {
-//                return bridge::property::type::Int;
-//            }
-//            static constexpr internal_type serialize(int64_t v) {
-//                return v;
-//            }
-//            static constexpr int64_t deserialize(const internal_type& v) {
-//                return v;
-//            }
-//        };
-//        template <>
-//        struct type_info<double> {
-//            using internal_type = double;
-//            static constexpr bridge::property::type type() {
-//                return bridge::property::type::Double;
-//            }
-//            static constexpr internal_type serialize(double v) {
-//                return v;
-//            }
-//            static constexpr double deserialize(const internal_type& v) {
-//                return v;
-//            }
-//        };
-    }
-
     template <>
-    struct persisted<int64_t> : public persisted_base<int64_t> {
-        using persisted_base<int64_t>::persisted_base;
+    struct persisted<int64_t> : public persisted_primitive_base<int64_t> {
+        using persisted_primitive_base<int64_t>::persisted_primitive_base;
 
         template <typename T>
         std::enable_if_t<std::is_arithmetic_v<T>, persisted&> // NOLINT(misc-unconventional-assign-operator)
@@ -70,10 +40,15 @@ namespace realm {
             }
             return *this;
         }
+    protected:
+        static int64_t serialize(int64_t);
+        static int64_t deserialize(int64_t);
+
+        __cpp_realm_friends
     };
 
     template <>
-    struct persisted<double> : persisted_base<double> {
+    struct persisted<double> : persisted_primitive_base<double> {
         template <typename T>
         std::enable_if_t<std::is_arithmetic_v<T>, persisted&> // NOLINT(misc-unconventional-assign-operator)
         operator=(const T& o) {
@@ -86,69 +61,28 @@ namespace realm {
             }
             return *this;
         }
+    protected:
+        static double serialize(double);
+        static double deserialize(double);
+
+        __cpp_realm_friends
     };
 
-    template <typename T, typename V>
-    rbool operator>(const persisted<T>& a, const V& b)
-    {
-        if (a.should_detect_usage_for_queries) {
-            auto query = internal::bridge::query(a.query->get_table());
-            query.greater(a.managed, internal::type_info::serialize<V>(b));
-            return {std::move(query)};
-        }
-        return *a > b;
-    }
-    template <typename T>
-    rbool operator>(const persisted<T>& a, const persisted<T>& b)
-    {
-        return a > *b;
-    }
-    template <typename T, typename V>
-    rbool operator>=(const persisted<T>& a, const V& b)
-    {
-        if (a.should_detect_usage_for_queries) {
-            auto query = internal::bridge::query(a.query->get_table());
-            query.greater_equal(a.managed, internal::type_info::serialize<V>(b));
-            return {std::move(query)};
-        }
-        return *a >= b;
-    }
 
-    template <typename T>
-    rbool operator>=(const persisted<T>& a, const persisted<T>& b)
-    {
-        return a >= *b;
-    }
-    template <typename T, typename V>
-    rbool operator<(const persisted<T>& a, const V& b)
-    {
-        if (a.should_detect_usage_for_queries) {
-            auto query = internal::bridge::query(a.query->get_table());
-            query.less(a.managed, internal::type_info::serialize<V>(b));
-            return {std::move(query)};
-        }
-        return *a < b;
-    }
-    template <typename T>
-    rbool operator<(const persisted<T>& a, const persisted<T>& b)
-    {
-        return a < *b;
-    }
-    template <typename T, typename V>
-    rbool operator<=(const persisted<T>& a, const V& b)
-    {
-        if (a.should_detect_usage_for_queries) {
-            auto query = internal::bridge::query(a.query->get_table());
-            query.less_equal(a.managed, internal::type_info::serialize<V>(b));
-            return {std::move(query)};
-        }
-        return *a <= b;
-    }
-    template <typename T>
-    rbool operator<=(const persisted<T>& a, const persisted<T>& b)
-    {
-        return a <= *b;
-    }
+    __cpp_realm_generate_operator(int64_t, >, greater)
+    __cpp_realm_generate_operator(int64_t, <, less)
+    __cpp_realm_generate_operator(int64_t, <=, less_equal)
+    __cpp_realm_generate_operator(int64_t, >=, greater_equal)
+    __cpp_realm_generate_operator(int64_t, ==, equal)
+    __cpp_realm_generate_operator(int64_t, !=, not_equal)
+
+    __cpp_realm_generate_operator(double, >, greater)
+    __cpp_realm_generate_operator(double, <, less)
+    __cpp_realm_generate_operator(double, <=, less_equal)
+    __cpp_realm_generate_operator(double, >=, greater_equal)
+    __cpp_realm_generate_operator(double, ==, equal)
+    __cpp_realm_generate_operator(double, !=, not_equal)
+
     namespace {
         static_assert(sizeof(persisted<int64_t>{}.operator=(1)));
         static_assert(sizeof(persisted<int64_t>{} == 1));

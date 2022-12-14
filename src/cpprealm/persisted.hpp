@@ -19,20 +19,132 @@
 #ifndef realm_persisted_hpp
 #define realm_persisted_hpp
 
-#include <cpprealm/type_info.hpp>
+#include <cpprealm/internal/type_info.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/query.hpp>
 
 #include <cpprealm/schema.hpp>
 
-namespace realm {
+#define __friend_rbool_operators__(type, op) \
+        friend rbool operator op(const persisted<type>& a, const type& b); \
 
-namespace schemagen {
-    template <typename Class, typename ...Properties>
-    struct schema;
-    template <auto Ptr, bool IsPrimaryKey>
-    struct property;
-}
+#define __friend_rbool_numeric_operators(type, op) \
+    template <typename V> \
+    friend std::enable_if_t<std::negation_v<std::is_same<V, bool>>, rbool> operator op(const persisted<type>& a, const V& b);
+
+#define __friend_rbool_timestamp_operators__(op) \
+        template <typename VV> \
+        friend rbool operator op(const persisted<std::chrono::time_point<std::chrono::system_clock, std::chrono::system_clock::duration>>& a, const VV& b); \
+
+#define __friend_rbool_mixed_operators(op) \
+    template <template <typename ...> typename Variant, typename ...Ts, typename V> \
+    std::enable_if_t<internal::type_info::is_variant_t<Variant<Ts...>>::value, rbool> \
+    friend operator op(const persisted<Variant<Ts...>>& a, V&& b);
+
+#define __friend_rbool_const_char_operators(op) \
+    friend rbool operator op(const persisted<std::string>& a, const char* b);
+
+#define __friend_rbool_enum_operators(op) \
+    template <typename TT, typename VV>                                      \
+    friend std::enable_if_t<std::is_enum_v<TT>, rbool> operator op(const persisted<TT>& a, const VV& b);
+
+#define __cpp_realm_friends \
+        template <typename, typename ...> \
+        friend struct realm::schemagen::schema; \
+        template <typename> friend struct query;\
+        template <typename> \
+        friend struct persisted_base;     \
+        template <typename> \
+        friend struct persisted_primitive_base; \
+        __friend_rbool_operators__(int64_t, >)  \
+        __friend_rbool_operators__(int64_t, <) \
+        __friend_rbool_operators__(int64_t, >=)   \
+        __friend_rbool_operators__(int64_t, <=) \
+        __friend_rbool_operators__(int64_t, ==) \
+        __friend_rbool_operators__(int64_t, !=) \
+        __friend_rbool_operators__(double, >)  \
+        __friend_rbool_operators__(double, <) \
+        __friend_rbool_operators__(double, >=)   \
+        __friend_rbool_operators__(double, <=) \
+        __friend_rbool_operators__(double, ==) \
+        __friend_rbool_operators__(double, !=)  \
+                            \
+        __friend_rbool_operators__(bool, ==) \
+        __friend_rbool_operators__(bool, !=)  \
+                            \
+        __friend_rbool_operators__(uuid, >)  \
+        __friend_rbool_operators__(uuid, <) \
+        __friend_rbool_operators__(uuid, >=)   \
+        __friend_rbool_operators__(uuid, <=) \
+        __friend_rbool_operators__(uuid, ==) \
+        __friend_rbool_operators__(uuid, !=)  \
+        \
+        __friend_rbool_operators__(std::string, !=) \
+        __friend_rbool_operators__(std::string, ==) \
+                            \
+        __friend_rbool_const_char_operators(==) \
+        __friend_rbool_const_char_operators(!=) \
+                            \
+        __friend_rbool_operators__(std::vector<uint8_t>, !=) \
+        __friend_rbool_operators__(std::vector<uint8_t>, ==) \
+        __friend_rbool_timestamp_operators__(>) \
+        __friend_rbool_timestamp_operators__(>=)\
+        __friend_rbool_timestamp_operators__(<)   \
+        __friend_rbool_timestamp_operators__(<=)\
+        __friend_rbool_timestamp_operators__(!=)\
+        __friend_rbool_timestamp_operators__(==)\
+        __friend_rbool_mixed_operators(==)\
+                            \
+        __friend_rbool_enum_operators(==) \
+        __friend_rbool_enum_operators(!=) \
+        __friend_rbool_enum_operators(>) \
+        __friend_rbool_enum_operators(<) \
+        __friend_rbool_enum_operators(>=) \
+        __friend_rbool_enum_operators(<=) \
+    template <typename TT> \
+    friend rbool operator==(const persisted<std::optional<TT>>& a, const std::optional<TT>& b); \
+    template <typename TT, typename VV> \
+    friend rbool operator==(const persisted<std::optional<TT>>& a, const VV& b);                \
+    template <typename S> \
+    friend inline persisted<std::chrono::time_point<std::chrono::system_clock, std::chrono::system_clock::duration>>& operator +=( \
+        persisted<std::chrono::time_point<std::chrono::system_clock, std::chrono::system_clock::duration>>& lhs, \
+        const std::chrono::duration<S>& rhs);   \
+    template <typename, typename> \
+    friend struct persisted;\
+    template <typename U> \
+    friend rbool inline operator==(const persisted<std::optional<U>>& a, const char* b);               \
+    template <typename> \
+    friend struct box_base; \
+    template <typename> \
+    friend class persisted_map_base;      \
+    friend struct internal::bridge::obj;  \
+    friend struct internal::bridge::list;
+
+#define __cpp_realm_generate_operator(type, op, name) \
+    inline rbool operator op(const persisted<type>& a, const type& b) { \
+        if (a.should_detect_usage_for_queries) { \
+            auto query = internal::bridge::query(a.query->get_table()); \
+            auto serialized = persisted<type>::serialize(b);     \
+            query.name(a.managed, serialized);    \
+            return query; \
+        } \
+        return *a op b; \
+    } \
+    inline rbool operator op(const persisted<type>& a, const persisted<type>& b) { \
+        return a op *b; \
+    }
+
+namespace realm {
+    namespace {
+        template<typename T>
+        using is_optional = internal::type_info::is_optional<T>;
+    }
+    namespace schemagen {
+        template <typename Class, typename ...Properties>
+        struct schema;
+        template <auto Ptr, bool IsPrimaryKey>
+        struct property;
+    }
 
 struct FieldValue;
 template <typename T, typename = void>
@@ -41,31 +153,12 @@ struct notification_token;
 
 class rbool;
 
-namespace {
-    template <typename T, typename Enable = void>
-    struct is_optional : std::false_type {
-        using underlying = T;
-    };
-
-    template <typename T>
-    struct is_optional<std::optional<T> > : std::true_type {
-        using underlying = T;
-    };
-}
 template <typename T>
 struct persisted_base {
     static_assert(std::is_destructible_v<T>);
+
     using Result = T;
-
-    persisted_base(const T& value) {
-        unmanaged = value;
-    }
-    persisted_base(T&& value) {
-        unmanaged = std::move(value);
-    }
-
-    persisted_base() {}
-    ~persisted_base() { }
+    persisted_base() = default;
     persisted_base(const persisted_base& o) {
         *this = o;
     }
@@ -73,124 +166,34 @@ struct persisted_base {
         *this = std::move(o);
     }
 
-    persisted_base& operator=(const persisted_base& o) noexcept {
-        if (auto obj = o.m_object) {
-            m_object = obj;
-            new (&managed) internal::bridge::col_key(o.managed);
-        } else {
-            new (&unmanaged) T(o.unmanaged);
-        }
-        return *this;
-    }
-    persisted_base& operator=(persisted_base&& o) noexcept {
-        if (o.m_object) {
-            m_object = o.m_object;
-            new (&managed) internal::bridge::col_key(std::move(o.managed));
-        } else {
-            new (&unmanaged) T(std::move(o.unmanaged));
-        }
-        return *this;
-    }
-
-    virtual std::conditional_t<is_optional<T>::value,
-            typename is_optional<T>::underlying,
-            typename is_optional<T>::underlying> operator *() const {
-        if (this->is_managed()) {
-            auto val = internal::type_info::deserialize<T>(this->m_object->obj().template
-                    get<typename internal::type_info::type_info<T>::internal_type>(this->managed));
-            if constexpr (is_optional<T>::value) {
-                return *val;
-            } else {
-                return val;
-            }
-        } else {
-            if constexpr (is_optional<T>::value) {
-                return *this->unmanaged;
-            } else {
-                return this->unmanaged;
-            }
-        }
-    }
-//    {
-//        if (m_object) {
-//            if constexpr (type_info::OptionalPersistableConcept<T>::value || type_info::EmbeddedObjectPersistableConcept<T>::value) {
-//                if constexpr (type_info::EmbeddedObjectPersistableConcept<T>::value) {
-//                    return T::schema.create(m_object->obj().get_linked_object(managed), m_object->get_realm());
-//                } else if constexpr (type_info::ObjectBasePersistableConcept<typename T::value_type>::value) {
-//                    if (m_object->obj().is_null(managed)) {
-//                        return std::nullopt;
-//                    } else {
-//                        return T::value_type::schema.create(m_object->obj().get_linked_object(managed),
-//                                                            m_object->get_realm());
-//                    }
-//                } else {
-//                    using UnwrappedType = typename type_info::persisted_type<typename T::value_type>::type;
-//                    // convert optionals
-//                    if (m_object->obj().is_null(managed)) {
-//                        return std::nullopt;
-//                    } else {
-//                        auto value = m_object->obj().template get<UnwrappedType>(managed);
-//                        if constexpr (std::is_same_v<UnwrappedType, BinaryData>) {
-//                            return std::vector<u_int8_t>(value.data(), value.data() + value.size());
-//                        } else if constexpr (type_info::EnumPersistableConcept<typename T::value_type>::value) {
-//                            return std::optional<typename T::value_type>(static_cast<typename T::value_type>(value));
-//                        } else {
-//                            return T(value);
-//                        }
-//                    }
-//                }
+//    virtual std::conditional_t<is_optional<T>::value,
+//            typename is_optional<T>::underlying,
+//            typename is_optional<T>::underlying> operator *() const {
+//        if (this->is_managed()) {
+//            auto val = persisted<T>::deserialize(this->m_object->obj().template
+//                    get<typename internal::type_info::type_info<T>::internal_type>(this->managed));
+//            if constexpr (is_optional<T>::value) {
+//                return *val;
 //            } else {
-//                if constexpr (!type_info::PrimitivePersistableConcept<T>::value
-//                                && !type_info::MixedPersistableConcept<T>::value) {
-//                    if constexpr (type_info::ListPersistableConcept<T>::value) {
-//                        T v;
-//                        auto lst = m_object->obj().template get_list_values<typename type_info::persisted_type<typename T::value_type>::type>(
-//                                managed);
-//                        for (size_t i; i < lst.size(); i++) {
-//                            if constexpr (type_info::ObjectBasePersistableConcept<typename T::value_type>::value) {
-//                                auto obj = lst.get_object(i);
-//                                v.push_back(T::value_type::schema::create(obj, obj.get_table(), nullptr));
-//                            } else {
-//                                v.push_back(static_cast<typename T::value_type>(lst[i]));
-//                            }
-//                        }
-//
-//                        return v;
-//                    } else {
-//                        REALM_UNREACHABLE();
-//                    }
-//                }
-//                if constexpr (std::is_same_v<realm::BinaryData, type>) {
-//                    realm::BinaryData binary = m_object->obj().template get<type>(managed);
-//                    return std::vector<u_int8_t>(binary.data(), binary.data() + binary.size());
-//                } else if constexpr (type_info::MixedPersistableConcept<T>::value) {
-//                    Mixed mixed = m_object->obj().template get<type>(managed);
-//                    return type_info::mixed_to_variant<T>(mixed);
-//                } else {
-//                    return static_cast<T>(m_object->obj().template get<type>(managed));
-//                }
+//                return val;
 //            }
 //        } else {
-//            return unmanaged;
+//            if constexpr (is_optional<T>::value) {
+//                return *this->unmanaged;
+//            } else {
+//                return this->unmanaged;
+//            }
 //        }
 //    }
 protected:
-    union {
-        T unmanaged;
-        internal::bridge::col_key managed;
-    };
-
     [[nodiscard]] bool is_managed() const {
-        return m_object.has_value();
+        return m_object;
     }
-    void manage(const internal::bridge::obj& object,
-                const internal::bridge::col_key& col_key,
-                const internal::bridge::realm& realm)
-    {
-        m_object = internal::bridge::object(realm, object);
-        managed = col_key;
-    }
-    std::optional<internal::bridge::object> m_object;
+
+    virtual void manage(internal::bridge::object* object,
+                        internal::bridge::col_key&& col_key) = 0;
+
+    internal::bridge::object *m_object;
 
     // MARK: Queries
     bool should_detect_usage_for_queries = false;
@@ -202,74 +205,97 @@ protected:
         should_detect_usage_for_queries = true;
         query = &query_builder;
     }
-    template <typename Class, typename ...Properties>
-    friend struct schemagen::schema;
-    template <auto Ptr, bool IsPrimaryKey>
-    friend struct schemagen::property;
-    template <typename>
-    friend struct query;
-    template <typename U, typename V>
-    friend rbool operator==(const persisted<U>& a, const V& b);
-    template <auto Ptr, typename Class, typename Result, typename>
-    friend struct realm::schemagen::property_deducer;
-    template <template <typename ...> typename Variant, typename ...Ts, typename V>
-    std::enable_if_t<internal::type_info::is_variant_t<Variant<Ts...>>::value, rbool>
-    friend operator==(const persisted<Variant<Ts...>>& a, V&& b);
-    template <template <typename ...> typename Variant, typename ...Ts, typename V>
-    std::enable_if_t<internal::type_info::is_variant_t<Variant<Ts...>>::value, rbool>
-    friend operator==(const persisted<Variant<Ts...>>& a, const V& b);
-    friend inline rbool operator==(const persisted<std::string>& a, const char* b);
-    template <typename U, typename V>
-    friend rbool operator!=(const persisted<U>& a, const V& b);
-//    template <typename V>
-//    inline rbool operator==(const persisted<V>& lhs, const persisted<V>& rhs);
-    template <typename R>
-    friend inline rbool operator==(const persisted<R>& lhs, const persisted<R>& rhs);
-    template <typename U, typename V>
-    friend rbool operator>(const persisted<U>& a, const V& b);
-    template <typename U, typename V>
-    friend rbool operator<(const persisted<U>& a, const V& b);
-    template <typename U, typename V>
-    friend rbool operator<=(const persisted<U>& a, const V& b);
-    template <typename U, typename V>
-    friend rbool operator>=(const persisted<U>& a, const V& b);
+
+    __cpp_realm_friends
 };
 
-//// MARK: Implementation
-//
-//template <typename T>
-//persisted_base<T, realm::type_info::Persistable<T>>::persisted_base() {
-//    new (&unmanaged) T();
-//}
-//template <typename T>
-//persisted_base<T, realm::type_info::Persistable<T>>::persisted_base(const T& value) {
-//    unmanaged = value;
-//}
-//template <typename T>
-//persisted_base<T, realm::type_info::Persistable<T>>::persisted_base(T&& value) {
-//    unmanaged = std::move(value);
-//}
-//
-//template <typename T>
-//persisted_base<T, realm::type_info::Persistable<T>>::~persisted_base()
-//{
-//    if (should_detect_usage_for_queries) {
-//        return;
-//    }
-//    if constexpr (!type_info::PrimitivePersistableConcept<T>::value) {
-//        if constexpr (type_info::ListPersistableConcept<T>::value) {
-//            using std::vector;
-//            if (!m_object) {
-//                unmanaged.clear();
-//            }
-//        }
-//    } else if constexpr (std::is_same_v<T, std::string>) {
-//        if (!m_object) {
-//            using std::string;
-//            unmanaged.~string();
-//        }
-//    }
-//}
+    template <typename T>
+    struct persisted_primitive_base : public persisted_base<T> {
+        using persisted_base<T>::persisted_base;
+        persisted_primitive_base() {
+            new (&unmanaged) T();
+        }
+        persisted_primitive_base(const persisted_primitive_base& v) {
+            if (v.is_managed()) {
+                this->m_object = v.m_object;
+                managed = v.managed;
+            } else {
+                unmanaged = v.unmanaged;
+            }
+        }
+        persisted_primitive_base(const T& value) {
+            unmanaged = value;
+        }
+        persisted_primitive_base(T&& value) {
+            unmanaged = std::move(value);
+        }
+        ~persisted_primitive_base() {
+            if (this->is_managed()) {
+                managed.~col_key();
+            } else {
+                unmanaged.~T();
+            }
+        }
+
+        persisted_primitive_base& operator=(const T& o) noexcept {
+            if (this->is_managed()) {
+                this->m_object->obj().template set(managed, serialize(o));
+            } else {
+                new (&unmanaged) T(o);
+            }
+            return *this;
+        }
+
+        persisted_primitive_base& operator=(T&& o) noexcept {
+            if (this->is_managed()) {
+                this->m_object->obj().set(managed, o);
+            } else {
+                new (&unmanaged) T(std::move(o));
+            }
+            return *this;
+        }
+
+        persisted_primitive_base& operator=(const persisted_primitive_base& o) noexcept {
+            if (o.m_object) {
+                this->m_object = o.m_object;
+                new (&managed) internal::bridge::col_key(o.managed);
+            } else {
+                new (&unmanaged) T(o.unmanaged);
+            }
+            return *this;
+        }
+
+        persisted_primitive_base& operator=(persisted_primitive_base&& o) noexcept {
+            if (o.m_object) {
+                this->m_object = o.m_object;
+                new (&managed) internal::bridge::col_key(std::move(o.managed));
+            } else {
+                new (&unmanaged) T(std::move(o.unmanaged));
+            }
+            return *this;
+        }
+
+        T operator *() const {
+            if (this->is_managed()) {
+                return persisted<T>::deserialize(this->m_object->obj()
+                        .template get<typename internal::type_info::type_info<T>::internal_type>(this->managed));
+            } else {
+                return this->unmanaged;
+            }
+        }
+    protected:
+        union {
+            T unmanaged;
+            internal::bridge::col_key managed;
+        };
+
+        void manage(internal::bridge::object* object,
+                    internal::bridge::col_key&& col_key) final {
+            object->obj().set(col_key, persisted<T>::serialize(unmanaged));
+            this->m_object = object;
+            this->managed = col_key;
+        }
+    };
 
 // MARK: rbool
 
@@ -286,51 +312,13 @@ class rbool {
             b = r.b;
     }
     friend rbool operator &&(const rbool& lhs, const rbool& rhs);
-    template <typename T>
-    friend rbool operator==(const persisted<T>& a, const T& b);
-    template <typename T>
-    friend rbool operator==(const persisted<T>& a, const persisted<T>& b);
-    template <typename T>
-    friend rbool operator==(const persisted<T>& a, const char* b);
 
-    template <typename T, typename>
-    friend struct persisted_noncontainer_base;
-    template <typename T, typename>
-    friend struct persisted;
     template <typename T>
     friend struct results;
 
-    template <typename T>
-    friend rbool operator!=(const persisted<T>& a, const T& b);
-    template <typename T>
-    friend rbool operator!=(const persisted<T>& a, const persisted<T>& b);
-    template <typename T>
-    friend rbool operator!=(const persisted<T>& a, const char* b);
-
     friend rbool operator ||(const rbool& lhs, const rbool& rhs);
 
-    template <typename T, typename V>
-    friend rbool operator==(const persisted<T>& a, const V& b);
-    template <typename T, typename V>
-    friend rbool operator!=(const persisted<T>& a, const V& b);
-    template <typename T, typename V>
-    friend rbool operator>(const persisted<T>& a, const V& b);
-    template <typename T, typename V>
-    friend rbool operator<(const persisted<T>& a, const V& b);
-    template <typename T, typename V>
-    friend rbool operator>=(const persisted<T>& a, const V& b);
-    template <typename T, typename V>
-    friend rbool operator<=(const persisted<T>& a, const V& b);
-    template <typename T>
-    friend rbool inline operator==(const persisted<std::optional<T>>& a, const std::optional<T>& b);
-    template <template <typename ...> typename Variant, typename ...Ts, typename V>
-    std::enable_if_t<internal::type_info::is_variant_t<Variant<Ts...>>::value, rbool>
-    friend operator==(const persisted<Variant<Ts...>>& a, V&& b);
-    friend inline rbool operator==(const persisted<std::string>& a, const char* b);
-    template <template <typename ...> typename Variant, typename ...Ts, typename V>
-    std::enable_if_t<internal::type_info::is_variant_t<Variant<Ts...>>::value, rbool>
-    friend operator==(const persisted<Variant<Ts...>>& a, const V& b);
-    friend inline rbool operator!=(const persisted<std::string>& a, const char* b);
+    __cpp_realm_friends;
 public:
     ~rbool() {
         if (is_for_queries)
@@ -361,171 +349,12 @@ inline rbool operator ||(const rbool& lhs, const rbool& rhs) {
     }
     return lhs.b && rhs.b;
 }
-template <typename T>
-inline rbool operator==(const persisted<T>& lhs, const persisted<T>& rhs) {
-    if (lhs.should_detect_usage_for_queries) {
-        auto query = internal::bridge::query(lhs.query->get_table());
-        query.equal(lhs.managed, internal::type_info::serialize<T>(*rhs));
-        return {std::move(query)};
-    }
-    return *lhs == *rhs;
-}
 
-//
-//template <typename T>
-//rbool operator==(const persisted<T>& a, const T& b)
-//{
-//    if (a.should_detect_usage_for_queries) {
-//        auto query = internal::query(a.query->get_table());
-//        query.equal(a.managed, type_info::persisted_type<T>::convert_if_required(b));
-//        return {std::move(query)};
-//    }
-//    return *a == b;
-//}
-//
-//template <typename T>
-//rbool operator==(const persisted<T>& a, const persisted<T>& b)
-//{
-//    if (a.should_detect_usage_for_queries) {
-//        auto query = internal::query(a.query->get_table());
-//        query.equal(a.managed, b.managed);
-//        return {std::move(query)};
-//    }
-//    return *a == *b;
-//}
-//
-//template <typename T>
-//rbool operator!=(const persisted<T>& a, const T& b)
-//{
-//    if (a.should_detect_usage_for_queries) {
-//        auto query = internal::query(a.query->get_table());
-//        query.not_equal(a.managed, type_info::persisted_type<T>::convert_if_required(b));
-//        return {std::move(query)};
-//    }
-//    return !(a == b);
-//}
-//
-//template <typename T>
-//rbool operator!=(const persisted<T>& a, const persisted<T>& b)
-//{
-//    if (a.should_detect_usage_for_queries) {
-//        auto query = internal::query(a.query->get_table());
-//        query.not_equal(a.managed, b.managed);
-//        return {std::move(query)};
-//    }
-//    return !(a == b);
-//}
-//
-//template <typename T>
-//rbool operator==(const persisted<T>& a, const char* b)
-//{
-//    if (a.should_detect_usage_for_queries) {
-//        auto query = internal::query(a.query->get_table());
-//        query.equal(a.managed, b);
-//        return {std::move(query)};
-//    }
-//    return type_info::persisted_type<T>::convert_if_required(*a) == b;
-//}
-//
-//template <typename T>
-//rbool operator!=(const persisted<T>& a, const char* b)
-//{
-//    if (a.should_detect_usage_for_queries) {
-//        auto query = internal::query(a.query->get_table());
-//        query.not_equal(a.managed, b);
-//        return {std::move(query)};
-//    }
-//    return !(a == b);
-//}
-//
-//// MARK: Comparable
-//template <typename T>
-//std::enable_if_t<type_info::ComparableConcept<T>::value, rbool>
-//inline operator <(const persisted<T>& lhs, const T& a) {
-//    if (lhs.should_detect_usage_for_queries) {
-//        auto query = Query(lhs.query->get_table());
-//        query.less(lhs.managed, type_info::persisted_type<T>::convert_if_required(a));
-//        return {std::move(query)};
-//    }
-//    return *lhs < a;
-//}
-//template <typename T>
-//std::enable_if_t<type_info::ComparableConcept<T>::value, rbool>
-//inline operator >(const persisted<T>& lhs, const T& a) {
-//    if (lhs.should_detect_usage_for_queries) {
-//        auto query = Query(lhs.query->get_table());
-//        query.greater(lhs.managed, type_info::persisted_type<T>::convert_if_required(a));
-//        return {std::move(query)};
-//    }
-//    return *lhs > a;
-//}
-//template <typename T>
-//std::enable_if_t<type_info::ComparableConcept<T>::value, rbool>
-//inline operator <=(const persisted<T>& lhs, const T& a) {
-//    if (lhs.should_detect_usage_for_queries) {
-//        auto query = Query(lhs.query->get_table());
-//        query.less_equal(lhs.managed, type_info::persisted_type<T>::convert_if_required(a));
-//        return {std::move(query)};
-//    }
-//    return *lhs <= a;
-//}
-//template <typename T>
-//std::enable_if_t<type_info::ComparableConcept<T>::value, rbool>
-//inline operator >=(const persisted<T>& lhs, const T& a) {
-//    if (lhs.should_detect_usage_for_queries) {
-//        auto query = Query(lhs.query->get_table());
-//        query.greater_equal(lhs.managed, type_info::persisted_type<T>::convert_if_required(a));
-//        return {std::move(query)};
-//    }
-//    return *lhs >= a;
-//}
-//
-//template <typename T>
-//std::enable_if_t<type_info::ComparableConcept<T>::value, rbool>
-//inline operator <(const persisted<T>& lhs, const persisted<T>& a) {
-//    if (lhs.should_detect_usage_for_queries) {
-//        auto query = Query(lhs.query->get_table());
-//        query.less(lhs.managed, a.managed);
-//        return {std::move(query)};
-//    }
-//    return *lhs < *a;
-//}
-//template <typename T>
-//std::enable_if_t<type_info::ComparableConcept<T>::value, rbool>
-//inline operator >(const persisted<T>& lhs, const persisted<T>& a) {
-//    if (lhs.should_detect_usage_for_queries) {
-//        auto query = Query(lhs.query->get_table());
-//        query.greater(lhs.managed, a.managed);
-//        return {std::move(query)};
-//    }
-//    return *lhs > *a;
-//}
-//template <typename T>
-//std::enable_if_t<type_info::ComparableConcept<T>::value, rbool>
-//inline operator <=(const persisted<T>& lhs, const persisted<T>& a) {
-//    if (lhs.should_detect_usage_for_queries) {
-//        auto query = Query(lhs.query->get_table());
-//        query.less_equal(lhs.managed, a.managed);
-//        return {std::move(query)};
-//    }
-//    return *lhs <= *a;
-//}
-//template <typename T>
-//std::enable_if_t<type_info::ComparableConcept<T>::value, rbool>
-//inline operator >=(const persisted<T>& lhs, const persisted<T>& a) {
-//    if (lhs.should_detect_usage_for_queries) {
-//        auto query = Query(lhs.query->get_table());
-//        query.greater_equal(lhs.managed, a.managed);
-//        return {std::move(query)};
-//    }
-//    return *lhs >= *a;
-//}
-//
-//template <typename T>
-//std::ostream& operator<< (std::ostream& stream, const persisted<T>& value)
-//{
-//    return stream << type_info::persisted_type<T>::convert_if_required(*value);
-//}
+template <typename T>
+inline std::ostream& operator<< (std::ostream& stream, const persisted_primitive_base<T>& value)
+{
+    return stream << *value;
+}
 //
 //template <typename T>
 //std::ostream& operator<< (std::ostream& stream, const persisted<std::optional<T>>& value)
@@ -535,30 +364,29 @@ inline rbool operator==(const persisted<T>& lhs, const persisted<T>& rhs) {
 //    }
 //    return stream << type_info::persisted_type<T>::convert_if_required(**value);
 //}
-//
-//template <typename T>
-//typename std::enable_if<std::is_base_of<realm::object_base, T>::value, std::ostream>::type&
-//operator<< (std::ostream& stream, const T& object)
-//{
-//    static_assert(type_info::ObjectBasePersistableConcept<T>::value);
-//    if (object.m_object) {
-//        return stream << object.m_object->obj();
-//    }
-////    for (int i = 0; i < std::tuple_size<decltype(T::schema.properties)>{}; i++) {
-////        auto props = std::get<i>(T::schema.properties);
-////        auto name = T::schema.names[i];
-////        stream << "{\n";
-////        (stream << "\t" << name << ": " << *(object.*props.ptr) << "\n");
-////        stream << "}";
-////    }
-//    std::apply([&stream, &object](auto&&... props) {
+
+template <typename T>
+inline typename std::enable_if<std::is_base_of<realm::object_base, T>::value, std::ostream>::type&
+operator<< (std::ostream& stream, const T& object)
+{
+    if (object.m_object) {
+        return stream << object.m_object->obj();
+    }
+//    for (int i = 0; i < std::tuple_size<decltype(T::schema.properties)>{}; i++) {
+//        auto props = std::get<i>(T::schema.properties);
+//        auto name = T::schema.names[i];
 //        stream << "{\n";
-//        ((stream << "\t" << props.name << ": " << *(object.*props.ptr) << "\n"), ...);
+//        (stream << "\t" << name << ": " << *(object.*props.ptr) << "\n");
 //        stream << "}";
-//    }, T::schema.properties);
-//
-//    return stream;
-//}
+//    }
+    std::apply([&stream, &object](auto&&... props) {
+        stream << "{\n";
+        ((stream << "\t" << props.name << ": " << *(object.*props.ptr) << "\n"), ...);
+        stream << "}";
+    }, T::schema.properties);
+
+    return stream;
+}
 //
 //template <typename T>
 //typename std::enable_if_t<type_info::BinaryPersistableConcept<T>::value, std::ostream>&

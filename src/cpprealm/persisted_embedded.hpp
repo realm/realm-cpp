@@ -19,39 +19,68 @@
 #ifndef REALM_PERSISTED_EMBEDDED_HPP
 #define REALM_PERSISTED_EMBEDDED_HPP
 
+#include <cpprealm/object.hpp>
 #include <cpprealm/persisted.hpp>
 
 namespace realm {
-    namespace internal {
-//        template <typename T>
-//        struct type_info<std::chrono::time_point<C, D>> {
-//            using internal_type = bridge::timestamp;
-//        };
-    }
-//    template<typename T>
-//    struct persisted<T, std::enable_if_t<std::is_base_of_v<embedded_object, T>>> : public persisted_base<T> {
-//
-//        persisted& operator=(const T& o) override {
-//            if (auto obj = this->m_object) {
-//                // if non-null object is being assigned...
-//                if (o.m_object) {
-//                    // if object is managed, we will to set the link
-//                    // to the new target's key
-//                    obj->obj().template set<typename persisted_base<T>::type>(
-//                            this->managed,
-//                            o.m_object->obj().get_key());
-//                } else {
-//                    // else new unmanaged object is being assigned.
-//                    // we must assign the values to this object's fields
-//                    // TODO:
-//                    REALM_UNREACHABLE();
-//                }
-//            } else {
-//                new (&this->unmanaged) T(o);
-//            }
-//            return *this;
-//        }
-//    };
+    template <typename T>
+    struct persisted<T, std::enable_if_t<std::is_base_of_v<object_base, T>>> : public persisted_base<T> {
+        persisted() = default;
+        persisted(const persisted& v) {
+            m_property_object = v.m_property_object;
+        }
+        persisted(const T& v) {
+            m_property_object = v;
+        }
+        persisted& operator =(const T& v) {
+            m_property_object = v;
+            return *this;
+        }
+        persisted& operator =(std::nullopt_t) {
+            m_property_object = std::nullopt;
+            if (this->is_managed()) {
+                abort();
+            }
+            return *this;
+        }
+        T* operator ->() {
+            return &*m_property_object;
+        }
+        T& operator * () {
+            return *m_property_object;
+        }
+    protected:
+        void manage(internal::bridge::object* object,
+                    internal::bridge::col_key&& col_key) final {
+            if (!m_property_object) {
+                return;
+            }
+            if (m_property_object->m_object) {
+                m_property_object->m_object->obj().set(col_key, m_property_object->m_object->obj().get_key());
+            } else {
+                auto target_table = object->obj().get_table().get_link_target(col_key);
+                T& target_cls = *m_property_object;
+
+                auto realm = object->get_realm();
+                if constexpr (decltype(T::schema)::HasPrimaryKeyProperty) {
+                    using Schema = decltype(T::schema);
+                    auto val = (target_cls).*Schema::PrimaryKeyProperty::ptr;
+                    target_cls.m_object = internal::bridge::object(realm, target_table.create_object_with_primary_key(*val));
+                } else {
+                    target_cls.m_object = internal::bridge::object(realm, target_table.create_object());
+                }
+                T::schema.set(target_cls);
+                object->obj().set(col_key, target_cls.m_object->obj().get_key());
+            }
+        }
+
+        static internal::bridge::obj_key serialize(const T& v) {
+            return v.m_object->obj().get_key();
+        }
+        std::optional<T> m_property_object;
+
+        __cpp_realm_friends
+    };
 }
 
 #endif //REALM_PERSISTED_EMBEDDED_HPP
