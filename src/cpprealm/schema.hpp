@@ -296,6 +296,9 @@ namespace internal {
                 }
                 return variant_t{};
             } else {
+                if (property_name == std::string_view(names[N])) {
+                    return variant_t { std::in_place_index<N>, *(cls.*property.ptr) };
+                }
                 return property_value_for_name<N + 1>(property_name, cls, std::get<N + 1>(properties));
             }
         }
@@ -322,6 +325,21 @@ namespace internal {
             cls.m_object = Object(realm, obj);
             assign<0>(cls, std::get<0>(properties));
             return cls;
+        }
+
+        constexpr auto assign(Class &object) const {
+            return assign<0>(object, std::get<0>(properties));
+
+//            if constexpr (N + 1 == sizeof...(Properties)) {
+////                property.assign(object, object.m_object->obj().get_table()->get_column_key(names[N]),
+////                                object.m_object->realm());
+//                return;
+//            } else {
+////                property.assign(object, object.m_object->obj().get_table()->get_column_key(names[N]),
+////                                object.m_object->realm());
+//                return assign<N + 1>(object, std::get<N + 1>(properties));
+//            }
+
         }
 
         std::unique_ptr<Class> create_unique(Obj &&obj, const SharedRealm &realm) const {

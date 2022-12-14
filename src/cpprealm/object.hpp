@@ -226,8 +226,8 @@ struct object_base {
                             block(ObjectChange<T> { .is_deleted = true });
                         }
                     } else {
+                        std::vector<PropertyChange<T>> property_changes;
                         for (size_t i = 0; i < property_names.size(); i++) {
-                            std::vector<PropertyChange<T>> property_changes;
                             PropertyChange<T> property;
                             property.name = property_names[i];
                             if (!old_values.empty()) {
@@ -237,8 +237,8 @@ struct object_base {
                                 property.new_value = new_values[i];
                             }
                             property_changes.push_back(property);
-                            block(ObjectChange<T> { .object = ptr, .property_changes = property_changes });
                         }
+                        block(ObjectChange<T> { .object = ptr, .property_changes = property_changes });
                     }
                 }, *static_cast<T*>(this), *m_object}));
     }
@@ -258,6 +258,7 @@ protected:
     friend struct thread_safe_reference;
     template <typename ...Ts>
     friend struct db;
+    friend struct conversion_context;
 
     template <typename T>
     friend typename std::enable_if<std::is_base_of<realm::object_base, T>::value, std::ostream>::type&

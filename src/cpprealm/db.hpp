@@ -138,6 +138,11 @@ struct db {
         m_realm->commit_transaction();
     }
 
+    bool refresh()
+    {
+        return m_realm->refresh();
+    }
+
     template <typename T>
     void add(T& object)
     {

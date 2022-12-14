@@ -19,7 +19,6 @@
 #ifndef realm_persisted_hpp
 #define realm_persisted_hpp
 
-//#include <cpprealm/notifications.hpp>
 #include <cpprealm/type_info.hpp>
 
 #include <realm/query.hpp>
@@ -52,6 +51,68 @@ class rbool;
 template <typename, typename = void>
 struct persisted_base;
 
+    using mixed = std::variant<
+            int64_t,
+            bool,
+            std::string,
+            double,
+            std::vector<uint8_t>,
+            std::chrono::time_point<std::chrono::system_clock>,
+            uuid>; // TODO: Remove duplication
+
+struct conversion_context {
+    conversion_context() { }
+
+    int convert_to_sdk_type(const realm::Int v)
+    {
+        return v;
+    }
+
+    bool convert_to_sdk_type(const realm::Bool v)
+    {
+        return v;
+    }
+
+    double convert_to_sdk_type(const realm::Double v)
+    {
+        return v;
+    }
+
+    std::string convert_to_sdk_type(const realm::StringData& v)
+    {
+        return std::string {v.data(), v.size()};
+    }
+
+    std::vector<uint8_t> convert_to_sdk_type(const realm::BinaryData& v)
+    {
+        return std::vector<uint8_t>(v.data(), v.data()+v.size());
+    }
+
+    std::chrono::time_point<std::chrono::system_clock> convert_to_sdk_type(const realm::Timestamp& v)
+    {
+        return v.get_time_point();
+    }
+
+    realm::uuid convert_to_sdk_type(const realm::UUID& v)
+    {
+        return v;
+    }
+
+    mixed convert_to_sdk_type(const Mixed& v)
+    {
+        return mixed();
+    }
+
+    template<typename T>
+    T convert_to_sdk_type(realm::ObjKey v, const std::shared_ptr<Realm>& realm, const std::string& object_name)
+    {
+        T t;
+        t.m_object = Object(realm, object_name, v.value);
+        T::schema.assign(t);
+        return t;
+    }
+};
+
 template <typename T>
 struct persisted_base<T, realm::type_info::Persistable<T>> {
     using Result = T;
@@ -59,13 +120,6 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
 
     persisted_base(const T& value);
     persisted_base(T&& value);
-//
-//    template <typename S, std::enable_if_t<type_info::ObjectPersistableConcept<S>::value && std::is_same_v<S, typename T::value_type>>>
-//    persisted_base(std::optional<S> value) {
-//        unmanaged = value;
-//    }
-//    template <typename S, type_info::ObjectBasePersistable<T>>
-//    persisted_base(std::optional<S> value);
 
     persisted_base();
     ~persisted_base();
@@ -79,7 +133,11 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
     persisted_base& operator=(const T& o) {
         if (auto obj = m_object) {
             if constexpr (type_info::PrimitivePersistableConcept<T>::value) {
-                obj->obj().template set<type>(managed, o);
+                if constexpr (type_info::EnumPersistableConcept<T>::value) {
+                    obj->obj().template set<Int>(managed, static_cast<Int>(o));
+                } else {
+                    obj->obj().template set<type>(managed, o);
+                }
             } else if constexpr (type_info::MixedPersistableConcept<T>::value) {
                 obj->obj().set_any(managed, type_info::persisted_type<T>::convert_if_required(o));
             }
@@ -105,10 +163,11 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
                         // to the new target's key
                         obj->obj().template set<ObjKey>(managed, link->m_object->obj().get_key());
                     } else {
-                        // else new unmanaged object is being assigned.
-                        // we must assign the values to this object's fields
-                        // TODO:
-                        REALM_UNREACHABLE();
+                        auto actual_schema = *obj->get_realm()->schema().find(T::value_type::schema.name);
+                        auto& group = obj->get_realm()->read_group();
+                        auto table = group.get_table(actual_schema.table_key);
+                        T::value_type::schema.add(*link, table, obj->get_realm());
+                        obj->obj().template set<ObjKey>(managed, link->m_object->obj().get_key());
                     }
                 } else {
                     // else null link is being assigned to this field
@@ -122,9 +181,7 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
                     if constexpr (type_info::EnumPersistableConcept<typename T::value_type>::value) {
                         obj->obj().template set<Int>(managed, static_cast<Int>(*o));
                     } else {
-                        obj->obj().template set<UnwrappedType>(managed,
-                                                               type_info::persisted_type<UnwrappedType>::convert_if_required(
-                                                                       *o));
+                        obj->obj().template set<UnwrappedType>(managed, type_info::persisted_type<typename T::value_type>::convert_if_required(*o));
                     }
                 } else {
                     obj->obj().set_null(managed);
@@ -192,6 +249,27 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
                 } else if constexpr (type_info::MixedPersistableConcept<T>::value) {
                     Mixed mixed = m_object->obj().template get<type>(managed);
                     return type_info::mixed_to_variant<T>(mixed);
+                } else if constexpr (type_info::ListPersistableConcept<T>::value) {
+                    conversion_context ctx;
+                    auto vals = m_object->obj().template get_list_values<typename type_info::persisted_type<typename T::value_type>::type>(managed);
+                    std::vector<typename T::value_type> ret;
+                    if constexpr (std::is_same_v<typename T::value_type, int> || std::is_same_v<typename T::value_type, bool> || std::is_same_v<typename T::value_type, double>) {
+                        for (auto v : vals) {
+                            ret.push_back(ctx.convert_to_sdk_type(v));
+                        }
+                    } else if constexpr (std::is_same_v<typename T::value_type, mixed> || std::is_same_v<typename T::value_type, std::vector<uint8_t>> || std::is_same_v<typename T::value_type, std::string> || std::is_same_v<typename T::value_type, realm::uuid> || std::is_same_v<typename T::value_type, std::chrono::time_point<std::chrono::system_clock>>) {
+                        for (auto& v : vals) {
+                            ret.push_back(ctx.convert_to_sdk_type(v));
+                        }
+                    }
+                    else {
+                        auto class_name = T::value_type::schema.name;
+                        // For object_base
+                        for (auto& v : vals) {
+                            ret.push_back(ctx.convert_to_sdk_type<typename T::value_type>(v, m_object->get_realm(), class_name));
+                        }
+                    }
+                    return ret;
                 } else {
                     return static_cast<T>(m_object->obj().template get<type>(managed));
                 }
