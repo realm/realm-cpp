@@ -51,14 +51,14 @@ class rbool;
 template <typename, typename = void>
 struct persisted_base;
 
-    using mixed = std::variant<
-            int64_t,
-            bool,
-            std::string,
-            double,
-            std::vector<uint8_t>,
-            std::chrono::time_point<std::chrono::system_clock>,
-            uuid>; // TODO: Remove duplication
+using mixed = std::variant<
+        int64_t,
+        bool,
+        std::string,
+        double,
+        std::vector<uint8_t>,
+        std::chrono::time_point<std::chrono::system_clock>,
+        uuid>; // TODO: Remove duplication
 
 struct conversion_context {
     conversion_context() { }
@@ -100,12 +100,7 @@ struct conversion_context {
 
     mixed convert_to_sdk_type(const Mixed& v)
     {
-//        template<size_t N, typename Variant>
-//        constexpr Variant check_if_returnable(const Mixed& mixed) {
-//
-//        }
         return type_info::check_if_returnable<0, mixed>(v);
-//        return mixed();
     }
 
     template<typename T>
