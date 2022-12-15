@@ -8,6 +8,8 @@ TEST_CASE("object_notifications") {
         auto date = std::chrono::time_point<std::chrono::system_clock>();
         auto uuid = realm::uuid();
         auto foo = AllTypesObject();
+        auto o = AllTypesObjectLink();
+        o._id = 1;
 
         realm.write([&foo, &realm]() {
             realm.add(foo);
@@ -56,23 +58,6 @@ TEST_CASE("object_notifications") {
             run_count++;
         });
 
-
-        /*
-
-
-
-    realm::persisted<std::vector<int>> list_int_col;
-    realm::persisted<std::vector<bool>> list_bool_col;
-    realm::persisted<std::vector<std::string>> list_str_col;
-    realm::persisted<std::vector<realm::uuid>> list_uuid_col;
-    realm::persisted<std::vector<std::vector<std::uint8_t>>> list_binary_col;
-    realm::persisted<std::vector<std::chrono::time_point<std::chrono::system_clock>>> list_date_col;
-    realm::persisted<std::vector<realm::mixed>> list_mixed_col;
-
-    realm::persisted<std::vector<AllTypesObjectLink>> list_obj_col;
-    realm::persisted<std::vector<AllTypesObjectEmbedded>> list_embedded_obj_col;
-         */
-
         realm.write([&]() {
             foo.str_col = "foo";
             foo.bool_col = true;
@@ -89,18 +74,39 @@ TEST_CASE("object_notifications") {
             foo.opt_date_col = date;
             foo.opt_uuid_col = uuid;
             foo.opt_binary_col = std::vector<uint8_t>({1});
-            AllTypesObjectLink o;
+            o._id = 123;
             o.str_col = "link object";
             foo.opt_obj_col = o;
 
+            foo.list_int_col.push_back(1);
+            foo.list_bool_col.push_back(true);
+            foo.list_str_col.push_back("bar");
+            foo.list_uuid_col.push_back(realm::uuid());
+            foo.list_binary_col.push_back({1});
+            foo.list_date_col.push_back(date);
+            foo.list_mixed_col.push_back("mixed str");
+            AllTypesObjectLink o2;
+            o2._id = 2;
+            o2.str_col = "link object 2";
+            foo.list_obj_col.push_back(o2);
+            AllTypesObjectEmbedded o3;
+            o3.str_col = "embedded obj";
 
+            foo.list_embedded_obj_col.push_back(o3);
         });
-
         realm.refresh();
+
+        auto x = *o.str_col;
+        auto xx = o.is_managed();
+
         realm.write([&foo, &realm] {
             realm.remove(foo);
         });
         realm.refresh();
         CHECK(run_count == 2);
+    }
+
+    SECTION("scope") {
+
     }
 }

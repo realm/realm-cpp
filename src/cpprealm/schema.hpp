@@ -354,7 +354,7 @@ namespace internal {
                 auto pk = *(object.*PrimaryKeyProperty::ptr);
                 object.m_object = Object(realm, table->create_object_with_primary_key(pk));
             } else {
-                object.m_object = Object(realm, table->create_object(ObjKey{}));
+                object.m_object = Object(realm, table->create_object());
             }
 
             set(object);

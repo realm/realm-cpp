@@ -130,7 +130,14 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
         *this = std::move(o);
     }
 
+    persisted_base& operator=(T&& o) {
+        return this->operator=(o);
+    }
     persisted_base& operator=(const T& o) {
+        return this->operator=(o);
+    }
+
+    persisted_base& operator=(T& o) {
         if (auto obj = m_object) {
             if constexpr (type_info::PrimitivePersistableConcept<T>::value) {
                 if constexpr (type_info::EnumPersistableConcept<T>::value) {
@@ -156,18 +163,18 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
                 }
             } else if constexpr (type_info::OptionalObjectPersistableConcept<T>::value) {
                 // if object...
-                if (auto link = o) {
+                if (o) {
                     // if non-null object is being assigned...
-                    if (link->m_object) {
+                    if (o->m_object) {
                         // if object is managed, we will to set the link
                         // to the new target's key
-                        obj->obj().template set<ObjKey>(managed, link->m_object->obj().get_key());
+                        obj->obj().template set<ObjKey>(managed, o->m_object->obj().get_key());
                     } else {
                         auto actual_schema = *obj->get_realm()->schema().find(T::value_type::schema.name);
                         auto& group = obj->get_realm()->read_group();
                         auto table = group.get_table(actual_schema.table_key);
-                        T::value_type::schema.add(*link, table, obj->get_realm());
-                        obj->obj().template set<ObjKey>(managed, link->m_object->obj().get_key());
+                        T::value_type::schema.add(*o, table, obj->get_realm());
+                        obj->obj().template set<ObjKey>(managed, o->m_object->obj().get_key());
                     }
                 } else {
                     // else null link is being assigned to this field

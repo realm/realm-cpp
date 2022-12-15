@@ -244,6 +244,8 @@ struct object_base {
     }
 protected:
     std::optional<Object> m_object;
+    template<typename T, typename>
+    friend struct persisted;
     template <typename T, typename>
     friend struct persisted_base;
     template <typename T>

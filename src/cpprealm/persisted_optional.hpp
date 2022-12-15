@@ -27,6 +27,62 @@ namespace realm {
         using persisted_noncontainer_base<T>::persisted_noncontainer_base;
         using persisted_noncontainer_base<T>::operator=;
         using persisted_noncontainer_base<T>::operator*;
+
+        // Assigning an object type to the rhs
+        persisted<T, type_info::OptionalPersistable<T>>& operator=(typename T::value_type& o) {
+            if (auto obj = this->m_object) {
+                if constexpr (type_info::PrimitivePersistableConcept<T>::value) {
+                    if constexpr (type_info::EnumPersistableConcept<T>::value) {
+                        obj->obj().template set<Int>(this->managed, static_cast<Int>(o));
+                    } else {
+                        obj->obj().template set<this->type>(this->managed, o);
+                    }
+                } else if constexpr (type_info::MixedPersistableConcept<T>::value) {
+                    obj->obj().set_any(this->managed, type_info::persisted_type<T>::convert_if_required(o));
+                }
+                    // if parent is managed...
+                else if constexpr (type_info::EmbeddedObjectPersistableConcept<T>::value) {
+                    // if non-null object is being assigned...
+                    if (o.m_object) {
+                        // if object is managed, we will to set the link
+                        // to the new target's key
+                        obj->obj().template set<this->type>(this->managed, o.m_object->obj().get_key());
+                    } else {
+                        // else new unmanaged object is being assigned.
+                        // we must assign the values to this object's fields
+                        // TODO:
+                        REALM_UNREACHABLE();
+                    }
+                }
+                else if constexpr (type_info::OptionalObjectPersistableConcept<T>::value) {
+                        if (o.m_object) {
+                            // if object is managed, we will to set the link
+                            // to the new target's key
+                            obj->obj().template set<ObjKey>(this->managed, o.m_object->obj().get_key());
+                        } else {
+                            auto actual_schema = *obj->get_realm()->schema().find(T::value_type::schema.name);
+                            auto& group = obj->get_realm()->read_group();
+                            auto table = group.get_table(actual_schema.table_key);
+                            T::value_type::schema.add(o, table, obj->get_realm());
+                            obj->obj().template set<ObjKey>(this->managed, o.m_object->obj().get_key());
+                        }
+                }
+                else if constexpr (type_info::OptionalPersistableConcept<T>::value) {
+                    using UnwrappedType = typename type_info::persisted_type<typename T::value_type>::type;
+                    if constexpr (type_info::EnumPersistableConcept<typename T::value_type>::value) {
+                        obj->obj().template set<Int>(this->managed, static_cast<Int>(o));
+                    } else {
+                        obj->obj().template set<UnwrappedType>(this->managed, type_info::persisted_type<typename T::value_type>::convert_if_required(o));
+                    }
+                }
+                else {
+                    obj->obj().template set<this->type>(this->managed, o);
+                }
+            } else {
+                new (&this->unmanaged) T(o);
+            }
+            return *this;
+        }
     };
     template <typename T>
     std::enable_if_t<type_info::is_optional<T>::value, rbool>
