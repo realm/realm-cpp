@@ -3,6 +3,15 @@
 
 using namespace realm;
 
+static inline void little_sleep(std::chrono::microseconds us)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+    auto end = start + us;
+    do {
+        std::this_thread::yield();
+    } while (std::chrono::high_resolution_clock::now() < end);
+}
+
 TEST_CASE("map", "[map]") {
     realm_path path;
     SECTION("unmanaged_managed_map_get_set", "[mixed]") {
@@ -101,6 +110,8 @@ TEST_CASE("map", "[map]") {
         }
     }
 
+
+
     SECTION("managed_map_observe", "[mixed]") {
         auto obj = AllTypesObject();
         obj.map_str_col = {
@@ -112,7 +123,7 @@ TEST_CASE("map", "[map]") {
         });
         std::promise<bool> p;
         auto token = obj.map_str_col.observe([&p](auto&& change) {
-            if (!change.modifications.empty()) {
+            if (!change.modifications.empty() && !change.insertions.empty()) {
                 CHECK(change.modifications[0] == 0);
                 CHECK(change.insertions[0] == 1);
                 p.set_value(true);
@@ -132,3 +143,4 @@ TEST_CASE("map", "[map]") {
         }
     }
 }
+

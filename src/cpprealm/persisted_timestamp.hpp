@@ -38,8 +38,12 @@ namespace realm {
             }
         }
     protected:
-        static internal::bridge::timestamp serialize(const time_point& v);
-        static time_point deserialize(const internal::bridge::timestamp& v);
+        static internal::bridge::timestamp serialize(const time_point& v) {
+            return v;
+        }
+        static time_point deserialize(const internal::bridge::timestamp& v) {
+            return v;
+        }
 
         template <typename U, typename V, typename S>
         friend persisted<std::chrono::time_point<U, V>>& operator +=(

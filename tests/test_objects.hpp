@@ -170,7 +170,7 @@ private:
     std::string m_str;
 };
 
-bool operator==(const UppercaseString& lhs, const char* rhs) {
+inline bool operator==(const UppercaseString& lhs, const char* rhs) {
     return static_cast<std::string>(lhs) == rhs;
 }
 

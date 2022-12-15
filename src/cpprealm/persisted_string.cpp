@@ -1,6 +1,13 @@
 #include <cpprealm/persisted_string.hpp>
 
 namespace realm {
+    persisted<std::string>::persisted() {
+        unmanaged = "";
+    }
+    persisted<std::string>::persisted(const char *v)
+    {
+        unmanaged = v;
+    }
     rbool persisted<std::string>::contains(const std::string &s) const {
         if (is_managed()) {
             return m_object->obj().get<std::string>(managed).find(s) != npos;
@@ -47,5 +54,14 @@ namespace realm {
     }
     std::string persisted<std::string>::deserialize(const std::string &v) {
         return v;
+    }
+
+    persisted<std::string> &persisted<std::string>::operator=(const char *v) {
+        if (this->is_managed()) {
+            m_object->obj().set(managed, std::string(v));
+        } else {
+            unmanaged = v;
+        }
+        return *this;
     }
 }

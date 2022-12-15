@@ -5,10 +5,13 @@
 #include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
+#include <cpprealm/internal/bridge/dictionary.hpp>
+#include <cpprealm/internal/bridge/thread_safe_reference.hpp>
 
 #include <realm/object-store/schema.hpp>
-#include <realm/object-store/property.hpp>
 #include <realm/object-store/shared_realm.hpp>
+#include <realm/object-store/thread_safe_reference.hpp>
+#include <realm/object-store/dictionary.hpp>
 #include <realm/sync/config.hpp>
 #include <realm/object-store/util/scheduler.hpp>
 
@@ -37,8 +40,9 @@ namespace realm::internal::bridge {
 
         ~internal_scheduler() override = default;
         void invoke(util::UniqueFunction<void ()> &&fn) override {
-            m_scheduler->invoke([&fn]() {
-                fn();
+//            auto f = fn.release();
+            m_scheduler->invoke([fn = fn.release()]() {
+                fn->call();
             });
         }
 
@@ -60,11 +64,13 @@ namespace realm::internal::bridge {
     }
     realm::config::config(const std::string &path,
                           const std::shared_ptr<struct scheduler>& scheduler,
-                          const struct sync_config &s) {
+                          const std::optional<struct sync_config> &s) {
         RealmConfig config;
         config.path = path;
         config.scheduler = std::make_shared<internal_scheduler>(scheduler);
-        config.sync_config = std::make_shared<SyncConfig>(s);
+        if (s)
+            config.sync_config = std::make_shared<SyncConfig>(*s);
+        config.schema_version = 0;
         new (&m_config) RealmConfig(config);
     }
 
@@ -82,7 +88,9 @@ namespace realm::internal::bridge {
     std::string realm::config::path() const {
         return reinterpret_cast<const RealmConfig*>(m_config)->path;
     }
-
+    realm::config realm::get_config() const {
+        return m_realm->config();
+    }
     void realm::config::set_schema(const std::vector<object_schema> &v) {
         std::vector<ObjectSchema> v2;
         for (auto& os : v) {
@@ -108,6 +116,23 @@ namespace realm::internal::bridge {
         return *reinterpret_cast<const RealmConfig*>(m_config);
     }
     realm::realm(const config &v) {
-        m_realm = Realm::get_shared_realm(v);
+        m_realm = Realm::get_shared_realm(static_cast<RealmConfig>(v));
+    }
+
+    bool operator!=(realm const& lhs, realm const& rhs) {
+        return static_cast<SharedRealm>(lhs) == static_cast<SharedRealm>(rhs);
+    }
+
+    dictionary realm::resolve(thread_safe_reference &&tsr) {
+
+        return reinterpret_cast<ThreadSafeReference*>(tsr.m_thread_safe_reference)->resolve<Dictionary>(m_realm);
+    }
+
+    void realm::config::set_scheduler(const std::shared_ptr<struct scheduler> &s) {
+        reinterpret_cast<RealmConfig*>(m_config)->scheduler = std::make_shared<internal_scheduler>(s);
+    }
+
+    scheduler realm::scheduler() const {
+//        return m_realm->scheduler();
     }
 }

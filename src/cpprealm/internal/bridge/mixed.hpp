@@ -16,7 +16,10 @@ namespace realm {
 namespace realm::internal::bridge {
     struct mixed : core_binding<Mixed> {
         explicit mixed(const std::string&);
+        mixed(const int&); //NOLINT(google-explicit-constructor)
         mixed(const int64_t&); //NOLINT(google-explicit-constructor)
+        mixed(const double&); //NOLINT(google-explicit-constructor)
+        mixed(const bool&); //NOLINT(google-explicit-constructor)
         mixed(const struct uuid&); //NOLINT(google-explicit-constructor)
         mixed(const struct timestamp&); //NOLINT(google-explicit-constructor)
         mixed(const struct obj_key&); //NOLINT(google-explicit-constructor)

@@ -129,7 +129,9 @@ namespace realm {
             };
             void manage(internal::bridge::object *object,
                         internal::bridge::col_key &&col_key) final {
+                this->m_object = object;
                 object->obj().set_list_values(col_key, unmanaged);
+                m_list = object->get_list(col_key);
             }
         };
     }

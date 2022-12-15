@@ -8,7 +8,8 @@ namespace realm {
     class BinaryData;
 }
 namespace realm::internal::bridge {
-    struct binary : core_binding<BinaryData> {
+    struct binary {
+        binary();
         binary(const BinaryData&); //NOLINT(google-explicit-constructor)
         binary(const std::vector<uint8_t>&); //NOLINT(google-explicit-constructor)
         [[nodiscard]] const char* data() const;

@@ -23,7 +23,7 @@ namespace realm {
 
             col_key get_column_key(const std::string &name) const;
 
-            obj create_object_with_primary_key(const mixed &key);
+            obj create_object_with_primary_key(const mixed &key) const;
 
             obj create_object(const obj_key &obj_key = {}) const;
 

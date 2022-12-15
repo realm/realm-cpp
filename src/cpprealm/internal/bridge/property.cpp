@@ -28,4 +28,8 @@ namespace realm::internal::bridge {
     property::operator Property() const {
         return *reinterpret_cast<const Property*>(m_property);
     }
+
+    void property::set_type(realm::internal::bridge::property::type t) {
+        reinterpret_cast<Property*>(m_property)->type = static_cast<PropertyType>(t);
+    }
 }

@@ -49,6 +49,7 @@ namespace realm::internal::bridge {
     struct table;
     struct dictionary;
     struct uuid;
+    struct list;
 
     namespace {
         template <typename T>
@@ -62,7 +63,7 @@ namespace realm::internal::bridge {
         };
     }
     struct obj {
-        obj(Obj&&); //NOLINT google-explicit-constructor
+        obj(const Obj&); //NOLINT google-explicit-constructor
         operator Obj() const; //NOLINT google-explicit-constructor
         [[nodiscard]] table get_table() const noexcept;
         [[nodiscard]] bool is_null(const col_key& col_key) const;
@@ -129,22 +130,12 @@ namespace realm::internal::bridge {
 
         template <typename T>
         std::vector<T> get_list_values(int64_t col_key);
-        dictionary get_dictionary(const col_key& col_key);
-        dictionary get_dictionary(const std::string& property_name);
         [[nodiscard]] obj_key get_key() const;
         lnklst get_linklist(const col_key& col_key);
         void set_null(const col_key&);
         obj create_and_set_linked_object(const col_key&);
     private:
         unsigned char m_obj[64]{};
-    };
-
-    struct notification_token {
-        notification_token();
-        notification_token(NotificationToken&&);
-        operator NotificationToken() const;
-    private:
-        unsigned char m_token[32]{};
     };
 
     struct group {

@@ -84,4 +84,12 @@ namespace realm {
     {
         new (&m_subscription_set) sync::SubscriptionSet(static_cast<SharedRealm>(realm)->get_active_subscription_set());
     }
+
+    std::string_view SyncSubscription::query_string() const {
+        return reinterpret_cast<const sync::Subscription*>(m_subscription)->query_string();
+    }
+
+    std::string_view SyncSubscription::name() const {
+        return reinterpret_cast<const sync::Subscription*>(m_subscription)->name();
+    }
 }

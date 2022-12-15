@@ -1,6 +1,9 @@
 #include "obj.hpp"
 #include "realm/object-store/shared_realm.hpp"
 #include "realm/obj.hpp"
+#include <realm/object-store/object_store.hpp>
+#include <realm/list.hpp>
+
 #include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
@@ -20,7 +23,7 @@ namespace realm::internal::bridge {
         return *this;
     }
 
-    obj::obj(Obj&& v) {
+    obj::obj(const Obj& v) {
         new (&m_obj) Obj(v);
     }
 
@@ -69,37 +72,31 @@ namespace realm::internal::bridge {
         return reinterpret_cast<const Obj*>(m_obj)->get<Timestamp>(col_key);
     }
     void obj::set(const col_key &col_key, const std::string &value) {
-        reinterpret_cast<Obj*>(m_obj)->set<StringData>(*reinterpret_cast<const ColKey*>(&col_key), value);
+        reinterpret_cast<Obj*>(m_obj)->set<StringData>(col_key, value);
     }
     void obj::set(const col_key &col_key, const binary &value) {
-        reinterpret_cast<Obj*>(m_obj)->set<BinaryData>(*reinterpret_cast<const ColKey*>(&col_key), value);
+        reinterpret_cast<Obj*>(m_obj)->set<BinaryData>(col_key, value);
     }
     void obj::set(const col_key &col_key, const int64_t &value) {
-        reinterpret_cast<Obj*>(m_obj)->set<Int>(*reinterpret_cast<const ColKey*>(&col_key), value);
+        reinterpret_cast<Obj*>(m_obj)->set<Int>(col_key, value);
     }
     void obj::set(const col_key &col_key, const bool &value) {
-        reinterpret_cast<Obj*>(m_obj)->set<Bool>(*reinterpret_cast<const ColKey*>(&col_key), value);
+        reinterpret_cast<Obj*>(m_obj)->set<Bool>(col_key, value);
     }
     void obj::set(const col_key &col_key, const double &value) {
-        reinterpret_cast<Obj*>(m_obj)->set<Double>(*reinterpret_cast<const ColKey*>(&col_key), value);
+        reinterpret_cast<Obj*>(m_obj)->set<Double>(col_key, value);
     }
     void obj::set(const col_key &col_key, const internal::bridge::uuid &value) {
-        reinterpret_cast<Obj*>(m_obj)->set<UUID>(*reinterpret_cast<const ColKey*>(&col_key), value);
+        reinterpret_cast<Obj*>(m_obj)->set<UUID>(col_key, value);
     }
     void obj::set(const col_key &col_key, const obj_key &value) {
-        reinterpret_cast<Obj*>(m_obj)->set<ObjKey>(*reinterpret_cast<const ColKey*>(&col_key), value);
+        reinterpret_cast<Obj*>(m_obj)->set<ObjKey>(col_key, value);
     }
     void obj::set(const col_key &col_key, const mixed &value) {
-        reinterpret_cast<Obj*>(m_obj)->set_any(*reinterpret_cast<const ColKey*>(&col_key), static_cast<Mixed>(value));
+        reinterpret_cast<Obj*>(m_obj)->set_any(col_key, static_cast<Mixed>(value));
     }
     void obj::set(const col_key &col_key, const timestamp &value) {
-        reinterpret_cast<Obj*>(m_obj)->set<Timestamp>(*reinterpret_cast<const ColKey*>(&col_key), value);
-    }
-    dictionary obj::get_dictionary(const col_key &col_key) {
-        return reinterpret_cast<Obj*>(m_obj)->get_dictionary(col_key);
-    }
-    dictionary obj::get_dictionary(const std::string &name) {
-        return reinterpret_cast<Obj*>(m_obj)->get_dictionary(name);
+        reinterpret_cast<Obj*>(m_obj)->set<Timestamp>(col_key, value);
     }
     lnklst obj::get_linklist(const col_key &col_key) {
         return reinterpret_cast<Obj*>(m_obj)->get_linklist(col_key);

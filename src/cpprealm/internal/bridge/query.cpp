@@ -6,6 +6,7 @@
 #include <cpprealm/internal/bridge/timestamp.hpp>
 #include <cpprealm/internal/bridge/uuid.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
+#include <cpprealm/internal/bridge/mixed.hpp>
 
 #define __generate_query_operator(op, type) \
     query &query::op(col_key column_key, type value) { \
@@ -16,6 +17,12 @@
 #define __generate_query_operator_case_sensitive(op, type) \
     query &query::op(col_key column_key, type value, bool) { \
         *reinterpret_cast<Query *>(m_query) = reinterpret_cast<Query *>(m_query)->op(column_key, value); \
+        return *this; \
+    }
+
+#define __generate_query_operator_mixed(op) \
+    query &query::op(col_key column_key, mixed value, bool) { \
+        *reinterpret_cast<Query *>(m_query) = reinterpret_cast<Query *>(m_query)->op(column_key, static_cast<Mixed>(value)); \
         return *this; \
     }
 namespace realm::internal::bridge {
@@ -76,6 +83,13 @@ namespace realm::internal::bridge {
     __generate_query_operator_case_sensitive(equal, std::string_view)
     __generate_query_operator_case_sensitive(not_equal, std::string_view)
 
+    __generate_query_operator_mixed(equal)
+    __generate_query_operator_mixed(not_equal)
+
     __generate_query_operator_case_sensitive(equal, binary)
     __generate_query_operator_case_sensitive(not_equal, binary)
+
+    query operator||(query const& lhs, query const& rhs) {
+        return static_cast<Query>(lhs) || static_cast<Query>(rhs);
+    }
 }

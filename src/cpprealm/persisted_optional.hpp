@@ -133,7 +133,12 @@ namespace realm {
 
         void manage(internal::bridge::object* object,
                     internal::bridge::col_key&& col_key) override {
-
+            this->m_object = object;
+            if (this->unmanaged) {
+                this->m_object->obj().set(col_key, persisted<T>::serialize(*unmanaged));
+            } else {
+                this->m_object->obj().set_null(col_key);
+            }
         }
         inline static std::optional<typename internal::type_info::type_info<T>::internal_type>
         serialize(const std::optional<T>& value) {
@@ -194,25 +199,26 @@ namespace realm {
         }
     }
 
-//    template <typename T, typename V>
-//    rbool inline operator==(const persisted<std::optional<T>>& a, const V& b)
-//    {
-//        if (a.should_detect_usage_for_queries) {
-//            auto query = internal::bridge::query(a.query->get_table());
+    template <typename T, typename V>
+    rbool inline operator==(const persisted<std::optional<T>>& a, const V& b)
+    {
+        if (a.should_detect_usage_for_queries) {
+            auto query = internal::bridge::query(a.query->get_table());
 //            if (b) {
-//                query.equal(a.managed, persisted<V>::serialize(b));
+                query.equal(a.managed, persisted<V>::serialize(b));
 //            } else {
 //                query.equal(a.managed, std::nullopt);
 //            }
-//            return query;
-//        }
-//
-//        if (a) {
-//            return *a == b;
-//        } else {
-//            return false;
-//        }
-//    }
+            return query;
+        }
+
+        if (a) {
+            return *a == b;
+        } else {
+            return false;
+        }
+    }
+
     namespace {
         static_assert(sizeof(persisted<std::optional<int64_t>>{}));
         static_assert(sizeof(persisted<std::optional<std::string>>{}));

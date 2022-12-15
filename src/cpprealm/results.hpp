@@ -178,12 +178,16 @@ struct results {
         return *this;
     }
 
-    struct results_callback_wrapper {
-        util::UniqueFunction<void(results_change<T>)> handler;
+    struct results_callback_wrapper : internal::bridge::collection_change_callback {
+        std::function<void(results_change<T>)> handler;
         results<T>& collection;
-        bool ignoreChangesInInitialNotification;
+        bool ignoreChangesInInitialNotification = true;
+        results_callback_wrapper(std::function<void(results_change<T>)>,
+                results<T>& collection)
+                : handler(handler)
+                , collection(collection) {}
 
-        void operator()(realm::CollectionChangeSet const& changes)
+        void after(internal::bridge::collection_change_set const& changes) final
         {
             if (ignoreChangesInInitialNotification) {
                 ignoreChangesInInitialNotification = false;
@@ -192,17 +196,17 @@ struct results {
             else if (changes.empty()) {
                 handler({&collection, {},{},{}});
             }
-            else if (!changes.collection_root_was_deleted || !changes.deletions.empty()) {
+            else if (!changes.collection_root_was_deleted() || !changes.deletions().empty()) {
                 handler({&collection,
-                    to_vector(changes.deletions),
-                    to_vector(changes.insertions),
-                    to_vector(changes.modifications),
+                    to_vector(changes.deletions()),
+                    to_vector(changes.insertions()),
+                    to_vector(changes.modifications()),
                 });
             }
         }
 
     private:
-        std::vector<uint64_t> to_vector(const IndexSet& index_set)
+        std::vector<uint64_t> to_vector(const internal::bridge::index_set& index_set)
         {
             auto vector = std::vector<uint64_t>();
             for (auto index : index_set.as_indexes()) {
@@ -212,16 +216,41 @@ struct results {
         };
     };
 
-    notification_token observe(std::function<void(results_change<T>)> handler)
+    notification_token observe(std::function<void(results_change<T>)>&& handler)
     {
-        auto token = notification_token();
-        token.m_token = m_parent.add_notification_callback(results_callback_wrapper {
-            std::move(handler), *static_cast<results<T>*>(this), false
+        bool ignoreChangesInInitialNotification;
+        auto token = m_parent.add_notification_callback(
+                [handler = std::move(handler),
+                 collection = *this,
+                 ignoreChangesInInitialNotification = ignoreChangesInInitialNotification]
+                (const internal::bridge::collection_change_set& changes) mutable {
+            if (ignoreChangesInInitialNotification) {
+                ignoreChangesInInitialNotification = false;
+                handler({&collection, {},{},{}});
+            }
+            else if (changes.empty()) {
+                handler({&collection, {},{},{}});
+            }
+            else if (!changes.collection_root_was_deleted() || !changes.deletions().empty()) {
+                handler({&collection,
+                         to_vector(changes.deletions()),
+                         to_vector(changes.insertions()),
+                         to_vector(changes.modifications()),
+                        });
+            }
         });
         return token;
     }
 
 private:
+    static std::vector<uint64_t> to_vector(const internal::bridge::index_set& index_set)
+    {
+        auto vector = std::vector<uint64_t>();
+        for (auto index : index_set.as_indexes()) {
+            vector.push_back(index);
+        }
+        return vector;
+    };
     template <typename ...V>
     friend struct db;
     results(internal::bridge::results&& parent)

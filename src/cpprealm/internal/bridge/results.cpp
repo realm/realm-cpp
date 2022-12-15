@@ -31,7 +31,7 @@ namespace realm::internal::bridge {
         new (&m_results) Results(std::move(v));
     }
 
-    notification_token results::add_notification_callback(collection_change_callback &&fn) {
+    notification_token results::add_notification_callback(std::function<void(collection_change_set)> &&fn) {
         return reinterpret_cast<Results*>(m_results)->add_notification_callback(fn);
     }
 }
