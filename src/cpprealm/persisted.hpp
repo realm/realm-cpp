@@ -149,7 +149,6 @@ namespace realm {
 struct FieldValue;
 template <typename T, typename = void>
 struct persisted;
-struct notification_token;
 
 class rbool;
 
@@ -193,7 +192,7 @@ protected:
     virtual void manage(internal::bridge::object* object,
                         internal::bridge::col_key&& col_key) = 0;
 
-    internal::bridge::object *m_object;
+    internal::bridge::object *m_object = nullptr;
 
     // MARK: Queries
     bool should_detect_usage_for_queries = false;
@@ -218,16 +217,16 @@ protected:
         persisted_primitive_base(const persisted_primitive_base& v) {
             if (v.is_managed()) {
                 this->m_object = v.m_object;
-                managed = v.managed;
+                new (&managed) internal::bridge::col_key(v.managed);
             } else {
-                unmanaged = v.unmanaged;
+                new (&unmanaged) T(v.unmanaged);
             }
         }
         persisted_primitive_base(const T& value) {
-            unmanaged = value;
+            new (&unmanaged) T(value);
         }
         persisted_primitive_base(T&& value) {
-            unmanaged = std::move(value);
+            new (&unmanaged) T(std::move(value));
         }
         ~persisted_primitive_base() {
             if (this->is_managed()) {
@@ -293,7 +292,7 @@ protected:
                     internal::bridge::col_key&& col_key) final {
             object->obj().set(col_key, persisted<T>::serialize(unmanaged));
             this->m_object = object;
-            this->managed = col_key;
+            new (&this->managed) internal::bridge::col_key(col_key);
         }
     };
 
@@ -394,7 +393,7 @@ operator<< (std::ostream& stream, const T& object)
         stream << "{\n";
         ((stream << "\t" << props.name << ": " << *(object.*props.ptr) << "\n"), ...);
         stream << "}";
-    }, T::schema.properties);
+    }, T::schema.ps);
 
     return stream;
 }

@@ -11,7 +11,13 @@ namespace realm::internal::bridge {
     mixed::mixed(const timestamp &v) {
         new (&m_mixed) Mixed(v);
     }
+    mixed::mixed(const int &v) {
+        new (&m_mixed) Mixed(v);
+    }
     mixed::mixed(const int64_t &v) {
+        new (&m_mixed) Mixed(v);
+    }
+    mixed::mixed(const double &v) {
         new (&m_mixed) Mixed(v);
     }
     mixed::mixed(const struct uuid &v) {
@@ -26,8 +32,11 @@ namespace realm::internal::bridge {
     mixed::mixed(const struct obj_key &v) {
         new (&m_mixed) Mixed(static_cast<ObjKey>(v));
     }
+    mixed::mixed(const bool &v) {
+        new (&m_mixed) Mixed(v);
+    }
     mixed::operator Mixed() const {
-        return reinterpret_cast<const Mixed*>(m_mixed);
+        return *reinterpret_cast<const Mixed*>(m_mixed);
     }
 
     mixed::operator std::string() const {

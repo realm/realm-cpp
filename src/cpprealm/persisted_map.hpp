@@ -107,9 +107,9 @@ namespace realm {
         }
         persisted_map_base(const persisted_map_base& v) {
             if (v.is_managed()) {
-                this->managed = v.managed;
+                new (&this->managed) internal::bridge::dictionary(v.managed);
             } else {
-                this->unmanaged = v.unmanaged;
+                new (&this->unmanaged) T(v.unmanaged);
             }
         }
         ~persisted_map_base() {
@@ -170,7 +170,7 @@ namespace realm {
         }
         typename T::mapped_type operator[](size_t& key) {
             if (auto& obj = this->m_object) {
-                Dictionary dictionary = obj->obj().get_dictionary(this->managed);
+                auto dictionary = obj->obj().get_dictionary(this->managed);
                 return dictionary[dictionary.get_key(key)];
             } else {
                 return this->unmanaged[key];
@@ -209,27 +209,39 @@ namespace realm {
     template <typename T>
     notification_token persisted_map_base<T>::observe(std::function<void(collection_change<T>)> handler)
     {
-        abort();
-//        if (!this->m_object) {
-//            throw std::runtime_error("Only collections which are managed by a Realm support change notifications");
-//        }
-//
-//        if (!this->m_object->is_valid()) {
-//            throw std::runtime_error("Only collections which are managed by a Realm support change notifications");
-//        }
-//
-//        notification_token token;
-//        Realm::Config config = this->m_object->realm()->config();
-//        auto tsr = ThreadSafeReference(m_backing_map);
-//        auto tsr_o = ThreadSafeReference(*this->m_object);
-//        config.scheduler = LooperScheduler::make();
-//        auto realm = Realm::get_shared_realm(config);
-//        token.m_realm = realm;
-//        auto scheduler = std::reinterpret_pointer_cast<LooperScheduler>(token.m_realm->scheduler());
-//        scheduler->l.push(std::packaged_task<void()>([&token, &handler, &tsr, &tsr_o, this]() {
-//            token.m_object = tsr_o.template resolve<Object>(token.m_realm);
-//            token.m_dictionary = tsr.template resolve<object_store::Dictionary>(token.m_realm);
-//            token.m_token = token.m_dictionary.add_notification_callback(collection_callback_wrapper<T> { std::move(handler), *static_cast<persisted<T>*>(this), false });
+        if (!this->m_object) {
+            throw std::runtime_error("Only collections which are managed by a Realm support change notifications");
+        }
+
+        if (!this->m_object->is_valid()) {
+            throw std::runtime_error("Only collections which are managed by a Realm support change notifications");
+        }
+
+        auto scheduler = NoPlatformScheduler::make();
+        notification_token token;
+        auto config = this->m_object->get_realm().get_config();
+        config.set_scheduler(scheduler);
+        internal::bridge::realm r(config);
+        token.m_realm = r;
+        auto tsr = internal::bridge::thread_safe_reference(managed);
+        scheduler->invoke([&handler, this, &token, tsr = std::move(tsr)]() mutable {
+            auto managed = token.m_realm.resolve(std::move(tsr));
+            token.m_token = managed.add_notification_callback(
+                    std::make_shared<collection_callback_wrapper<T>>(
+                            std::move(handler),
+                            *static_cast<persisted<T>*>(this),
+                            false)
+            );
+
+            token.m_dictionary = managed;
+        });
+//        token = managed.add_notification_callback(
+//                std::make_shared<collection_callback_wrapper<T>>(
+//                        std::move(handler),
+//                        *static_cast<persisted<T>*>(this),
+//                        false)
+//        );
+        return token;
 //        })).get_future().get();
 //        return std::move(token);
     }
@@ -242,9 +254,11 @@ namespace realm {
             is_managed = false;
         }
         box_base(internal::bridge::dictionary& backing_map,
-                 std::string key)
+                 std::string key,
+                 internal::bridge::object* object)
                 : m_backing_map(backing_map)
                 , m_key(std::move(key))
+                , m_object(object)
         {
             is_managed = true;
         }
@@ -259,7 +273,7 @@ namespace realm {
         box_base& operator=(mapped_type&& o) {
             if (is_managed) {
                 m_backing_map.get().insert(m_key,
-                                           internal::bridge::mixed(persisted<mapped_type>::serialize(std::move(o))));
+                                           persisted<mapped_type>::serialize(std::move(o)));
             } else {
                 m_val.get() = std::move(o);
             }
@@ -268,19 +282,35 @@ namespace realm {
 
         bool operator==(const mapped_type& rhs) const {
             if (is_managed) {
-                return persisted<mapped_type>::serialize(rhs) ==
-                       this->m_backing_map.get().template get<typename internal::type_info::type_info<mapped_type>::internal_type>(this->m_key);
+                if constexpr (std::is_base_of_v<object_base, mapped_type>) {
+                    return rhs == this->operator*();
+                } else {
+                    return persisted<mapped_type>::serialize(rhs) ==
+                           this->m_backing_map.get().template get<typename internal::type_info::type_info<mapped_type>::internal_type>(
+                                   this->m_key);
+                }
             } else {
                 return rhs == m_val.get();
             }
         }
 
+        mapped_type operator *() const {
+            if (is_managed) {
+                mapped_type cls;
+                auto obj = m_backing_map.get().template get<internal::bridge::obj>(m_key);
+                mapped_type::schema.set(cls, internal::bridge::object(m_object->get_realm(), obj));
+                return cls;
+            } else {
+                return m_val.get();
+            }
+        }
         union {
             std::reference_wrapper<internal::bridge::dictionary> m_backing_map;
             std::reference_wrapper<mapped_type> m_val;
         };
         bool is_managed;
         std::string m_key;
+        internal::bridge::object* m_object = nullptr;
     };
     template <typename V, typename = void>
     struct box;
@@ -354,18 +384,41 @@ namespace realm {
 
         box<mapped_type> operator[](const std::string& a) {
             if (this->m_object) {
-                return box<mapped_type>(this->managed, a);
+                return box<mapped_type>(this->managed, a, this->m_object);
             } else {
                 return box<mapped_type>(this->unmanaged[a]);
             }
         }
     protected:
         void manage(internal::bridge::object *object, internal::bridge::col_key &&col_key) override {
-
+            this->m_object = object;
+            auto managed = object->get_dictionary(col_key);
+            for (auto& [k, v] : this->unmanaged) {
+                if constexpr (std::is_base_of_v<realm::object, T>) {
+                    v.manage(object->get_realm().table_for_object_type(T::schema.name),
+                             object->get_realm(),
+                             T::schema);
+                    managed.insert(k, internal::bridge::mixed(persisted<T>::serialize(v)));
+                } else if constexpr (std::is_base_of_v<embedded_object, T>) {
+                    managed.insert_embedded(k);
+                } else {
+                    managed.insert(k, internal::bridge::mixed(persisted < T > ::serialize(v)));
+                }
+            }
+            this->unmanaged.~map<std::string, T>();
+            new (&this->managed) internal::bridge::dictionary(managed);
         }
 
         __cpp_realm_friends
     };
+}
+
+template <typename T>
+inline typename std::enable_if<std::is_base_of<realm::object_base, T>::value, std::ostream>::type&
+operator<< (std::ostream& stream, const realm::box<T>& object)
+{
+    stream << *object;
+    return stream;
 }
 
 #endif //REALM_PERSISTED_MAP_HPP

@@ -21,4 +21,8 @@ namespace realm::internal::bridge {
     obj_key::operator ObjKey() const {
         return *reinterpret_cast<const ObjKey*>(m_obj_key);
     }
+
+    bool operator==(obj_key const& lhs, obj_key const& rhs) {
+        return static_cast<ObjKey>(lhs) == static_cast<ObjKey>(rhs);
+    }
 }

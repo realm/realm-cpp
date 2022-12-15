@@ -2,15 +2,6 @@
 #include <cpprealm/internal/bridge/binary.hpp>
 
 namespace realm {
-    persisted<std::vector<uint8_t>> &persisted<std::vector<uint8_t>>::operator=(const std::vector<uint8_t> &v) {
-        if (is_managed()) {
-            m_object->obj().set(managed, serialize(v));
-        } else {
-            unmanaged = v;
-        }
-        return *this;
-    }
-
     void persisted<std::vector<uint8_t>>::push_back(uint8_t v) {
         if (is_managed()) {
             auto v2 = deserialize(m_object->obj().get<internal::bridge::binary>(managed));

@@ -37,15 +37,16 @@ namespace realm::internal::bridge {
             Collection = Array | Set | Dictionary,
             Flags = Nullable | Collection
         };
-        property(const Property&);
+        property(const Property&); //NOLINT(google-explicit-constructor)
         property(const std::string& name,
                  type type,
                  bool is_primary_key);
         property(const std::string& name,
                  type type,
                  const std::string& object_name);
-        operator Property() const;
+        operator Property() const; //NOLINT(google-explicit-constructor)
         void set_object_link(const std::string&);
+        void set_type(type);
         [[nodiscard]] col_key column_key() const;
     private:
         unsigned char m_property[120]{};

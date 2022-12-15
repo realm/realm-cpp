@@ -225,7 +225,7 @@ namespace realm::internal::type_info {
         using internal_type = bridge::mixed;
 
         static constexpr auto type() {
-            return bridge::property::type::Mixed;
+            return bridge::property::type::Mixed | bridge::property::type::Nullable;
         }
     };
     template <typename T>

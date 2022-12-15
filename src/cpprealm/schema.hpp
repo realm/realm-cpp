@@ -65,137 +65,10 @@ namespace {
 
 // MARK: schema
 namespace schemagen {
-    template <auto Ptr, typename Class, typename Result, typename = void>
-    struct property_deducer {
-        static void set_object_link(internal::bridge::property& property) {}
-        static void manage(Class& object, const std::string& property_name) {
-            auto persisted = *(object.*Ptr);
-            object.m_object->template set_column_value(property_name, internal::type_info::serialize<Result>(persisted));
-        }
-    };
-    template <auto Ptr, typename Class, typename ValueType>
-    struct property_deducer<Ptr, Class, std::optional<ValueType>, std::enable_if_t<std::negation_v<std::is_base_of<object_base, ValueType>>>> {
-        static void set_object_link(internal::bridge::property& property) {}
-        static void manage(Class& object, const std::string& property_name) {
-            auto val = internal::type_info::serialize<std::optional<ValueType>>(*(object.*Ptr));
-            if (val) {
-                object.m_object->template set_column_value(property_name, *val);
-            }
-        }
-    };
-    template <auto Ptr, typename Class, typename ValueType>
-    struct property_deducer<Ptr, Class, std::optional<ValueType>, std::enable_if_t<std::is_base_of_v<object, ValueType>>> {
-        static void set_object_link(internal::bridge::property& property) {
-            property.set_object_link(ValueType::schema.name);
-        }
-        static void manage(Class& object, const std::string& property_name) {
-            persisted<std::optional<ValueType>, void> field = (object.*Ptr);
-            if (field) {
-                if (field.m_object) {
-                    object.m_object->set_column_value(property_name, field.m_object->obj().get_key());
-                } else {
-                    auto col_key = object.m_object->obj().get_table().get_column_key(property_name);
-                    auto target_table = object.m_object->obj().get_table().get_link_target(col_key);
-                    ValueType target_cls = *field;
-
-                    auto realm = object.m_object->get_realm();
-                    if constexpr (decltype(ValueType::schema)::HasPrimaryKeyProperty) {
-                        using Schema = decltype(ValueType::schema);
-                        auto val = (*field).*Schema::PrimaryKeyProperty::ptr;
-                        target_cls.m_object = internal::bridge::object(realm, target_table.create_object_with_primary_key(*val));
-                    } else {
-                        target_cls.m_object = internal::bridge::object(realm, target_table.create_object());
-                    }
-                    ValueType::schema.set(target_cls);
-                    object.m_object->obj().set(col_key, target_cls.m_object->obj().get_key());
-                }
-            }
-        }
-    };
-    template <auto Ptr, typename Class, typename ValueType>
-    struct property_deducer<Ptr, Class, std::optional<ValueType>, std::enable_if_t<std::is_base_of_v<embedded_object, ValueType>>> {
-        static void set_object_link(internal::bridge::property& property) {
-            property.set_object_link(ValueType::schema.name);
-        }
-        static void manage(Class& object, const std::string& property_name) {
-            auto field = (object.*Ptr);
-            if (field.m_object) {
-                object.m_object->set_column_value(property_name, field.m_object->obj().get_key());
-            } else {
-                auto col_key = object.m_object->obj().get_table().get_column_key(property_name);
-                auto target_table = object.m_object->obj().get_table().get_link_target(col_key);
-                auto target_cls = *field;
-
-                auto realm = object.m_object->get_realm();
-                target_cls.m_object = internal::bridge::object(realm,
-                                                               object.m_object->obj().create_and_set_linked_object(col_key));
-                ValueType::schema.set(target_cls);
-            }
-        }
-    };
-    template <auto Ptr, typename Class, typename ValueType>
-    struct property_deducer<Ptr, Class, std::vector<ValueType>,
-            std::enable_if_t<std::negation<std::is_base_of<object_base, ValueType>>::value>> {
-        static void set_object_link(internal::bridge::property& property) {
-        }
-        static void manage(Class& object, const std::string& property_name) {
-            auto col_key = object.m_object->obj().get_table().get_column_key(property_name);
-            if constexpr (std::is_same_v<uint8_t, ValueType>) {
-
-            } else if constexpr (std::is_same_v<std::vector<uint8_t>, ValueType>) {
-
-            } else {
-                std::vector<typename internal::type_info::type_info<ValueType>::internal_type> v;
-                for (const auto& e : object.*Ptr) {
-                    v.push_back(internal::type_info::serialize(e));
-                }
-                object.m_object->obj().set_list_values(col_key, v);
-            }
-        }
-    };
-    template <auto Ptr, typename Class, typename ValueType>
-    struct property_deducer<Ptr, Class, std::vector<ValueType>, std::enable_if_t<std::disjunction_v<std::is_base_of<object, ValueType>, std::is_base_of<embedded_object, ValueType>>>> {
-        static void set_object_link(internal::bridge::property& property) {
-            property.set_object_link(ValueType::schema.name);
-        }
-        static void manage(Class& object, const std::string& property_name) {
-            auto col_key = object.m_object->obj().get_table().get_column_key(property_name);
-            auto table = object.m_object->obj().get_table().get_link_target(col_key);
-            auto i = 0;
-            for (auto& list_obj : (object.*Ptr).unmanaged) {
-                if (table.is_embedded()) {
-                    list_obj.m_object = internal::bridge::object(object.m_object->get_realm(),
-                                                                object.m_object->obj().get_linklist(col_key).create_and_insert_linked_object(i));
-                    ValueType::schema.set(list_obj);
-                    i++;
-                } else {
-                    ValueType::schema.add(list_obj, table, object.m_object->get_realm());
-                    object.m_object->obj().get_linklist(col_key).add(list_obj.m_object->obj().get_key());
-                }
-            }
-        }
-    };
-    template <auto Ptr, typename Class, typename ValueType>
-    struct property_deducer<Ptr, Class, std::map<std::string, ValueType>> {
-        static void set_object_link(internal::bridge::property& property) {
-            if constexpr (std::is_base_of_v<object_base, ValueType>)
-                property.set_object_link(ValueType::schema.name);
-        }
-        static void manage(Class& object, const std::string& property_name) {
-            auto val = (object.*Ptr);
-            auto dictionary = object.m_object->obj().get_dictionary(property_name);
-            for (auto [k, v] : val.unmanaged) {
-                internal::bridge::mixed mixed = internal::type_info::serialize(v);
-                dictionary.insert(k, mixed);
-            }
-        }
-    };
-
     template <auto Ptr, bool IsPrimaryKey = false>
     struct property {
         using Result = typename ptr_type_extractor<Ptr>::member_type::Result;
         using Class = typename ptr_type_extractor<Ptr>::class_type;
-//        using Ptr = decltype(Ptr);
 
         const char* name = "";
         constexpr property() : type(internal::type_info::type_info<Result>::type())
@@ -209,13 +82,17 @@ namespace schemagen {
 
         operator internal::bridge::property() const {
             internal::bridge::property property(name, type, is_primary_key);
-            if constexpr (realm::internal::type_info::is_optional<Result>::value) {
-                if constexpr (std::is_base_of_v<object_base, typename Result::value_type>) {
-                    property.set_object_link(Result::value_type::schema.name);
-                }
+            if constexpr (std::is_base_of_v<object_base, Result>) {
+                property.set_object_link(Result::schema.name);
+                property.set_type(type | internal::bridge::property::type::Nullable);
             } else if constexpr (realm::internal::type_info::is_vector<Result>::value) {
                 if constexpr (std::is_base_of_v<object_base, typename Result::value_type>) {
                     property.set_object_link(Result::value_type::schema.name);
+                }
+            } else if constexpr (realm::internal::type_info::is_map<Result>::value) {
+                if constexpr (std::is_base_of_v<object_base, typename Result::mapped_type>) {
+                    property.set_object_link(Result::mapped_type::schema.name);
+                    property.set_type(type | internal::bridge::property::type::Nullable);
                 }
             }
             return property;
@@ -338,6 +215,12 @@ namespace schemagen {
         }
 
         void set(Class &cls) const {
+            std::apply([&cls](auto&&... p) {
+                ((cls.*(std::decay_t<decltype(p)>::ptr)).manage(&*cls.m_object, cls.m_object->obj().get_table().get_column_key(p.name)), ...);
+            }, ps);
+        }
+        void set(Class &cls, realm::internal::bridge::object obj) const {
+            cls.m_object = obj;
             std::apply([&cls](auto&&... p) {
                 ((cls.*(std::decay_t<decltype(p)>::ptr)).manage(&*cls.m_object, cls.m_object->obj().get_table().get_column_key(p.name)), ...);
             }, ps);

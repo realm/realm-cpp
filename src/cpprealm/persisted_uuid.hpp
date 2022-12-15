@@ -42,19 +42,7 @@ namespace realm {
     template <>
     struct persisted<uuid> : persisted_primitive_base<uuid> {
         using persisted_primitive_base<uuid>::persisted_primitive_base;
-//        struct box {
-//            uuid* operator ->() {
-//                return &v;
-//            }
-//        private:
-//            box(uuid);
-//            uuid v;
-//            template <typename, typename>
-//            friend struct persisted;
-//        };
-//        box operator ->() && {
-//            return {unmanaged};
-//        }
+
     protected:
         static internal::bridge::uuid serialize(const uuid&);
         static uuid deserialize(const internal::bridge::uuid&);

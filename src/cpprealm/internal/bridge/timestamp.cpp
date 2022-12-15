@@ -10,6 +10,9 @@ namespace realm::internal::bridge {
         new (&m_timestamp) Timestamp(seconds, nanoseconds);
     }
 
+    timestamp::timestamp(const std::chrono::time_point<std::chrono::system_clock> &tp) {
+        new (&m_timestamp) Timestamp(tp);
+    }
     timestamp::operator std::chrono::time_point<std::chrono::system_clock>() const {
         return reinterpret_cast<const Timestamp*>(m_timestamp)->get_time_point();
     }

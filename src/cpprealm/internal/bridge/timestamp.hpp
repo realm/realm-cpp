@@ -14,12 +14,7 @@ namespace realm::internal::bridge {
         operator Timestamp() const final; //NOLINT(google-explicit-constructor)
         operator std::chrono::time_point<std::chrono::system_clock>() const; //NOLINT(google-explicit-constructor)
         timestamp(int64_t seconds, int32_t nanoseconds);
-        template <typename C = std::chrono::system_clock, typename D = typename C::duration>
-        timestamp(const std::chrono::time_point<C, D>& tp) //NOLINT(google-explicit-constructor)
-        : timestamp(std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count(),
-                    std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch()).count())
-        {
-        }
+        timestamp(const std::chrono::time_point<std::chrono::system_clock>& tp); //NOLINT(google-explicit-constructor)
         [[nodiscard]] int64_t get_seconds() const noexcept;
         [[nodiscard]] int32_t get_nanoseconds() const noexcept;
         [[nodiscard]] std::chrono::time_point<std::chrono::system_clock, std::chrono::system_clock::duration>

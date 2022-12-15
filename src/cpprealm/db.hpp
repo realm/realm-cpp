@@ -146,7 +146,7 @@ private:
 template <typename ...Ts>
 static db<Ts...> open(std::string&& path = std::filesystem::current_path().append("default.realm"),
                       std::shared_ptr<scheduler>&& scheduler = scheduler::make_default(),
-                      internal::bridge::realm::sync_config sync_config = {})
+                      std::optional<sync_config> sync_config = std::nullopt)
 {
 #if QT_CORE_LIB
     util::Scheduler::set_default_factory(util::make_qt);
