@@ -9,7 +9,9 @@ TEST_CASE("object_notifications") {
         auto uuid = realm::uuid();
         auto foo = AllTypesObject();
         auto o = AllTypesObjectLink();
-        o._id = 1;
+        AllTypesObjectLink o2;
+        AllTypesObjectEmbedded o3;
+        AllTypesObjectEmbedded o4;
 
         realm.write([&foo, &realm]() {
             realm.add(foo);
@@ -51,6 +53,49 @@ TEST_CASE("object_notifications") {
                     } else if (prop_change.name == "opt_obj_col" && prop_change.new_value) {
                         auto obj = std::get<std::optional<AllTypesObjectLink>>(*prop_change.new_value);
                         CHECK(*(obj->str_col) == "link object");
+                    } else if (prop_change.name == "opt_embedded_obj_col" && prop_change.new_value) {
+                        auto obj = std::get<std::optional<AllTypesObjectEmbedded>>(*prop_change.new_value);
+                        CHECK(*(obj->str_col) == "embedded obj");
+                    } else if (prop_change.name == "list_int_col" && prop_change.new_value) {
+                        auto obj = std::get<std::vector<int>>(*prop_change.new_value);
+                        CHECK(obj.size() == 1);
+                        CHECK(obj[0] == 1);
+                    } else if (prop_change.name == "list_bool_col" && prop_change.new_value) {
+                        auto obj = std::get<std::vector<bool>>(*prop_change.new_value);
+                        CHECK(obj.size() == 1);
+                        CHECK(obj[0] == true);
+                    } else if (prop_change.name == "list_str_col" && prop_change.new_value) {
+                        auto obj = std::get<std::vector<std::string>>(*prop_change.new_value);
+                        CHECK(obj.size() == 1);
+                        CHECK(obj[0] == "bar");
+                    } else if (prop_change.name == "list_str_col" && prop_change.new_value) {
+                        auto obj = std::get<std::vector<std::string>>(*prop_change.new_value);
+                        CHECK(obj.size() == 1);
+                        CHECK(obj[0] == "bar");
+                    } else if (prop_change.name == "list_uuid_col" && prop_change.new_value) {
+                        auto obj = std::get<std::vector<realm::uuid>>(*prop_change.new_value);
+                        CHECK(obj.size() == 1);
+                        CHECK(obj[0] == uuid);
+                    } else if (prop_change.name == "list_binary_col" && prop_change.new_value) {
+                        auto obj = std::get<std::vector<std::vector<uint8_t>>>(*prop_change.new_value);
+                        CHECK(obj.size() == 1);
+                        CHECK(obj[0] == std::vector<uint8_t>({1}));
+                    } else if (prop_change.name == "list_date_col" && prop_change.new_value) {
+                        auto obj = std::get<std::vector<std::chrono::time_point<std::chrono::system_clock>>>(*prop_change.new_value);
+                        CHECK(obj.size() == 1);
+                        CHECK(obj[0] == date);
+                    } else if (prop_change.name == "list_mixed_col" && prop_change.new_value) {
+                        auto obj = std::get<std::vector<realm::mixed>>(*prop_change.new_value);
+                        CHECK(obj.size() == 1);
+                        CHECK(std::get<std::string>(obj[0]) == "mixed str");
+                    } else if (prop_change.name == "list_obj_col" && prop_change.new_value) {
+                        auto obj = std::get<std::vector<AllTypesObjectLink>>(*prop_change.new_value);
+                        CHECK(obj.size() == 1);
+                        CHECK(*obj[0].str_col == "link object 2");
+                    } else if (prop_change.name == "list_embedded_obj_col" && prop_change.new_value) {
+                        auto obj = std::get<std::vector<AllTypesObjectEmbedded>>(*prop_change.new_value);
+                        CHECK(obj.size() == 1);
+                        CHECK(*obj[0].str_col == "embedded obj 2");
                     }
                 }
             }
@@ -74,30 +119,35 @@ TEST_CASE("object_notifications") {
             foo.opt_date_col = date;
             foo.opt_uuid_col = uuid;
             foo.opt_binary_col = std::vector<uint8_t>({1});
-            o._id = 123;
+            o._id = 1;
             o.str_col = "link object";
             foo.opt_obj_col = o;
+            o3.str_col = "embedded obj";
+            foo.opt_embedded_obj_col = o3;
 
             foo.list_int_col.push_back(1);
             foo.list_bool_col.push_back(true);
             foo.list_str_col.push_back("bar");
-            foo.list_uuid_col.push_back(realm::uuid());
+            foo.list_uuid_col.push_back(uuid);
             foo.list_binary_col.push_back({1});
             foo.list_date_col.push_back(date);
             foo.list_mixed_col.push_back("mixed str");
-            AllTypesObjectLink o2;
             o2._id = 2;
             o2.str_col = "link object 2";
             foo.list_obj_col.push_back(o2);
-            AllTypesObjectEmbedded o3;
-            o3.str_col = "embedded obj";
-
-            foo.list_embedded_obj_col.push_back(o3);
+            o4.str_col = "embedded obj 2";
+            foo.list_embedded_obj_col.push_back(o4);
         });
         realm.refresh();
 
-        auto x = *o.str_col;
-        auto xx = o.is_managed();
+        CHECK(o.is_managed());
+        CHECK(o.str_col == "link object");
+        CHECK(o2.is_managed());
+        CHECK(o2.str_col == "link object 2");
+        CHECK(o3.is_managed());
+        CHECK(o3.str_col == "embedded obj");
+        CHECK(o4.is_managed());
+        CHECK(o4.str_col == "embedded obj 2");
 
         realm.write([&foo, &realm] {
             realm.remove(foo);

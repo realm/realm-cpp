@@ -64,6 +64,7 @@ struct AllTypesObject: realm::object {
     realm::persisted<std::optional<realm::uuid>> opt_uuid_col;
     realm::persisted<std::optional<std::vector<uint8_t>>> opt_binary_col;
     realm::persisted<std::optional<AllTypesObjectLink>> opt_obj_col;
+    realm::persisted<std::optional<AllTypesObjectEmbedded>> opt_embedded_obj_col;
 
     realm::persisted<std::vector<int>> list_int_col;
     realm::persisted<std::vector<bool>> list_bool_col;
@@ -93,6 +94,7 @@ struct AllTypesObject: realm::object {
         realm::property<&AllTypesObject::opt_date_col>("opt_date_col"),
         realm::property<&AllTypesObject::opt_enum_col>("opt_enum_col"),
         realm::property<&AllTypesObject::opt_obj_col>("opt_obj_col"),
+        realm::property<&AllTypesObject::opt_embedded_obj_col>("opt_embedded_obj_col"),
         realm::property<&AllTypesObject::opt_uuid_col>("opt_uuid_col"),
 
         realm::property<&AllTypesObject::list_int_col>("list_int_col"),

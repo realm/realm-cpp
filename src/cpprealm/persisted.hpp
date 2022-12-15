@@ -100,7 +100,12 @@ struct conversion_context {
 
     mixed convert_to_sdk_type(const Mixed& v)
     {
-        return mixed();
+//        template<size_t N, typename Variant>
+//        constexpr Variant check_if_returnable(const Mixed& mixed) {
+//
+//        }
+        return type_info::check_if_returnable<0, mixed>(v);
+//        return mixed();
     }
 
     template<typename T>
