@@ -102,7 +102,7 @@ struct db {
     results<T> objects()
     {
         return results<T>(internal::bridge::results(m_realm,
-                                                    m_realm.read_group().get_table(internal::bridge::table_name_for_object_type(T::schema.name))));
+                                                    m_realm.read_group().get_table(T::schema.name)));
     }
 
     template <typename T>

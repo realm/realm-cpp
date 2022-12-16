@@ -3,15 +3,6 @@
 
 using namespace realm;
 
-static inline void little_sleep(std::chrono::microseconds us)
-{
-    auto start = std::chrono::high_resolution_clock::now();
-    auto end = start + us;
-    do {
-        std::this_thread::yield();
-    } while (std::chrono::high_resolution_clock::now() < end);
-}
-
 TEST_CASE("map", "[map]") {
     realm_path path;
     SECTION("unmanaged_managed_map_get_set", "[mixed]") {
@@ -131,7 +122,7 @@ TEST_CASE("map", "[map]") {
         });
         realm.write([&obj] {
             obj.map_str_col["a"] = "baz";
-            obj.map_str_col["b"] = "baz";
+            obj.map_str_col["b"] = "food";
         });
         auto future = p.get_future();
         switch (future.wait_for(std::chrono::seconds(5))) {
@@ -143,4 +134,3 @@ TEST_CASE("map", "[map]") {
         }
     }
 }
-

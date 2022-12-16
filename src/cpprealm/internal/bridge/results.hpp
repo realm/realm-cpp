@@ -15,7 +15,7 @@ namespace realm::internal::bridge {
     struct collection_change_set;
 
     struct results {
-        results(Results&&); //NOLINT(google-explicit-constructor)
+        results(const Results&); //NOLINT(google-explicit-constructor)
         size_t size();
         [[nodiscard]] realm get_realm() const;
         [[nodiscard]] table get_table() const;
@@ -24,9 +24,9 @@ namespace realm::internal::bridge {
         template <>
         obj get(size_t);
         results(const realm&, const query&);
-        notification_token add_notification_callback(std::function<void(collection_change_set)>&&);
+        notification_token add_notification_callback(std::shared_ptr<collection_change_callback>&&);
     private:
-        unsigned char m_results[36]{};
+        unsigned char m_results[896]{};
     };
 }
 
