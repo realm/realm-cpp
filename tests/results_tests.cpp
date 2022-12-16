@@ -20,7 +20,7 @@ TEST_CASE("results", "[results]") {
         realm::results_change<Person> change;
 
         auto require_change = [&] {
-            auto token = results.observe([&](realm::results_change<Person> c) {
+            auto token = results.observe([&](results_change<Person> c) {
                 did_run = true;
                 change = std::move(c);
             });

@@ -156,7 +156,7 @@ namespace realm::internal::bridge {
     }
 
     table group::get_table(const std::string &table_key) {
-        return static_cast<SharedRealm>(m_realm.get())->read_group().get_table(table_key);
+        return static_cast<SharedRealm>(m_realm.get())->read_group().get_table(table_name_for_object_type(table_key));
     }
     table group::get_table(int64_t table_key) {
         return static_cast<SharedRealm>(m_realm.get())->read_group().get_table(TableKey(table_key));

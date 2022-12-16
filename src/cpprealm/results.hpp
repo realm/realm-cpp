@@ -182,11 +182,12 @@ struct results {
         std::function<void(results_change<T>)> handler;
         results<T>& collection;
         bool ignoreChangesInInitialNotification = true;
-        results_callback_wrapper(std::function<void(results_change<T>)>,
+        results_callback_wrapper(std::function<void(results_change<T>)> handler,
                 results<T>& collection)
                 : handler(handler)
                 , collection(collection) {}
 
+        void before(const realm::internal::bridge::collection_change_set &c) override {}
         void after(internal::bridge::collection_change_set const& changes) final
         {
             if (ignoreChangesInInitialNotification) {
@@ -218,28 +219,7 @@ struct results {
 
     notification_token observe(std::function<void(results_change<T>)>&& handler)
     {
-        bool ignoreChangesInInitialNotification;
-        auto token = m_parent.add_notification_callback(
-                [handler = std::move(handler),
-                 collection = *this,
-                 ignoreChangesInInitialNotification = ignoreChangesInInitialNotification]
-                (const internal::bridge::collection_change_set& changes) mutable {
-            if (ignoreChangesInInitialNotification) {
-                ignoreChangesInInitialNotification = false;
-                handler({&collection, {},{},{}});
-            }
-            else if (changes.empty()) {
-                handler({&collection, {},{},{}});
-            }
-            else if (!changes.collection_root_was_deleted() || !changes.deletions().empty()) {
-                handler({&collection,
-                         to_vector(changes.deletions()),
-                         to_vector(changes.insertions()),
-                         to_vector(changes.modifications()),
-                        });
-            }
-        });
-        return token;
+        return m_parent.add_notification_callback(std::make_shared<results_callback_wrapper>(std::move(handler), *this));
     }
 
 private:

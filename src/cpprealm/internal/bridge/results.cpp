@@ -6,8 +6,14 @@
 #include <realm/object-store/results.hpp>
 
 namespace realm::internal::bridge {
+    static_assert(SizeCheck<896, sizeof(Results)>{});
+
     results::results(const realm &realm, const query &query) {
-        new (m_results) Results(realm, query);
+        new (&m_results) Results(realm, query);
+    }
+
+    results::results(const Results &v) {
+        new (&m_results) Results(v);
     }
 
     size_t results::size() {
@@ -27,11 +33,18 @@ namespace realm::internal::bridge {
         return reinterpret_cast<Results*>(m_results)->template get(v);
     }
 
-    results::results(Results &&v) {
-        new (&m_results) Results(std::move(v));
-    }
-
-    notification_token results::add_notification_callback(std::function<void(collection_change_set)> &&fn) {
-        return reinterpret_cast<Results*>(m_results)->add_notification_callback(fn);
+    notification_token results::add_notification_callback(std::shared_ptr<collection_change_callback> &&cb) {
+        struct wrapper : CollectionChangeCallback {
+            std::shared_ptr<collection_change_callback> m_cb;
+            explicit wrapper(std::shared_ptr<collection_change_callback>&& cb)
+                    : m_cb(std::move(cb)) {}
+            void before(const CollectionChangeSet& v) const {
+                m_cb->before(v);
+            }
+            void after(const CollectionChangeSet& v) const {
+                m_cb->after(v);
+            }
+        } ccb(std::move(cb));
+        return reinterpret_cast<Results*>(m_results)->add_notification_callback(ccb);
     }
 }

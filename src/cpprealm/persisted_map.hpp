@@ -235,15 +235,7 @@ namespace realm {
 
             token.m_dictionary = managed;
         });
-//        token = managed.add_notification_callback(
-//                std::make_shared<collection_callback_wrapper<T>>(
-//                        std::move(handler),
-//                        *static_cast<persisted<T>*>(this),
-//                        false)
-//        );
         return token;
-//        })).get_future().get();
-//        return std::move(token);
     }
 
     template <typename mapped_type>
