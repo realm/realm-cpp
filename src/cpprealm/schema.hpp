@@ -29,33 +29,20 @@
 namespace realm {
     template <typename, typename>
     struct persisted;
-namespace {
-    template <typename T>
-    struct ptr_type_extractor_base;
-    template <typename Result, typename Class>
-    struct ptr_type_extractor_base<Result Class::*>
-    {
-        using class_type = Class;
-        using member_type = Result;
-    };
+    namespace {
+        template <typename T>
+        struct ptr_type_extractor_base;
+        template <typename Result, typename Class>
+        struct ptr_type_extractor_base<Result Class::*>
+        {
+            using class_type = Class;
+            using member_type = Result;
+        };
 
-    template <auto T>
-    struct ptr_type_extractor : ptr_type_extractor_base<decltype(T)> {
-    };
-}
-
-namespace {
-    constexpr std::size_t split(char const *str, char sep) {
-        std::size_t ret{1u};
-
-        while (*str)
-            if (sep == *str++)
-                ++ret;
-
-        return ret;
+        template <auto T>
+        struct ptr_type_extractor : ptr_type_extractor_base<decltype(T)> {
+        };
     }
-}
-
 
     template<typename... Ts>
     constexpr auto make_subpack_tuple(Ts&&... xs)
@@ -69,8 +56,11 @@ namespace schemagen {
     struct property {
         using Result = typename ptr_type_extractor<Ptr>::member_type::Result;
         using Class = typename ptr_type_extractor<Ptr>::class_type;
-
+        static constexpr auto Class::*ptr = Ptr;
+        static constexpr bool is_primary_key = IsPrimaryKey;
+        internal::bridge::property::type type;
         const char* name = "";
+
         constexpr property() : type(internal::type_info::type_info<Result>::type())
         {
         }
@@ -97,25 +87,9 @@ namespace schemagen {
             }
             return property;
         }
-
-//        static void assign(Class& object, internal::bridge::col_key col_key, internal::bridge::realm realm) {
-//            (object.*Ptr).manage(object.m_object->obj(), col_key, realm);
-//        }
-//
-//        static void set(Class& object, const std::string& property_name) {
-//            property_deducer<Ptr, Class, Result>::manage(object, property_name);
-//        }
-        static constexpr auto Class::*ptr = Ptr;
-        internal::bridge::property::type type;
-        static constexpr bool is_primary_key = IsPrimaryKey;
     };
 
-
-    template <auto Ptr, bool IsPrimaryKey>
-    internal::bridge::property to_property(schemagen::property<Ptr, IsPrimaryKey> persisted_property,
-                                           const char* name);
-
-    template<typename Class, typename ...Properties>
+    template <typename Class, typename ...Properties>
     struct schema {
         const char *name;
         const char *names[sizeof...(Properties)] = {};
@@ -176,17 +150,6 @@ namespace schemagen {
         static constexpr bool HasPrimaryKeyProperty = !std::is_void_v<PrimaryKeyProperty>;
         static constexpr bool IsEmbedded = std::is_base_of_v<embedded_object, Class>;
 
-        template<size_t N, typename P>
-        constexpr auto to_property(internal::bridge::object_schema &schema, P &p) const {
-            if constexpr (N + 1 == sizeof...(Properties)) {
-                schema.add_property(p.to_property(names[N]));
-                return;
-            } else {
-                schema.add_property(p.to_property(names[N]));
-                return to_property<N + 1>(schema, std::get<N + 1>(properties));
-            }
-        }
-
         [[nodiscard]] internal::bridge::object_schema to_core_schema() const {
             internal::bridge::object_schema schema;
             schema.set_name(name);
@@ -214,18 +177,6 @@ namespace schemagen {
             }
         }
 
-        void set(Class &cls) const {
-            std::apply([&cls](auto&&... p) {
-                ((cls.*(std::decay_t<decltype(p)>::ptr)).manage(&*cls.m_object, cls.m_object->obj().get_table().get_column_key(p.name)), ...);
-            }, ps);
-        }
-        void set(Class &cls, realm::internal::bridge::object obj) const {
-            cls.m_object = obj;
-            std::apply([&cls](auto&&... p) {
-                ((cls.*(std::decay_t<decltype(p)>::ptr)).manage(&*cls.m_object, cls.m_object->obj().get_table().get_column_key(p.name)), ...);
-            }, ps);
-        }
-
         template<size_t N, typename P>
         constexpr variant_t
         property_value_for_name(std::string_view property_name, const Class &cls, P &property) const {
@@ -242,51 +193,6 @@ namespace schemagen {
         constexpr auto property_value_for_name(std::string_view property_name, const Class &cls) const {
             return property_value_for_name<0>(property_name, cls, std::get<0>(properties));
         }
-
-        template<size_t N, typename P>
-        constexpr auto assign(Class &object, P &property) const {
-            if constexpr (N + 1 == sizeof...(Properties)) {
-                property.assign(object, object.m_object->obj().get_table().get_column_key(names[N]),
-                                object.m_object->get_realm());
-                return;
-            } else {
-                property.assign(object, object.m_object->obj().get_table().get_column_key(names[N]),
-                                object.m_object->get_realm());
-                return assign<N + 1>(object, std::get<N + 1>(properties));
-            }
-        }
-
-        Class create(internal::bridge::obj &&obj, const internal::bridge::realm &realm) const {
-            Class object;
-            object.m_object = internal::bridge::object(realm, obj);
-
-            std::apply([&object](auto&&... p) {
-                ((object.*(std::decay_t<decltype(p)>::ptr))
-                        .manage(&*object.m_object, object.m_object->obj().get_table().get_column_key(p.name)), ...);
-            }, ps);
-            return object;
-        }
-
-        std::unique_ptr<Class> create_unique(internal::bridge::obj &&obj, const internal::bridge::realm &realm) const {
-            auto cls = std::make_unique<Class>();
-            cls->m_object = internal::bridge::object(realm, obj);
-            assign<0>(*cls, std::get<0>(properties));
-            return cls;
-        }
-
-        void add(Class &object, internal::bridge::table table, internal::bridge::realm realm) const {
-            if constexpr (HasPrimaryKeyProperty) {
-                auto pk = *(object.*PrimaryKeyProperty::ptr);
-                object.m_object = internal::bridge::object(realm, table.create_object_with_primary_key(pk));
-            } else {
-                object.m_object = internal::bridge::object(realm, table.create_object());
-            }
-
-            std::apply([&object](auto&&... p) {
-                ((object.*(std::decay_t<decltype(p)>::ptr))
-                    .manage(&*object.m_object, object.m_object->obj().get_table().get_column_key(p.name)), ...);
-            }, ps);
-        }
     };
 }
 template <auto Ptr, bool IsPrimaryKey = false>
@@ -300,8 +206,8 @@ static constexpr auto schema(const char * name,
                              T&&... props) {
     auto tup = make_subpack_tuple(props...);
     auto i = std::get<0>(tup);
-    using i2 = typename decltype(i)::Class;
-    return schemagen::schema<i2, T...>(name, std::move(props)...);
+    using Cls = typename decltype(i)::Class;
+    return schemagen::schema<Cls, T...>(name, std::move(props)...);
 }
 
 }

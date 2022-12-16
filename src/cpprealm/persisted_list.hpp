@@ -129,10 +129,16 @@ namespace realm {
             };
             void manage(internal::bridge::object *object,
                         internal::bridge::col_key &&col_key) final {
-                this->m_object = object;
                 object->obj().set_list_values(col_key, unmanaged);
+                assign_accessor(object, std::move(col_key));
+            }
+            void assign_accessor(internal::bridge::object *object,
+                                 internal::bridge::col_key &&col_key) final {
+                this->m_object = object;
                 m_list = object->get_list(col_key);
             }
+
+            __cpp_realm_friends
         };
     }
 
@@ -171,8 +177,7 @@ namespace realm {
             }
         }
     protected:
-        template <typename Class, typename ...Properties>
-        friend struct schemagen::schema;
+        __cpp_realm_friends
     };
 
     template <class T>
@@ -181,8 +186,9 @@ namespace realm {
         void push_back(T& a) {
             if (this->m_object) {
                 if (!a.m_object) {
-                    T::schema.add(a, this->m_object->get_realm().table_for_object_type(T::schema.name),
-                                  this->m_list.get_realm());
+                    a.manage(this->m_object->get_realm().table_for_object_type(T::schema.name),
+                             this->m_list.get_realm(),
+                             T::schema);
                 }
                 this->m_list.add(a.m_object->obj().get_key());
             } else {
@@ -192,8 +198,9 @@ namespace realm {
         void push_back(T&& a) {
             if (this->is_managed()) {
                 if (!a.m_object) {
-                    T::schema.add(a, this->m_object->get_realm().table_for_object_type(T::schema.name),
-                                  this->m_list.get_realm());
+                    a.manage(this->m_object->get_realm().table_for_object_type(T::schema.name),
+                             this->m_list.get_realm(),
+                             T::schema);
                 }
                 this->m_list.add(a.m_object->obj().get_key());
             } else {
@@ -230,15 +237,17 @@ namespace realm {
 
         T operator[](size_t idx) const override {
             if (this->m_object) {
-                return T::schema.create(this->m_list.template get<internal::bridge::obj>(idx),
-                                        this->m_list.get_realm());
+                T cls;
+                cls.assign_accessors(internal::bridge::object(this->m_list.get_realm(),
+                                                              this->m_list.template get<internal::bridge::obj>(idx)),
+                                     T::schema);
+                return cls;
             } else {
                 return this->unmanaged[idx];
             }
         }
     protected:
-        template <typename Class, typename ...Properties>
-        friend struct schemagen::schema;
+        __cpp_realm_friends
     };
 
     template <class T>
@@ -247,9 +256,9 @@ namespace realm {
         void push_back(T& a) {
             if (this->m_object) {
                 if (!a.m_object) {
-                    a.m_object = internal::bridge::object(this->m_list.get_realm(),
-                                                          this->m_list.add_embedded());
-                    T::schema.set(a);
+                    a.manage(internal::bridge::object(this->m_list.get_realm(),
+                                                      this->m_list.add_embedded()),
+                             T::schema);
                 }
             } else {
                 this->unmanaged.push_back(a);
@@ -260,7 +269,6 @@ namespace realm {
                 if (!a.m_object) {
                     a.m_object = internal::bridge::object(this->m_list.get_realm(),
                                                           this->m_list.add_embedded());
-                    T::schema.set(a);
                 }
             } else {
                 this->unmanaged.push_back(a);
@@ -296,15 +304,17 @@ namespace realm {
 
         T operator[](size_t idx) const override {
             if (this->m_object) {
-                return T::schema.create(this->m_list.template get<internal::bridge::obj>(idx),
-                                        this->m_list.get_realm());
+                T cls;
+                cls.assign_accessors(internal::bridge::object(this->m_list.get_realm(),
+                                                              this->m_list.template get<internal::bridge::obj>(idx)),
+                                     T::schema);
+                return cls;
             } else {
                 return this->unmanaged[idx];
             }
         }
     protected:
-        template <typename Class, typename ...Properties>
-        friend struct schemagen::schema;
+        __cpp_realm_friends
     };
 
     namespace {

@@ -133,13 +133,20 @@ namespace realm {
 
         void manage(internal::bridge::object* object,
                     internal::bridge::col_key&& col_key) override {
-            this->m_object = object;
             if (this->unmanaged) {
-                this->m_object->obj().set(col_key, persisted<T>::serialize(*unmanaged));
+                object->obj().set(col_key, persisted<T>::serialize(*unmanaged));
             } else {
-                this->m_object->obj().set_null(col_key);
+                object->obj().set_null(col_key);
             }
+            unmanaged.~optional<T>();
+            assign_accessor(object, std::move(col_key));
         }
+        void assign_accessor(internal::bridge::object* object,
+                             internal::bridge::col_key&& col_key) override {
+            this->m_object = object;
+            new (&managed) internal::bridge::col_key(std::move(col_key));
+        }
+
         inline static std::optional<typename internal::type_info::type_info<T>::internal_type>
         serialize(const std::optional<T>& value) {
             if (!value) {

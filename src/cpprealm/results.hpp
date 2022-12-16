@@ -34,8 +34,10 @@ struct query : public T {
 private:
     template <typename V>
     void set_managed(V& prop, const internal::bridge::col_key& column_key) {
-        if constexpr (internal::type_info::is_primitive<typename V::Result>::value)
-            prop.managed = column_key;
+        if constexpr (internal::type_info::is_primitive<typename V::Result>::value ||
+            std::is_same_v<std::vector<uint8_t>, typename V::Result>) {
+            new (&prop.managed) internal::bridge::col_key(column_key);
+        }
     }
     template <size_t N, typename P>
     constexpr auto prepare_for_query(internal::bridge::query& query, internal::bridge::object_schema& schema, P& property)
@@ -153,8 +155,11 @@ struct results {
     {
         if (index >= m_parent.size())
             throw std::out_of_range("Index out of range.");
-        auto obj = m_parent.template get<internal::bridge::obj>(index);
-        return T::schema.create(std::move(obj), m_parent.get_realm());
+        auto object = internal::bridge::object(m_parent.get_realm(),
+                                               m_parent.template get<internal::bridge::obj>(index));
+        auto cls = T();
+        cls.assign_accessors(object, T::schema);
+        return cls;
     }
 
     size_t size()
@@ -228,18 +233,10 @@ struct results {
     }
 
 private:
-    static std::vector<uint64_t> to_vector(const internal::bridge::index_set& index_set)
-    {
-        auto vector = std::vector<uint64_t>();
-        for (auto index : index_set.as_indexes()) {
-            vector.push_back(index);
-        }
-        return vector;
-    };
     template <typename ...V>
     friend struct db;
-    results(internal::bridge::results&& parent)
-    : m_parent(std::move(parent))
+    explicit results(internal::bridge::results&& parent)
+    : m_parent(parent)
     {
     }
     internal::bridge::results m_parent;

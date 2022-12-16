@@ -28,7 +28,6 @@ namespace realm {
     struct persisted<time_point> : public persisted_primitive_base<time_point> {
         using persisted_primitive_base<time_point>::persisted_primitive_base;
 
-
         auto time_since_epoch() const {
             if (this->is_managed()) {
                 auto ts = this->m_object->obj().template get<internal::bridge::timestamp>(this->managed);
@@ -76,12 +75,12 @@ namespace realm {
         return a op *b; \
     }
 
-    __cpp_realm_generate_timestamp_operator(==)
-    __cpp_realm_generate_timestamp_operator(!=)
-    __cpp_realm_generate_timestamp_operator(>)
-    __cpp_realm_generate_timestamp_operator(<)
-    __cpp_realm_generate_timestamp_operator(>=)
-    __cpp_realm_generate_timestamp_operator(<=)
+    __cpp_realm_generate_operator(std::chrono::time_point<std::chrono::system_clock>, ==, equal)
+    __cpp_realm_generate_operator(std::chrono::time_point<std::chrono::system_clock>, !=, not_equal)
+    __cpp_realm_generate_operator(std::chrono::time_point<std::chrono::system_clock>, >, greater)
+    __cpp_realm_generate_operator(std::chrono::time_point<std::chrono::system_clock>, <, less)
+    __cpp_realm_generate_operator(std::chrono::time_point<std::chrono::system_clock>, >=, greater_equal)
+    __cpp_realm_generate_operator(std::chrono::time_point<std::chrono::system_clock>, <=, less_equal)
 
     template <typename S>
     inline persisted<time_point>& operator +=(

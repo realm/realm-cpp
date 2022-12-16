@@ -79,7 +79,7 @@ struct db {
         auto actual_schema = m_realm.schema().find(T::schema.name);
         auto group = m_realm.read_group();
         auto table = group.get_table(actual_schema.table_key());
-        T::schema.add(object, table, m_realm);
+        object.manage(table, m_realm, T::schema);
     }
 
     template <typename T>

@@ -161,6 +161,10 @@ namespace realm::internal::bridge {
     table group::get_table(int64_t table_key) {
         return static_cast<SharedRealm>(m_realm.get())->read_group().get_table(TableKey(table_key));
     }
+
+    obj obj::create_and_set_linked_object(const col_key &v) {
+        return reinterpret_cast<Obj*>(m_obj)->create_and_set_linked_object(v);
+    }
 }
 
 std::string realm::internal::bridge::table_name_for_object_type(const std::string &v) {

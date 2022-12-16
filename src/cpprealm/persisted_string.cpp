@@ -9,7 +9,11 @@ namespace realm {
         unmanaged = v;
     }
     rbool persisted<std::string>::contains(const std::string &s) const {
-        if (is_managed()) {
+        if (should_detect_usage_for_queries) {
+            auto query = internal::bridge::query(this->query->get_table());
+            query.contains(managed, s);
+            return query;
+        } else if (is_managed()) {
             return m_object->obj().get<std::string>(managed).find(s) != npos;
         } else {
             return unmanaged.find(s) != npos;
