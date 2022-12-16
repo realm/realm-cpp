@@ -22,7 +22,7 @@ TEST_CASE("object_notifications") {
             if (run_count == 1) {
                 CHECK(change.is_deleted);
             } else {
-                CHECK(change.property_changes.size() == 26);
+                CHECK(change.property_changes.size() == 25);
                 for (auto& prop_change : change.property_changes) {
                     if (prop_change.name == "str_col" && prop_change.new_value) {
                         CHECK(std::get<std::string>(*prop_change.new_value) == "foo");
@@ -150,21 +150,20 @@ TEST_CASE("object_notifications") {
         CHECK(o4.is_managed());
         CHECK(o4.str_col == "embedded obj 2");
 
-        auto abc = *foo.opt_embedded_obj_col;
-
-        auto aaa = abc->str_col;
-        auto aba = abc->is_managed();
-
-        realm.write([&] {
-            abc->str_col = "ghj";
-        });
+        CHECK(foo.opt_obj_col.operator*()->is_managed());
+        CHECK(foo.opt_obj_col.operator*()->str_col == "link object");
+        CHECK(foo.list_obj_col.operator*()[0].is_managed());
+        CHECK(foo.list_obj_col.operator*()[0].str_col == "link object 2");
+        CHECK(foo.opt_embedded_obj_col.operator*()->is_managed());
+        CHECK(foo.opt_embedded_obj_col.operator*()->str_col == "embedded obj");
+        CHECK(foo.list_embedded_obj_col.operator*()[0].is_managed());
+        CHECK(foo.list_embedded_obj_col.operator*()[0].str_col == "embedded obj 2");
 
         realm.write([&foo, &realm] {
             realm.remove(foo);
         });
         realm.refresh();
 
-        auto a = *abc->str_col;
         CHECK(run_count == 2);
     }
 

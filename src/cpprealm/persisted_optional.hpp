@@ -28,7 +28,7 @@ namespace realm {
         using persisted_noncontainer_base<T>::operator=;
         using persisted_noncontainer_base<T>::operator*;
 
-        // Assigning an object type to the rhs
+        // If the RHS is not wrapped in a std::optional we need to handle it manaully.
         persisted<T, type_info::OptionalPersistable<T>>& operator=(typename T::value_type& o) {
             if (auto obj = this->m_object) {
                 if constexpr (type_info::PrimitivePersistableConcept<T>::value) {
@@ -64,10 +64,7 @@ namespace realm {
 //                            obj->obj().template set<this->type>(this->managed, o.m_object->obj().get_key());
                             REALM_TERMINATE("not implemented");
                         } else {
-                            auto actual_schema = *obj->get_realm()->schema().find(T::value_type::schema.name);
-                            auto& group = obj->get_realm()->read_group();
-                            auto table = group.get_table(actual_schema.table_key);
-                            o.m_object = Object(obj->get_realm(), obj->obj().create_and_set_linked_object(this->managed, true));
+                            T::value_type::schema.add_embedded_object(o, obj->get_realm(), obj->obj(), this->managed);
                         }
                     }
                     else {

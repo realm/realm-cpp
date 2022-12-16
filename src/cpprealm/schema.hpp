@@ -360,6 +360,13 @@ namespace internal {
             set(object);
             assign<0>(object, std::get<0>(properties));
         }
+
+        void add_embedded_object(Class &object, SharedRealm realm, Obj parent, const ColKey& col_key) const
+        {
+            object.m_object = Object(realm, parent.create_and_set_linked_object(col_key));
+            set(object);
+            assign<0>(object, std::get<0>(properties));
+        }
     };
 }
 
