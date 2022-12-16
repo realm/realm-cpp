@@ -28,7 +28,8 @@ namespace realm {
         using persisted_noncontainer_base<T>::operator=;
         using persisted_noncontainer_base<T>::operator*;
 
-        // If the RHS is not wrapped in a std::optional we need to handle it manaully.
+        // If the RHS is not wrapped in a std::optional we need to handle it manually so that we don't
+        // end up performing unnecessary copies and gain the ability to modify 'o' by ref.
         persisted<T, type_info::OptionalPersistable<T>>& operator=(typename T::value_type& o) {
             if (auto obj = this->m_object) {
                 if constexpr (type_info::PrimitivePersistableConcept<T>::value) {
@@ -52,22 +53,19 @@ namespace realm {
                         obj->obj().template set<ObjKey>(this->managed, o.m_object->obj().get_key());
                     }
                 } else if constexpr (type_info::OptionalPersistableConcept<T>::value) {
-                    using UnwrappedType = typename type_info::persisted_type<typename T::value_type>::type;
                     if constexpr (type_info::EnumPersistableConcept<typename T::value_type>::value) {
                         obj->obj().template set<Int>(this->managed, static_cast<Int>(o));
                     }
                     else if constexpr (type_info::EmbeddedObjectPersistableConcept<typename T::value_type>::value) {
                         // if non-null object is being assigned...
                         if (o.m_object) {
-                            // if object is managed, we will to set the link
-                            // to the new target's key
-//                            obj->obj().template set<this->type>(this->managed, o.m_object->obj().get_key());
-                            REALM_TERMINATE("not implemented");
+                            REALM_TERMINATE("Embedded object is already managed.");
                         } else {
                             T::value_type::schema.add_embedded_object(o, obj->get_realm(), obj->obj(), this->managed);
                         }
                     }
                     else {
+                        using UnwrappedType = typename type_info::persisted_type<typename T::value_type>::type;
                         obj->obj().template set<UnwrappedType>(this->managed, type_info::persisted_type<typename T::value_type>::convert_if_required(o));
                     }
                 }

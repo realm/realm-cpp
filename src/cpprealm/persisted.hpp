@@ -147,20 +147,8 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
                 }
             } else if constexpr (type_info::MixedPersistableConcept<T>::value) {
                 obj->obj().set_any(managed, type_info::persisted_type<T>::convert_if_required(o));
-            }
-            // if parent is managed...
-            else if constexpr (type_info::EmbeddedObjectPersistableConcept<T>::value) {
-                // if non-null object is being assigned...
-                if (o.m_object) {
-                    // if object is managed, we will to set the link
-                    // to the new target's key
-                    obj->obj().template set<type>(managed, o.m_object->obj().get_key());
-                } else {
-                    // else new unmanaged object is being assigned.
-                    // we must assign the values to this object's fields
-                    // TODO:
-                    REALM_UNREACHABLE();
-                }
+            } else if constexpr (type_info::EmbeddedObjectPersistableConcept<T>::value) {
+                REALM_UNREACHABLE();
             } else if constexpr (type_info::OptionalObjectPersistableConcept<T>::value) {
                 // if object...
                 if (o) {
@@ -183,11 +171,19 @@ struct persisted_base<T, realm::type_info::Persistable<T>> {
                     obj->obj().set_null(managed);
                 }
             } else if constexpr (type_info::OptionalPersistableConcept<T>::value) {
-                using UnwrappedType = typename type_info::persisted_type<typename T::value_type>::type;
                 if (o) {
-                    if constexpr (type_info::EnumPersistableConcept<typename T::value_type>::value) {
+                    if constexpr (type_info::EmbeddedObjectPersistableConcept<typename T::value_type>::value) {
+                        // if non-null object is being assigned...
+                        if (o->m_object) {
+                            REALM_TERMINATE("Embedded object is already managed.");
+                        } else {
+                            T::value_type::schema.add_embedded_object(*o, obj->get_realm(), obj->obj(), this->managed);
+                        }
+                    }
+                    else if constexpr (type_info::EnumPersistableConcept<typename T::value_type>::value) {
                         obj->obj().template set<Int>(managed, static_cast<Int>(*o));
                     } else {
+                        using UnwrappedType = typename type_info::persisted_type<typename T::value_type>::type;
                         obj->obj().template set<UnwrappedType>(managed, type_info::persisted_type<typename T::value_type>::convert_if_required(*o));
                     }
                 } else {

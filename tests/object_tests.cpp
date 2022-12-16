@@ -167,7 +167,60 @@ TEST_CASE("object_notifications") {
         CHECK(run_count == 2);
     }
 
-    SECTION("scope") {
+    SECTION("optional objects") {
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({.path=path});
 
+        auto foo = AllTypesObject();
+        auto o = AllTypesObjectLink();
+        o.str_col = "bar";
+        AllTypesObjectEmbedded o2;
+        o2.str_col = "embedded bar";
+
+        auto opt_obj = std::optional<AllTypesObjectLink>(o);
+        auto opt_embedded_obj = std::optional<AllTypesObjectEmbedded>(o2);
+
+        realm.write([&foo, &realm] {
+            realm.add(foo);
+        });
+
+        realm.write([&] {
+            foo.opt_obj_col = opt_obj;
+            foo.opt_embedded_obj_col = opt_embedded_obj;
+        });
+
+        CHECK(foo.opt_obj_col.operator*()->is_managed());
+        CHECK(foo.opt_obj_col.operator*()->str_col == "bar");
+
+        CHECK(foo.opt_embedded_obj_col.operator*()->is_managed());
+        CHECK(foo.opt_embedded_obj_col.operator*()->str_col == "embedded bar");
+
+    }
+
+    SECTION("observation scope") {
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({.path=path});
+
+        realm::notification_token token;
+        // Keep object outside of scope with token;
+        AllTypesObject foo;
+        int run_count = 0;
+
+        {
+            realm.write([&foo, &realm]() {
+                realm.add(foo);
+            });
+
+            token = foo.observe<AllTypesObject>([&](auto change) {
+                run_count++;
+            });
+        }
+
+        AllTypesObject o = *realm.objects<AllTypesObject>()[0];
+
+        realm.write([&o, &realm]() {
+            o.str_col = "foo";
+        });
+
+        realm.refresh();
+        CHECK(run_count == 1);
     }
 }
