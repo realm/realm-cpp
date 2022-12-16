@@ -505,24 +505,6 @@ struct object_base {
     }
 protected:
     std::optional<internal::bridge::object> m_object;
-    template <typename T, typename>
-    friend struct persisted;
-    template <typename T>
-    friend class persisted_object_container_base;
-    template <typename Class, typename ...Properties>
-    friend struct schemagen::schema;
-    template <auto Ptr, bool IsPrimaryKey>
-    friend struct schemagen::property;
-    template <typename T, typename>
-    friend struct thread_safe_reference;
-    template <typename ...Ts>
-    friend struct db;
-    template <typename T>
-    friend typename std::enable_if<std::is_base_of<realm::object_base, T>::value, std::ostream>::type&
-    operator<< (std::ostream& stream, const T& object);
-    template <typename T>
-    friend inline std::enable_if_t<std::is_base_of_v<object_base, T>, bool> operator==(const T& lhs,
-                                                                                       const T& rhs);
 
     template <typename Class, typename ...Properties>
     void manage(const internal::bridge::table& target_table,
@@ -536,11 +518,39 @@ protected:
             } else {
                 m_object = internal::bridge::object(realm, target_table.create_object());
             }
-            schema.set(static_cast<Class&>(*this));
-//            object->obj().set(col_key, m_object->obj().get_key());
+            std::apply([this](auto&&... p) {
+                ((static_cast<Class&>(*this).*(std::decay_t<decltype(p)>::ptr))
+                        .manage(&*m_object, m_object->obj().get_table().get_column_key(p.name)), ...);
+            }, schema.ps);
+            assign_accessors(*m_object, schema);
         }
     }
-};
+    template <typename Class, typename ...Properties>
+    void manage(internal::bridge::object&& object,
+                const schemagen::schema<Class, Properties...>& schema) {
+        m_object = std::move(object);
+        std::apply([this](auto&&... p) {
+            ((static_cast<Class&>(*this).*(std::decay_t<decltype(p)>::ptr))
+                    .manage(&*m_object, m_object->obj().get_table().get_column_key(p.name)), ...);
+        }, schema.ps);
+        assign_accessors(*m_object, schema);
+    }
+    template <typename Class, typename ...Properties>
+    void assign_accessors(const internal::bridge::object& object,
+                          const schemagen::schema<Class, Properties...>& schema) {
+        m_object = object;
+        std::apply([this](auto&&... p) {
+            ((static_cast<Class&>(*this).*(std::decay_t<decltype(p)>::ptr))
+                .assign_accessor(&*m_object, m_object->obj().get_table().get_column_key(p.name)), ...);
+        }, schema.ps);
+    }
+
+    __cpp_realm_friends
+    template <typename, typename> friend struct thread_safe_reference;
+        template <typename T>
+        friend inline std::enable_if_t<std::is_base_of_v<object_base, T>, bool> operator==(const T& lhs,
+                                                                                            const T& rhs);
+    };
 // MARK: Object
 /**
  `realm::object` is a class used to define Realm model objects.

@@ -49,6 +49,8 @@
     friend std::enable_if_t<std::is_enum_v<TT>, rbool> operator op(const persisted<TT>& a, const VV& b);
 
 #define __cpp_realm_friends \
+        template <typename ...> \
+        friend struct db;                    \
         template <typename, typename ...> \
         friend struct realm::schemagen::schema; \
         template <typename> friend struct query;\
@@ -87,12 +89,12 @@
                             \
         __friend_rbool_operators__(std::vector<uint8_t>, !=) \
         __friend_rbool_operators__(std::vector<uint8_t>, ==) \
-        __friend_rbool_timestamp_operators__(>) \
-        __friend_rbool_timestamp_operators__(>=)\
-        __friend_rbool_timestamp_operators__(<)   \
-        __friend_rbool_timestamp_operators__(<=)\
-        __friend_rbool_timestamp_operators__(!=)\
-        __friend_rbool_timestamp_operators__(==)\
+        __friend_rbool_operators__(std::chrono::time_point<std::chrono::system_clock>, ==) \
+        __friend_rbool_operators__(std::chrono::time_point<std::chrono::system_clock>, !=)\
+        __friend_rbool_operators__(std::chrono::time_point<std::chrono::system_clock>, >)   \
+        __friend_rbool_operators__(std::chrono::time_point<std::chrono::system_clock>, <) \
+        __friend_rbool_operators__(std::chrono::time_point<std::chrono::system_clock>, >=)\
+        __friend_rbool_operators__(std::chrono::time_point<std::chrono::system_clock>, <=)\
         __friend_rbool_mixed_operators(==)\
                             \
         __friend_rbool_enum_operators(==) \
@@ -118,7 +120,12 @@
     template <typename> \
     friend class persisted_map_base;      \
     friend struct internal::bridge::obj;  \
-    friend struct internal::bridge::list;
+    friend struct internal::bridge::list; \
+    friend struct object_base; template <typename> friend struct results;                  \
+    template <typename TT> \
+    friend inline typename std::enable_if<std::is_base_of<realm::object_base, TT>::value, std::ostream>::type& \
+    operator<< (std::ostream& stream, const TT& object); \
+    template <typename, typename> friend struct thead_safe_reference;
 
 #define __cpp_realm_generate_operator(type, op, name) \
     inline rbool operator op(const persisted<type>& a, const type& b) { \
@@ -164,39 +171,21 @@ struct persisted_base {
     persisted_base(persisted_base&& o) {
         *this = std::move(o);
     }
-
-//    virtual std::conditional_t<is_optional<T>::value,
-//            typename is_optional<T>::underlying,
-//            typename is_optional<T>::underlying> operator *() const {
-//        if (this->is_managed()) {
-//            auto val = persisted<T>::deserialize(this->m_object->obj().template
-//                    get<typename internal::type_info::type_info<T>::internal_type>(this->managed));
-//            if constexpr (is_optional<T>::value) {
-//                return *val;
-//            } else {
-//                return val;
-//            }
-//        } else {
-//            if constexpr (is_optional<T>::value) {
-//                return *this->unmanaged;
-//            } else {
-//                return this->unmanaged;
-//            }
-//        }
-//    }
 protected:
     [[nodiscard]] bool is_managed() const {
-        return m_object;
+        return m_object || query;
     }
 
     virtual void manage(internal::bridge::object* object,
                         internal::bridge::col_key&& col_key) = 0;
+    virtual void assign_accessor(internal::bridge::object* object,
+                                 internal::bridge::col_key&& col_key) = 0;
 
     internal::bridge::object *m_object = nullptr;
 
     // MARK: Queries
     bool should_detect_usage_for_queries = false;
-    internal::bridge::query* query;
+    internal::bridge::query* query = nullptr;
     bool is_and;
     bool is_or;
 
@@ -291,7 +280,12 @@ protected:
         void manage(internal::bridge::object* object,
                     internal::bridge::col_key&& col_key) final {
             object->obj().set(col_key, persisted<T>::serialize(unmanaged));
+            assign_accessor(object, std::move(col_key));
+        }
+        void assign_accessor(internal::bridge::object* object,
+                             internal::bridge::col_key&& col_key) final {
             this->m_object = object;
+            unmanaged.~T();
             new (&this->managed) internal::bridge::col_key(col_key);
         }
     };
@@ -354,15 +348,6 @@ inline std::ostream& operator<< (std::ostream& stream, const persisted_primitive
 {
     return stream << *value;
 }
-//
-//template <typename T>
-//std::ostream& operator<< (std::ostream& stream, const persisted<std::optional<T>>& value)
-//{
-//    if (*value) {
-//        return stream << "null";
-//    }
-//    return stream << type_info::persisted_type<T>::convert_if_required(**value);
-//}
 
 template <typename T>
 inline typename std::enable_if<std::is_base_of<realm::object_base, T>::value, std::ostream>::type&
@@ -371,13 +356,7 @@ operator<< (std::ostream& stream, const T& object)
     if (object.m_object) {
         return stream << object.m_object->obj();
     }
-//    for (int i = 0; i < std::tuple_size<decltype(T::schema.properties)>{}; i++) {
-//        auto props = std::get<i>(T::schema.properties);
-//        auto name = T::schema.names[i];
-//        stream << "{\n";
-//        (stream << "\t" << name << ": " << *(object.*props.ptr) << "\n");
-//        stream << "}";
-//    }
+
     std::apply([&stream, &object](auto&&... props) {
         stream << "{\n";
         ((stream << "\t" << props.name << ": " << *(object.*props.ptr) << "\n"), ...);
@@ -386,13 +365,6 @@ operator<< (std::ostream& stream, const T& object)
 
     return stream;
 }
-//
-//template <typename T>
-//typename std::enable_if_t<type_info::BinaryPersistableConcept<T>::value, std::ostream>&
-//        operator<< (std::ostream& stream, const T& binary)
-//{
-//    return stream << binary;
-//}
 
 }
 

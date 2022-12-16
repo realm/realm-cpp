@@ -82,6 +82,7 @@ namespace realm::internal::bridge {
 
     __generate_query_operator_case_sensitive(equal, std::string_view)
     __generate_query_operator_case_sensitive(not_equal, std::string_view)
+    __generate_query_operator_case_sensitive(contains, std::string_view)
 
     __generate_query_operator_mixed(equal)
     __generate_query_operator_mixed(not_equal)

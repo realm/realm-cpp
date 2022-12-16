@@ -68,7 +68,7 @@ namespace realm::internal::bridge {
         query& not_equal(col_key column_key, std::string_view value, bool case_sensitive = true);
         query& begins_with(col_key column_key, const std::string& value, bool case_sensitive = true);
         query& ends_with(col_key column_key, const std::string& value, bool case_sensitive = true);
-        query& contains(col_key column_key, const std::string& value, bool case_sensitive = true);
+        query& contains(col_key column_key, std::string_view value, bool case_sensitive = true);
         query& like(col_key column_key, const std::string& value, bool case_sensitive = true);
 
         // Conditions: binary

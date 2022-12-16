@@ -290,7 +290,7 @@ namespace realm {
             if (is_managed) {
                 mapped_type cls;
                 auto obj = m_backing_map.get().template get<internal::bridge::obj>(m_key);
-                mapped_type::schema.set(cls, internal::bridge::object(m_object->get_realm(), obj));
+                cls.assign_accessors(internal::bridge::object(m_object->get_realm(), obj), mapped_type::schema);
                 return cls;
             } else {
                 return m_val.get();
@@ -383,7 +383,6 @@ namespace realm {
         }
     protected:
         void manage(internal::bridge::object *object, internal::bridge::col_key &&col_key) override {
-            this->m_object = object;
             auto managed = object->get_dictionary(col_key);
             for (auto& [k, v] : this->unmanaged) {
                 if constexpr (std::is_base_of_v<realm::object, T>) {
@@ -398,9 +397,13 @@ namespace realm {
                 }
             }
             this->unmanaged.~map<std::string, T>();
-            new (&this->managed) internal::bridge::dictionary(managed);
+            assign_accessor(object, std::move(col_key));
         }
 
+        void assign_accessor(internal::bridge::object *object, internal::bridge::col_key &&col_key) override {
+            this->m_object = object;
+            new (&this->managed) internal::bridge::dictionary(object->get_dictionary(col_key));
+        }
         __cpp_realm_friends
     };
 }

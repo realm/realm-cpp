@@ -58,23 +58,23 @@ namespace realm {
             if (m_property_object->m_object) {
                 m_property_object->m_object->obj().set(col_key, m_property_object->m_object->obj().get_key());
             } else {
-                m_property_object->manage(object->obj().get_table().get_link_target(col_key),
-                                          object->get_realm(),
-                                          T::schema);
-//                auto target_table = object->obj().get_table().get_link_target(col_key);
-//                T& target_cls = *m_property_object;
-//
-//                auto realm = object->get_realm();
-//                if constexpr (decltype(T::schema)::HasPrimaryKeyProperty) {
-//                    using Schema = decltype(T::schema);
-//                    auto val = (target_cls).*Schema::PrimaryKeyProperty::ptr;
-//                    target_cls.m_object = internal::bridge::object(realm, target_table.create_object_with_primary_key(*val));
-//                } else {
-//                    target_cls.m_object = internal::bridge::object(realm, target_table.create_object());
-//                }
-//                T::schema.set(target_cls);
-                object->obj().set(col_key, m_property_object->m_object->obj().get_key());
+                if (std::is_base_of_v<embedded_object, T>) {
+                    m_property_object->manage(
+                            internal::bridge::object(object->get_realm(),
+                                                     object->obj().create_and_set_linked_object(col_key)),
+                                                     T::schema);
+                } else {
+                    m_property_object->manage(object->obj().get_table().get_link_target(col_key),
+                                              object->get_realm(),
+                                              T::schema);
+                    object->obj().set(col_key, m_property_object->m_object->obj().get_key());
+                }
             }
+        }
+
+        void assign_accessor(internal::bridge::object* object,
+                             internal::bridge::col_key&& col_key) final {
+
         }
 
         static internal::bridge::obj_key serialize(const T& v) {
