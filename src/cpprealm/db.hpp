@@ -33,6 +33,7 @@
 #include <cpprealm/thread_safe_reference.hpp>
 #include <cpprealm/scheduler.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
+#include <cpprealm/internal/bridge/async_open_task.hpp>
 #include <utility>
 
 namespace realm {
@@ -73,13 +74,24 @@ struct db {
     }
 
     template <typename T>
-    void add(T& object)
+    void add(std::vector<T>& objects)
     {
-        static_assert(std::is_base_of_v<realm::object, T> && (std::is_same_v<T, Ts> || ...));
+        static_assert(std::is_base_of_v<realm::object<T>, T> && (std::is_same_v<T, Ts> || ...));
         auto actual_schema = m_realm.schema().find(T::schema.name);
         auto group = m_realm.read_group();
         auto table = group.get_table(actual_schema.table_key());
-        object.manage(table, m_realm, T::schema);
+        for (auto& object : objects)
+            object.manage(table, m_realm);
+    }
+
+    template <typename T>
+    void add(T& object)
+    {
+        static_assert(std::is_base_of_v<realm::object<T>, T> && (std::is_same_v<T, Ts> || ...));
+        auto actual_schema = m_realm.schema().find(T::schema.name);
+        auto group = m_realm.read_group();
+        auto table = group.get_table(actual_schema.table_key());
+        object.manage(table, m_realm);
     }
 
     template <typename T>
@@ -113,11 +125,11 @@ struct db {
     }
 
     template <typename T>
-    T resolve(thread_safe_reference<T>&& tsr) const
+    T resolve(thread_safe_reference<T>&& tsr)
     {
-//        Object object = tsr.m_tsr->template resolve<Object>(m_realm);
-//        return T::schema.create(object.obj(), object.realm());
-abort();
+        T cls;
+        cls.assign_accessors(m_realm.resolve<internal::bridge::object>(std::move(tsr.m_tsr)));
+        return cls;
     }
 
 #if QT_CORE_LIB
@@ -138,6 +150,7 @@ private:
             initialized = true;
         }
     }
+    template <typename>
     friend struct object;
     template <typename T, typename>
     friend struct thread_safe_reference;
@@ -147,7 +160,7 @@ private:
 template <typename ...Ts>
 static db<Ts...> open(std::string&& path = std::filesystem::current_path().append("default.realm"),
                       std::shared_ptr<scheduler>&& scheduler = scheduler::make_default(),
-                      std::optional<sync_config> sync_config = std::nullopt)
+                      const std::optional<sync_config>& sync_config = std::nullopt)
 {
 #if QT_CORE_LIB
     util::Scheduler::set_default_factory(util::make_qt);
@@ -156,26 +169,34 @@ static db<Ts...> open(std::string&& path = std::filesystem::current_path().appen
 }
 
 template <typename ...Ts>
-static inline std::promise<thread_safe_reference<db<Ts...>>> async_open(const typename db<Ts...>::config& config) {
+struct async_open_promise : public std::promise<thread_safe_reference<db<Ts...>>> {
+//    async_open_promise(const async_open_promise<Ts...>&) = delete;
+private:
+    async_open_promise(internal::bridge::async_open_task&& task) // NOLINT(google-explicit-constructor)
+    : async_open_task(std::move(task)) {}
+    internal::bridge::async_open_task async_open_task;
+    template <typename ...Vs>
+    friend inline async_open_promise<Vs...> async_open(const typename db<Vs...>::config& config);
+};
+
+template <typename ...Ts>
+[[nodiscard]] static inline async_open_promise<Ts...> async_open(const typename db<Ts...>::config& config) {
     // TODO: Add these flags to core
 #if QT_CORE_LIB
     util::Scheduler::set_default_factory(util::make_qt);
 #endif
-//    std::vector<object_schema> schema;
-//    (schema.push_back(Ts::schema.to_core_schema()), ...);
-    std::promise<thread_safe_reference<db<Ts...>>> p;
-//
-//    auto async_open_task =
-//            internal::get_synchronized_realm(config, schema, [&p](std::unique_ptr<ThreadSafeReference> tsr, auto ex) {
-//                if (ex) p.set_exception(ex);
-//                else p.set_value(thread_safe_reference<db<Ts...>>(std::move(tsr)));
-//            });
-//
-//    static bool initialized;
-//    if (!initialized) {
-//        realm_analytics::send();
-//        initialized = true;
-//    }
+    auto c = config;
+    std::vector<internal::bridge::object_schema> schema;
+    (schema.push_back(Ts::schema.to_core_schema()), ...);
+    c.set_schema(schema);
+    async_open_promise<Ts...> p = {internal::bridge::realm::get_synchronized_realm(c)};
+    p.async_open_task.start([&p](internal::bridge::thread_safe_reference tsr, auto ex) {
+        if (ex) {
+            p.set_exception(ex);
+        } else {
+            p.set_value(thread_safe_reference<db<Ts...>>(std::move(tsr)));
+        }
+    });
     return p;
 }
 

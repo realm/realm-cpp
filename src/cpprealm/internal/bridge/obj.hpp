@@ -20,6 +20,7 @@ namespace realm {
     class Query;
     class ColKey;
     class LnkLst;
+    template <typename T>
     struct object_base;
     class NotificationToken;
 
@@ -27,7 +28,7 @@ namespace realm {
         struct obj_key;
     }
     namespace internal::type_info {
-        template <typename T, std::enable_if_t<std::is_base_of_v<object_base, T>>>
+        template <typename T, std::enable_if_t<std::is_base_of_v<object_base<T>, T>>>
         bridge::obj_key serialize(const T& o);
         template <typename, typename>
         struct type_info;
@@ -66,6 +67,7 @@ namespace realm::internal::bridge {
         obj(const Obj&); //NOLINT google-explicit-constructor
         operator Obj() const; //NOLINT google-explicit-constructor
         [[nodiscard]] table get_table() const noexcept;
+        [[nodiscard]] table get_target_table(col_key) const noexcept;
         [[nodiscard]] bool is_null(const col_key& col_key) const;
         obj get_linked_object(const col_key& col_key);
         template <typename T>
@@ -74,7 +76,9 @@ namespace realm::internal::bridge {
                 if (is_null(col_key)) {
                     return std::nullopt;
                 }
-                return get<typename T::value_type>(col_key);
+                return
+                    persisted<typename T::value_type, void>::deserialize
+                            (get<typename type_info::type_info<typename T::value_type, void>::internal_type>(col_key));
             } else {
                 return get<T>(col_key);
             }

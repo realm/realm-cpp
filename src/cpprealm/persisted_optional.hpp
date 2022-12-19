@@ -36,10 +36,10 @@ namespace realm {
             *this = std::move(v);
         }
         persisted(const T& value) {
-            unmanaged = value;
+            new (&unmanaged) std::optional<T>(value);
         }
         persisted(T&& value) {
-            unmanaged = std::move(value);
+            new (&unmanaged) std::optional<T>(std::move(value));
         }
         ~persisted() {
             if (this->is_managed()) {
@@ -48,21 +48,21 @@ namespace realm {
                 unmanaged.~optional<T>();
             }
         }
-        persisted operator=(const persisted& v) {
+        persisted& operator=(const persisted& v) {
             if (v.is_managed()) {
                 this->m_object = v.m_object;
-                managed = v.managed;
+                new (&managed) internal::bridge::col_key(v.managed);
             } else {
-                unmanaged = v.unmanaged;
+                new (&unmanaged) std::optional<T>(v.unmanaged);
             }
             return *this;
         }
-        persisted operator=(persisted&& v) {
+        persisted& operator=(persisted&& v) {
             if (v.is_managed()) {
                 this->m_object = v.m_object;
-                managed = v.managed;
+                new (&managed) internal::bridge::col_key(std::move(v.managed));
             } else {
-                unmanaged = v.unmanaged;
+                new (&unmanaged) std::optional<T>(std::move(v.unmanaged));
             }
             return *this;
         }
@@ -89,7 +89,7 @@ namespace realm {
                 }
             } else {
                 if (o)
-                    new (&this->unmanaged) T(std::move(*o));
+                    new (&this->unmanaged) std::optional<T>(std::move(*o));
                 else
                     new (&this->unmanaged) std::optional<T>();
             }
@@ -112,7 +112,7 @@ namespace realm {
 
         operator bool() const {
             if (this->is_managed()) {
-                return this->m_object->obj().is_null(managed);
+                return !this->m_object->obj().is_null(managed);
             } else {
                 return unmanaged.operator bool();
             }
@@ -120,7 +120,7 @@ namespace realm {
 
         T operator*() const {
             if (this->is_managed()) {
-                return this->m_object->obj().template get<T>(managed);
+                return *this->m_object->obj().template get<std::optional<T>>(managed);
             } else {
                 return *unmanaged;
             }

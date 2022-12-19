@@ -44,6 +44,17 @@ namespace realm {
 
     __cpp_realm_generate_operator(std::vector<uint8_t>, ==, equal)
     __cpp_realm_generate_operator(std::vector<uint8_t>, !=, not_equal)
+
+    inline std::ostream& operator<< (std::ostream& stream, const persisted<std::vector<uint8_t>>& value)
+    {
+        stream << "{ ";
+        for (auto& c : *value) {
+            stream << c << ", ";
+        }
+        stream.seekp(-2);
+        stream << " }";
+        return stream;
+    }
 }
 
 #endif //REALM_PERSISTED_BINARY_HPP

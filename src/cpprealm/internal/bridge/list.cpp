@@ -6,6 +6,7 @@
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/internal/bridge/uuid.hpp>
+#include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/type_info.hpp>
 
 #include <realm/object-store/list.hpp>
@@ -31,6 +32,9 @@ namespace realm::internal::bridge {
         return *reinterpret_cast<const List*>(m_list);
     }
 
+    table list::get_table() const {
+        return reinterpret_cast<const List *>(m_list)->get_table();
+    }
     size_t list::size() const {
         return reinterpret_cast<const List *>(m_list)->size();
     }
@@ -62,6 +66,9 @@ namespace realm::internal::bridge {
     }
     void list::add(const obj_key &v) {
         reinterpret_cast<List *>(m_list)->add(static_cast<ObjKey>(v));
+    }
+    void list::add(const timestamp &v) {
+        reinterpret_cast<List *>(m_list)->add(static_cast<Timestamp>(v));
     }
     void list::add(const bool &v) {
         reinterpret_cast<List *>(m_list)->add(v);
@@ -119,6 +126,26 @@ namespace realm::internal::bridge {
     size_t list::find(const uuid &v) { return reinterpret_cast<List *>(m_list)->find(static_cast<UUID>(v)); }
     size_t list::find(const mixed &v) { return reinterpret_cast<List *>(m_list)->find(static_cast<Mixed>(v)); }
     size_t list::find(const timestamp &v) { return reinterpret_cast<List *>(m_list)->find(static_cast<Timestamp>(v)); }
-    size_t list::find(const binary& v) { return reinterpret_cast<List *>(m_list)->find(static_cast<BinaryData>(v)); }
+    size_t list::find(const binary& v) {
+        auto v_actual = v.operator BinaryData();
+        auto val_actual = reinterpret_cast<List *>(m_list)->get<BinaryData>(1);
+        auto val = reinterpret_cast<List *>(m_list)->find(static_cast<BinaryData>(v));
+        return val;
+    }
     size_t list::find(const obj_key& v) { return reinterpret_cast<List *>(m_list)->find(static_cast<ObjKey>(v)); }
+
+    notification_token list::add_notification_callback(std::shared_ptr<collection_change_callback> cb) {
+        struct wrapper : CollectionChangeCallback {
+            std::shared_ptr<collection_change_callback> m_cb;
+            explicit wrapper(std::shared_ptr<collection_change_callback>&& cb)
+                    : m_cb(std::move(cb)) {}
+            void before(const CollectionChangeSet& v) const {
+                m_cb->before(v);
+            }
+            void after(const CollectionChangeSet& v) const {
+                m_cb->after(v);
+            }
+        } ccb(std::move(cb));
+        return reinterpret_cast<List*>(m_list)->add_notification_callback(ccb);
+    }
 }

@@ -47,15 +47,15 @@ namespace realm {
         }
         static T deserialize(const internal::bridge::mixed& value) {
             switch (value.type()) {
-                case internal::bridge::property::type::Int: return value.operator int64_t();
-                case internal::bridge::property::type::Bool: return value.operator bool();
-                case internal::bridge::property::type::String: return static_cast<std::string>(value);
-                case internal::bridge::property::type::Data:
+                case internal::bridge::data_type::Int: return value.operator int64_t();
+                case internal::bridge::data_type::Bool: return value.operator bool();
+                case internal::bridge::data_type::String: return static_cast<std::string>(value);
+                case internal::bridge::data_type::Binary:
                     return static_cast<std::vector<uint8_t>>(static_cast<internal::bridge::binary>(value));
-                case internal::bridge::property::type::Date: return static_cast<internal::bridge::timestamp>(value);
-                case internal::bridge::property::type::Float:
-                case internal::bridge::property::type::Double: return static_cast<double>(value);
-                case internal::bridge::property::type::UUID:
+                case internal::bridge::data_type::Timestamp: return static_cast<internal::bridge::timestamp>(value);
+                case internal::bridge::data_type::Float:
+                case internal::bridge::data_type::Double: return static_cast<double>(value);
+                case internal::bridge::data_type::UUID:
                     return static_cast<uuid>(static_cast<internal::bridge::uuid>(value));
                 default: abort();
             }

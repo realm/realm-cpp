@@ -4,22 +4,22 @@
 #include <realm/binary_data.hpp>
 
 namespace realm::internal::bridge {
-    static_assert(SizeCheck<16, sizeof(BinaryData)>{});
+    static_assert(SizeCheck<16, sizeof(OwnedBinaryData)>{});
 
     char binary::operator[](size_t i) const noexcept {
         return reinterpret_cast<const BinaryData*>(m_data)->operator[](i);
     }
     binary::binary() {
-        new (&m_data) BinaryData();
+        new (&m_data) OwnedBinaryData();
     }
     binary::binary(const realm::BinaryData &v) {
-        new (&m_data) BinaryData(v);
+        new (&m_data) OwnedBinaryData(v);
     }
     binary::binary(const std::vector<uint8_t> &v) {
         if (v.empty()) {
-            new (&m_data) BinaryData("", 0);
+            new (&m_data) OwnedBinaryData("", 0);
         } else {
-            new (&m_data) BinaryData(reinterpret_cast<const char *>(v.data()), v.size());
+            new (&m_data) OwnedBinaryData(reinterpret_cast<const char *>(v.data()), v.size());
         }
     }
 

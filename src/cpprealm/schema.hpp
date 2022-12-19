@@ -72,15 +72,17 @@ namespace schemagen {
 
         operator internal::bridge::property() const {
             internal::bridge::property property(name, type, is_primary_key);
-            if constexpr (std::is_base_of_v<object_base, Result>) {
+            if constexpr (std::is_base_of_v<object_base<Result>, Result>) {
                 property.set_object_link(Result::schema.name);
                 property.set_type(type | internal::bridge::property::type::Nullable);
             } else if constexpr (realm::internal::type_info::is_vector<Result>::value) {
-                if constexpr (std::is_base_of_v<object_base, typename Result::value_type>) {
+                if constexpr (std::is_base_of_v<object_base<typename Result::value_type>,
+                                                            typename Result::value_type>) {
                     property.set_object_link(Result::value_type::schema.name);
                 }
             } else if constexpr (realm::internal::type_info::is_map<Result>::value) {
-                if constexpr (std::is_base_of_v<object_base, typename Result::mapped_type>) {
+                if constexpr (std::is_base_of_v<object_base<typename Result::mapped_type>,
+                                                            typename Result::mapped_type>) {
                     property.set_object_link(Result::mapped_type::schema.name);
                     property.set_type(type | internal::bridge::property::type::Nullable);
                 }
@@ -148,7 +150,7 @@ namespace schemagen {
 
         using PrimaryKeyProperty = decltype(primary_key());
         static constexpr bool HasPrimaryKeyProperty = !std::is_void_v<PrimaryKeyProperty>;
-        static constexpr bool IsEmbedded = std::is_base_of_v<embedded_object, Class>;
+        static constexpr bool IsEmbedded = std::is_base_of_v<embedded_object<Class>, Class>;
 
         [[nodiscard]] internal::bridge::object_schema to_core_schema() const {
             internal::bridge::object_schema schema;

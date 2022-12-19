@@ -40,6 +40,7 @@ namespace realm {
 
 struct Realm;
 struct NotificationToken;
+template <typename T>
 struct object;
 class Object;
 
@@ -80,6 +81,8 @@ using ObjectNotificationCallback = std::function<void(const T*,
                                                       const std::exception_ptr error)>;
 } // anonymous namespace
 
+
+template <typename T>
 struct object_base {
     [[nodiscard]] bool is_managed() const noexcept {
         return m_object && m_object->is_valid();
@@ -385,7 +388,6 @@ struct object_base {
 //        return std::move(token);
 //    }
 
-    template <typename T>
     notification_token observe(std::function<void(ObjectChange<T>)> block, bool queue = false) {
         struct ObjectChangeCallbackWrapper : internal::bridge::collection_change_callback {
             ObjectChangeCallbackWrapper(ObjectNotificationCallback<T> b,
@@ -506,50 +508,43 @@ struct object_base {
 protected:
     std::optional<internal::bridge::object> m_object;
 
-    template <typename Class, typename ...Properties>
     void manage(const internal::bridge::table& target_table,
-                const internal::bridge::realm& realm,
-                const schemagen::schema<Class, Properties...>& schema) {
+                const internal::bridge::realm& realm) {
         if (!m_object) {
-            if constexpr (schemagen::schema<Class, Properties...>::HasPrimaryKeyProperty) {
-                using Schema = schemagen::schema<Class, Properties...>;
-                auto val = (static_cast<Class&>(*this)).*Schema::PrimaryKeyProperty::ptr;
+            if constexpr (T::schema.HasPrimaryKeyProperty) {
+                auto val = (static_cast<T&>(*this)).*decltype(T::schema)::PrimaryKeyProperty::ptr;
                 m_object = internal::bridge::object(realm, target_table.create_object_with_primary_key(*val));
             } else {
                 m_object = internal::bridge::object(realm, target_table.create_object());
             }
             std::apply([this](auto&&... p) {
-                ((static_cast<Class&>(*this).*(std::decay_t<decltype(p)>::ptr))
+                ((static_cast<T&>(*this).*(std::decay_t<decltype(p)>::ptr))
                         .manage(&*m_object, m_object->obj().get_table().get_column_key(p.name)), ...);
-            }, schema.ps);
-            assign_accessors(*m_object, schema);
+            }, T::schema.ps);
+            assign_accessors(*m_object);
         }
     }
-    template <typename Class, typename ...Properties>
-    void manage(internal::bridge::object&& object,
-                const schemagen::schema<Class, Properties...>& schema) {
+    void manage(internal::bridge::object&& object) {
         m_object = std::move(object);
         std::apply([this](auto&&... p) {
-            ((static_cast<Class&>(*this).*(std::decay_t<decltype(p)>::ptr))
+            ((static_cast<T&>(*this).*(std::decay_t<decltype(p)>::ptr))
                     .manage(&*m_object, m_object->obj().get_table().get_column_key(p.name)), ...);
-        }, schema.ps);
-        assign_accessors(*m_object, schema);
+        }, T::schema.ps);
+        assign_accessors(*m_object);
     }
-    template <typename Class, typename ...Properties>
-    void assign_accessors(const internal::bridge::object& object,
-                          const schemagen::schema<Class, Properties...>& schema) {
+    void assign_accessors(const internal::bridge::object& object) {
         m_object = object;
         std::apply([this](auto&&... p) {
-            ((static_cast<Class&>(*this).*(std::decay_t<decltype(p)>::ptr))
+            ((static_cast<T&>(*this).*(std::decay_t<decltype(p)>::ptr))
                 .assign_accessor(&*m_object, m_object->obj().get_table().get_column_key(p.name)), ...);
-        }, schema.ps);
+        }, T::schema.ps);
     }
 
     __cpp_realm_friends
     template <typename, typename> friend struct thread_safe_reference;
-        template <typename T>
-        friend inline std::enable_if_t<std::is_base_of_v<object_base, T>, bool> operator==(const T& lhs,
-                                                                                            const T& rhs);
+        template <typename V>
+        friend inline std::enable_if_t<std::is_base_of_v<object_base<V>, V>, bool> operator==(const V& lhs,
+                                                                                            const V& rhs);
     };
 // MARK: Object
 /**
@@ -580,7 +575,8 @@ protected:
  You can retrieve all objects of a given type from a Realm by calling the `objects(_:)` instance method.
 
  */
-struct object : public object_base {
+template <typename T>
+struct object : public object_base<T> {
 };
 
 /**
@@ -617,7 +613,8 @@ struct object : public object_base {
  };
  ```
  */
-struct embedded_object : public object_base {
+template <typename T>
+struct embedded_object : public object_base<T> {
 };
 
 namespace {
@@ -635,8 +632,9 @@ namespace {
         }
     }
 }
+
 template <typename T>
-inline std::enable_if_t<std::is_base_of_v<object_base, T>, bool> operator==(const T& lhs,
+inline std::enable_if_t<std::is_base_of_v<object_base<T>, T>, bool> operator==(const T& lhs,
                        const T& rhs) {
     if (lhs.is_managed() && rhs.is_managed()) {
         auto& a = *lhs.m_object;

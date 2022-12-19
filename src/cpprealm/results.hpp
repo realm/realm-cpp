@@ -158,7 +158,7 @@ struct results {
         auto object = internal::bridge::object(m_parent.get_realm(),
                                                m_parent.template get<internal::bridge::obj>(index));
         auto cls = T();
-        cls.assign_accessors(object, T::schema);
+        cls.assign_accessors(object);
         return cls;
     }
 

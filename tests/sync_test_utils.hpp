@@ -4,9 +4,11 @@
 #include <cpprealm/sdk.hpp>
 
 #include <realm/object-store/sync/sync_session.hpp>
+#include <realm/object-store/sync/sync_manager.hpp>
+#include <realm/object-store/sync/sync_user.hpp>
 
 namespace test {
-    inline std::promise<void> wait_for_sync_uploads(const realm::User& user) {
+    inline std::promise<void> wait_for_sync_uploads(const realm::user& user) {
         auto sync_sessions = user.m_user->sync_manager()->get_all_sessions();
         CHECK(sync_sessions.size() == 1);
         auto session = sync_sessions[0];
@@ -20,7 +22,7 @@ namespace test {
         return p;
     }
 
-    inline std::promise<void> wait_for_sync_downloads(const realm::User& user) {
+    inline std::promise<void> wait_for_sync_downloads(const realm::user& user) {
         auto sync_sessions = user.m_user->sync_manager()->get_all_sessions();
         CHECK(sync_sessions.size() == 1);
         auto session = sync_sessions[0];

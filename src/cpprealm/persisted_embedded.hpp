@@ -24,7 +24,7 @@
 
 namespace realm {
     template <typename T>
-    struct persisted<T, std::enable_if_t<std::is_base_of_v<object_base, T>>> : public persisted_base<T> {
+    struct persisted<T, std::enable_if_t<std::is_base_of_v<object_base<T>, T>>> : public persisted_base<T> {
         persisted() = default;
         persisted(const persisted& v) {
             m_property_object = v.m_property_object;
@@ -58,15 +58,13 @@ namespace realm {
             if (m_property_object->m_object) {
                 m_property_object->m_object->obj().set(col_key, m_property_object->m_object->obj().get_key());
             } else {
-                if (std::is_base_of_v<embedded_object, T>) {
+                if (std::is_base_of_v<embedded_object<T>, T>) {
                     m_property_object->manage(
                             internal::bridge::object(object->get_realm(),
-                                                     object->obj().create_and_set_linked_object(col_key)),
-                                                     T::schema);
+                                                     object->obj().create_and_set_linked_object(col_key)));
                 } else {
                     m_property_object->manage(object->obj().get_table().get_link_target(col_key),
-                                              object->get_realm(),
-                                              T::schema);
+                                              object->get_realm());
                     object->obj().set(col_key, m_property_object->m_object->obj().get_key());
                 }
             }

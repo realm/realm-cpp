@@ -3,9 +3,11 @@
 #include <realm/mixed.hpp>
 
 namespace realm::internal::bridge {
+
     static_assert(SizeCheck<24, sizeof(Mixed)>{});
 
     mixed::mixed(const std::string &v) {
+        m_owned_string = v;
         new (&m_mixed) Mixed(v);
     }
     mixed::mixed(const timestamp &v) {
@@ -24,6 +26,9 @@ namespace realm::internal::bridge {
         new (&m_mixed) Mixed(static_cast<UUID>(v));
     }
     mixed::mixed(const realm::Mixed &v) {
+        if (v.get_type() == type_String) {
+            m_owned_string = v.get_string();
+        }
         new (&m_mixed) Mixed(v);
     }
     mixed::mixed(const struct binary &v) {
@@ -36,11 +41,14 @@ namespace realm::internal::bridge {
         new (&m_mixed) Mixed(v);
     }
     mixed::operator Mixed() const {
+        if (type() == data_type::String) {
+            return m_owned_string;
+        }
         return *reinterpret_cast<const Mixed*>(m_mixed);
     }
 
     mixed::operator std::string() const {
-        return reinterpret_cast<const Mixed*>(m_mixed)->get_string();
+        return m_owned_string;
     }
     mixed::operator bridge::binary() const {
         return reinterpret_cast<const Mixed*>(m_mixed)->get_binary();
@@ -63,7 +71,7 @@ namespace realm::internal::bridge {
     mixed::operator bool() const {
         return static_cast<const bool &>(reinterpret_cast<const Mixed *>(m_mixed)->get_bool());
     }
-    property::type mixed::type() const noexcept {
-        return property::type(static_cast<int>(reinterpret_cast<const Mixed *>(m_mixed)->get_type()));
+    data_type mixed::type() const noexcept {
+        return data_type(static_cast<int>(reinterpret_cast<const Mixed *>(m_mixed)->get_type()));
     }
 }
