@@ -77,7 +77,7 @@ namespace realm::internal {
                                                   util::UniqueFunction<void(const app::Response&)>&& completion_block) {
         // Get the host name.
         size_t found = request.url.find_first_of(":");
-        std::string domain = request.url.substr(found+3); //url_new is the url excluding the http part
+        std::string domain = request.url.substr(found+3);
         size_t found1 = domain.find_first_of(":");
         size_t found2 = domain.find_first_of("/");
         const std::string host = domain.substr(found1 + 1, found2 - found1 - 1);
