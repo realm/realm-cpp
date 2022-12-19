@@ -2,7 +2,6 @@
 #define CPP_REALM_BRIDGE_MIXED_HPP
 
 #include <string>
-#include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/internal/bridge/property.hpp>
 #include <cpprealm/internal/bridge/binary.hpp>
 #include <cpprealm/internal/bridge/uuid.hpp>
@@ -14,7 +13,26 @@ namespace realm {
 }
 
 namespace realm::internal::bridge {
-    struct mixed : core_binding<Mixed> {
+    enum class data_type {
+        // Note: Value assignments must be kept in sync with <realm/column_type.h>
+        // Note: Any change to this enum is a file-format breaking change.
+        Int = 0,
+        Bool = 1,
+        String = 2,
+        Binary = 4,
+        Mixed = 6,
+        Timestamp = 8,
+        Float = 9,
+        Double = 10,
+        Decimal = 11,
+        Link = 12,
+        LinkList = 13,
+        ObjectId = 15,
+        TypedLink = 16,
+        UUID = 17,
+    };
+
+    struct mixed {
         explicit mixed(const std::string&);
         mixed(const int&); //NOLINT(google-explicit-constructor)
         mixed(const int64_t&); //NOLINT(google-explicit-constructor)
@@ -36,11 +54,12 @@ namespace realm::internal::bridge {
         operator bridge::obj_key() const; //NOLINT(google-explicit-constructor)
         operator bridge::binary() const; //NOLINT(google-explicit-constructor)
 
-        explicit operator Mixed() const final;
+        explicit operator Mixed() const;
 
-        [[nodiscard]] property::type type() const noexcept;
+        [[nodiscard]] data_type type() const noexcept;
     private:
-        unsigned char m_mixed[24]{};
+        std::string m_owned_string;
+        unsigned char m_mixed[48]{};
     };
 }
 

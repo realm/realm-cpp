@@ -225,7 +225,7 @@ namespace realm {
         token.m_realm = r;
         auto tsr = internal::bridge::thread_safe_reference(managed);
         scheduler->invoke([&handler, this, &token, tsr = std::move(tsr)]() mutable {
-            auto managed = token.m_realm.resolve(std::move(tsr));
+            auto managed = token.m_realm.resolve<internal::bridge::dictionary>(std::move(tsr));
             token.m_token = managed.add_notification_callback(
                     std::make_shared<collection_callback_wrapper<T>>(
                             std::move(handler),
@@ -274,7 +274,7 @@ namespace realm {
 
         bool operator==(const mapped_type& rhs) const {
             if (is_managed) {
-                if constexpr (std::is_base_of_v<object_base, mapped_type>) {
+                if constexpr (std::is_base_of_v<object_base<mapped_type>, mapped_type>) {
                     return rhs == this->operator*();
                 } else {
                     return persisted<mapped_type>::serialize(rhs) ==
@@ -290,7 +290,7 @@ namespace realm {
             if (is_managed) {
                 mapped_type cls;
                 auto obj = m_backing_map.get().template get<internal::bridge::obj>(m_key);
-                cls.assign_accessors(internal::bridge::object(m_object->get_realm(), obj), mapped_type::schema);
+                cls.assign_accessors(internal::bridge::object(m_object->get_realm(), obj));
                 return cls;
             } else {
                 return m_val.get();
@@ -337,7 +337,7 @@ namespace realm {
         using box_base<std::string>::operator=;
     };
     template <typename V>
-    struct box<V, std::enable_if_t<std::is_base_of_v<object_base, V>>> : public box_base<V> {
+    struct box<V, std::enable_if_t<std::is_base_of_v<object_base<V>, V>>> : public box_base<V> {
         using box_base<V>::box_base;
         using box_base<V>::operator=;
         using box_base<V>::operator==;
@@ -385,12 +385,11 @@ namespace realm {
         void manage(internal::bridge::object *object, internal::bridge::col_key &&col_key) override {
             auto managed = object->get_dictionary(col_key);
             for (auto& [k, v] : this->unmanaged) {
-                if constexpr (std::is_base_of_v<realm::object, T>) {
-                    v.manage(object->get_realm().table_for_object_type(T::schema.name),
-                             object->get_realm(),
-                             T::schema);
+                if constexpr (std::is_base_of_v<realm::object<T>, T>) {
+                    v.manage(object->obj().get_target_table(col_key),
+                             object->get_realm());
                     managed.insert(k, internal::bridge::mixed(persisted<T>::serialize(v)));
-                } else if constexpr (std::is_base_of_v<embedded_object, T>) {
+                } else if constexpr (std::is_base_of_v<embedded_object<T>, T>) {
                     managed.insert_embedded(k);
                 } else {
                     managed.insert(k, internal::bridge::mixed(persisted < T > ::serialize(v)));
@@ -409,7 +408,7 @@ namespace realm {
 }
 
 template <typename T>
-inline typename std::enable_if<std::is_base_of<realm::object_base, T>::value, std::ostream>::type&
+inline typename std::enable_if<std::is_base_of<realm::object_base<T>, T>::value, std::ostream>::type&
 operator<< (std::ostream& stream, const realm::box<T>& object)
 {
     stream << *object;

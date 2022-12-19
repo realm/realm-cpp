@@ -28,7 +28,7 @@
 #include <cpprealm/internal/bridge/thread_safe_reference.hpp>
 
 namespace realm {
-
+    template <typename>
     struct object;
     class ThreadSafeReference;
     class Realm;
@@ -39,7 +39,7 @@ template <typename T, typename = void>
 struct thread_safe_reference;
 
 template <typename T>
-struct thread_safe_reference<T, std::enable_if_t<std::is_base_of_v<object, T>>> {
+struct thread_safe_reference<T, std::enable_if_t<std::is_base_of_v<object<T>, T>>> {
     explicit thread_safe_reference(const T& object)
     : m_tsr(internal::bridge::thread_safe_reference(*object.m_object))
     {
@@ -61,10 +61,10 @@ struct thread_safe_reference<db<Ts...>> {
 //    : m_tsr(std::move(tsr))
 //    {
 //    }
-//    thread_safe_reference(db<Ts...> db)
-//    : m_tsr(ThreadSafeReference(db.m_realm))
-//    {
-//    }
+    thread_safe_reference(internal::bridge::thread_safe_reference&& tsr)
+            : m_tsr(std::move(tsr))
+    {
+    }
     thread_safe_reference() = default;
     thread_safe_reference(const thread_safe_reference&) = default;
     thread_safe_reference(thread_safe_reference&&) = default;
@@ -74,6 +74,7 @@ struct thread_safe_reference<db<Ts...>> {
 
     db<Ts...> resolve()
     {
+
 //        return db<Ts...>(Realm::get_shared_realm(std::move(m_tsr)));
 abort();
     }

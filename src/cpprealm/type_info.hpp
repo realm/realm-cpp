@@ -32,8 +32,11 @@ namespace realm {
 
 
     }
+    template <typename T>
     struct object_base;
+    template <typename T>
     struct object;
+    template <typename T>
     struct embedded_object;
     enum class PropertyType : unsigned short;
 }

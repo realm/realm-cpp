@@ -12,6 +12,9 @@ namespace realm::internal::bridge {
     thread_safe_reference::thread_safe_reference(const object &o) {
         new (&m_thread_safe_reference) ThreadSafeReference(static_cast<Object>(o));
     }
+    thread_safe_reference::thread_safe_reference(ThreadSafeReference &&v) {
+        new (&m_thread_safe_reference) ThreadSafeReference(std::move(v));
+    }
     thread_safe_reference::operator bool() const {
         return reinterpret_cast<const ThreadSafeReference*>(m_thread_safe_reference)->operator bool();
     }

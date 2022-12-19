@@ -101,9 +101,9 @@ namespace realm {
             persisted_list_base& operator=(const persisted_list_base& v) {
                 if (v.is_managed()) {
                     this->m_object = v.m_object;
-                    m_list = v.m_list;
+                    new (&m_list) bridge::list(v.m_list);
                 } else {
-                    unmanaged = v.unmanaged;
+                    new (&unmanaged) T(v.unmanaged);
                 }
                 return *this;
             }
@@ -119,8 +119,12 @@ namespace realm {
                 }
             }
             virtual typename T::value_type operator[](size_t idx) const = 0;
-            notification_token observe(std::function<void(collection_change<T>)> fn) {
-                abort();
+            notification_token observe(std::function<void(collection_change<T>)>&& fn) {
+                return this->m_list.add_notification_callback(
+                        std::make_shared<collection_callback_wrapper<T>>(
+                                std::move(fn),
+                                *static_cast<persisted<T>*>(this),
+                                false));
             }
         protected:
             union {
@@ -128,14 +132,14 @@ namespace realm {
                 internal::bridge::list m_list;
             };
             void manage(internal::bridge::object *object,
-                        internal::bridge::col_key &&col_key) final {
+                        internal::bridge::col_key &&col_key) override {
                 object->obj().set_list_values(col_key, unmanaged);
                 assign_accessor(object, std::move(col_key));
             }
             void assign_accessor(internal::bridge::object *object,
                                  internal::bridge::col_key &&col_key) final {
                 this->m_object = object;
-                m_list = object->get_list(col_key);
+                new (&m_list) bridge::list(object->get_list(std::move(col_key)));
             }
 
             __cpp_realm_friends
@@ -181,14 +185,13 @@ namespace realm {
     };
 
     template <class T>
-    struct persisted<std::vector<T>, std::enable_if_t<std::is_base_of_v<object, T>>> :
+    struct persisted<std::vector<T>, std::enable_if_t<std::is_base_of_v<object<T>, T>>> :
             internal::persisted_list_base<std::vector<T>> {
         void push_back(T& a) {
             if (this->m_object) {
                 if (!a.m_object) {
-                    a.manage(this->m_object->get_realm().table_for_object_type(T::schema.name),
-                             this->m_list.get_realm(),
-                             T::schema);
+                    a.manage(this->m_list.get_table(),
+                             this->m_list.get_realm());
                 }
                 this->m_list.add(a.m_object->obj().get_key());
             } else {
@@ -198,9 +201,8 @@ namespace realm {
         void push_back(T&& a) {
             if (this->is_managed()) {
                 if (!a.m_object) {
-                    a.manage(this->m_object->get_realm().table_for_object_type(T::schema.name),
-                             this->m_list.get_realm(),
-                             T::schema);
+                    a.manage(this->m_list.get_table(),
+                             this->m_list.get_realm());
                 }
                 this->m_list.add(a.m_object->obj().get_key());
             } else {
@@ -239,26 +241,38 @@ namespace realm {
             if (this->m_object) {
                 T cls;
                 cls.assign_accessors(internal::bridge::object(this->m_list.get_realm(),
-                                                              this->m_list.template get<internal::bridge::obj>(idx)),
-                                     T::schema);
+                                                              this->m_list.template get<internal::bridge::obj>(idx)));
                 return cls;
             } else {
                 return this->unmanaged[idx];
             }
         }
     protected:
+        void manage(internal::bridge::object *object,
+                    internal::bridge::col_key &&col_key) override {
+            std::vector<internal::bridge::obj_key> keys;
+            for (auto& obj : this->unmanaged) {
+                if (obj.is_managed()) {
+                    keys.push_back(persisted<T>::serialize(obj));
+                } else {
+                    obj.manage(object->obj().get_table().get_link_target(col_key), object->get_realm());
+                    keys.push_back(persisted<T>::serialize(obj));
+                }
+            }
+            object->obj().set_list_values(col_key, keys);
+            this->assign_accessor(object, std::move(col_key));
+        }
         __cpp_realm_friends
     };
 
     template <class T>
-    struct persisted<std::vector<T>, std::enable_if_t<std::is_base_of_v<embedded_object, T>>> :
+    struct persisted<std::vector<T>, std::enable_if_t<std::is_base_of_v<embedded_object<T>, T>>> :
             internal::persisted_list_base<std::vector<T>> {
         void push_back(T& a) {
             if (this->m_object) {
                 if (!a.m_object) {
                     a.manage(internal::bridge::object(this->m_list.get_realm(),
-                                                      this->m_list.add_embedded()),
-                             T::schema);
+                                                      this->m_list.add_embedded()));
                 }
             } else {
                 this->unmanaged.push_back(a);
@@ -267,8 +281,8 @@ namespace realm {
         void push_back(T&& a) {
             if (this->m_object) {
                 if (!a.m_object) {
-                    a.m_object = internal::bridge::object(this->m_list.get_realm(),
-                                                          this->m_list.add_embedded());
+                    a.manage(internal::bridge::object(this->m_list.get_realm(),
+                                                      this->m_list.add_embedded()));
                 }
             } else {
                 this->unmanaged.push_back(a);
@@ -306,25 +320,36 @@ namespace realm {
             if (this->m_object) {
                 T cls;
                 cls.assign_accessors(internal::bridge::object(this->m_list.get_realm(),
-                                                              this->m_list.template get<internal::bridge::obj>(idx)),
-                                     T::schema);
+                                                              this->m_list.template get<internal::bridge::obj>(idx)));
                 return cls;
             } else {
                 return this->unmanaged[idx];
             }
         }
     protected:
+        void manage(internal::bridge::object *object,
+                    internal::bridge::col_key &&col_key) override {
+            for (auto& obj : this->unmanaged) {
+                if (obj.is_managed()) {
+                    object->get_list(col_key).add(persisted<T>::serialize(obj));
+                } else {
+                    obj.manage(internal::bridge::object(object->get_realm(),
+                                                        object->get_list(col_key).add_embedded()));
+                }
+            }
+            this->assign_accessor(object, std::move(col_key));
+        }
         __cpp_realm_friends
     };
 
     namespace {
-        struct static_object : object {
+        struct static_object : object<static_object> {
             persisted<int64_t> int_col;
 
             static constexpr auto schema = realm::schema("static_object",
                                                          realm::property<&static_object::int_col>("int_col"));
         };
-        struct static_embedded_object : embedded_object {
+        struct static_embedded_object : embedded_object<static_embedded_object> {
             persisted<int64_t> int_col;
 
             static constexpr auto schema = realm::schema("static_embedded_object",

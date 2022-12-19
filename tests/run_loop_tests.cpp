@@ -14,7 +14,7 @@ TEST_CASE("run loop", "[results]") {
         });
 
         std::promise<bool> p;
-        auto token = dog.observe<Dog>([&p](realm::ObjectChange<Dog> const& change) {
+        auto token = dog.observe([&p](realm::ObjectChange<Dog> const& change) {
             std::cout << "Called back" << std::endl; // never hit
             p.set_value(true);
             CFRunLoopStop(CFRunLoopGetCurrent());

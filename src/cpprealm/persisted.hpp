@@ -120,10 +120,11 @@
     template <typename> \
     friend class persisted_map_base;      \
     friend struct internal::bridge::obj;  \
-    friend struct internal::bridge::list; \
-    friend struct object_base; template <typename> friend struct results;                  \
+    friend struct internal::bridge::list;    \
+    template <typename> friend struct object_base;  \
+    template <typename> friend struct results;                  \
     template <typename TT> \
-    friend inline typename std::enable_if<std::is_base_of<realm::object_base, TT>::value, std::ostream>::type& \
+    friend inline typename std::enable_if<std::is_base_of<realm::object_base<TT>, TT>::value, std::ostream>::type& \
     operator<< (std::ostream& stream, const TT& object); \
     template <typename, typename> friend struct thead_safe_reference;
 
@@ -285,7 +286,7 @@ protected:
         void assign_accessor(internal::bridge::object* object,
                              internal::bridge::col_key&& col_key) final {
             this->m_object = object;
-            unmanaged.~T();
+//            unmanaged.~T();
             new (&this->managed) internal::bridge::col_key(col_key);
         }
     };
@@ -361,7 +362,7 @@ inline std::ostream& operator<< (std::ostream& stream, const persisted_primitive
 }
 
 template <typename T>
-inline typename std::enable_if<std::is_base_of<realm::object_base, T>::value, std::ostream>::type&
+inline typename std::enable_if<std::is_base_of<realm::object_base<T>, T>::value, std::ostream>::type&
 operator<< (std::ostream& stream, const T& object)
 {
     if (object.m_object) {

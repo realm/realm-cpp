@@ -29,6 +29,7 @@
 #include <cpprealm/results.hpp>
 
 namespace realm {
+    template <typename>
     struct object;
     struct rbool;
 
@@ -66,7 +67,7 @@ public:
     // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
     // for the templated class type.
     template <typename T>
-    std::enable_if_t<std::is_base_of_v<object, T>>
+    std::enable_if_t<std::is_base_of_v<object<T>, T>>
     add(const std::string& name,
         std::optional<std::function<rbool(T&)>>&& query_fn = std::nullopt) {
         auto schema = m_realm.get().schema().find(T::schema.name);
@@ -114,7 +115,7 @@ public:
     // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
     // for the templated class type.
     template <typename T>
-    std::enable_if_t<std::is_base_of_v<object, T>>
+    std::enable_if_t<std::is_base_of_v<object<T>, T>>
     update_subscription(const std::string& name, std::optional<std::function<rbool(T&)>>&& query_fn = std::nullopt) {
         remove(name);
         if (query_fn)

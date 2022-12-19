@@ -229,7 +229,7 @@ namespace realm::internal::type_info {
         }
     };
     template <typename T>
-    struct type_info<T, std::enable_if_t<std::is_base_of_v<object_base, T>>> {
+    struct type_info<T, std::enable_if_t<std::is_base_of_v<object_base<T>, T>>> {
         using internal_type = bridge::obj_key;
         static constexpr bridge::property::type type() {
             return bridge::property::type::Object;

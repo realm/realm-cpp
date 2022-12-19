@@ -6,7 +6,9 @@
 
 namespace realm {
     class List;
+    template <typename>
     struct object;
+    template <typename>
     struct embedded_object;
     template <typename, typename>
     struct persisted;
@@ -21,6 +23,9 @@ namespace realm::internal::bridge {
     struct uuid;
     struct col_key;
     struct timestamp;
+    struct table;
+    struct notification_token;
+    struct collection_change_callback;
 
     struct list {
         list();
@@ -32,6 +37,7 @@ namespace realm::internal::bridge {
         void remove(size_t idx);
         void remove_all();
 
+        table get_table() const;
 
         void add(const std::string&);
         void add(const int64_t &);
@@ -40,6 +46,7 @@ namespace realm::internal::bridge {
         void add(const uuid &);
         void add(const mixed &);
         void add(const obj_key &);
+        void add(const timestamp &);
         template <typename ValueType>
         void add(const ValueType& v) {
             add(persisted<ValueType, void>::serialize(v));
@@ -90,6 +97,7 @@ namespace realm::internal::bridge {
         size_t find(const ValueType&v) {
             return find(persisted<ValueType, void>::serialize(v));
         }
+        notification_token add_notification_callback(std::shared_ptr<collection_change_callback>);
     private:
         unsigned char m_list[80]{};
     };

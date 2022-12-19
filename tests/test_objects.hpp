@@ -3,7 +3,7 @@
 
 #include <cpprealm/sdk.hpp>
 
-struct Dog: realm::object {
+struct Dog: realm::object<Dog> {
     realm::persisted<std::string> name;
     realm::persisted<int64_t> age;
 
@@ -13,7 +13,7 @@ struct Dog: realm::object {
     );
 };
 
-struct Person: realm::object {
+struct Person: realm::object<Person> {
     realm::persisted<std::string> name;
     realm::persisted<int64_t> age;
     realm::persisted<Dog> dog;
@@ -25,14 +25,14 @@ struct Person: realm::object {
     );
 };
 //
-struct AllTypesObjectEmbedded: realm::embedded_object {
+struct AllTypesObjectEmbedded: realm::embedded_object<AllTypesObjectEmbedded> {
     realm::persisted<std::string> str_col;
 
     static constexpr auto schema = realm::schema("AllTypesObjectEmbedded",
         realm::property<&AllTypesObjectEmbedded::str_col>("str_col"));
 };
 
-struct AllTypesObjectLink: realm::object {
+struct AllTypesObjectLink: realm::object<AllTypesObjectLink> {
     realm::persisted<int64_t> _id;
     realm::persisted<std::string> str_col;
 
@@ -42,7 +42,7 @@ struct AllTypesObjectLink: realm::object {
                             realm::property<&AllTypesObjectLink::str_col>("str_col"));
 };
 
-struct AllTypesObject: realm::object {
+struct AllTypesObject: realm::object<AllTypesObject> {
     enum class Enum {
         one, two
     };
@@ -134,13 +134,13 @@ struct AllTypesObject: realm::object {
         realm::property<&AllTypesObject::map_embedded_col>("map_embedded_col"));
 };
 
-struct EmbeddedFoo: realm::embedded_object {
+struct EmbeddedFoo: realm::embedded_object<EmbeddedFoo> {
     realm::persisted<int64_t> bar;
 
     static constexpr auto schema = realm::schema("EmbeddedFoo", realm::property<&EmbeddedFoo::bar>("bar"));
 };
 
-struct Foo: realm::object {
+struct Foo: realm::object<Foo> {
     realm::persisted<int64_t> bar;
     realm::persisted<EmbeddedFoo> foo;
 
@@ -179,12 +179,12 @@ inline bool operator==(const UppercaseString& lhs, const char* rhs) {
     return static_cast<std::string>(lhs) == rhs;
 }
 
-struct CustomStringObject : realm::object {
+struct CustomStringObject : realm::object<CustomStringObject> {
     realm::persisted<UppercaseString> str_col;
     static constexpr auto schema = realm::schema("CustomStringObject",
                                                     realm::property<&CustomStringObject::str_col>("str_col"));
 };
-struct IntTypesObject: realm::object {
+struct IntTypesObject: realm::object<IntTypesObject> {
     realm::persisted<int64_t> int64_col;
 
     static constexpr auto schema = realm::schema("IntTypesObject",

@@ -20,6 +20,7 @@
 
 #include <catch2/catch_all.hpp>
 #include <realm/util/features.h>
+#include <filesystem>
 
 int main(int argc, char* argv[]) {
     Catch::ConfigData config;
@@ -27,17 +28,27 @@ int main(int argc, char* argv[]) {
     if (getenv("REALM_CI")) {
         config.showDurations = Catch::ShowDurations::Always; // this is to help debug hangs
         config.reporterSpecifications.push_back(Catch::ReporterSpec{"console", {}, {}, {}});
-        config.reporterSpecifications.push_back(Catch::ReporterSpec{"junit", {"TestResults.xml"}, {}, {}});
+        config.reporterSpecifications.push_back(Catch::ReporterSpec{"xml", {"TestResults.xml"}, {}, {}});
+        config.testsOrTags.emplace_back("~[app]");
+        config.testsOrTags.emplace_back("~[sync]");
     } else if (getenv("REALM_LOCAL_ENDPOINT") == nullptr) {
 #if REALM_MOBILE || REALM_WINDOWS
         // skip app and sync tests on Mobile and Windows platforms if we're not running on CI or have an explicit BAAS endpoint set
         config.testsOrTags.push_back("~[app]");
         config.testsOrTags.push_back("~[sync]");
+#else
+        config.showDurations = Catch::ShowDurations::Always; // this is to help debug hangs
+//        config.reporterSpecifications.push_back(Catch::ReporterSpec{"console", {}, {}, {}});
+//        config.reporterSpecifications.push_back(Catch::ReporterSpec{"xml", {"TestResults.xml"}, {}, {}});
+        config.testsOrTags.emplace_back("~[performance]");
+//        config.testsOrTags.emplace_back("~[app]");
+//        config.testsOrTags.emplace_back("~[sync]");
 #endif
     }
 
     Catch::Session session;
     session.useConfigData(config);
     int result = session.run(argc, argv);
+//    int result = session.run();
     return result < 0xff ? result : 0xff;
 }

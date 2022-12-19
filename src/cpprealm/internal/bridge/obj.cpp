@@ -37,6 +37,9 @@ namespace realm::internal::bridge {
     table obj::get_table() const noexcept {
         return reinterpret_cast<const Obj*>(m_obj)->get_table();
     }
+    table obj::get_target_table(col_key key) const noexcept {
+        return reinterpret_cast<const Obj*>(m_obj)->get_target_table(key);
+    }
     obj obj::get_linked_object(const col_key &col_key) {
         return reinterpret_cast<Obj*>(m_obj)->get_linked_object(col_key);
     }

@@ -16,74 +16,58 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef realm_app_hpp
-#define realm_app_hpp
-
-#include <realm/object-store/sync/app.hpp>
-#include <realm/object-store/sync/sync_user.hpp>
-#include <realm/object-store/sync/impl/sync_client.hpp>
+#ifndef CPP_REALM_APP_HPP
+#define CPP_REALM_APP_HPP
 
 #include <cpprealm/type_info.hpp>
 #include <cpprealm/task.hpp>
 #include <cpprealm/db.hpp>
 #include <cpprealm/internal/generic_network_transport.hpp>
+#include <cpprealm/internal/bridge/sync_session.hpp>
+#include <cpprealm/internal/bridge/sync_error.hpp>
+#include <cpprealm/internal/bridge/sync_manager.hpp>
+#include <cpprealm/internal/bridge/realm.hpp>
+
+#include <realm/object-store/util/bson/bson.hpp>
+#include <realm/object-store/util/tagged_string.hpp>
 
 #include <utility>
 #include <future>
 
 namespace realm {
+    using sync_session = internal::bridge::sync_session;
+    using sync_error = internal::bridge::sync_error;
+    using sync_manager = internal::bridge::sync_manager;
+
+    namespace app {
+        struct AppError;
+        struct AppCredentials;
+    }
 // MARK: User
 template <typename ...Ts>
-static inline std::promise<thread_safe_reference<db<Ts...>>> async_open(const typename db<Ts...>::config& config);
+static inline std::promise<thread_safe_reference<db<Ts...>>> async_open(typename db<Ts...>::config&& config);
 
 // Represents an error state from the server.
 struct app_error {
+    app_error(realm::app::AppError&& error); //NOLINT(google-explicit-constructor)
 
-    app_error(realm::app::AppError error) : m_error(error)
-    {
-    }
+    [[nodiscard]] std::error_code error_code() const;
 
-    std::error_code error_code() const
-    {
-        return m_error.error_code;
-    }
+    [[nodiscard]] std::string_view mesage() const;
 
-    std::string_view mesage() const
-    {
-        return m_error.message;
-    }
+    [[nodiscard]] std::string_view link_to_server_logs() const;
 
-    std::string_view link_to_server_logs() const
-    {
-        return m_error.link_to_server_logs;
-    }
+    [[nodiscard]] bool is_json_error() const;
 
-    bool is_json_error() const
-    {
-        return error_code().category() == realm::app::json_error_category();
-    }
+    [[nodiscard]] bool is_service_error() const;
 
-    bool is_service_error() const
-    {
-        return error_code().category() == realm::app::service_error_category();
-    }
+    [[nodiscard]] bool is_http_error() const;
 
-    bool is_http_error() const
-    {
-        return error_code().category() == realm::app::http_error_category();
-    }
+    [[nodiscard]] bool is_custom_error() const;
 
-    bool is_custom_error() const
-    {
-        return error_code().category() == realm::app::custom_error_category();
-    }
-
-    bool is_client_error() const
-    {
-        return error_code().category() == realm::app::client_error_category();
-    }
+    [[nodiscard]] bool is_client_error() const;
 private:
-    realm::app::AppError m_error;
+    unsigned char m_error[72]{};
 };
 
 /**
@@ -95,14 +79,14 @@ private:
 
  User objects can be accessed from any thread.
  */
-struct User {
-    User() = default;
-    User(const User&) = default;
-    User(User&&) = default;
-    User& operator=(const User&) = default;
-    User& operator=(User&&) = default;
-    explicit User(std::shared_ptr<SyncUser> user, std::shared_ptr<app::App> app)
-    : m_user(std::move(user)), m_app(std::move(app))
+struct user {
+    user() = default;
+    user(const user&) = default;
+    user(user&&) = default;
+    user& operator=(const user&) = default;
+    user& operator=(user&&) = default;
+    explicit user(std::shared_ptr<SyncUser> user)
+    : m_user(std::move(user))
     {
     }
 
@@ -119,18 +103,12 @@ struct User {
      The unique MongoDB Realm string identifying this user.
      Note this is different from an identitiy: A user may have multiple identities but has a single indentifier. See RLMUserIdentity.
      */
-    std::string identifier() const
-    {
-       return m_user->identity();
-    }
+    [[nodiscard]] std::string identifier() const;
 
     /**
      The current state of the user.
      */
-    state state() const
-    {
-        return static_cast<enum state>(m_user->state());
-    }
+    [[nodiscard]] state state() const;
 
     /**
      The user's refresh token used to access the Realm Application.
@@ -138,10 +116,7 @@ struct User {
      This is required to make HTTP requests to MongoDB Realm's REST API
      for functionality not exposed natively. It should be treated as sensitive data.
      */
-    std::string access_token() const
-    {
-        return m_user->access_token();
-    }
+    [[nodiscard]] std::string access_token() const;
 
     /**
      The user's refresh token used to access the Realm Applcation.
@@ -149,48 +124,22 @@ struct User {
      This is required to make HTTP requests to the Realm App's REST API
      for functionality not exposed natively. It should be treated as sensitive data.
      */
-    std::string refresh_token() const
-    {
-        return m_user->refresh_token();
-    }
+    [[nodiscard]] std::string refresh_token() const;
 
-    template <typename ...Ts>
-    typename db<Ts...>::config flexible_sync_configuration() const
+    sync_manager sync_manager() const;
+
+    [[nodiscard]] db_config flexible_sync_configuration() const
     {
-        typename db<Ts...>::config config;
-//        config.sync_config = std::make_shared<SyncConfig>(m_user, SyncConfig::FLXSyncEnabled{});
-//        config.sync_config->error_handler = [](std::shared_ptr<SyncSession> session, SyncError error) {
-//            std::cerr<<"sync error: "<<error.message<<std::endl;
-//        };
-//        config.path = m_user->sync_manager()->path_for_realm(*config.sync_config);
-//        config.sync_config->client_resync_mode = realm::ClientResyncMode::Manual;
-//        config.sync_config->stop_policy = SyncSessionStopPolicy::AfterChangesUploaded;
+        db_config config;
+        config.set_sync_config(sync_config(m_user));
+        config.sync_config().set_error_handler([](const sync_session& session, const sync_error& error) {
+            std::cerr<<"sync error: "<<error.message()<<std::endl;
+        });
+        config.set_path(sync_manager().path_for_realm(config.sync_config()));
+        config.sync_config().set_client_resync_mode(realm::internal::bridge::realm::client_resync_mode::Manual);
+        config.sync_config().set_stop_policy(realm::internal::bridge::realm::sync_session_stop_policy::AfterChangesUploaded);
         return config;
     }
-
-#if __cpp_coroutines
-    /**
-     Logs out the current user
-
-     The users state will be set to `Removed` is they are an anonymous user or `LoggedOut`
-     if they are authenticated by an email / password or third party auth clients
-     If the logout request fails, this method will still clear local authentication state.
-    */
-    task<void> log_out() {
-        try {
-            auto error = co_await make_awaitable<util::Optional<app_error>>([&](auto cb) {
-                m_app->log_out(m_user, cb);
-            });
-            if (error) {
-                throw *error;
-            }
-        } catch (std::exception& err) {
-            throw;
-        }
-
-        co_return;
-    }
-#endif
 
     /**
      Logs out the current user
@@ -199,31 +148,15 @@ struct User {
      if they are authenticated by an email / password or third party auth clients
      If the logout request fails, this method will still clear local authentication state.
      */
-    void log_out(util::UniqueFunction<void(std::optional<app_error>)>&& callback)
-    {
-        m_app->log_out(m_user, [cb = std::move(callback)](auto error) {
-            cb(error ? std::optional<app_error>{app_error(*error)} : std::nullopt);
-        });
-    }
+    void log_out(std::function<void(std::optional<app_error>)>&& callback) const;
 
-    std::promise<void> log_out()
-    {
-      std::promise<void> p;
-      m_app->log_out(m_user, [&p](auto err){
-                     if (err) p.set_exception(std::make_exception_ptr(*err));
-                     else p.set_value();
-      });
-      return p;
-    }
+    [[nodiscard]] std::promise<void> log_out() const;
 
     /**
      The custom data of the user.
      This is configured in your Atlas App Services app.
      */
-    std::optional<bson::BsonDocument> custom_data()
-    {
-        return m_user->custom_data();
-    }
+    [[nodiscard]] std::optional<bson::BsonDocument> custom_data() const;
 
     /**
      Calls the Atlas App Services function with the provided name and arguments.
@@ -234,10 +167,7 @@ struct User {
      This handler is executed on the thread the method was called from.
      */
     void call_function(const std::string& name, const realm::bson::BsonArray& arguments,
-                       util::UniqueFunction<void(std::optional<bson::Bson>&&, std::optional<app_error>)> callback)
-    {
-        m_app->call_function(name, arguments, std::move(callback));
-    }
+                       std::function<void(std::optional<bson::Bson>&&, std::optional<app_error>)> callback) const;
 
    /**
     Calls the Atlas App Services function with the provided name and arguments.
@@ -247,83 +177,22 @@ struct User {
     @param callback The completion handler to call when the function call is complete.
     This handler is executed on the thread the method was called from.
     */
-    std::promise<std::optional<bson::Bson>> call_function(const std::string& name, const realm::bson::BsonArray& arguments)
-    {
-      std::promise<std::optional<bson::Bson>> p;
-      m_app->call_function(name, arguments, [&p](std::optional<bson::Bson>&& bson, std::optional<app_error> err) {
-          if (err) p.set_exception(std::make_exception_ptr(*err));
-          else p.set_value(std::move(bson));
-      });
-      return p;
-    }
-
-#if __cpp_coroutines
-    /**
-     Calls the Atlas App Services function with the provided name and arguments.
-
-     @param name The name of the Atlas App Services function to be called.
-     @param arguments The `BsonArray` of arguments to be provided to the function.
-     @returns An optional Bson object containing the servers response.
-     */
-    task<std::optional<bson::Bson>> call_function(const std::string& name, const realm::bson::BsonArray& arguments)
-    {
-        try {
-            auto opt_bson = co_await make_awaitable<util::Optional<bson::Bson>>( [&](auto cb) {
-                m_app->call_function(m_user, name, arguments, std::move(cb));
-            });
-            co_return opt_bson;
-        } catch (std::exception& err) {
-            throw;
-        }
-    }
-#endif
+    [[nodiscard]] std::promise<std::optional<bson::Bson>> call_function(const std::string& name,
+                                                                        const realm::bson::BsonArray& arguments) const;
 
     /**
      Refresh a user's custom data. This will, in effect, refresh the user's auth session.
      */
-    void refresh_custom_user_data(util::UniqueFunction<void(std::optional<app_error>)> callback)
-    {
-        m_user->refresh_custom_data(std::move(callback));
-    }
+    void refresh_custom_user_data(std::function<void(std::optional<app_error>)> callback);
 
     /**
      Refresh a user's custom data. This will, in effect, refresh the user's auth session.
      */
-    std::promise<void> refresh_custom_user_data()
-    {
-        std::promise<void> p;
-        m_user->refresh_custom_data([&p](auto err){
-            if (err) p.set_exception(std::make_exception_ptr(*err));
-            else p.set_value();
-        });
-        return p;
-    }
+    [[nodiscard]] std::promise<void> refresh_custom_user_data() const;
 
-#if __cpp_coroutines
-    /**
-     Refresh a user's custom data. This will, in effect, refresh the user's auth session.
-     */
-    task<void> refresh_custom_user_data()
-    {
-        try {
-            auto error = co_await make_awaitable<std::optional<app_error>>( [&](auto cb) {
-                m_user->refresh_custom_data(std::move(cb));
-            });
-            if (error) {
-                throw *error;
-            }
-        } catch (std::exception& err) {
-            throw;
-        }
-    }
-#endif
-
-    std::shared_ptr<app::App> m_app;
     std::shared_ptr<SyncUser> m_user;
 };
-static_assert((int)User::state::logged_in  == (int)SyncUser::State::LoggedIn);
-static_assert((int)User::state::logged_out == (int)SyncUser::State::LoggedOut);
-static_assert((int)User::state::removed    == (int)SyncUser::State::Removed);
+
 
 class App {
     static std::unique_ptr<util::Logger> defaultSyncLogger(util::Logger::Level level) {
@@ -348,141 +217,37 @@ class App {
         return std::move(logger);
     }
 public:
-    explicit App(const std::string& app_id,
-                 const std::optional<std::string>& base_url = std::nullopt,
-                 const std::optional<std::string>& file_path = std::nullopt)
-    {
-        #if QT_CORE_LIB
-        util::Scheduler::set_default_factory(util::make_qt);
-        #endif
-        SyncClientConfig config;
-        config.logger_factory = defaultSyncLogger;
-        // TODO: Add metadata encryption support.
-        config.metadata_mode = SyncManager::MetadataMode::NoEncryption;
-        #ifdef QT_CORE_LIB
-        auto qt_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
-        if (!std::filesystem::exists(qt_path)) {
-            std::filesystem::create_directory(qt_path);
-        }
-        config.base_file_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
-        #else
-        if (file_path)
-            config.base_file_path = *file_path;
-        else
-            config.base_file_path = std::filesystem::current_path();
-        #endif
-        config.user_agent_binding_info = "RealmCpp/0.0.1";
-        config.user_agent_application_info = app_id;
+    explicit App(const std::string& app_id, const std::optional<std::string>& base_url = {});
 
-        m_app = app::App::get_shared_app(app::App::Config{
-            .app_id=app_id,
-            .transport = std::make_shared<internal::DefaultTransport>(),
-            .base_url = base_url ? base_url : std::nullopt,
-            .platform="Realm Cpp",
-            .platform_version="?",
-            .sdk_version="0.0.1",
-        }, config);
-    }
+    struct credentials {
+        using auth_code = util::TaggedString<class auth_code_tag>;
+        using id_token = util::TaggedString<class id_token_tag>;
 
-    struct Credentials {
-        static Credentials anonymous()
-        {
-            return Credentials(app::AppCredentials::anonymous());
-        }
-        static Credentials api_key(const std::string& key)
-        {
-            return Credentials(app::AppCredentials::user_api_key(key));
-        }
-        static Credentials facebook(const std::string& access_token)
-        {
-            return Credentials(app::AppCredentials::facebook(access_token));
-        }
-        static Credentials apple(const std::string& id_token)
-        {
-            return Credentials(app::AppCredentials::apple(id_token));
-        }
-        static Credentials google(app::AuthCode auth_code)
-        {
-            return Credentials(app::AppCredentials::google(std::move(auth_code)));
-        }
-        static Credentials google(app::IdToken id_token)
-        {
-            return Credentials(app::AppCredentials::google(std::move(id_token)));
-        }
-        static Credentials custom(const std::string& token)
-        {
-            return Credentials(app::AppCredentials::custom(token));
-        }
-        static Credentials username_password(const std::string& username, const std::string& password)
-        {
-            return Credentials(app::AppCredentials::username_password(username, password));
-        }
-        static Credentials function(const bson::BsonDocument& payload)
-        {
-            return Credentials(app::AppCredentials::function(payload));
-        }
-        Credentials() = delete;
-        Credentials(const Credentials& credentials) = default;
-        Credentials(Credentials&&) = default;
+        static credentials anonymous();
+        static credentials api_key(const std::string& key);
+        static credentials facebook(const std::string& access_token);
+        static credentials apple(const std::string& id_token);
+        static credentials google(const auth_code& auth_code);
+        static credentials google(const id_token& id_token);
+        static credentials custom(const std::string& token);
+        static credentials username_password(const std::string& username, const std::string& password);
+        static credentials function(const bson::BsonDocument& payload);
+        credentials() = delete;
+        credentials(const credentials& credentials) = default;
+        credentials(credentials&&) = default;
     private:
-        explicit Credentials(app::AppCredentials&& credentials)
-        : m_credentials(credentials)
-        {
-        }
+        credentials(app::AppCredentials&& credentials) noexcept;
+        operator app::AppCredentials() const;
         friend class App;
-        app::AppCredentials m_credentials;
+        unsigned char m_credentials[16]{};
     };
 
-#if __cpp_coroutines
-    task<void> register_user(const std::string username, const std::string password) {
-        auto error = co_await make_awaitable<util::Optional<app::AppError>>([&](auto cb) {
-            m_app->template provider_client<app::App::UsernamePasswordProviderClient>().register_email(username,
-                                                                                                       password,
-                                                                                                       cb);
-        });
-        if (error) {
-            throw *error;
-        }
-        co_return;
-    }
-
-    task<User> login(const Credentials& credentials) {
-        auto user = co_await make_awaitable<std::shared_ptr<SyncUser>>([this, credentials](auto cb) {
-            m_app->log_in_with_credentials(credentials.m_credentials, cb);
-        });
-        co_return std::move(User{std::move(user)});
-    }
-#else
-std::promise<void> register_user(const std::string& username, const std::string& password) {
-    std::promise<void> p;
-    m_app->template provider_client<app::App::UsernamePasswordProviderClient>().register_email(username,
-                                                                                               password,
-                                                                                               [&p](auto err){
-        if (err) p.set_exception(std::make_exception_ptr(*err));
-        else p.set_value();
-    });
-    return p;
-}
-std::promise<User> login(const Credentials& credentials) {
-    std::promise<User> p;
-    m_app->log_in_with_credentials(credentials.m_credentials, [&p, this](auto& user, auto err) {
-        if (err) p.set_exception(std::make_exception_ptr(*err));
-        else p.set_value(User{std::move(user), m_app});
-    });
-    return p;
-}
-
-void login(const Credentials& credentials, util::UniqueFunction<void(User, std::optional<app_error>)>&& callback) {
-  m_app->log_in_with_credentials(
-      credentials.m_credentials,
-      [cb = std::move(callback), this](auto &u, auto error) {
-        cb(User{std::move(u), m_app}, error ? std::optional<app_error>{app_error(*error)} : std::nullopt);
-      });
-}
-#endif
+    std::promise<void> register_user(const std::string& username, const std::string& password);
+    std::promise<user> login(const credentials& credentials);
+    void login(const credentials& credentials, std::function<void(user, std::optional<app_error>)>&& callback);
 private:
     std::shared_ptr<app::App> m_app;
 };
 
 }
-#endif /* Header_h */
+#endif /* CPP_REALM_APP_HPP */

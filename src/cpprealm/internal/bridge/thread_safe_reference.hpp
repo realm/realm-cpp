@@ -15,6 +15,7 @@ namespace realm::internal::bridge {
     struct thread_safe_reference {
         thread_safe_reference(const object&);
         thread_safe_reference(const dictionary&);
+        thread_safe_reference(ThreadSafeReference&&);
         operator ThreadSafeReference&&();
         operator bool() const; //NOLINT(google-explicit-constructor)
     private:

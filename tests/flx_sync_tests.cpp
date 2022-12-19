@@ -8,9 +8,10 @@ using namespace realm;
 TEST_CASE("flx_sync", "[flx][sync]") {
     SECTION("all") {
         auto app = realm::App(Admin::shared().create_app({"str_col", "_id"}), Admin::shared().base_url());
-        auto user = app.login(realm::App::Credentials::anonymous()).get_future().get();
-        auto flx_sync_config = user.flexible_sync_configuration<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>();
-        auto tsr = realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config).get_future().get();
+        auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
+        auto flx_sync_config = user.flexible_sync_configuration();
+        auto p = realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config);
+        auto tsr = p.get_future().get();
         auto synced_realm = tsr.resolve();
 
         auto update_success = synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
@@ -86,7 +87,7 @@ TEST_CASE("flx_sync", "[flx][sync]") {
 
         // Open realm with completion handler.
 //        std::promise<void> p;
-        auto p = realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config);
+        p = realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config);
         p.get_future().get();
 
         synced_realm = tsr.resolve();
