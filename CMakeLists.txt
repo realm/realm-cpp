@@ -35,7 +35,7 @@ target_include_directories(cpprealm PUBLIC src)
 
 # on Apple platforms we use the built-in CFRunLoop
 # everywhere else it's libuv, except UWP where it doesn't build
-if(NOT APPLE AND NOT WINDOWS_STORE)
+if(NOT APPLE AND NOT WINDOWS_STORE AND NOT ANDROID)
     set(REALM_HAVE_UV 1)
 
     option(REALM_FETCH_MISSING_DEPENDENCIES "Download missing dependencies with CMake's FetchContent where possible" ON)
@@ -83,9 +83,13 @@ target_link_libraries(cpprealm PUBLIC Realm::ObjectStore)
 set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
 
 if (APPLE)
-    target_sources(cpprealm PRIVATE 
+    target_sources(cpprealm PRIVATE
         src/cpprealm/internal/apple/network_transport.mm
     )
+elseif(ANDROID)
+    set(REALM_ANDROID)
+    target_sources(cpprealm PUBLIC
+        src/cpprealm/internal/android/network_transport.cpp)
 else()
     find_package(CURL REQUIRED)
     target_link_libraries(cpprealm PUBLIC
@@ -96,7 +100,7 @@ else()
     )
 endif()
 
-#if (!REALM_CPP_NO_TESTS)
+if (NOT ANDROID)
 Include(FetchContent)
 FetchContent_Declare(
         Catch2
@@ -113,4 +117,4 @@ file(COPY tests/config_overrides.json DESTINATION ${CMAKE_BINARY_DIR})
 
 add_test(cpprealm_tests cpprealm_exe_tests)
 enable_testing()
-#endif()
+endif()

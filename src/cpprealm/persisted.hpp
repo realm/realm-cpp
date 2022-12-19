@@ -449,16 +449,6 @@ persisted_base<T, realm::type_info::Persistable<T>>::~persisted_base()
 
 class rbool {
     bool is_for_queries = false;
-    rbool(Query&& q) : q(std::move(q)), is_for_queries(true) {}
-    rbool(bool b) : b(b) {}
-    rbool(const rbool& r) {
-        if (r.is_for_queries) {
-            new (&q) Query(r.q);
-            is_for_queries = true;
-        }
-        else
-            b = r.b;
-    }
     friend rbool operator &&(const rbool& lhs, const rbool& rhs);
     template <typename T>
     friend rbool operator==(const persisted<T>& a, const T& b);
@@ -533,6 +523,17 @@ public:
         bool b;
         mutable Query q;
     };
+
+    rbool(Query&& q) : q(std::move(q)), is_for_queries(true) {}
+    rbool(bool b) : b(b) {}
+    rbool(const rbool& r) {
+        if (r.is_for_queries) {
+            new (&q) Query(r.q);
+            is_for_queries = true;
+        }
+        else
+            b = r.b;
+    }
 };
 //
 //// MARK: Equatable

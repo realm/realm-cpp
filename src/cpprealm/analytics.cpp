@@ -243,6 +243,9 @@ namespace realm {
 
     void realm_analytics::send()
     {
+#ifdef __ANDROID__
+        return; // TODO: Implement metrics for Android.
+#endif
         if (!debugger_attached() || getenv("REALM_DISABLE_ANALYTICS"))
             return;
         std::string os_name;

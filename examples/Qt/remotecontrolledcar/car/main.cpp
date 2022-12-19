@@ -69,9 +69,10 @@ int main(int argc, char *argv[])
     auto realm = realm::open<Car>(user.flexible_sync_configuration());
     realm.subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
         if (!subs.find("foo")) {
-            subs.add<Car>("foo"); // Subscription to get all cars
+            subs.add<Car>("foo", [](auto& c) { return c._id == 0; }); // Subscription to get all cars
         }
     }).get_future().get();
+    realm.refresh();
 
     auto car = std::make_shared<Car>();
     // invoke on the main thread
