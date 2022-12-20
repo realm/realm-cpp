@@ -295,16 +295,6 @@ protected:
 
 class rbool {
     bool is_for_queries = false;
-    rbool(internal::bridge::query&& q) : q(q), is_for_queries(true) {}
-    rbool(bool b) : b(b) {}
-    rbool(const rbool& r) {
-        if (r.is_for_queries) {
-            new (&q) internal::bridge::query(r.q);
-            is_for_queries = true;
-        }
-        else
-            b = r.b;
-    }
     friend rbool operator &&(const rbool& lhs, const rbool& rhs);
 
     template <typename T>
@@ -326,11 +316,11 @@ public:
         mutable internal::bridge::query q;
     };
 
-    rbool(Query&& q) : q(std::move(q)), is_for_queries(true) {}
+    rbool(internal::bridge::query&& q) : q(q), is_for_queries(true) {}
     rbool(bool b) : b(b) {}
     rbool(const rbool& r) {
         if (r.is_for_queries) {
-            new (&q) Query(r.q);
+            new (&q) internal::bridge::query(r.q);
             is_for_queries = true;
         }
         else

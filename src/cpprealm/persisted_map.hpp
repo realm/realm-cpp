@@ -358,20 +358,21 @@ namespace realm {
         using persisted_map_base<std::map<std::string, T>>::observe;
 
         std::map<std::string, T> operator *() const {
-            if (this->is_managed()) {
-                internal::bridge::dictionary dictionary = this->m_object->obj().get_dictionary(this->managed);
-                std::map<std::string, T> map;
-                for (size_t i = 0; i < dictionary.size(); i++) {
-                    auto pair = dictionary.get_pair(i);
-
-                    map.insert({pair.first, persisted<T>::deserialize(
-                            static_cast<typename internal::type_info::type_info<T>::internal_type>(pair.second)
-                    )});
-                }
-                return map;
-            } else {
-                return this->unmanaged;
-            }
+//            if (this->is_managed()) {
+//                internal::bridge::dictionary dictionary = this->m_object->obj().get_dictionary(this->managed);
+//                std::map<std::string, T> map;
+//                for (size_t i = 0; i < dictionary.size(); i++) {
+//                    auto pair = dictionary.get_pair(i);
+//
+//                    map.insert({pair.first, persisted<T>::deserialize(
+//                            static_cast<typename internal::type_info::type_info<T>::internal_type>(pair.second)
+//                    )});
+//                }
+//                return map;
+//            } else {
+//                return this->unmanaged;
+//            }
+            return {};
         }
 
         box<mapped_type> operator[](const std::string& a) {

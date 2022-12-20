@@ -22,19 +22,19 @@
 
 #include <cpprealm/persisted.hpp>
 
-namespace realm {
-    template<typename T>
-    struct persisted<T, type_info::DoublePersistable<T>> : public persisted_add_assignable_base<T> {
-        using persisted_add_assignable_base<T>::persisted_add_assignable_base;
-        using persisted_add_assignable_base<T>::operator*;
-        using persisted_add_assignable_base<T>::operator=;
-        using persisted_add_assignable_base<T>::operator+;
-        using persisted_add_assignable_base<T>::operator++;
-        using persisted_add_assignable_base<T>::operator+=;
-        using persisted_add_assignable_base<T>::operator-;
-        using persisted_add_assignable_base<T>::operator-=;
-        using persisted_add_assignable_base<T>::operator--;
-    };
-}
+//namespace realm {
+//    template<typename T>
+//    struct persisted<T, type_info::DoublePersistable<T>> : public persisted_add_assignable_base<T> {
+//        using persisted_add_assignable_base<T>::persisted_add_assignable_base;
+//        using persisted_add_assignable_base<T>::operator*;
+//        using persisted_add_assignable_base<T>::operator=;
+//        using persisted_add_assignable_base<T>::operator+;
+//        using persisted_add_assignable_base<T>::operator++;
+//        using persisted_add_assignable_base<T>::operator+=;
+//        using persisted_add_assignable_base<T>::operator-;
+//        using persisted_add_assignable_base<T>::operator-=;
+//        using persisted_add_assignable_base<T>::operator--;
+//    };
+//}
 
 #endif //REALM_PERSISTED_DOUBLE_HPP

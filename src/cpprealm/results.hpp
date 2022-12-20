@@ -169,7 +169,7 @@ struct results {
 
     bool empty()
     {
-        return !m_parent.template first();
+        return true;//!m_parent.template first();
     }
 
     results& where(const std::string& query, std::vector<internal::bridge::mixed> arguments)

@@ -38,16 +38,12 @@ struct ObjectChange;
  A token which is returned from methods which subscribe to changes to a `realm::object`.
  */
 struct notification_token {
-<<<<<<< HEAD
     notification_token(notification_token&& nt) noexcept = default;
     notification_token& operator=(notification_token&&) = default;
     notification_token() = default;
-private:
-=======
-    notification_token() = default;
+
     notification_token(internal::bridge::notification_token&& token)
-    : m_token(token) {}
->>>>>>> 87c708f (checkpoint)
+            : m_token(token) {}
 
     internal::bridge::notification_token m_token;
     internal::bridge::dictionary m_dictionary;

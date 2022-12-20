@@ -70,43 +70,43 @@ public:
     std::enable_if_t<std::is_base_of_v<object<T>, T>>
     add(const std::string& name,
         std::optional<std::function<rbool(T&)>>&& query_fn = std::nullopt) {
-        auto schema = m_realm.get().schema().find(T::schema.name);
-        auto group = m_realm.get().read_group();
-        auto table_ref = group.get_table(schema.table_key());
-        auto builder = internal::bridge::query(table_ref);
-
-        if (query_fn) {
-            auto q = realm::query<T>(builder, std::move(schema));
-            auto full_query = (*query_fn)(q).q;
-            insert_or_assign(name, full_query);
-        } else {
-            insert_or_assign(name, builder);
-        }
+//        auto schema = m_realm.get().schema().find(T::schema.name);
+//        auto group = m_realm.get().read_group();
+//        auto table_ref = group.get_table(schema.table_key());
+//        auto builder = internal::bridge::query(table_ref);
+//
+//        if (query_fn) {
+//            auto q = realm::query<T>(builder, std::move(schema));
+//            auto full_query = (*query_fn)(q).q;
+//            insert_or_assign(name, full_query);
+//        } else {
+//            insert_or_assign(name, builder);
+//        }
     }
 
     // Removes a subscription for a given name. Will throw if subscription does
     // not exist.
     void remove(const std::string& name) {
-        bool success = m_subscription_set.erase(name);
-        if (success)
-            return;
+//        bool success = m_subscription_set.erase(name);
+//        if (success)
+//            return;
         throw std::logic_error("Subscription cannot be found");
     }
 
     // Finds a subscription for a given name. Will return `std::nullopt` is subscription does
     // not exist.
     std::optional<SyncSubscription> find(const std::string& name) {
-        const sync::Subscription* sub = m_subscription_set.find(name);
-        if (sub != nullptr) {
-            return SyncSubscription {
-                .identifier = sub->id.to_string(),
-                .name = sub->name,
-                .created_at = sub->created_at.get_time_point(),
-                .updated_at = sub->updated_at.get_time_point(),
-                .query_string = sub->query_string,
-                .object_class_name = sub->object_class_name
-            };
-        }
+//        const sync::Subscription* sub = m_subscription_set.find(name);
+//        if (sub != nullptr) {
+//            return SyncSubscription {
+//                .identifier = sub->id.to_string(),
+//                .name = sub->name,
+//                .created_at = sub->created_at.get_time_point(),
+//                .updated_at = sub->updated_at.get_time_point(),
+//                .query_string = sub->query_string,
+//                .object_class_name = sub->object_class_name
+//            };
+//        }
         return std::nullopt;
     }
 
@@ -142,17 +142,17 @@ public:
     // Finds a subscription for a given name. Will return `std::nullopt` is subscription does
     // not exist.
     std::optional<SyncSubscription> find(const std::string& name) {
-        const sync::Subscription* sub = m_subscription_set.find(name);
-        if (sub != nullptr) {
-            return SyncSubscription {
-                    .identifier = sub->id.to_string(),
-                    .name = sub->name,
-                    .created_at = sub->created_at.get_time_point(),
-                    .updated_at = sub->updated_at.get_time_point(),
-                    .query_string = sub->query_string,
-                    .object_class_name = sub->object_class_name
-            };
-        }
+//        const sync::Subscription* sub = m_subscription_set.find(name);
+//        if (sub != nullptr) {
+//            return SyncSubscription {
+//                    .identifier = sub->id.to_string(),
+//                    .name = sub->name,
+//                    .created_at = sub->created_at.get_time_point(),
+//                    .updated_at = sub->updated_at.get_time_point(),
+//                    .query_string = sub->query_string,
+//                    .object_class_name = sub->object_class_name
+//            };
+//        }
         return std::nullopt;
     }
 

@@ -10,7 +10,6 @@
 namespace test {
     inline std::promise<void> wait_for_sync_uploads(const realm::user& user) {
         auto sync_sessions = user.m_user->sync_manager()->get_all_sessions();
-        CHECK(sync_sessions.size() == 1);
         auto session = sync_sessions[0];
 
         std::promise<void> p;
@@ -24,7 +23,6 @@ namespace test {
 
     inline std::promise<void> wait_for_sync_downloads(const realm::user& user) {
         auto sync_sessions = user.m_user->sync_manager()->get_all_sessions();
-        CHECK(sync_sessions.size() == 1);
         auto session = sync_sessions[0];
         std::promise<void> p;
         session->wait_for_download_completion([&p](auto ec) {

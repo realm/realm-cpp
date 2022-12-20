@@ -134,9 +134,8 @@ struct db {
 
     [[maybe_unused]] bool refresh()
     {
-        return m_realm->refresh();
+        return true;//return m_realm->refresh();
     }
-#endif
 
 private:
     db(internal::bridge::realm realm) //NOLINT

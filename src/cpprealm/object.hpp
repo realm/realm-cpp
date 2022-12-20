@@ -393,7 +393,7 @@ struct object_base {
             ObjectChangeCallbackWrapper(ObjectNotificationCallback<T> b,
                                         const T* obj,
                                         const internal::bridge::object& internal_object)
-                                        : block(b), object(obj), m_object(internal_object) {}
+                    : block(b), object(obj), m_object(internal_object) {}
             ObjectNotificationCallback<T> block;
             const T* object;
             const internal::bridge::object m_object;
@@ -489,6 +489,7 @@ struct object_base {
                             block(ObjectChange<T> { .is_deleted = true });
                         }
                     } else {
+                        std::vector<PropertyChange<T>> property_changes;
                         for (size_t i = 0; i < property_names.size(); i++) {
                             PropertyChange<T> property;
                             property.name = property_names[i];
@@ -498,8 +499,9 @@ struct object_base {
                             if (!new_values.empty()) {
                                 property.new_value = new_values[i];
                             }
-                            block(ObjectChange<T> { .object = ptr, .property = property });
+                            property_changes.push_back(std::move(property));
                         }
+                        block(ObjectChange<T> { .object = ptr, .property_changes = property_changes });
                     }
                 }, static_cast<T*>(this), *m_object};
         return m_object->add_notification_callback(

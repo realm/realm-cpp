@@ -2,7 +2,6 @@ set(SOURCES
     cpprealm/sdk.cpp
     cpprealm/analytics.cpp
     cpprealm/type_info.cpp
-    cpprealm/db.cpp
     cpprealm/thread_safe_reference.cpp
     cpprealm/internal/bridge/obj.hpp
     cpprealm/internal/bridge/obj.cpp
@@ -63,6 +62,19 @@ set(SOURCES
     cpprealm/persisted_int.cpp
     cpprealm/flex_sync.cpp
     cpprealm/persisted_bool.cpp
+
+
+
+
+    cpprealm/internal/bridge/sync_session.cpp
+    cpprealm/internal/bridge/sync_session.hpp
+    cpprealm/internal/bridge/sync_error.cpp
+    cpprealm/internal/bridge/sync_error.hpp
+    cpprealm/internal/bridge/sync_manager.cpp
+    cpprealm/internal/bridge/sync_manager.hpp
+
+    cpprealm/internal/bridge/async_open_task.cpp
+    cpprealm/internal/bridge/async_open_task.hpp
     
     ) # REALM_SOURCES
 
