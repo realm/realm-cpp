@@ -42,129 +42,102 @@ namespace realm {
 
 // A SyncSubscription represents a single query that may be OR'd with other queries on the same object class to be
 // send to the server in a QUERY or IDENT message.
-struct SyncSubscription {
-    // Returns the unique ID for this subscription.
-    const std::string identifier;
-    // The name representing this subscription, or std::nullopt if not set.
-    std::optional<std::string> name;
-    // Returns the timestamp of when this subscription was originally created.
-    const std::chrono::time_point<std::chrono::system_clock> created_at;
-    // Returns the timestamp of the last time this subscription was updated by calling update_query.
-    const std::chrono::time_point<std::chrono::system_clock> updated_at;
-    // Returns a stringified version of the query associated with this subscription.
-    const std::string query_string;
-    // Returns the name of the object class of the query for this subscription.
-    const std::string object_class_name;
-};
+    struct SyncSubscription {
+        // Returns the unique ID for this subscription.
+        std::string identifier;
+        // The name representing this subscription.
+        util::Optional<std::string> name;
+        // Returns the timestamp of when this subscription was originally created.
+        std::chrono::time_point<std::chrono::system_clock> created_at;
+        // Returns the timestamp of the last time this subscription was updated by calling update_query.
+        std::chrono::time_point<std::chrono::system_clock> updated_at;
+        // Returns a stringified version of the query associated with this subscription.
+        std::string_view query_string;
+        // Returns the name of the object class of the query for this subscription.
+        std::string_view object_class_name;
+    private:
+        SyncSubscription(const sync::Subscription&);
+
+        friend struct SyncSubscriptionSet;
+        friend struct MutableSyncSubscriptionSet;
+    };
 
 // A MutableSyncSubscriptionSet represents a single query that may be OR'd with other queries on the same object class to be
 // send to the server in a QUERY or IDENT message.
-struct MutableSyncSubscriptionSet {
-private:
-    void insert_or_assign(const std::string& name, const internal::bridge::query&);
-public:
-    // Inserts a new subscription into the set if one does not exist already.
-    // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
-    // for the templated class type.
-    template <typename T>
-    std::enable_if_t<std::is_base_of_v<object<T>, T>>
-    add(const std::string& name,
-        std::optional<std::function<rbool(T&)>>&& query_fn = std::nullopt) {
-//        auto schema = m_realm.get().schema().find(T::schema.name);
-//        auto group = m_realm.get().read_group();
-//        auto table_ref = group.get_table(schema.table_key());
-//        auto builder = internal::bridge::query(table_ref);
-//
-//        if (query_fn) {
-//            auto q = realm::query<T>(builder, std::move(schema));
-//            auto full_query = (*query_fn)(q).q;
-//            insert_or_assign(name, full_query);
-//        } else {
-//            insert_or_assign(name, builder);
-//        }
-    }
+    struct MutableSyncSubscriptionSet {
+    private:
+        void insert_or_assign(const std::string& name, const internal::bridge::query&);
+    public:
+        // Inserts a new subscription into the set if one does not exist already.
+        // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
+        // for the templated class type.
+        template <typename T>
+        std::enable_if_t<std::is_base_of_v<object<T>, T>>
+        add(const std::string& name,
+            std::optional<std::function<rbool(T&)>>&& query_fn = std::nullopt) {
+            auto schema = m_realm.get().schema().find(T::schema.name);
+            auto group = m_realm.get().read_group();
+            auto table_ref = group.get_table(schema.table_key());
+            auto builder = internal::bridge::query(table_ref);
 
-    // Removes a subscription for a given name. Will throw if subscription does
-    // not exist.
-    void remove(const std::string& name) {
-//        bool success = m_subscription_set.erase(name);
-//        if (success)
-//            return;
-        throw std::logic_error("Subscription cannot be found");
-    }
+            if (query_fn) {
+                auto q = realm::query<T>(builder, std::move(schema));
+                auto full_query = (*query_fn)(q).q;
+                insert_or_assign(name, full_query);
+            } else {
+                insert_or_assign(name, builder);
+            }
+        }
 
-    // Finds a subscription for a given name. Will return `std::nullopt` is subscription does
-    // not exist.
-    std::optional<SyncSubscription> find(const std::string& name) {
-//        const sync::Subscription* sub = m_subscription_set.find(name);
-//        if (sub != nullptr) {
-//            return SyncSubscription {
-//                .identifier = sub->id.to_string(),
-//                .name = sub->name,
-//                .created_at = sub->created_at.get_time_point(),
-//                .updated_at = sub->updated_at.get_time_point(),
-//                .query_string = sub->query_string,
-//                .object_class_name = sub->object_class_name
-//            };
-//        }
-        return std::nullopt;
-    }
+        // Removes a subscription for a given name. Will throw if subscription does
+        // not exist.
+        void remove(const std::string& name);
 
-    // Updates a subscription for a given name.
-    // Will throw if subscription does not exist.
-    // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
-    // for the templated class type.
-    template <typename T>
-    std::enable_if_t<std::is_base_of_v<object<T>, T>>
-    update_subscription(const std::string& name, std::optional<std::function<rbool(T&)>>&& query_fn = std::nullopt) {
-        remove(name);
-        if (query_fn)
+        // Finds a subscription for a given name. Will return `std::nullopt` is subscription does
+        // not exist.
+        std::optional<SyncSubscription> find(const std::string& name);
+
+        // Updates a subscription for a given name.
+        // Will throw if subscription does not exist.
+        // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
+        // for the templated class type.
+        template <typename T>
+        std::enable_if_t<std::is_base_of_v<object<T>, T>>
+        update_subscription(const std::string& name, std::optional<std::function<rbool(T&)>>&& query_fn = std::nullopt) {
+            remove(name);
             add(name, std::move(query_fn));
-    }
+        }
 
-    // Removes all subscriptions.
-    void clear();
+        // Removes all subscriptions.
+        void clear();
 
 
-private:
-    MutableSyncSubscriptionSet(internal::bridge::realm&, const sync::MutableSubscriptionSet& subscription_set);
-    unsigned char m_subscription_set[32]{};
-    std::reference_wrapper<internal::bridge::realm> m_realm;
-    friend struct SyncSubscriptionSet;
-    sync::MutableSubscriptionSet get_subscription_set();
-};
+    private:
+        MutableSyncSubscriptionSet(internal::bridge::realm&, const sync::MutableSubscriptionSet& subscription_set);
+        unsigned char m_subscription_set[184]{};
+        std::reference_wrapper<internal::bridge::realm> m_realm;
+        friend struct SyncSubscriptionSet;
+        sync::MutableSubscriptionSet get_subscription_set();
+    };
 
-struct SyncSubscriptionSet {
-public:
-    /// The total number of subscriptions in the set.
-    [[nodiscard]] size_t size() const;
+    struct SyncSubscriptionSet {
+    public:
+        /// The total number of subscriptions in the set.
+        [[nodiscard]] size_t size() const;
 
-    // Finds a subscription for a given name. Will return `std::nullopt` is subscription does
-    // not exist.
-    std::optional<SyncSubscription> find(const std::string& name) {
-//        const sync::Subscription* sub = m_subscription_set.find(name);
-//        if (sub != nullptr) {
-//            return SyncSubscription {
-//                    .identifier = sub->id.to_string(),
-//                    .name = sub->name,
-//                    .created_at = sub->created_at.get_time_point(),
-//                    .updated_at = sub->updated_at.get_time_point(),
-//                    .query_string = sub->query_string,
-//                    .object_class_name = sub->object_class_name
-//            };
-//        }
-        return std::nullopt;
-    }
+        // Finds a subscription for a given name. Will return `std::nullopt` is subscription does
+        // not exist.
+        std::optional<SyncSubscription> find(const std::string& name);
 
-    std::promise<bool> update(std::function<void(MutableSyncSubscriptionSet&)>&& fn);
+        std::promise<bool> update(std::function<void(MutableSyncSubscriptionSet&)>&& fn);
 
-    explicit SyncSubscriptionSet(internal::bridge::realm& realm);
-private:
-    template <typename ...Ts>
-    friend struct db;
-    unsigned char m_subscription_set[32]{};
-    std::reference_wrapper<internal::bridge::realm> m_realm;
-};
+        explicit SyncSubscriptionSet(internal::bridge::realm& realm);
+    private:
+        template <typename ...Ts>
+        friend struct db;
+        unsigned char m_subscription_set[96]{};
+        std::reference_wrapper<internal::bridge::realm> m_realm;
+    };
 
 } // namespace realm
 

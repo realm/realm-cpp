@@ -372,7 +372,7 @@ namespace realm {
 //            } else {
 //                return this->unmanaged;
 //            }
-            return {};
+return {};
         }
 
         box<mapped_type> operator[](const std::string& a) {

@@ -15,7 +15,7 @@ TEST_CASE("embedded_objects") {
         });
 
         CHECK(foo.foo->bar == 42);
-        EmbeddedFoo e_foo = (*foo.foo);
+        EmbeddedFoo e_foo = *(*foo.foo);
         std::promise<bool> p;
         auto token = e_foo.observe([&p](auto change) {
             if (change.is_deleted) return;

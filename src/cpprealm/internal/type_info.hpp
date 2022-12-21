@@ -55,6 +55,7 @@ namespace realm::internal::type_info {
 
         template <typename T>
         using is_primitive = std::negation<std::disjunction<
+                std::is_same<typename type_info<T>::internal_type, std::optional<bridge::obj_key>>,
                 std::is_same<typename type_info<T>::internal_type, bridge::obj_key>,
                 std::is_same<typename type_info<T>::internal_type, bridge::list>,
                 std::is_same<typename type_info<T>::internal_type, bridge::dictionary>

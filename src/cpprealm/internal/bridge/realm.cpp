@@ -25,6 +25,9 @@ namespace realm::internal::bridge {
     realm::realm(std::shared_ptr<Realm> v)
     : m_realm(std::move(v)){}
 
+    realm::realm(thread_safe_reference&& tsr)
+            : m_realm(Realm::get_shared_realm(std::move(tsr))){}
+
     realm::operator std::shared_ptr<Realm>() const {
         return m_realm;
     }

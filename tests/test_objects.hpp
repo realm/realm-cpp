@@ -16,7 +16,7 @@ struct Dog: realm::object<Dog> {
 struct Person: realm::object<Person> {
     realm::persisted<std::string> name;
     realm::persisted<int64_t> age;
-    realm::persisted<Dog> dog;
+    realm::persisted<std::optional<Dog>> dog;
 
     static constexpr auto schema = realm::schema("Person",
             realm::property<&Person::name>("name"),
@@ -71,7 +71,8 @@ struct AllTypesObject: realm::object<AllTypesObject> {
     realm::persisted<std::optional<std::chrono::time_point<std::chrono::system_clock>>> opt_date_col;
     realm::persisted<std::optional<realm::uuid>> opt_uuid_col;
     realm::persisted<std::optional<std::vector<uint8_t>>> opt_binary_col;
-    realm::persisted<AllTypesObjectLink> opt_obj_col;
+    realm::persisted<std::optional<AllTypesObjectLink>> opt_obj_col;
+    realm::persisted<std::optional<AllTypesObjectEmbedded>> opt_embedded_obj_col;
 
     realm::persisted<std::vector<int64_t>> list_int_col;
     realm::persisted<std::vector<bool>> list_bool_col;
@@ -111,6 +112,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
         realm::property<&AllTypesObject::opt_date_col>("opt_date_col"),
         realm::property<&AllTypesObject::opt_enum_col>("opt_enum_col"),
         realm::property<&AllTypesObject::opt_obj_col>("opt_obj_col"),
+        realm::property<&AllTypesObject::opt_embedded_obj_col>("opt_embedded_obj_col"),
         realm::property<&AllTypesObject::opt_uuid_col>("opt_uuid_col"),
 
         realm::property<&AllTypesObject::list_int_col>("list_int_col"),
@@ -142,10 +144,10 @@ struct EmbeddedFoo: realm::embedded_object<EmbeddedFoo> {
 
 struct Foo: realm::object<Foo> {
     realm::persisted<int64_t> bar;
-    realm::persisted<EmbeddedFoo> foo;
+    realm::persisted<std::optional<EmbeddedFoo>> foo;
 
     realm::persisted<int> bar2;
-    realm::persisted<EmbeddedFoo> foo2;
+    realm::persisted<std::optional<EmbeddedFoo>> foo2;
 
     Foo() = default;
     Foo(const Foo&) = delete;

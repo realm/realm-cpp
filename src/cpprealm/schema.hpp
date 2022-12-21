@@ -72,7 +72,12 @@ namespace schemagen {
 
         operator internal::bridge::property() const {
             internal::bridge::property property(name, type, is_primary_key);
-            if constexpr (std::is_base_of_v<object_base<Result>, Result>) {
+            if constexpr (realm::internal::type_info::is_optional<Result>::value) {
+                if constexpr (!realm::internal::type_info::is_primitive<typename Result::value_type>::value) {
+                    property.set_object_link(Result::value_type::schema.name);
+                    property.set_type(type | internal::bridge::property::type::Nullable);
+                }
+            } else if constexpr (std::is_base_of_v<object_base<Result>, Result>) {
                 property.set_object_link(Result::schema.name);
                 property.set_type(type | internal::bridge::property::type::Nullable);
             } else if constexpr (realm::internal::type_info::is_vector<Result>::value) {
@@ -188,6 +193,9 @@ namespace schemagen {
                 }
                 return variant_t{};
             } else {
+                if (property_name == std::string_view(names[N])) {
+                    return variant_t { std::in_place_index<N>, *(cls.*property.ptr) };
+                }
                 return property_value_for_name<N + 1>(property_name, cls, std::get<N + 1>(properties));
             }
         }

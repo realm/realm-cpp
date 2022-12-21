@@ -26,6 +26,19 @@ namespace realm {
     template <>
     struct persisted<bool> : public persisted_primitive_base<bool> {
         operator bool() const; // NOLINT(google-explicit-constructor)
+
+        template <typename T>
+        std::enable_if_t<std::is_integral_v<T>, persisted&> // NOLINT(misc-unconventional-assign-operator)
+        operator=(const T o) {
+            if (this->is_managed()) {
+                this->m_object->obj().template set<bool>(
+                        this->managed,
+                        static_cast<bool>(o));
+            } else {
+                new (&this->unmanaged) T(o);
+            }
+            return *this;
+        }
     protected:
         static bool serialize(bool v);
         static bool deserialize(bool v);

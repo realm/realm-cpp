@@ -74,9 +74,7 @@ struct thread_safe_reference<db<Ts...>> {
 
     db<Ts...> resolve()
     {
-
-//        return db<Ts...>(Realm::get_shared_realm(std::move(m_tsr)));
-abort();
+        return db<Ts...>(internal::bridge::realm(std::move(m_tsr)));
     }
 
     explicit operator bool() const noexcept

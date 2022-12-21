@@ -119,6 +119,8 @@ namespace realm {
                 }
             }
             virtual typename T::value_type operator[](size_t idx) const = 0;
+            virtual typename std::vector<typename T::value_type> operator*() const = 0;
+
             notification_token observe(std::function<void(collection_change<T>)>&& fn) {
                 return this->m_list.add_notification_callback(
                         std::make_shared<collection_callback_wrapper<T>>(
@@ -159,6 +161,10 @@ namespace realm {
             if (this->is_managed()) return persisted<T>::deserialize(this->m_list.template
                     get<typename internal::type_info::type_info<T>::internal_type>(idx));
             else return this->unmanaged[idx];
+        }
+        std::vector<T> operator*() const override
+        {
+            return {};
         }
         size_t find(const T& a) {
             if (this->is_managed()) {
@@ -247,6 +253,11 @@ namespace realm {
                 return this->unmanaged[idx];
             }
         }
+        std::vector<T> operator*() const override
+        {
+            return {};
+        }
+
     protected:
         void manage(internal::bridge::object *object,
                     internal::bridge::col_key &&col_key) override {
@@ -325,6 +336,10 @@ namespace realm {
             } else {
                 return this->unmanaged[idx];
             }
+        }
+        std::vector<T> operator*() const override
+        {
+            return {};
         }
     protected:
         void manage(internal::bridge::object *object,

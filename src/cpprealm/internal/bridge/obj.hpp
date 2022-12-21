@@ -132,8 +132,6 @@ namespace realm::internal::bridge {
             set_list_values(col_key, v2);
         }
 
-        template <typename T>
-        std::vector<T> get_list_values(int64_t col_key);
         [[nodiscard]] obj_key get_key() const;
         lnklst get_linklist(const col_key& col_key);
         void set_null(const col_key&);

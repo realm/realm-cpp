@@ -1,4 +1,5 @@
 set(SOURCES
+    cpprealm/app.cpp
     cpprealm/sdk.cpp
     cpprealm/analytics.cpp
     cpprealm/type_info.cpp
@@ -42,18 +43,14 @@ set(SOURCES
     cpprealm/internal/bridge/realm.hpp
     cpprealm/internal/bridge/dictionary.cpp
     cpprealm/internal/bridge/dictionary.hpp
-    cpprealm/internal/bridge/results.cpp 
-    
+    cpprealm/internal/bridge/results.cpp
     cpprealm/internal/bridge/results.hpp
     cpprealm/internal/bridge/schema.cpp
     cpprealm/internal/bridge/schema.hpp
     cpprealm/scheduler.cpp
     cpprealm/internal/bridge/thread_safe_reference.cpp
     cpprealm/internal/bridge/thread_safe_reference.hpp
-    cpprealm/internal/bridge/lnklst.cpp 
-    
-    
-    
+    cpprealm/internal/bridge/lnklst.cpp
     cpprealm/internal/bridge/lnklst.hpp
     cpprealm/internal/bridge/list.cpp
     cpprealm/internal/bridge/list.hpp
@@ -62,21 +59,14 @@ set(SOURCES
     cpprealm/persisted_int.cpp
     cpprealm/flex_sync.cpp
     cpprealm/persisted_bool.cpp
-
-
-
-
     cpprealm/internal/bridge/sync_session.cpp
     cpprealm/internal/bridge/sync_session.hpp
     cpprealm/internal/bridge/sync_error.cpp
     cpprealm/internal/bridge/sync_error.hpp
     cpprealm/internal/bridge/sync_manager.cpp
     cpprealm/internal/bridge/sync_manager.hpp
-
     cpprealm/internal/bridge/async_open_task.cpp
-    cpprealm/internal/bridge/async_open_task.hpp
-    
-    ) # REALM_SOURCES
+    cpprealm/internal/bridge/async_open_task.hpp) # REALM_SOURCES
 
 set(HEADERS
     cpprealm/sdk.hpp

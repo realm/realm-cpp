@@ -23,6 +23,69 @@
 #include <cpprealm/persisted.hpp>
 
 namespace realm {
+    // For forward links
+    template <typename T>
+    struct persisted<std::optional<T>, std::enable_if_t<std::is_base_of_v<object_base<T>, T>>> : public persisted_base<std::optional<T>> {
+        persisted() = default;
+        persisted(const persisted& v) {
+            m_property_object = v.m_property_object;
+        }
+        persisted(const T& v) {
+            m_property_object = v;
+        }
+        persisted& operator =(const T& v) {
+            m_property_object = v;
+            return *this;
+        }
+        persisted& operator =(std::nullopt_t) {
+            m_property_object = std::nullopt;
+            if (this->is_managed()) {
+                abort();
+            }
+            return *this;
+        }
+        T* operator ->() {
+            return &*m_property_object;
+        }
+        std::optional<T> operator * () const
+        {
+            return m_property_object;
+        }
+    protected:
+        void manage(internal::bridge::object* object,
+                    internal::bridge::col_key&& col_key) final {
+            if (!m_property_object) {
+                return;
+            }
+            if (m_property_object->m_object) {
+                m_property_object->m_object->obj().set(col_key, m_property_object->m_object->obj().get_key());
+            } else {
+                if (std::is_base_of_v<embedded_object<T>, T>) {
+                    m_property_object->manage(
+                            internal::bridge::object(object->get_realm(),
+                                                     object->obj().create_and_set_linked_object(col_key)));
+                } else {
+                    m_property_object->manage(object->obj().get_table().get_link_target(col_key),
+                                              object->get_realm());
+                    object->obj().set(col_key, m_property_object->m_object->obj().get_key());
+                }
+            }
+        }
+
+        void assign_accessor(internal::bridge::object* object,
+                             internal::bridge::col_key&& col_key) final {
+
+        }
+
+        static internal::bridge::obj_key serialize(const T& v) {
+            return v.m_object->obj().get_key();
+        }
+        std::optional<T> m_property_object;
+
+        __cpp_realm_friends
+    };
+
+    // for container elements
     template <typename T>
     struct persisted<T, std::enable_if_t<std::is_base_of_v<object_base<T>, T>>> : public persisted_base<T> {
         persisted() = default;

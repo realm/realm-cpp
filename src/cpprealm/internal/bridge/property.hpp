@@ -63,6 +63,10 @@ namespace realm::internal::bridge {
     {
         return static_cast<property::type>(to_underlying(a) | to_underlying(b));
     }
+    inline constexpr property::type operator&(property::type a, property::type b)
+    {
+        return static_cast<property::type>(to_underlying(a) & to_underlying(b));
+    }
 }
 
 #endif //CPP_REALM_BRIDGE_PROPERTY_HPP
