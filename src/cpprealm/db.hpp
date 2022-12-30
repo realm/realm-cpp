@@ -134,7 +134,7 @@ struct db {
 
     [[maybe_unused]] bool refresh()
     {
-        return true;//return m_realm->refresh();
+        return m_realm.refresh();
     }
 
 private:

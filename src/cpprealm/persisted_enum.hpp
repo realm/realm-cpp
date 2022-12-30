@@ -25,6 +25,7 @@ namespace realm {
     template <typename T>
     struct persisted<T, std::enable_if_t<std::is_enum_v<T>>> : public persisted_primitive_base<T> {
         using persisted_primitive_base<T>::persisted_primitive_base;
+        using persisted_primitive_base<T>::operator=;
 
     protected:
         static int64_t serialize(const T& v) {

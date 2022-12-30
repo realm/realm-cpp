@@ -107,8 +107,7 @@ namespace realm::internal::bridge {
     }
 
     table realm::table_for_object_type(const std::string &object_type) {
-        auto name = table_name_for_object_type(object_type);
-        return read_group().get_table(name);
+        return read_group().get_table(object_type);
     }
     realm::config::config() {
         new (m_config) RealmConfig();
@@ -216,5 +215,10 @@ namespace realm::internal::bridge {
 
     void realm::config::set_path(const std::string &path) {
         reinterpret_cast<RealmConfig*>(m_config)->path = path;
+    }
+
+    bool realm::refresh()
+    {
+        return m_realm->refresh();
     }
 }

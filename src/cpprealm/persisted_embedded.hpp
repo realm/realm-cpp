@@ -33,14 +33,55 @@ namespace realm {
         persisted(const T& v) {
             m_property_object = v;
         }
-        persisted& operator =(const T& v) {
-            m_property_object = v;
+
+        persisted& operator =(T&& v) {
+            if (this->is_managed()) {
+                auto realm = this->m_object->get_realm();
+                if (std::is_base_of_v<embedded_object<T>, T>) {
+                    m_property_object = v;
+                    m_property_object->manage(
+                            internal::bridge::object(realm, this->m_object->obj().create_and_set_linked_object(col_key)));
+                } else {
+                    if constexpr (internal::type_info::is_optional<T>::value) {
+                        v.manage(realm.table_for_object_type(T::value_type::schema.name), realm);
+                    } else {
+                        v.manage(realm.table_for_object_type(T::schema.name), realm);
+                    }
+                    this->m_property_object = v;
+                    this->m_object->obj().template set(col_key, this->m_property_object.value());
+                }
+            } else {
+                m_property_object = v;
+            }
+            return *this;
+        }
+
+        persisted& operator =(T& v) {
+            if (this->is_managed()) {
+                auto realm = this->m_object->get_realm();
+                if (std::is_base_of_v<embedded_object<T>, T>) {
+                    m_property_object = v;
+                    m_property_object->manage(
+                            internal::bridge::object(realm, this->m_object->obj().create_and_set_linked_object(col_key)));
+                    v = *m_property_object;
+                } else {
+                    if constexpr (internal::type_info::is_optional<T>::value) {
+                        v.manage(realm.table_for_object_type(T::value_type::schema.name), realm);
+                    } else {
+                        v.manage(realm.table_for_object_type(T::schema.name), realm);
+                    }
+                    this->m_property_object = v;
+                    this->m_object->obj().template set(col_key, this->m_property_object.value());
+                }
+            } else {
+                m_property_object = v;
+            }
             return *this;
         }
         persisted& operator =(std::nullopt_t) {
             m_property_object = std::nullopt;
             if (this->is_managed()) {
-                abort();
+                this->m_object->obj().set_null(col_key);
             }
             return *this;
         }
@@ -74,14 +115,15 @@ namespace realm {
 
         void assign_accessor(internal::bridge::object* object,
                              internal::bridge::col_key&& col_key) final {
-
+            this->m_object = object;
+            this->col_key = std::move(col_key);
         }
 
         static internal::bridge::obj_key serialize(const T& v) {
             return v.m_object->obj().get_key();
         }
         std::optional<T> m_property_object;
-
+        internal::bridge::col_key col_key;
         __cpp_realm_friends
     };
 

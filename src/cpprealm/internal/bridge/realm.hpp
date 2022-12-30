@@ -91,6 +91,7 @@ namespace realm::internal::bridge {
         object resolve(thread_safe_reference&& tsr);
         [[nodiscard]] std::shared_ptr<scheduler> scheduler() const;
         static async_open_task get_synchronized_realm(const config&);
+        bool refresh();
     private:
         std::shared_ptr<Realm> m_realm;
         friend struct group;

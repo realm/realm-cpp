@@ -249,17 +249,26 @@ protected:
                 this->m_object = o.m_object;
                 new (&managed) internal::bridge::col_key(o.managed);
             } else {
-                new (&unmanaged) T(o.unmanaged);
+                if (this->is_managed()) {
+                    this->m_object->obj().set(managed, o.unmanaged);
+                } else {
+                    new (&unmanaged) T(o.unmanaged);
+                }
             }
             return *this;
         }
+
 
         persisted_primitive_base& operator=(persisted_primitive_base&& o) noexcept {
             if (o.m_object) {
                 this->m_object = o.m_object;
                 new (&managed) internal::bridge::col_key(std::move(o.managed));
             } else {
-                new (&unmanaged) T(std::move(o.unmanaged));
+                if (this->is_managed()) {
+                    this->m_object->obj().set(managed, std::move(o.unmanaged));
+                } else {
+                    new (&unmanaged) T(std::move(o.unmanaged));
+                }
             }
             return *this;
         }

@@ -51,6 +51,7 @@ namespace realm::internal::bridge {
     struct dictionary;
     struct uuid;
     struct list;
+    struct row;
 
     namespace {
         template <typename T>
