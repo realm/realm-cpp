@@ -84,8 +84,8 @@ struct AllTypesObject: realm::object<AllTypesObject> {
     realm::persisted<std::map<std::string, std::chrono::time_point<std::chrono::system_clock>>> map_date_col;
     realm::persisted<std::map<std::string, Enum>> map_enum_col;
     realm::persisted<std::map<std::string, realm::mixed>> map_mixed_col;
-    realm::persisted<std::map<std::string, AllTypesObjectLink>> map_link_col;
-    realm::persisted<std::map<std::string, AllTypesObjectEmbedded>> map_embedded_col;
+    realm::persisted<std::map<std::string, std::optional<AllTypesObjectLink>>> map_link_col;
+    realm::persisted<std::map<std::string, std::optional<AllTypesObjectEmbedded>>> map_embedded_col;
 
     static constexpr auto schema = realm::schema("AllTypesObject",
         realm::property<&AllTypesObject::_id, true>("_id"),

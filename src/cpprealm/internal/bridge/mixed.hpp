@@ -2,6 +2,7 @@
 #define CPP_REALM_BRIDGE_MIXED_HPP
 
 #include <string>
+#include <optional>
 #include <cpprealm/internal/bridge/property.hpp>
 #include <cpprealm/internal/bridge/binary.hpp>
 #include <cpprealm/internal/bridge/uuid.hpp>
@@ -34,6 +35,7 @@ namespace realm::internal::bridge {
 
     struct mixed {
         explicit mixed(const std::string&);
+        mixed(const std::nullopt_t&); //NOLINT(google-explicit-constructor)
         mixed(const int&); //NOLINT(google-explicit-constructor)
         mixed(const int64_t&); //NOLINT(google-explicit-constructor)
         mixed(const double&); //NOLINT(google-explicit-constructor)
@@ -57,6 +59,7 @@ namespace realm::internal::bridge {
         explicit operator Mixed() const;
 
         [[nodiscard]] data_type type() const noexcept;
+        [[nodiscard]] bool is_null() const noexcept;
     private:
         std::string m_owned_string;
         unsigned char m_mixed[48]{};

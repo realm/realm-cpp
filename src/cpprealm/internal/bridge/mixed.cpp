@@ -6,6 +6,10 @@ namespace realm::internal::bridge {
 
     static_assert(SizeCheck<24, sizeof(Mixed)>{});
 
+    mixed::mixed(const std::nullopt_t& v) {
+        new (&m_mixed) Mixed(v);
+    }
+
     mixed::mixed(const std::string &v) {
         m_owned_string = v;
         new (&m_mixed) Mixed(v);
@@ -41,7 +45,7 @@ namespace realm::internal::bridge {
         new (&m_mixed) Mixed(v);
     }
     mixed::operator Mixed() const {
-        if (type() == data_type::String) {
+        if (!is_null() && type() == data_type::String) {
             return m_owned_string;
         }
         return *reinterpret_cast<const Mixed*>(m_mixed);
@@ -73,5 +77,8 @@ namespace realm::internal::bridge {
     }
     data_type mixed::type() const noexcept {
         return data_type(static_cast<int>(reinterpret_cast<const Mixed *>(m_mixed)->get_type()));
+    }
+    bool mixed::is_null() const noexcept {
+        return reinterpret_cast<const Mixed *>(m_mixed)->is_null();
     }
 }

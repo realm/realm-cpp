@@ -86,10 +86,12 @@ namespace schemagen {
                     property.set_object_link(Result::value_type::schema.name);
                 }
             } else if constexpr (realm::internal::type_info::is_map<Result>::value) {
-                if constexpr (std::is_base_of_v<object_base<typename Result::mapped_type>,
-                                                            typename Result::mapped_type>) {
-                    property.set_object_link(Result::mapped_type::schema.name);
+                if constexpr (internal::type_info::is_optional<typename Result::mapped_type>::value) {
                     property.set_type(type | internal::bridge::property::type::Nullable);
+
+                    if ((type & internal::bridge::property::type::Object) == internal::bridge::property::type::Object) {
+                        property.set_object_link(Result::mapped_type::value_type::schema.name);
+                    }
                 }
             }
             return property;

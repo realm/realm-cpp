@@ -46,6 +46,9 @@ namespace realm::internal::bridge {
     bool obj::is_null(const col_key &col_key) const {
         return reinterpret_cast<const Obj*>(m_obj)->is_null(col_key);
     }
+    bool obj::is_valid() const {
+        return reinterpret_cast<const Obj*>(m_obj)->is_valid();
+    }
     template <>
     std::string obj::get(const col_key& col_key) const {
         return reinterpret_cast<const Obj*>(m_obj)->get<StringData>(col_key);

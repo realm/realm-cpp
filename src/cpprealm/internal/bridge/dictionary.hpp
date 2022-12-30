@@ -27,6 +27,7 @@ namespace realm::internal::bridge {
         void insert(const std::string &key, const std::string &value);
         [[nodiscard]] size_t size() const;
         void remove_all();
+        void remove(const std::string&);
         std::pair<std::string, mixed> get_pair(size_t);
         void clear();
         template <typename T>

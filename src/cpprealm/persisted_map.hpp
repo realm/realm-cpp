@@ -123,7 +123,11 @@ namespace realm {
             if (this->is_managed()) {
                 this->managed.clear();
                 for (auto& [k, v] : o) {
-                    this->managed.insert(k, internal::bridge::mixed(persisted<typename T::mapped_type>::serialize(v)));
+                    if constexpr (internal::type_info::is_optional<typename T::mapped_type>::value) {
+                        this->managed.insert(k, internal::bridge::mixed(persisted<typename T::mapped_type>::serialize(*v)));
+                    } else {
+                        this->managed.insert(k, internal::bridge::mixed(persisted<typename T::mapped_type>::serialize(v)));
+                    }
                 }
             } else {
                 new (&this->unmanaged) std::map<std::string, typename T::mapped_type>(o);
@@ -254,6 +258,14 @@ namespace realm {
         {
             is_managed = true;
         }
+
+        ////////
+        template <typename T>
+        std::enable_if_t<std::is_base_of_v<T, object_base<T>>, mapped_type&> // NOLINT(misc-unconventional-assign-operator)
+        operator=(const T o) {
+            return *this;
+        }
+
         box_base& operator=(const mapped_type& o) {
             if (is_managed) {
                 m_backing_map.get().insert(m_key, std::move(o));
@@ -264,18 +276,33 @@ namespace realm {
         }
         box_base& operator=(mapped_type&& o) {
             if (is_managed) {
-                m_backing_map.get().insert(m_key,
-                                           persisted<mapped_type>::serialize(std::move(o)));
+                if constexpr (internal::type_info::is_optional<mapped_type>::value) {
+                    if (o) {
+                        m_backing_map.get().insert(m_key,
+                                                   persisted<mapped_type>::serialize(std::move(*o)));
+                    } else {
+                        m_backing_map.get().insert(m_key, internal::bridge::mixed(std::nullopt));
+                    }
+                } else {
+                    m_backing_map.get().insert(m_key,
+                                               persisted<mapped_type>::serialize(std::move(o)));
+                }
             } else {
                 m_val.get() = std::move(o);
             }
             return *this;
         }
 
+        void erase(const std::string& key) {
+            m_backing_map.get().remove(m_key);
+        }
+
         bool operator==(const mapped_type& rhs) const {
             if (is_managed) {
-                if constexpr (std::is_base_of_v<object_base<mapped_type>, mapped_type>) {
-                    return rhs == this->operator*();
+                if constexpr (internal::type_info::is_optional<mapped_type>::value) {
+                    if constexpr (std::is_base_of_v<object_base<typename mapped_type::value_type>, typename mapped_type::value_type>) {
+                        return rhs == this->operator*();
+                    }
                 } else {
                     return persisted<mapped_type>::serialize(rhs) ==
                            this->m_backing_map.get().template get<typename internal::type_info::type_info<mapped_type>::internal_type>(
@@ -288,8 +315,11 @@ namespace realm {
 
         mapped_type operator *() const {
             if (is_managed) {
-                mapped_type cls;
+                typename mapped_type::value_type cls;
                 auto obj = m_backing_map.get().template get<internal::bridge::obj>(m_key);
+                if (!obj.is_valid()) {
+                    return std::nullopt;
+                }
                 cls.assign_accessors(internal::bridge::object(m_object->get_realm(), obj));
                 return cls;
             } else {
@@ -337,10 +367,10 @@ namespace realm {
         using box_base<std::string>::operator=;
     };
     template <typename V>
-    struct box<V, std::enable_if_t<std::is_base_of_v<object_base<V>, V>>> : public box_base<V> {
-        using box_base<V>::box_base;
-        using box_base<V>::operator=;
-        using box_base<V>::operator==;
+struct box<std::optional<V>, std::enable_if_t<std::is_base_of_v<object_base<V>, V>>> : public box_base<std::optional<V>> {
+        using box_base<std::optional<V>>::box_base;
+        using box_base<std::optional<V>>::operator=;
+        using box_base<std::optional<V>>::operator==;
     };
 
     template <typename T>
@@ -358,21 +388,7 @@ namespace realm {
         using persisted_map_base<std::map<std::string, T>>::observe;
 
         std::map<std::string, T> operator *() const {
-//            if (this->is_managed()) {
-//                internal::bridge::dictionary dictionary = this->m_object->obj().get_dictionary(this->managed);
-//                std::map<std::string, T> map;
-//                for (size_t i = 0; i < dictionary.size(); i++) {
-//                    auto pair = dictionary.get_pair(i);
-//
-//                    map.insert({pair.first, persisted<T>::deserialize(
-//                            static_cast<typename internal::type_info::type_info<T>::internal_type>(pair.second)
-//                    )});
-//                }
-//                return map;
-//            } else {
-//                return this->unmanaged;
-//            }
-return {};
+            return {};
         }
 
         box<mapped_type> operator[](const std::string& a) {
@@ -386,12 +402,14 @@ return {};
         void manage(internal::bridge::object *object, internal::bridge::col_key &&col_key) override {
             auto managed = object->get_dictionary(col_key);
             for (auto& [k, v] : this->unmanaged) {
-                if constexpr (std::is_base_of_v<realm::object<T>, T>) {
-                    v.manage(object->obj().get_target_table(col_key),
-                             object->get_realm());
-                    managed.insert(k, internal::bridge::mixed(persisted<T>::serialize(v)));
-                } else if constexpr (std::is_base_of_v<embedded_object<T>, T>) {
-                    managed.insert_embedded(k);
+                if constexpr (internal::type_info::is_optional<T>::value) {
+                    if constexpr (std::is_base_of_v<realm::object<typename T::value_type>, typename T::value_type>) {
+                        (*v).manage(object->obj().get_target_table(col_key),
+                                 object->get_realm());
+                        managed.insert(k, internal::bridge::mixed(persisted<T>::serialize(*v)));
+                    } else if constexpr (std::is_base_of_v<embedded_object<typename T::value_type>, typename T::value_type>) {
+                        managed.insert_embedded(k);
+                    }
                 } else {
                     managed.insert(k, internal::bridge::mixed(persisted < T > ::serialize(v)));
                 }

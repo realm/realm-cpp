@@ -39,6 +39,10 @@ namespace realm::internal::bridge {
         clear();
     }
 
+    void dictionary::remove(const std::string& key) {
+        reinterpret_cast<Dictionary*>(m_dictionary)->erase(key);
+    }
+
     std::pair<std::string, mixed> dictionary::get_pair(size_t idx) {
         auto pair = reinterpret_cast<Dictionary*>(m_dictionary)->get_pair(idx);
         return { pair.first, static_cast<mixed>(pair.second) };

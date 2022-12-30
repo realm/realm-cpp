@@ -24,14 +24,6 @@
 #include <cpprealm/schema.hpp>
 #include <cpprealm/internal/type_info.hpp>
 
-//#include <realm/obj.hpp>
-//#include <realm/table.hpp>
-//#include <realm/object-store/object.hpp>
-//#include <realm/object-store/object_store.hpp>
-//#include <realm/object-store/shared_realm.hpp>
-//#include <realm/object-store/thread_safe_reference.hpp>
-//#include <realm/object-store/util/scheduler.hpp>
-
 #include <any>
 #include <iostream>
 #include <future>

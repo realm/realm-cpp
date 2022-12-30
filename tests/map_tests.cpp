@@ -79,6 +79,15 @@ TEST_CASE("map", "[map]") {
         CHECK(obj.map_binary_col["b"] == std::vector<uint8_t>{3, 4, 5});
         CHECK(obj.map_link_col["b"] == AllTypesObjectLink());
         CHECK(obj.map_embedded_col["b"] == AllTypesObjectEmbedded());
+
+        realm.write([&obj] {
+            obj.map_link_col["b"] = std::nullopt;
+            obj.map_embedded_col["b"] = std::nullopt;
+        });
+
+        std::optional<AllTypesObjectLink> v = *obj.map_link_col["b"];
+        CHECK(obj.map_link_col["b"] == std::nullopt);
+        CHECK(obj.map_embedded_col["b"] == std::nullopt);
     }
 
     SECTION("unmanaged_managed_map_iter", "[mixed]") {
