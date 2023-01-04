@@ -121,7 +121,8 @@
     friend class persisted_map_base;      \
     friend struct internal::bridge::obj;  \
     friend struct internal::bridge::list;    \
-    template <typename> friend struct object_base;  \
+    template <typename> friend struct object_base;\
+    template <typename> friend struct asymmetric_object;  \
     template <typename> friend struct results;                  \
     template <typename TT> \
     friend inline typename std::enable_if<std::is_base_of<realm::object_base<TT>, TT>::value, std::ostream>::type& \
@@ -295,7 +296,6 @@ protected:
         void assign_accessor(internal::bridge::object* object,
                              internal::bridge::col_key&& col_key) final {
             this->m_object = object;
-//            unmanaged.~T();
             new (&this->managed) internal::bridge::col_key(col_key);
         }
     };

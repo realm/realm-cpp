@@ -73,10 +73,13 @@ struct db {
         m_realm.commit_transaction();
     }
 
+    template<template<typename> typename ObjectBase, typename T>
+    using ObjectPredicate = std::enable_if_t<std::is_base_of_v<ObjectBase<T>, T> && (std::is_same_v<T, Ts> || ...)>;
+
     template <typename T>
-    void add(std::vector<T>& objects)
+    ObjectPredicate<object, T>
+    add(std::vector<T>& objects)
     {
-        static_assert(std::is_base_of_v<realm::object<T>, T> && (std::is_same_v<T, Ts> || ...));
         auto actual_schema = m_realm.schema().find(T::schema.name);
         auto group = m_realm.read_group();
         auto table = group.get_table(actual_schema.table_key());
@@ -85,9 +88,9 @@ struct db {
     }
 
     template <typename T>
-    void add(T& object)
+    ObjectPredicate<object, T>
+    add(T& object)
     {
-        static_assert(std::is_base_of_v<realm::object<T>, T> && (std::is_same_v<T, Ts> || ...));
         auto actual_schema = m_realm.schema().find(T::schema.name);
         auto group = m_realm.read_group();
         auto table = group.get_table(actual_schema.table_key());
@@ -95,9 +98,20 @@ struct db {
     }
 
     template <typename T>
-    void add(T&& object)
+    ObjectPredicate<object, T>
+    add(T&& object)
     {
         add(object);
+    }
+
+    template <typename T>
+    ObjectPredicate<asymmetric_object, T>
+    add(T& object)
+    {
+        auto actual_schema = m_realm.schema().find(T::schema.name);
+        auto group = m_realm.read_group();
+        auto table = group.get_table(actual_schema.table_key());
+        object.manage(table, m_realm);
     }
 
     template <typename T>
@@ -108,6 +122,11 @@ struct db {
         auto schema = object.m_object->get_object_schema();
         auto table = group.get_table(schema.table_key());
         table.remove_object(object.m_object->obj().get_key());
+    }
+
+    void removeAll()
+    {
+        REALM_TERMINATE("not implemented");
     }
 
     template <typename T>

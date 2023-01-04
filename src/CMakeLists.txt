@@ -95,7 +95,9 @@ set(HEADERS
     cpprealm/persisted_mixed.hpp
     cpprealm/persisted_map.hpp
     cpprealm/analytics.hpp
-    cpprealm/internal/generic_network_transport.hpp) # REALM_INSTALL_HEADERS
+    cpprealm/internal/generic_network_transport.hpp
+#    cpprealm/asymmetric_object.hpp
+        ) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm SHARED ${SOURCES} ${HEADERS})
 

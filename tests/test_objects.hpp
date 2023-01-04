@@ -128,6 +128,87 @@ struct AllTypesObject: realm::object<AllTypesObject> {
         realm::property<&AllTypesObject::map_embedded_col>("map_embedded_col"));
 };
 
+struct AllTypesAsymmetricObject: realm::asymmetric_object<AllTypesAsymmetricObject> {
+    enum class Enum {
+        one, two
+    };
+
+    realm::persisted<int64_t> _id;
+    realm::persisted<bool> bool_col;
+    realm::persisted<std::string> str_col;
+    realm::persisted<Enum> enum_col;
+    realm::persisted<std::chrono::time_point<std::chrono::system_clock>> date_col;
+    realm::persisted<realm::uuid> uuid_col;
+    realm::persisted<std::vector<std::uint8_t>> binary_col;
+    realm::persisted<realm::mixed> mixed_col;
+
+    realm::persisted<std::optional<int64_t>> opt_int_col;
+    realm::persisted<std::optional<std::string>> opt_str_col;
+    realm::persisted<std::optional<bool>> opt_bool_col;
+    realm::persisted<std::optional<Enum>> opt_enum_col;
+    realm::persisted<std::optional<std::chrono::time_point<std::chrono::system_clock>>> opt_date_col;
+    realm::persisted<std::optional<realm::uuid>> opt_uuid_col;
+    realm::persisted<std::optional<std::vector<uint8_t>>> opt_binary_col;
+    realm::persisted<std::optional<AllTypesObjectEmbedded>> opt_embedded_obj_col;
+
+    realm::persisted<std::vector<int64_t>> list_int_col;
+    realm::persisted<std::vector<bool>> list_bool_col;
+    realm::persisted<std::vector<std::string>> list_str_col;
+    realm::persisted<std::vector<realm::uuid>> list_uuid_col;
+    realm::persisted<std::vector<std::vector<std::uint8_t>>> list_binary_col;
+    realm::persisted<std::vector<std::chrono::time_point<std::chrono::system_clock>>> list_date_col;
+    realm::persisted<std::vector<realm::mixed>> list_mixed_col;
+    realm::persisted<std::vector<AllTypesObjectEmbedded>> list_embedded_obj_col;
+
+    realm::persisted<std::map<std::string, int64_t>> map_int_col;
+    realm::persisted<std::map<std::string, bool>> map_bool_col;
+    realm::persisted<std::map<std::string, std::string>> map_str_col;
+    realm::persisted<std::map<std::string, realm::uuid>> map_uuid_col;
+    realm::persisted<std::map<std::string, std::vector<std::uint8_t>>> map_binary_col;
+    realm::persisted<std::map<std::string, std::chrono::time_point<std::chrono::system_clock>>> map_date_col;
+    realm::persisted<std::map<std::string, Enum>> map_enum_col;
+    realm::persisted<std::map<std::string, realm::mixed>> map_mixed_col;
+    realm::persisted<std::map<std::string, std::optional<AllTypesObjectEmbedded>>> map_embedded_col;
+
+    static constexpr auto schema = realm::schema("AllTypesAsymmetricObject",
+                                                 realm::property<&AllTypesAsymmetricObject::_id, true>("_id"),
+                                                 realm::property<&AllTypesAsymmetricObject::bool_col>("bool_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::str_col>("str_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::enum_col>("enum_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::date_col>("date_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::uuid_col>("uuid_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::binary_col>("binary_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::mixed_col>("mixed_col"),
+
+                                                 realm::property<&AllTypesAsymmetricObject::opt_int_col>("opt_int_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::opt_str_col>("opt_str_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::opt_bool_col>("opt_bool_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::opt_binary_col>("opt_binary_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::opt_date_col>("opt_date_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::opt_enum_col>("opt_enum_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::opt_embedded_obj_col>("opt_embedded_obj_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::opt_uuid_col>("opt_uuid_col"),
+
+                                                 realm::property<&AllTypesAsymmetricObject::list_int_col>("list_int_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::list_bool_col>("list_bool_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::list_str_col>("list_str_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::list_uuid_col>("list_uuid_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::list_binary_col>("list_binary_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::list_date_col>("list_date_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::list_mixed_col>("list_mixed_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::list_embedded_obj_col>("list_embedded_obj_col"),
+
+                                                 realm::property<&AllTypesAsymmetricObject::map_int_col>("map_int_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::map_str_col>("map_str_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::map_bool_col>("map_bool_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::map_enum_col>("map_enum_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::map_date_col>("map_date_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::map_uuid_col>("map_uuid_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::map_mixed_col>("map_mixed_col"),
+                                                 realm::property<&AllTypesAsymmetricObject::map_embedded_col>("map_embedded_col"));
+};
+
+
 struct EmbeddedFoo: realm::embedded_object<EmbeddedFoo> {
     realm::persisted<int64_t> bar;
 
