@@ -4,7 +4,22 @@
 #include <cpprealm/persisted_uuid.hpp>
 
 namespace realm::internal::bridge {
+#ifdef __i386__
     static_assert(SizeCheck<16, sizeof(::realm::UUID)>{});
+    static_assert(SizeCheck<1, alignof(::realm::UUID)>{});
+#elif __x86_64__
+    static_assert(SizeCheck<16, sizeof(::realm::UUID)>{});
+    static_assert(SizeCheck<1, alignof(::realm::UUID)>{});
+#elif __arm__
+    static_assert(SizeCheck<16, sizeof(::realm::UUID)>{});
+    static_assert(SizeCheck<1, alignof(::realm::UUID)>{});
+#elif __aarch64__
+    static_assert(SizeCheck<16, sizeof(::realm::UUID)>{});
+    static_assert(SizeCheck<1, alignof(::realm::UUID)>{});
+#else
+    static_assert(SizeCheck<12, sizeof(::realm::UUID)>{});
+    static_assert(SizeCheck<1, alignof(::realm::UUID)>{});
+#endif
     uuid::uuid() {
         new (&m_uuid) UUID();
     }

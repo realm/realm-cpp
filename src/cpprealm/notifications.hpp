@@ -19,7 +19,6 @@
 #ifndef notifications_hpp
 #define notifications_hpp
 
-#include <cpprealm/type_info.hpp>
 #include <cpprealm/thread_safe_reference.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
 

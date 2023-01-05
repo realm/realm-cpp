@@ -45,7 +45,7 @@ namespace realm {
             if (this->is_managed()) {
                 managed.~col_key();
             } else {
-                unmanaged.~optional<T>();
+                unmanaged = std::nullopt;
             }
         }
         persisted& operator=(const persisted& v) {
@@ -82,10 +82,10 @@ namespace realm {
         persisted& operator=(std::optional<T>&& o) {
             if (auto& obj = this->m_object) {
                 if (o) {
-                    obj->obj().set(this->managed,
+                    obj->get_obj().set(this->managed,
                                    persisted<T>::serialize(*o));
                 } else {
-                    obj->obj().set_null(this->managed);
+                    obj->get_obj().set_null(this->managed);
                 }
             } else {
                 if (o)
@@ -112,7 +112,7 @@ namespace realm {
 
         operator bool() const {
             if (this->is_managed()) {
-                return !this->m_object->obj().is_null(managed);
+                return !this->m_object->get_obj().is_null(managed);
             } else {
                 return unmanaged.operator bool();
             }
@@ -120,7 +120,7 @@ namespace realm {
 
         T operator*() const {
             if (this->is_managed()) {
-                return *this->m_object->obj().template get<std::optional<T>>(managed);
+                return *this->m_object->get_obj().template get<std::optional<T>>(managed);
             } else {
                 return *unmanaged;
             }
@@ -134,16 +134,16 @@ namespace realm {
         void manage(internal::bridge::object* object,
                     internal::bridge::col_key&& col_key) override {
             if (this->unmanaged) {
-                object->obj().set(col_key, persisted<T>::serialize(*unmanaged));
+                object->get_obj().set(col_key, persisted<T>::serialize(*unmanaged));
             } else {
-                object->obj().set_null(col_key);
+                object->get_obj().set_null(col_key);
             }
-            unmanaged.~optional<T>();
+            unmanaged = std::nullopt;
             assign_accessor(object, std::move(col_key));
         }
         void assign_accessor(internal::bridge::object* object,
                              internal::bridge::col_key&& col_key) override {
-            this->m_object = object;
+            this->m_object = *object;
             new (&managed) internal::bridge::col_key(std::move(col_key));
         }
 

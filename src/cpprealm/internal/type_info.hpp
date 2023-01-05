@@ -8,9 +8,11 @@
 #include <cpprealm/internal/bridge/mixed.hpp>
 #include <cpprealm/internal/bridge/obj_key.hpp>
 #include <cpprealm/internal/bridge/list.hpp>
+#include "cpprealm/internal/bridge/obj.hpp"
+#include <realm/obj.hpp>
 
+#include <variant>
 #include <vector>
-#include <cpprealm/type_info.hpp>
 
 namespace realm::internal::type_info {
     template <typename T, typename = void>
@@ -261,91 +263,5 @@ namespace realm::internal::type_info {
     struct type_info<T, std::enable_if_t<is_custom_persistable<T>::value>> :
             public type_info<typename is_custom_persistable<T>::underlying> {
     };
-
-//    template <typename T>
-//    typename type_info<std::decay_t<T>>::internal_type serialize(const T&);
-//    template <>
-//    std::string serialize(const char* const& c);
-//    template <>
-//    int64_t     serialize(const int64_t&);
-//    template <typename T>
-//    int64_t serialize(std::enable_if_t<std::is_integral_v<T>, T> v) {
-//        return static_cast<int64_t>(v);
-//    }
-//
-//    template <>
-//    bool             serialize(const bool& c);
-//    template <>
-//    bridge::uuid     serialize(const realm::uuid& c);
-////    template <>
-////    bridge::binary   serialize(const std::vector<uint8_t>& v);
-//
-//    template <typename T, std::enable_if_t<std::is_base_of_v<object_base, T>>>
-//    bridge::obj_key serialize(const T& o) {
-//        return o.m_object->obj().get_key();
-//    }
-//    template <typename C, typename D>
-//    bridge::timestamp serialize(const std::chrono::time_point<C, D>& ts) {
-//        return ts;
-//    }
-//    template <typename E, std::enable_if_t<std::is_enum_v<E>>>
-//    int64_t serialize(const E& e) {
-//        return static_cast<int64_t>(e);
-//    }
-//
-//    template <typename T>
-//    std::enable_if_t<std::negation_v<std::is_same<T, uint8_t>>, std::vector<typename type_info<T>::internal_type>>
-//    serialize(const std::vector<T>& v) {
-//        std::vector<typename type_info<T>::internal_type> v2;
-//        for (auto& a : v) {
-//            v2.push_back(serialize(a));
-//        }
-//        return v2;
-//    }
-//    template <typename T>
-//    std::optional<typename type_info<T>::internal_type> serialize(std::optional<T>&& c) {
-//        if (c) {
-//            return serialize<T>(*c);
-//        }
-//        return std::nullopt;
-//    }
-//
-//    // MARK: Mixed
-//    template <typename ...Ts>
-//    bridge::mixed serialize(const std::variant<Ts...>& v) {
-//        return std::visit([](auto&& arg) {
-//            using M = std::decay_t<decltype(arg)>;
-//            return bridge::mixed(serialize<M>(arg));
-//        }, v);
-//    }
-//    template <typename T>
-//    std::enable_if_t<is_custom_persistable<std::decay_t<T>>::value,
-//                     typename type_info<typename is_custom_persistable<std::decay_t<T>>::underlying>::internal_type>
-//    serialize(const T& s) {
-//        static_assert(!std::is_same_v<T, int64_t>);
-//        return serialize<typename is_custom_persistable<T>::underlying>(s);
-//    }
-//
-//    template <typename T, typename = void>
-//    T deserialize(typename type_info<T>::internal_type&&);
-//    template <>
-//    int64_t deserialize(int64_t&&);
-//    template <>
-//    uuid deserialize(bridge::uuid&&);
-//    template <typename C, typename D>
-//    std::chrono::time_point<C, D> deserialize(bridge::timestamp&&);
-//    template <>
-//    std::string deserialize(std::string&&);
-//    template <>
-//    std::vector<uint8_t> deserialize(bridge::binary&&);
-//
-//    template <typename T>
-//    T deserialize(const bridge::mixed& v) {
-//        return deserialize<T>(static_cast<typename type_info<T>::internal_type>(v));
-//    }
-//    template <typename T, typename V>
-//    std::enable_if_t<is_custom_persistable<V>::value, V> deserialize(const T& s) {
-//        return deserialize<typename is_custom_persistable<V>::underlying>(s);
-//    }
 }
 #endif //REALM_TYPE_INFO_HPP

@@ -3,6 +3,8 @@
 
 #include <any>
 #include <functional>
+#include <memory>
+#include <optional>
 #include <string>
 #include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
@@ -64,6 +66,26 @@ namespace realm::internal::bridge {
             using underlying = T;
         };
     }
+
+    template <typename T>
+    [[nodiscard]] T get(const obj&, const col_key& col_key);
+    template <>
+    [[nodiscard]] std::string get(const obj&, const col_key& col_key);
+    template <>
+    [[nodiscard]] uuid get(const obj&, const col_key& col_key);
+    template <>
+    [[nodiscard]] binary get(const obj&, const col_key& col_key);
+    template <>
+    [[nodiscard]] timestamp get(const obj&, const col_key& col_key);
+    template <>
+    [[nodiscard]] int64_t get(const obj&, const col_key& col_key);
+    template <>
+    [[nodiscard]] double get(const obj&, const col_key& col_key);
+    template <>
+    [[nodiscard]] bool get(const obj&, const col_key& col_key);
+    template <>
+    [[nodiscard]] mixed get(const obj&, const col_key& col_key);
+
     struct obj {
         obj(const Obj&); //NOLINT google-explicit-constructor
         operator Obj() const; //NOLINT google-explicit-constructor
@@ -80,25 +102,11 @@ namespace realm::internal::bridge {
                 }
                 return
                     persisted<typename T::value_type, void>::deserialize
-                            (get<typename type_info::type_info<typename T::value_type, void>::internal_type>(col_key));
+                            (internal::bridge::get<typename type_info::type_info<typename T::value_type, void>::internal_type>(*this, col_key));
             } else {
-                return get<T>(col_key);
+                return internal::bridge::get<T>(*this, col_key);
             }
         }
-        template <>
-        [[nodiscard]] std::string get(const col_key& col_key) const;
-        template <>
-        [[nodiscard]] uuid get(const col_key& col_key) const;
-        template <>
-        [[nodiscard]] binary get(const col_key& col_key) const;
-        template <>
-        [[nodiscard]] timestamp get(const col_key& col_key) const;
-        template <>
-        [[nodiscard]] int64_t get(const col_key& col_key) const;
-        template <>
-        [[nodiscard]] bool get(const col_key& col_key) const;
-        template <>
-        [[nodiscard]] mixed get(const col_key& col_key) const;
 
 #define __cpp_realm_generate_obj_set(type) \
         void set(const col_key& col_key, const type& value);
@@ -139,12 +147,24 @@ namespace realm::internal::bridge {
         void set_null(const col_key&);
         obj create_and_set_linked_object(const col_key&);
     private:
-        unsigned char m_obj[64]{};
+        template <typename T>
+        friend T get(const obj&, const col_key& col_key);
+#ifdef __i386__
+        std::aligned_storage<44, 4>::type m_obj[1];
+#elif __x86_64__
+        std::aligned_storage<64, 8>::type m_obj[1];
+#elif __arm__
+        std::aligned_storage<56, 8>::type m_obj[1];
+#elif __aarch64__
+        std::aligned_storage<64, 8>::type m_obj[1];
+#else
+        std::aligned_storage<64, 8>::type m_obj[1];
+#endif
     };
 
     struct group {
         group(realm&);
-        table get_table(int64_t table_key);
+        table get_table(uint32_t table_key);
         table get_table(const std::string& table_key);
     private:
         std::reference_wrapper<realm> m_realm;

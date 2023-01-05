@@ -12,7 +12,22 @@
 #include <cpprealm/object.hpp>
 
 namespace realm::internal::bridge {
+#ifdef __i386__
+    static_assert(SizeCheck<44, sizeof(Obj)>{});
+    static_assert(SizeCheck<4, alignof(Obj)>{});
+#elif __x86_64__
     static_assert(SizeCheck<64, sizeof(Obj)>{});
+    static_assert(SizeCheck<8, alignof(Obj)>{});
+#elif __arm__
+    static_assert(SizeCheck<56, sizeof(Obj)>{});
+    static_assert(SizeCheck<8, alignof(Obj)>{});
+#elif __aarch64__
+    static_assert(SizeCheck<64, sizeof(Obj)>{});
+    static_assert(SizeCheck<8, alignof(Obj)>{});
+#else
+    static_assert(SizeCheck<64, sizeof(Obj)>{});
+    static_assert(SizeCheck<4, alignof(Obj)>{});
+#endif
 
     group::group(realm& val)
     : m_realm(val)
@@ -50,32 +65,36 @@ namespace realm::internal::bridge {
         return reinterpret_cast<const Obj*>(m_obj)->is_valid();
     }
     template <>
-    std::string obj::get(const col_key& col_key) const {
-        return reinterpret_cast<const Obj*>(m_obj)->get<StringData>(col_key);
+    std::string get(const obj& o, const col_key& col_key) {
+        return reinterpret_cast<const Obj*>(o.m_obj)->get<StringData>(col_key);
     }
     template <>
-    int64_t obj::get(const col_key& col_key) const {
-        return reinterpret_cast<const Obj*>(m_obj)->get<Int>(col_key);
+    int64_t get(const obj& o, const col_key& col_key) {
+        return reinterpret_cast<const Obj*>(o.m_obj)->get<Int>(col_key);
     }
     template <>
-    bool obj::get(const col_key& col_key) const {
-        return reinterpret_cast<const Obj*>(m_obj)->get<bool>(col_key);
+    double get(const obj& o, const col_key& col_key) {
+        return reinterpret_cast<const Obj*>(o.m_obj)->get<Double>(col_key);
     }
     template <>
-    binary obj::get(const col_key& col_key) const {
-        return reinterpret_cast<const Obj*>(m_obj)->get<BinaryData>(col_key);
+    bool get(const obj& o, const col_key& col_key) {
+        return reinterpret_cast<const Obj*>(o.m_obj)->get<bool>(col_key);
     }
     template <>
-    uuid obj::get(const col_key& col_key) const {
-        return reinterpret_cast<const Obj*>(m_obj)->get<UUID>(col_key);
+    binary get(const obj& o, const col_key& col_key) {
+        return reinterpret_cast<const Obj*>(o.m_obj)->get<BinaryData>(col_key);
     }
     template <>
-    mixed obj::get(const col_key& col_key) const {
-        return reinterpret_cast<const Obj*>(m_obj)->get_any(col_key);
+    uuid get(const obj& o, const col_key& col_key) {
+        return reinterpret_cast<const Obj*>(o.m_obj)->get<UUID>(col_key);
     }
     template <>
-    timestamp obj::get(const col_key& col_key) const {
-        return reinterpret_cast<const Obj*>(m_obj)->get<Timestamp>(col_key);
+    mixed get(const obj& o, const col_key& col_key) {
+        return reinterpret_cast<const Obj*>(o.m_obj)->get_any(col_key);
+    }
+    template <>
+    timestamp get(const obj& o, const col_key& col_key) {
+        return reinterpret_cast<const Obj*>(o.m_obj)->get<Timestamp>(col_key);
     }
     void obj::set(const col_key &col_key, const std::string &value) {
         reinterpret_cast<Obj*>(m_obj)->set<StringData>(col_key, value);
@@ -164,7 +183,7 @@ namespace realm::internal::bridge {
     table group::get_table(const std::string &table_key) {
         return static_cast<SharedRealm>(m_realm.get())->read_group().get_table(table_name_for_object_type(table_key));
     }
-    table group::get_table(int64_t table_key) {
+    table group::get_table(uint32_t table_key) {
         return static_cast<SharedRealm>(m_realm.get())->read_group().get_table(TableKey(table_key));
     }
 

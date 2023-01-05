@@ -2,6 +2,7 @@
 #define CPP_REALM_BRIDGE_ASYNC_OPEN_TASK_HPP
 
 #include <functional>
+#include <memory>
 
 namespace realm {
     class AsyncOpenTask;

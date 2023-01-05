@@ -20,7 +20,32 @@
 #include <realm/object-store/util/scheduler.hpp>
 
 namespace realm::internal::bridge {
+#ifdef __i386__
+    static_assert(SizeCheck<192, sizeof(Realm::Config)>{});
+    static_assert(SizeCheck<8, alignof(Realm::Config)>{});
+#elif __x86_64__
+    #if defined(__clang__)
+    static_assert(SizeCheck<368, sizeof(Realm::Config)>{});
+    static_assert(SizeCheck<16, alignof(Realm::Config)>{});
+    #elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(SizeCheck<328, sizeof(Realm::Config)>{});
+    static_assert(SizeCheck<8, alignof(Realm::Config)>{});
+    #endif
+#elif __arm__
+    static_assert(SizeCheck<192, sizeof(Realm::Config)>{});
+    static_assert(SizeCheck<8, alignof(Realm::Config)>{});
+#elif __aarch64__
+    #if __ANDROID__
+    static_assert(SizeCheck<368, sizeof(Realm::Config)>{});
+    static_assert(SizeCheck<16, alignof(Realm::Config)>{});
+    #else
     static_assert(SizeCheck<312, sizeof(Realm::Config)>{});
+    static_assert(SizeCheck<8, alignof(Realm::Config)>{});
+    #endif
+#else
+    static_assert(SizeCheck<368, sizeof(Realm::Config)>{});
+    static_assert(SizeCheck<16, alignof(Realm::Config)>{});
+#endif
 
     realm::realm(std::shared_ptr<Realm> v)
     : m_realm(std::move(v)){}
@@ -125,16 +150,13 @@ namespace realm::internal::bridge {
     bool operator!=(realm const& lhs, realm const& rhs) {
         return static_cast<SharedRealm>(lhs) != static_cast<SharedRealm>(rhs);
     }
-
     template <>
-    dictionary realm::resolve(thread_safe_reference &&tsr) {
-
-        return reinterpret_cast<ThreadSafeReference*>(tsr.m_thread_safe_reference)->resolve<Dictionary>(m_realm);
+    dictionary resolve(const realm& r, thread_safe_reference &&tsr) {
+        return reinterpret_cast<ThreadSafeReference*>(tsr.m_thread_safe_reference)->resolve<Dictionary>(r);
     }
     template <>
-    object realm::resolve(thread_safe_reference &&tsr) {
-
-        return reinterpret_cast<ThreadSafeReference*>(tsr.m_thread_safe_reference)->resolve<Object>(m_realm);
+    object resolve(const realm& r, thread_safe_reference &&tsr) {
+        return reinterpret_cast<ThreadSafeReference*>(tsr.m_thread_safe_reference)->resolve<Object>(r);
     }
     void realm::config::set_scheduler(const std::shared_ptr<struct scheduler> &s) {
         reinterpret_cast<RealmConfig*>(m_config)->scheduler = std::make_shared<internal_scheduler>(s);

@@ -133,6 +133,7 @@ TEST_CASE("map", "[map]") {
             obj.map_str_col["a"] = "baz";
             obj.map_str_col["b"] = "food";
         });
+        realm.refresh();
         auto future = p.get_future();
         switch (future.wait_for(std::chrono::seconds(5))) {
             case std::future_status::ready:

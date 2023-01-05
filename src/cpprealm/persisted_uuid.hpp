@@ -2,7 +2,6 @@
 #define CPP_REALM_UUID_HPP
 
 #include <string>
-#include <cpprealm/type_info.hpp>
 #include <cpprealm/persisted.hpp>
 
 namespace realm {

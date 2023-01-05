@@ -30,7 +30,7 @@ namespace realm {
 
         auto time_since_epoch() const {
             if (this->is_managed()) {
-                auto ts = this->m_object->obj().template get<internal::bridge::timestamp>(this->managed);
+                auto ts = this->m_object->get_obj().template get<internal::bridge::timestamp>(this->managed);
                 return ts.get_time_point().time_since_epoch();
             } else {
                 return this->unmanaged.time_since_epoch();
@@ -88,8 +88,8 @@ namespace realm {
             const std::chrono::duration<S>& rhs)
     {
         if (lhs.is_managed()) {
-            auto ts = lhs.m_object->obj().template get<internal::bridge::timestamp>(lhs.managed);
-            lhs.m_object->obj().set(lhs.managed, internal::bridge::timestamp(ts.get_time_point() + rhs));
+            auto ts = lhs.m_object->get_obj().template get<internal::bridge::timestamp>(lhs.managed);
+            lhs.m_object->get_obj().set(lhs.managed, internal::bridge::timestamp(ts.get_time_point() + rhs));
         } else {
             lhs.unmanaged += rhs;
         }

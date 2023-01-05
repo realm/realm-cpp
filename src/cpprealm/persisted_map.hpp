@@ -23,6 +23,7 @@
 #include <cpprealm/notifications.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
 
+#include <string>
 #include <utility>
 
 namespace realm {
@@ -217,28 +218,19 @@ namespace realm {
             throw std::runtime_error("Only collections which are managed by a Realm support change notifications");
         }
 
-        if (!this->m_object->is_valid()) {
+        if (!this->m_object) {
             throw std::runtime_error("Only collections which are managed by a Realm support change notifications");
         }
 
-        auto scheduler = NoPlatformScheduler::make();
         notification_token token;
-        auto config = this->m_object->get_realm().get_config();
-        config.set_scheduler(scheduler);
-        internal::bridge::realm r(config);
-        token.m_realm = r;
-        auto tsr = internal::bridge::thread_safe_reference(managed);
-        scheduler->invoke([&handler, this, &token, tsr = std::move(tsr)]() mutable {
-            auto managed = token.m_realm.resolve<internal::bridge::dictionary>(std::move(tsr));
-            token.m_token = managed.add_notification_callback(
-                    std::make_shared<collection_callback_wrapper<T>>(
-                            std::move(handler),
-                            *static_cast<persisted<T>*>(this),
-                            false)
-            );
-
-            token.m_dictionary = managed;
-        });
+        token.m_realm = this->m_object->get_realm();
+        token.m_token = managed.add_notification_callback(
+                std::make_shared<collection_callback_wrapper<T>>(
+                        std::move(handler),
+                        *static_cast<persisted<T>*>(this),
+                        false)
+        );
+        token.m_dictionary = managed;
         return token;
     }
 
@@ -254,7 +246,7 @@ namespace realm {
                  internal::bridge::object* object)
                 : m_backing_map(backing_map)
                 , m_key(std::move(key))
-                , m_object(object)
+                , m_object(*object)
         {
             is_managed = true;
         }
@@ -305,8 +297,7 @@ namespace realm {
                     }
                 } else {
                     return persisted<mapped_type>::serialize(rhs) ==
-                           this->m_backing_map.get().template get<typename internal::type_info::type_info<mapped_type>::internal_type>(
-                                   this->m_key);
+                            internal::bridge::get<typename internal::type_info::type_info<mapped_type>::internal_type>(this->m_backing_map.get(), this->m_key);
                 }
             } else {
                 return rhs == m_val.get();
@@ -316,11 +307,11 @@ namespace realm {
         mapped_type operator *() const {
             if (is_managed) {
                 typename mapped_type::value_type cls;
-                auto obj = m_backing_map.get().template get<internal::bridge::obj>(m_key);
+                auto obj = internal::bridge::get<internal::bridge::obj>(this->m_backing_map.get(), m_key);
                 if (!obj.is_valid()) {
                     return std::nullopt;
                 }
-                cls.assign_accessors(internal::bridge::object(m_object->get_realm(), obj));
+                cls.assign_accessors(internal::bridge::object(m_object.get_realm(), obj));
                 return cls;
             } else {
                 return m_val.get();
@@ -332,7 +323,7 @@ namespace realm {
         };
         bool is_managed;
         std::string m_key;
-        internal::bridge::object* m_object = nullptr;
+        internal::bridge::object m_object;
     };
     template <typename V, typename = void>
     struct box;
@@ -393,7 +384,7 @@ struct box<std::optional<V>, std::enable_if_t<std::is_base_of_v<object_base<V>, 
 
         box<mapped_type> operator[](const std::string& a) {
             if (this->m_object) {
-                return box<mapped_type>(this->managed, a, this->m_object);
+                return box<mapped_type>(this->managed, a, &*this->m_object);
             } else {
                 return box<mapped_type>(this->unmanaged[a]);
             }
@@ -404,7 +395,7 @@ struct box<std::optional<V>, std::enable_if_t<std::is_base_of_v<object_base<V>, 
             for (auto& [k, v] : this->unmanaged) {
                 if constexpr (internal::type_info::is_optional<T>::value) {
                     if constexpr (std::is_base_of_v<realm::object<typename T::value_type>, typename T::value_type>) {
-                        (*v).manage(object->obj().get_target_table(col_key),
+                        (*v).manage(object->get_obj().get_target_table(col_key),
                                  object->get_realm());
                         managed.insert(k, internal::bridge::mixed(persisted<T>::serialize(*v)));
                     } else if constexpr (std::is_base_of_v<embedded_object<typename T::value_type>, typename T::value_type>) {
@@ -414,12 +405,12 @@ struct box<std::optional<V>, std::enable_if_t<std::is_base_of_v<object_base<V>, 
                     managed.insert(k, internal::bridge::mixed(persisted < T > ::serialize(v)));
                 }
             }
-            this->unmanaged.~map<std::string, T>();
+            this->unmanaged.clear();
             assign_accessor(object, std::move(col_key));
         }
 
         void assign_accessor(internal::bridge::object *object, internal::bridge::col_key &&col_key) override {
-            this->m_object = object;
+            this->m_object = *object;
             new (&this->managed) internal::bridge::dictionary(object->get_dictionary(col_key));
         }
         __cpp_realm_friends

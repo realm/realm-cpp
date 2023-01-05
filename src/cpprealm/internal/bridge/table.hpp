@@ -2,6 +2,7 @@
 #define CPP_REALM_BRIDGE_TABLE_HPP
 
 #include <string>
+#include <vector>
 #include <cpprealm/internal/bridge/obj_key.hpp>
 
 namespace realm {
@@ -31,11 +32,21 @@ namespace realm {
 
             [[nodiscard]] bool is_embedded() const;
 
-            query query(const std::string &, const std::vector <mixed>&) const;
+            struct query query(const std::string &, const std::vector <mixed>&) const;
 
             void remove_object(const obj_key &) const;
             using underlying = TableRef;
-            unsigned char m_table[16]{};
+#ifdef __i386__
+         std::aligned_storage<12, 4>::type m_table[1];
+#elif __x86_64__
+        std::aligned_storage<16, 8>::type m_table[1];
+#elif __arm__
+        std::aligned_storage<16, 8>::type m_table[1];
+#elif __aarch64__
+        std::aligned_storage<16, 8>::type m_table[1];
+#else
+        std::aligned_storage<12, 4>::type m_table[1];
+#endif
         };
 
         bool operator==(const table &, const table &);

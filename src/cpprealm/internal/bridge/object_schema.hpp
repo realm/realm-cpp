@@ -1,6 +1,8 @@
 #ifndef CPP_REALM_BRIDGE_OBJECT_SCHEMA_HPP
 #define CPP_REALM_BRIDGE_OBJECT_SCHEMA_HPP
 
+#include <cstdint>
+#include <string>
 #include <vector>
 
 namespace realm {
@@ -19,7 +21,7 @@ namespace realm::internal::bridge {
                       object_type type);
         object_schema(const ObjectSchema&);
         operator ObjectSchema() const;
-        int64_t table_key();
+        uint32_t table_key();
         void add_property(const property&);
 
         void set_name(const std::string& name);
@@ -27,7 +29,21 @@ namespace realm::internal::bridge {
         void set_object_type(object_type);
         property property_for_name(const std::string&);
     private:
-        unsigned char m_schema[128]{};
+#ifdef __i386__
+        std::aligned_storage<68, 4>::type m_schema[1];
+#elif __x86_64__
+    #if defined(__clang__)
+        std::aligned_storage<128, 8>::type m_schema[1];
+    #elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<152, 8>::type m_schema[1];
+    #endif
+#elif __arm__
+        std::aligned_storage<68, 4>::type m_schema[1];
+#elif __aarch64__
+        std::aligned_storage<128, 8>::type m_schema[1];
+#else
+        std::aligned_storage68, 4>::type m_schema[1];
+#endif
     };
 }
 

@@ -21,7 +21,6 @@
 
 #include <any>
 
-#include <cpprealm/type_info.hpp>
 #include <cpprealm/internal/bridge/object_schema.hpp>
 #include <cpprealm/internal/bridge/results.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
@@ -104,14 +103,14 @@ struct results {
 
         reference operator*() noexcept
         {
-            auto obj = m_parent->m_parent.template get<Obj>(m_idx);
+            auto obj = internal::bridge::get<Obj>(m_parent->m_parent, m_idx);
             value = std::move(T::schema.create(std::move(obj), m_parent->m_parent.get_realm()));
             return value;
         }
 
         pointer operator->() const noexcept
         {
-            auto obj = m_parent->m_parent.template get<Obj>(m_idx);
+            auto obj = internal::bridge::get<Obj>(m_parent->m_parent, m_idx);
             return T::schema::create_unique(std::move(obj), m_parent->m_parent.get_realm());
         }
 
@@ -155,8 +154,7 @@ struct results {
     {
         if (index >= m_parent.size())
             throw std::out_of_range("Index out of range.");
-        auto object = internal::bridge::object(m_parent.get_realm(),
-                                               m_parent.template get<internal::bridge::obj>(index));
+        auto object = internal::bridge::object(m_parent.get_realm(), internal::bridge::get<internal::bridge::obj>(m_parent, index));
         auto cls = T();
         cls.assign_accessors(object);
         return cls;

@@ -2,6 +2,7 @@
 #define CPP_REALM_BRIDGE_PROPERTY_HPP
 
 #include <functional>
+#include <string>
 
 namespace realm {
     class Property;
@@ -49,7 +50,21 @@ namespace realm::internal::bridge {
         void set_type(type);
         [[nodiscard]] col_key column_key() const;
     private:
-        unsigned char m_property[120]{};
+#ifdef __i386__
+        std::aligned_storage<64, 4>::type m_property[1];
+#elif __x86_64__
+    #if defined(__clang__)
+        std::aligned_storage<120, 8>::type m_property[1];
+    #elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<152, 8>::type m_property[1];
+    #endif
+#elif __arm__
+        std::aligned_storage<64, 8>::type m_property[1];
+#elif __aarch64__
+        std::aligned_storage<120, 8>::type m_property[1];
+#else
+        std::aligned_storage<120, 4>::type m_property[1];
+#endif
     };
 
     namespace {

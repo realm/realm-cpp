@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <string>
+#include <memory>
 
 namespace realm {
     class List;
@@ -53,23 +54,7 @@ namespace realm::internal::bridge {
         }
         obj add_embedded();
 
-        template <typename ValueType>
-        ValueType get(size_t idx) const;
-        template <>
-        [[nodiscard]] std::string get(size_t idx) const;
-        template <>
-        [[nodiscard]] int64_t get(size_t idx) const;
-        template <>
-        [[nodiscard]] binary get(size_t idx) const;
-        template <>
-        [[nodiscard]] uuid get(size_t idx) const;
-        template <>
-        [[nodiscard]] mixed get(size_t idx) const;
-        template <>
-        [[nodiscard]] obj get(size_t idx) const;
-
         [[nodiscard]] realm get_realm() const;
-
 
         void set(size_t pos, const int64_t &);
         void set(size_t pos, const bool &);
@@ -99,8 +84,35 @@ namespace realm::internal::bridge {
         }
         notification_token add_notification_callback(std::shared_ptr<collection_change_callback>);
     private:
-        unsigned char m_list[80]{};
+        template <typename ValueType>
+        friend ValueType get(const list&, size_t idx);
+#ifdef __i386__
+        std::aligned_storage<40, 4>::type m_list[1];
+#elif __x86_64__
+        std::aligned_storage<80, 8>::type m_list[1];
+#elif __arm__
+        std::aligned_storage<40, 4>::type m_list[1];
+#elif __aarch64__
+        std::aligned_storage<80, 8>::type m_list[1];
+#else
+        std::aligned_storage<80, 8>::type m_list[1];
+#endif
     };
+
+    template <typename ValueType>
+    [[nodiscard]] ValueType get(const list&, size_t idx);
+    template <>
+    [[nodiscard]] std::string get(const list&, size_t idx);
+    template <>
+    [[nodiscard]] int64_t get(const list&, size_t idx);
+    template <>
+    [[nodiscard]] binary get(const list&, size_t idx);
+    template <>
+    [[nodiscard]] uuid get(const list&, size_t idx);
+    template <>
+    [[nodiscard]] mixed get(const list&, size_t idx);
+    template <>
+    [[nodiscard]] obj get(const list&, size_t idx);
 }
 
 #endif //CPP_REALM_BRIDGE_LIST_HPP

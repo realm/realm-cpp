@@ -83,7 +83,7 @@ TEST_CASE("flx_sync", "[flx][sync]") {
 
         synced_realm.refresh();
         objs = synced_realm.objects<AllTypesObject>();
-        CHECK(objs.size() == 1);
+        CHECK(objs.size() == 2);
     }
 }
 

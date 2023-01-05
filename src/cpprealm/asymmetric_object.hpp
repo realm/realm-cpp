@@ -58,7 +58,7 @@ namespace realm {
                 }
                 std::apply([this](auto&&... p) {
                     ((static_cast<T&>(*this).*(std::decay_t<decltype(p)>::ptr))
-                            .manage(&*this->m_object, this->m_object->obj().get_table().get_column_key(p.name)), ...);
+                            .manage(&*this->m_object, this->m_object->get_obj().get_table().get_column_key(p.name)), ...);
                 }, T::schema.ps);
 //                assign_accessors(*this->m_object);
             }

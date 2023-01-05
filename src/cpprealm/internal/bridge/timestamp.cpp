@@ -3,6 +3,23 @@
 #include <realm/timestamp.hpp>
 
 namespace realm::internal::bridge {
+#ifdef __i386__
+    static_assert(SizeCheck<16, sizeof(Timestamp)>{});
+    static_assert(SizeCheck<4, alignof(Timestamp)>{});
+#elif __x86_64__
+    static_assert(SizeCheck<16, sizeof(Timestamp)>{});
+    static_assert(SizeCheck<8, alignof(Timestamp)>{});
+#elif __arm__
+    static_assert(SizeCheck<16, sizeof(Timestamp)>{});
+    static_assert(SizeCheck<8, alignof(Timestamp)>{});
+#elif __aarch64__
+    static_assert(SizeCheck<16, sizeof(Timestamp)>{});
+    static_assert(SizeCheck<8, alignof(Timestamp)>{});
+#else
+    static_assert(SizeCheck<12, sizeof(Timestamp)>{});
+    static_assert(SizeCheck<4, alignof(Timestamp)>{});
+#endif
+
     timestamp::timestamp(const realm::Timestamp &v) {
         new (&m_timestamp) Timestamp(v);
     }

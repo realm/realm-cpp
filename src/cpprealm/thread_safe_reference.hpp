@@ -23,7 +23,6 @@
 #include <queue>
 #include <iostream>
 
-#include <cpprealm/type_info.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/thread_safe_reference.hpp>
 

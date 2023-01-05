@@ -32,7 +32,7 @@ namespace realm {
         std::enable_if_t<std::is_arithmetic_v<T>, persisted&> // NOLINT(misc-unconventional-assign-operator)
         operator=(const T& o) {
             if (this->is_managed()) {
-                this->m_object->obj().template set<int64_t>(
+                this->m_object->get_obj().template set<int64_t>(
                         this->managed,
                         static_cast<int64_t>(o));
             } else {
@@ -40,7 +40,43 @@ namespace realm {
             }
             return *this;
         }
-    protected:
+        template<typename T>
+        std::enable_if_t<std::is_integral_v<T>>
+        operator+=(const T& o) {
+            if (this->is_managed()) {
+                auto old_val = deserialize(this->m_object->get_obj().get<int64_t>(this->managed));
+                this->m_object->get_obj().template set<int64_t>(
+                        this->managed,
+                        static_cast<int64_t>(old_val + o));
+            } else {
+                this->unmanaged += T(o);
+            }
+        }
+        template<typename T>
+        std::enable_if_t<std::is_integral_v<T>>
+        operator-=(const T& o) {
+            if (this->is_managed()) {
+                auto old_val = deserialize(this->m_object->get_obj().get<int64_t>(this->managed));
+                this->m_object->get_obj().template set<int64_t>(
+                        this->managed,
+                        static_cast<int64_t>(old_val - o));
+            } else {
+                this->unmanaged -= T(o);
+            }
+        }
+        template<typename T>
+        std::enable_if_t<std::is_integral_v<T>>
+        operator*=(const T& o) {
+            if (this->is_managed()) {
+                auto old_val = deserialize(this->m_object->get_obj().get<int64_t>(this->managed));
+                this->m_object->get_obj().template set<int64_t>(
+                        this->managed,
+                        static_cast<int64_t>(old_val * o));
+            } else {
+                this->unmanaged *= T(o);
+            }
+        }
+            protected:
         static int64_t serialize(int64_t);
         static int64_t deserialize(int64_t);
 
@@ -53,13 +89,49 @@ namespace realm {
         std::enable_if_t<std::is_arithmetic_v<T>, persisted&> // NOLINT(misc-unconventional-assign-operator)
         operator=(const T& o) {
             if (this->is_managed()) {
-                this->m_object->obj().template set<double>(
+                this->m_object->get_obj().template set<double>(
                         this->managed,
                         static_cast<double>(o));
             } else {
                 new (&this->unmanaged) T(o);
             }
             return *this;
+        }
+        template<typename T>
+        std::enable_if_t<std::is_floating_point_v<T>>
+        operator+=(const T& o) {
+            if (this->is_managed()) {
+                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed));
+                this->m_object->get_obj().template set<double>(
+                        this->managed,
+                        static_cast<double>(old_val + o));
+            } else {
+                this->unmanaged += T(o);
+            }
+        }
+        template<typename T>
+        std::enable_if_t<std::is_floating_point_v<T>>
+        operator-=(const T& o) {
+            if (this->is_managed()) {
+                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed));
+                this->m_object->get_obj().template set<double>(
+                        this->managed,
+                        static_cast<double>(old_val - o));
+            } else {
+                this->unmanaged -= T(o);
+            }
+        }
+        template<typename T>
+        std::enable_if_t<std::is_floating_point_v<T>>
+        operator*=(const T& o) {
+            if (this->is_managed()) {
+                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed));
+                this->m_object->get_obj().template set<int64_t>(
+                        this->managed,
+                        static_cast<double>(old_val * o));
+            } else {
+                this->unmanaged *= T(o);
+            }
         }
     protected:
         static double serialize(double);

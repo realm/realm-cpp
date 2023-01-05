@@ -14,15 +14,15 @@ namespace realm {
             query.contains(managed, s);
             return query;
         } else if (is_managed()) {
-            return m_object->obj().get<std::string>(managed).find(s) != npos;
+            return m_object->get_obj().get<std::string>(managed).find(s) != cpprealm::npos;
         } else {
-            return unmanaged.find(s) != npos;
+            return unmanaged.find(s) != cpprealm::npos;
         }
     }
 
     rbool persisted<std::string>::empty() const {
         if (m_object) {
-            return m_object->obj().get<std::string>(managed).empty();
+            return m_object->get_obj().get<std::string>(managed).empty();
         } else {
             return unmanaged.empty();
         }
@@ -30,7 +30,7 @@ namespace realm {
 
     size_t persisted<std::string>::size() const noexcept {
         if (m_object) {
-            return m_object->obj().get<std::string>(managed).size();
+            return m_object->get_obj().get<std::string>(managed).size();
         } else {
             return unmanaged.size();
         }
@@ -38,7 +38,7 @@ namespace realm {
 
     size_t persisted<std::string>::length() const noexcept {
         if (this->is_managed()) {
-            return m_object->obj().get<std::string>(managed).length();
+            return m_object->get_obj().get<std::string>(managed).length();
         } else {
             return unmanaged.length();
         }
@@ -46,8 +46,8 @@ namespace realm {
 
     void persisted<std::string>::push_back(char c) {
         if (this->is_managed()) {
-            m_object->obj().set(managed,
-                                m_object->obj().get<std::string>(managed) + c);
+            m_object->get_obj().set(managed,
+                                    m_object->get_obj().get<std::string>(managed) + c);
         } else {
             unmanaged.push_back(c);
         }
@@ -62,7 +62,7 @@ namespace realm {
 
     persisted<std::string> &persisted<std::string>::operator=(const char *v) {
         if (this->is_managed()) {
-            m_object->obj().set(managed, std::string(v));
+            m_object->get_obj().set(managed, std::string(v));
         } else {
             unmanaged = v;
         }

@@ -155,7 +155,7 @@ struct object_base {
                 // FIXME: It's possible for the column key of a persisted property
                 // to equal the column key of a computed property.
                 auto properties = std::vector<std::string>();
-                auto table = m_object.obj().get_table();
+                auto table = m_object.get_obj().get_table();
 
                 for (auto i = 0; i < std::tuple_size<decltype(T::schema.properties)>{}; i++) {
                     if (c.columns().count(table.get_column_key(T::schema.names[i]).value())) {
@@ -257,7 +257,7 @@ protected:
             }
             std::apply([this](auto&&... p) {
                 ((static_cast<T&>(*this).*(std::decay_t<decltype(p)>::ptr))
-                        .manage(&*m_object, m_object->obj().get_table().get_column_key(p.name)), ...);
+                        .manage(&*m_object, m_object->get_obj().get_table().get_column_key(p.name)), ...);
             }, T::schema.ps);
             assign_accessors(*m_object);
         }
@@ -266,7 +266,7 @@ protected:
         m_object = std::move(object);
         std::apply([this](auto&&... p) {
             ((static_cast<T&>(*this).*(std::decay_t<decltype(p)>::ptr))
-                    .manage(&*m_object, m_object->obj().get_table().get_column_key(p.name)), ...);
+                    .manage(&*m_object, m_object->get_obj().get_table().get_column_key(p.name)), ...);
         }, T::schema.ps);
         assign_accessors(*m_object);
     }
@@ -274,7 +274,7 @@ protected:
         m_object = object;
         std::apply([this](auto&&... p) {
             ((static_cast<T&>(*this).*(std::decay_t<decltype(p)>::ptr))
-                .assign_accessor(&*m_object, m_object->obj().get_table().get_column_key(p.name)), ...);
+                .assign_accessor(&*m_object, m_object->get_obj().get_table().get_column_key(p.name)), ...);
         }, T::schema.ps);
     }
 
@@ -382,8 +382,8 @@ inline std::enable_if_t<std::is_base_of_v<object_base<T>, T>, bool> operator==(c
             return false;
         }
 
-        auto obj1 = a.obj();
-        auto obj2 = b.obj();
+        auto obj1 = a.get_obj();
+        auto obj2 = b.get_obj();
         // if table and index are the same
         return obj1.get_table() == obj2.get_table()
             && obj1.get_key() == obj2.get_key();

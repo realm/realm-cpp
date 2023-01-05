@@ -1,4 +1,4 @@
-#include "thread_safe_reference.hpp"
+#include <cpprealm/internal/bridge/thread_safe_reference.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
@@ -6,9 +6,25 @@
 #include <realm/object-store/dictionary.hpp>
 #include <realm/object-store/thread_safe_reference.hpp>
 
-namespace realm::internal::bridge {
-    static_assert(SizeCheck<8, sizeof(ThreadSafeReference)>{});
+#include <memory>
 
+namespace realm::internal::bridge {
+#ifdef __i386__
+    static_assert(SizeCheck<4, sizeof(ThreadSafeReference)>{});
+    static_assert(SizeCheck<4, alignof(ThreadSafeReference)>{});
+#elif __x86_64__
+    static_assert(SizeCheck<8, sizeof(ThreadSafeReference)>{});
+    static_assert(SizeCheck<8, alignof(ThreadSafeReference)>{});
+#elif __arm__
+    static_assert(SizeCheck<4, sizeof(ThreadSafeReference)>{});
+    static_assert(SizeCheck<4, alignof(ThreadSafeReference)>{});
+#elif __aarch64__
+    static_assert(SizeCheck<8, sizeof(ThreadSafeReference)>{});
+    static_assert(SizeCheck<8, alignof(ThreadSafeReference)>{});
+#else
+    static_assert(SizeCheck<12, sizeof(ThreadSafeReference)>{});
+    static_assert(SizeCheck<4, alignof(ThreadSafeReference)>{});
+#endif
     thread_safe_reference::thread_safe_reference(const object &o) {
         new (&m_thread_safe_reference) ThreadSafeReference(static_cast<Object>(o));
     }

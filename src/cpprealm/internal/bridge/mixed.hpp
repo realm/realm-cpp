@@ -62,7 +62,17 @@ namespace realm::internal::bridge {
         [[nodiscard]] bool is_null() const noexcept;
     private:
         std::string m_owned_string;
-        unsigned char m_mixed[48]{};
+#ifdef __i386__
+        std::aligned_storage<20, 4>::type m_mixed[1];
+#elif __x86_64__
+        std::aligned_storage<24, 8>::type m_mixed[1];
+#elif __arm__
+        std::aligned_storage<24, 8>::type m_mixed[1];
+#elif __aarch64__
+        std::aligned_storage<24, 8>::type m_mixed[1];
+#else
+        std::aligned_storage<24, 8>::type m_mixed[1];
+#endif
     };
 }
 

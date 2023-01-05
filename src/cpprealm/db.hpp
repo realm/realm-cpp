@@ -26,7 +26,6 @@
 #include <cpprealm/analytics.hpp>
 #endif
 
-#include <cpprealm/type_info.hpp>
 #include <cpprealm/results.hpp>
 #include <cpprealm/task.hpp>
 #include <cpprealm/flex_sync.hpp>
@@ -121,12 +120,12 @@ struct db {
         auto group = m_realm.read_group();
         auto schema = object.m_object->get_object_schema();
         auto table = group.get_table(schema.table_key());
-        table.remove_object(object.m_object->obj().get_key());
+        table.remove_object(object.m_object->get_obj().get_key());
     }
 
     void removeAll()
     {
-        REALM_TERMINATE("not implemented");
+        abort();//REALM_TERMINATE("not implemented");
     }
 
     template <typename T>
@@ -147,7 +146,7 @@ struct db {
     T resolve(thread_safe_reference<T>&& tsr)
     {
         T cls;
-        cls.assign_accessors(m_realm.resolve<internal::bridge::object>(std::move(tsr.m_tsr)));
+        cls.assign_accessors(internal::bridge::resolve<internal::bridge::object>(m_realm, std::move(tsr.m_tsr)));
         return cls;
     }
 

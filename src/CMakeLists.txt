@@ -2,7 +2,6 @@ set(SOURCES
     cpprealm/app.cpp
     cpprealm/sdk.cpp
     cpprealm/analytics.cpp
-    cpprealm/type_info.cpp
     cpprealm/thread_safe_reference.cpp
     cpprealm/internal/bridge/obj.hpp
     cpprealm/internal/bridge/obj.cpp
@@ -79,7 +78,6 @@ set(HEADERS
     cpprealm/schema.hpp
     cpprealm/task.hpp
     cpprealm/thread_safe_reference.hpp
-    cpprealm/type_info.hpp
     cpprealm/flex_sync.hpp
     cpprealm/persisted_string.hpp
     cpprealm/persisted_bool.hpp
@@ -99,7 +97,7 @@ set(HEADERS
 #    cpprealm/asymmetric_object.hpp
         ) # REALM_INSTALL_HEADERS
 
-add_library(cpprealm SHARED ${SOURCES} ${HEADERS})
+add_library(cpprealm STATIC ${SOURCES} ${HEADERS})
 
 set_target_properties(cpprealm PROPERTIES PUBLIC_HEADER "${HEADERS}")
 

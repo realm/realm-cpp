@@ -20,7 +20,6 @@
 #define realm_persisted_hpp
 
 #include <cpprealm/internal/type_info.hpp>
-#include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/query.hpp>
 
 #include <cpprealm/schema.hpp>
@@ -144,6 +143,9 @@
     }
 
 namespace realm {
+    namespace cpprealm {
+        constexpr size_t npos = size_t(-1);
+    }
     namespace {
         template<typename T>
         using is_optional = internal::type_info::is_optional<T>;
@@ -183,7 +185,7 @@ protected:
     virtual void assign_accessor(internal::bridge::object* object,
                                  internal::bridge::col_key&& col_key) = 0;
 
-    internal::bridge::object *m_object = nullptr;
+    std::optional<internal::bridge::object> m_object;
 
     // MARK: Queries
     bool should_detect_usage_for_queries = false;
@@ -229,7 +231,7 @@ protected:
 
         persisted_primitive_base& operator=(const T& o) noexcept {
             if (this->is_managed()) {
-                this->m_object->obj().template set(managed, serialize(o));
+                this->m_object.obj().template set(managed, serialize(o));
             } else {
                 new (&unmanaged) T(o);
             }
@@ -238,7 +240,7 @@ protected:
 
         persisted_primitive_base& operator=(T&& o) noexcept {
             if (this->is_managed()) {
-                this->m_object->obj().set(managed, o);
+                this->m_object->get_obj().set(managed, o);
             } else {
                 new (&unmanaged) T(std::move(o));
             }
@@ -251,7 +253,7 @@ protected:
                 new (&managed) internal::bridge::col_key(o.managed);
             } else {
                 if (this->is_managed()) {
-                    this->m_object->obj().set(managed, o.unmanaged);
+                    this->m_object->get_obj().set(managed, o.unmanaged);
                 } else {
                     new (&unmanaged) T(o.unmanaged);
                 }
@@ -266,7 +268,7 @@ protected:
                 new (&managed) internal::bridge::col_key(std::move(o.managed));
             } else {
                 if (this->is_managed()) {
-                    this->m_object->obj().set(managed, std::move(o.unmanaged));
+                    this->m_object->get_obj().set(managed, std::move(o.unmanaged));
                 } else {
                     new (&unmanaged) T(std::move(o.unmanaged));
                 }
@@ -276,7 +278,7 @@ protected:
 
         T operator *() const {
             if (this->is_managed()) {
-                return persisted<T>::deserialize(this->m_object->obj()
+                return persisted<T>::deserialize(this->m_object->get_obj()
                         .template get<typename internal::type_info::type_info<T>::internal_type>(this->managed));
             } else {
                 return this->unmanaged;
@@ -290,12 +292,12 @@ protected:
 
         void manage(internal::bridge::object* object,
                     internal::bridge::col_key&& col_key) final {
-            object->obj().set(col_key, persisted<T>::serialize(unmanaged));
+            object->get_obj().set(col_key, persisted<T>::serialize(unmanaged));
             assign_accessor(object, std::move(col_key));
         }
         void assign_accessor(internal::bridge::object* object,
                              internal::bridge::col_key&& col_key) final {
-            this->m_object = object;
+            this->m_object = *object;
             new (&this->managed) internal::bridge::col_key(col_key);
         }
     };
@@ -365,7 +367,7 @@ inline typename std::enable_if<std::is_base_of<realm::object_base<T>, T>::value,
 operator<< (std::ostream& stream, const T& object)
 {
     if (object.m_object) {
-        return stream << object.m_object->obj();
+        return stream << object.m_object->get_obj();
     }
 
     std::apply([&stream, &object](auto&&... props) {

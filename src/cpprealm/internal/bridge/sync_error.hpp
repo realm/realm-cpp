@@ -29,7 +29,21 @@ namespace realm::internal::bridge {
         /// The error indicates a client reset situation.
         [[nodiscard]] bool is_client_reset_requested() const;
     private:
-        unsigned char m_error[152]{};
+#ifdef __i386__
+        std::aligned_storage<80, 4>::type m_error[1];
+#elif __x86_64__
+    #if defined(__clang__)
+        std::aligned_storage<152, 8>::type m_error[1];
+    #elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<176, 8>::type m_error[1];
+    #endif
+#elif __arm__
+        std::aligned_storage<80, 4>::type m_error[1];
+#elif __aarch64__
+        std::aligned_storage<152, 8>::type m_error[1];
+#else
+        std::aligned_storage<80, 4>::type m_error[1];
+#endif
     };
 }
 

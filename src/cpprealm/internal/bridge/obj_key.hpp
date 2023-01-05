@@ -1,6 +1,7 @@
 #ifndef CPP_REALM_BRIDGE_OBJ_KEY_HPP
 #define CPP_REALM_BRIDGE_OBJ_KEY_HPP
 #include <cinttypes>
+#include <type_traits>
 
 namespace realm {
     class ObjKey;
@@ -13,7 +14,17 @@ namespace realm::internal::bridge {
         obj_key();
         operator ObjKey() const;
     private:
-        unsigned char m_obj_key[8]{};
+#ifdef __i386__
+        std::aligned_storage<8, 4>::type m_obj_key[1];
+#elif __x86_64__
+        std::aligned_storage<8, 8>::type m_obj_key[1];
+#elif __arm__
+        std::aligned_storage<8, 8>::type m_obj_key[1];
+#elif __aarch64__
+        std::aligned_storage<8, 8>::type m_obj_key[1];
+#else
+        std::aligned_storage<8, 4>::type m_obj_key[1];
+#endif
     };
 
     bool operator==(const obj_key &, const obj_key &);

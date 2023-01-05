@@ -1,5 +1,5 @@
-#ifndef REALM_UTILS_HPP
-#define REALM_UTILS_HPP
+#ifndef REALM_BRIDGE_UTILS_HPP
+#define REALM_BRIDGE_UTILS_HPP
 
 #include <functional>
 #include <string_view>
@@ -19,4 +19,4 @@ namespace realm::internal::bridge {
     };
 }
 
-#endif //REALM_UTILS_HPP
+#endif //REALM_BRIDGE_UTILS_HPP

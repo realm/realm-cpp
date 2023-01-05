@@ -12,7 +12,22 @@
 #include <realm/object-store/list.hpp>
 
 namespace realm::internal::bridge {
+#ifdef __i386__
+    static_assert(SizeCheck<40, sizeof(List)>{});
+    static_assert(SizeCheck<4, alignof(List)>{});
+#elif __x86_64__
     static_assert(SizeCheck<80, sizeof(List)>{});
+    static_assert(SizeCheck<8, alignof(List)>{});
+    #elif __arm__
+    static_assert(SizeCheck<40, sizeof(List)>{});
+    static_assert(SizeCheck<4, alignof(List)>{});
+    #elif __aarch64__
+    static_assert(SizeCheck<80, sizeof(List)>{});
+    static_assert(SizeCheck<8, alignof(List)>{});
+    #else
+    static_assert(SizeCheck<80, sizeof(List)>{});
+    static_assert(SizeCheck<8, alignof(List)>{});
+#endif
 
     list::list() {
         new (&m_list) List();
@@ -78,36 +93,36 @@ namespace realm::internal::bridge {
     }
 
     template <>
-    std::string list::get(size_t idx) const {
-        return reinterpret_cast<const List *>(m_list)->get<StringData>(idx);
+    std::string get(const list& lst, size_t idx) {
+        return reinterpret_cast<const List *>(lst.m_list)->get<StringData>(idx);
     }
     template <>
-    int64_t list::get(size_t idx) const {
-        return reinterpret_cast<const List *>(m_list)->get<Int>(idx);
+    int64_t get(const list& lst, size_t idx) {
+        return reinterpret_cast<const List *>(lst.m_list)->get<Int>(idx);
     }
     template <>
-    binary list::get(size_t idx) const {
-        return reinterpret_cast<const List *>(m_list)->get<BinaryData>(idx);
+    binary get(const list& lst, size_t idx) {
+        return reinterpret_cast<const List *>(lst.m_list)->get<BinaryData>(idx);
     }
     template <>
-    uuid list::get(size_t idx) const {
-        return reinterpret_cast<const List *>(m_list)->get<UUID>(idx);
+    uuid get(const list& lst, size_t idx) {
+        return reinterpret_cast<const List *>(lst.m_list)->get<UUID>(idx);
     }
     template <>
-    mixed list::get(size_t idx) const {
-        return reinterpret_cast<const List *>(m_list)->get<Mixed>(idx);
+    mixed get(const list& lst, size_t idx) {
+        return reinterpret_cast<const List *>(lst.m_list)->get<Mixed>(idx);
     }
     template <>
-    obj list::get(size_t idx) const {
-        return reinterpret_cast<const List *>(m_list)->get<Obj>(idx);
+    obj get(const list& lst, size_t idx) {
+        return reinterpret_cast<const List *>(lst.m_list)->get<Obj>(idx);
     }
     template <>
-    bool list::get(size_t idx) const {
-        return reinterpret_cast<const List *>(m_list)->get<Bool>(idx);
+    bool get(const list& lst, size_t idx) {
+        return reinterpret_cast<const List *>(lst.m_list)->get<Bool>(idx);
     }
     template <>
-    timestamp list::get(size_t idx) const {
-        return reinterpret_cast<const List *>(m_list)->get<Timestamp>(idx);
+    timestamp get(const list& lst, size_t idx) {
+        return reinterpret_cast<const List *>(lst.m_list)->get<Timestamp>(idx);
     }
 
     void list::set(size_t pos, const int64_t &v) { reinterpret_cast<List *>(m_list)->set(pos, v); }

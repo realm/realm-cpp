@@ -4,8 +4,26 @@
 #include <realm/sync/config.hpp>
 
 namespace realm::internal::bridge {
+#ifdef __i386__
+    static_assert(SizeCheck<80, sizeof(SyncError)>{});
+    static_assert(SizeCheck<4, alignof(SyncError)>{});
+#elif __x86_64__
+    #if defined(__clang__)
     static_assert(SizeCheck<152, sizeof(SyncError)>{});
-
+    #elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(SizeCheck<176, sizeof(SyncError)>{});
+    #endif
+    static_assert(SizeCheck<8, alignof(SyncError)>{});
+#elif __arm__
+    static_assert(SizeCheck<80, sizeof(SyncError)>{});
+    static_assert(SizeCheck<4, alignof(SyncError)>{});
+#elif __aarch64__
+    static_assert(SizeCheck<152, sizeof(SyncError)>{});
+    static_assert(SizeCheck<8, alignof(SyncError)>{});
+#else
+    static_assert(SizeCheck<80, sizeof(SyncError)>{});
+    static_assert(SizeCheck<4, alignof(SyncError)>{});
+#endif
     std::string sync_error::message() const {
         return reinterpret_cast<const SyncError*>(m_error)->message;
     }

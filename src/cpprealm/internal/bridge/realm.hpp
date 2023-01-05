@@ -1,8 +1,11 @@
 #ifndef CPP_REALM_BRIDGE_REALM_HPP
 #define CPP_REALM_BRIDGE_REALM_HPP
 
-#include <string>
+#include <memory>
 #include <optional>
+#include <string>
+#include <vector>
+#include <functional>
 
 namespace realm {
     class Realm;
@@ -62,15 +65,33 @@ namespace realm::internal::bridge {
                    const std::shared_ptr<scheduler>& scheduler,
                    const std::optional<sync_config>& sync_config);
             [[nodiscard]] std::string path() const;
-            [[nodiscard]] sync_config sync_config() const;
-            [[nodiscard]] std::shared_ptr<scheduler> scheduler() const;
+            [[nodiscard]] struct sync_config sync_config() const;
+            [[nodiscard]] std::shared_ptr<struct scheduler> scheduler();
             operator RealmConfig() const; //NOLINT(google-explicit-constructor)
             void set_path(const std::string&);
             void set_schema(const std::vector<object_schema>&);
             void set_scheduler(const std::shared_ptr<struct scheduler>&);
             void set_sync_config(const std::optional<struct sync_config>&);
         private:
-            unsigned char m_config[312]{};
+#ifdef __i386__
+            std::aligned_storage<192, 8>::type m_config[1];
+#elif __x86_64__
+    #if defined(__clang__)
+        std::aligned_storage<368, 16>::type m_config[1];
+    #elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<368, 8>::type m_config[1];
+    #endif
+#elif __arm__
+            std::aligned_storage<192, 8>::type m_config[1];
+#elif __aarch64__
+#if __ANDROID__
+            std::aligned_storage<368, 16>::type m_config[1];
+#else
+            std::aligned_storage<312, 8>::type m_config[1];
+#endif
+#else
+            std::aligned_storage<368, 16>::type m_config[1];
+#endif
         };
         realm();
         realm(const config&); //NOLINT(google-explicit-constructor)
@@ -79,23 +100,24 @@ namespace realm::internal::bridge {
         operator std::shared_ptr<Realm>() const; //NOLINT(google-explicit-constructor)
         group read_group();
         [[nodiscard]] config get_config() const;
-        [[nodiscard]] schema schema() const;
+        [[nodiscard]] struct schema schema() const;
         void begin_transaction() const;
         void commit_transaction() const;
         table table_for_object_type(const std::string& object_type);
-        template <typename T>
-        T resolve(thread_safe_reference&& tsr);
-        template <>
-        dictionary resolve(thread_safe_reference&& tsr);
-        template <>
-        object resolve(thread_safe_reference&& tsr);
-        [[nodiscard]] std::shared_ptr<scheduler> scheduler() const;
+        [[nodiscard]] std::shared_ptr<struct scheduler> scheduler() const;
         static async_open_task get_synchronized_realm(const config&);
         bool refresh();
     private:
         std::shared_ptr<Realm> m_realm;
         friend struct group;
     };
+
+    template <typename T>
+    T resolve(const realm&, thread_safe_reference&& tsr);
+    template <>
+    dictionary resolve(const realm&, thread_safe_reference&& tsr);
+    template <>
+    object resolve(const realm&, thread_safe_reference&& tsr);
 
     bool operator ==(const realm&, const realm&);
     bool operator !=(const realm&, const realm&);

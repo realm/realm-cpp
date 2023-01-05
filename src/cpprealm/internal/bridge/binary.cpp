@@ -4,7 +4,22 @@
 #include <realm/binary_data.hpp>
 
 namespace realm::internal::bridge {
-    static_assert(SizeCheck<16, sizeof(OwnedBinaryData)>{});
+#ifdef __i386__
+        static_assert(SizeCheck<8, sizeof(OwnedBinaryData)>{});
+        static_assert(SizeCheck<4, alignof(OwnedBinaryData)>{});
+#elif __x86_64__
+        static_assert(SizeCheck<16, sizeof(OwnedBinaryData)>{});
+        static_assert(SizeCheck<8, alignof(OwnedBinaryData)>{});
+#elif __arm__
+        static_assert(SizeCheck<8, sizeof(OwnedBinaryData)>{});
+        static_assert(SizeCheck<4, alignof(OwnedBinaryData)>{});
+#elif __aarch64__
+        static_assert(SizeCheck<16, sizeof(OwnedBinaryData)>{});
+        static_assert(SizeCheck<8, alignof(OwnedBinaryData)>{});
+#else
+        static_assert(SizeCheck<8, sizeof(OwnedBinaryData)>{});
+        static_assert(SizeCheck<4, alignof(OwnedBinaryData)>{});
+#endif
 
     char binary::operator[](size_t i) const noexcept {
         return reinterpret_cast<const BinaryData*>(m_data)->operator[](i);

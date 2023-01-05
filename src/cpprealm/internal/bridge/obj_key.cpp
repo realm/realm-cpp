@@ -4,7 +4,22 @@
 #include <realm/obj.hpp>
 
 namespace realm::internal::bridge {
+#ifdef __i386__
     static_assert(SizeCheck<8, sizeof(ObjKey)>{});
+    static_assert(SizeCheck<4, alignof(ObjKey)>{});
+#elif __x86_64__
+    static_assert(SizeCheck<8, sizeof(ObjKey)>{});
+    static_assert(SizeCheck<8, alignof(ObjKey)>{});
+#elif __arm__
+    static_assert(SizeCheck<8, sizeof(ObjKey)>{});
+    static_assert(SizeCheck<8, alignof(ObjKey)>{});
+#elif __aarch64__
+    static_assert(SizeCheck<8, sizeof(ObjKey)>{});
+    static_assert(SizeCheck<8, alignof(ObjKey)>{});
+#else
+    static_assert(SizeCheck<8, sizeof(ObjKey)>{});
+    static_assert(SizeCheck<4, alignof(ObjKey)>{});
+#endif
 
     obj_key::obj_key() {
         new (&m_obj_key) ObjKey();

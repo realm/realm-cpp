@@ -3,8 +3,22 @@
 #include <realm/mixed.hpp>
 
 namespace realm::internal::bridge {
-
+#ifdef __i386__
+    static_assert(SizeCheck<20, sizeof(Mixed)>{});
+    static_assert(SizeCheck<4, alignof(Mixed)>{});
+#elif __x86_64__
     static_assert(SizeCheck<24, sizeof(Mixed)>{});
+    static_assert(SizeCheck<8, alignof(Mixed)>{});
+#elif __arm__
+    static_assert(SizeCheck<24, sizeof(Mixed)>{});
+    static_assert(SizeCheck<8, alignof(Mixed)>{});
+#elif __aarch64__
+    static_assert(SizeCheck<24, sizeof(Mixed)>{});
+    static_assert(SizeCheck<8, alignof(Mixed)>{});
+#else
+    static_assert(SizeCheck<24, sizeof(Mixed)>{});
+    static_assert(SizeCheck<8, alignof(Mixed)>{});
+#endif
 
     mixed::mixed(const std::nullopt_t& v) {
         new (&m_mixed) Mixed(v);

@@ -6,7 +6,26 @@
 #include <realm/object-store/property.hpp>
 
 namespace realm::internal::bridge {
+#ifdef __i386__
+    static_assert(SizeCheck<68, sizeof(ObjectSchema)>{});
+    static_assert(SizeCheck<4, alignof(ObjectSchema)>{});
+#elif __x86_64__
+    #if defined(__clang__)
     static_assert(SizeCheck<128, sizeof(ObjectSchema)>{});
+    #elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(SizeCheck<152, sizeof(ObjectSchema)>{});
+    #endif
+    static_assert(SizeCheck<8, alignof(ObjectSchema)>{});
+#elif __arm__
+    static_assert(SizeCheck<68, sizeof(ObjectSchema)>{});
+    static_assert(SizeCheck<4, alignof(ObjectSchema)>{});
+#elif __aarch64__
+    static_assert(SizeCheck<128, sizeof(ObjectSchema)>{});
+    static_assert(SizeCheck<8, alignof(ObjectSchema)>{});
+#else
+    static_assert(SizeCheck<68, sizeof(ObjectSchema)>{});
+    static_assert(SizeCheck<4, alignof(ObjectSchema)>{});
+#endif
 
     object_schema::object_schema() {
         new (&m_schema) ObjectSchema();
@@ -28,7 +47,7 @@ namespace realm::internal::bridge {
         reinterpret_cast<ObjectSchema*>(m_schema)->primary_key = primary_key;
         reinterpret_cast<ObjectSchema*>(m_schema)->table_type = static_cast<ObjectSchema::ObjectType>(type);
     }
-    int64_t object_schema::table_key() {
+    uint32_t object_schema::table_key() {
         return reinterpret_cast<ObjectSchema*>(m_schema)->table_key.value;
     }
 

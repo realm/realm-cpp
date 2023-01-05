@@ -19,7 +19,6 @@
 #ifndef CPP_REALM_APP_HPP
 #define CPP_REALM_APP_HPP
 
-#include <cpprealm/type_info.hpp>
 #include <cpprealm/task.hpp>
 #include <cpprealm/db.hpp>
 #include <cpprealm/internal/generic_network_transport.hpp>
@@ -37,15 +36,12 @@
 namespace realm {
     using sync_session = internal::bridge::sync_session;
     using sync_error = internal::bridge::sync_error;
-    using sync_manager = internal::bridge::sync_manager;
 
     namespace app {
         struct AppError;
         struct AppCredentials;
     }
 // MARK: User
-template <typename ...Ts>
-static inline std::promise<thread_safe_reference<db<Ts...>>> async_open(typename db<Ts...>::config&& config);
 
 // Represents an error state from the server.
 struct app_error {
@@ -67,7 +63,21 @@ struct app_error {
 
     [[nodiscard]] bool is_client_error() const;
 private:
-    unsigned char m_error[72]{};
+#ifdef __i386__
+    std::aligned_storage<40, 4>::type m_error[1];
+#elif __x86_64__
+    #if defined(__clang__)
+std::aligned_storage<72, 8>::type m_error[1];
+    #elif defined(__GNUC__) || defined(__GNUG__)
+std::aligned_storage<88, 8>::type m_error[1];
+    #endif
+#elif __arm__
+    std::aligned_storage<40, 4>::type m_error[1];
+#elif __aarch64__
+    std::aligned_storage<72, 8>::type m_error[1];
+#else
+    std::aligned_storage<40, 4>::type m_error[1];
+#endif
 };
 
 /**
@@ -126,7 +136,7 @@ struct user {
      */
     [[nodiscard]] std::string refresh_token() const;
 
-    sync_manager sync_manager() const;
+    struct internal::bridge::sync_manager sync_manager() const;
 
     [[nodiscard]] db_config flexible_sync_configuration() const
     {
@@ -217,7 +227,7 @@ class App {
         return std::move(logger);
     }
 public:
-    explicit App(const std::string& app_id, const std::optional<std::string>& base_url = {});
+    explicit App(const std::string& app_id, const std::optional<std::string>& base_url = {}, const std::optional<std::string>& path = {});
 
     struct credentials {
         using auth_code = util::TaggedString<class auth_code_tag>;
@@ -239,7 +249,21 @@ public:
         credentials(app::AppCredentials&& credentials) noexcept;
         operator app::AppCredentials() const;
         friend class App;
-        unsigned char m_credentials[16]{};
+#if __ANDROID__
+#ifdef __i386__
+        std::aligned_storage<8, 4>::type m_credentials[1];
+#elif __x86_64__
+        std::aligned_storage<16, 8>::type m_credentials[1];
+#elif __arm__
+    std::aligned_storage<8, 4>::type m_credentials[1];
+#elif __aarch64__
+    std::aligned_storage<16, 8>::type m_credentials[1];
+#else
+    std::aligned_storage<8, 4>::type m_credentials[1];
+#endif
+#else
+        std::aligned_storage<16, 8>::type m_credentials[1];
+#endif
     };
 
     std::promise<void> register_user(const std::string& username, const std::string& password);

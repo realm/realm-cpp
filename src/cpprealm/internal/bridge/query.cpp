@@ -26,7 +26,26 @@
         return *this; \
     }
 namespace realm::internal::bridge {
+#ifdef __i386__
+    static_assert(SizeCheck<68, sizeof(Query)>{});
+    static_assert(SizeCheck<4, alignof(Query)>{});
+#elif __x86_64__
+    #if defined(__clang__)
     static_assert(SizeCheck<128, sizeof(Query)>{});
+    #elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(SizeCheck<136, sizeof(Query)>{});
+    #endif
+    static_assert(SizeCheck<8, alignof(Query)>{});
+#elif __arm__
+    static_assert(SizeCheck<80, sizeof(Query)>{});
+    static_assert(SizeCheck<8, alignof(Query)>{});
+#elif __aarch64__
+    static_assert(SizeCheck<128, sizeof(Query)>{});
+    static_assert(SizeCheck<8, alignof(Query)>{});
+#else
+    static_assert(SizeCheck<68, sizeof(Query)>{});
+    static_assert(SizeCheck<4, alignof(Query)>{});
+#endif
 
     query::query(const realm::internal::bridge::table &table) {
         new (&m_query) Query(static_cast<ConstTableRef>(table));

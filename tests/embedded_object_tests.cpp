@@ -31,7 +31,7 @@ TEST_CASE("embedded_objects") {
         });
         auto future = p.get_future();
         switch (future.wait_for(std::chrono::seconds(5))) {
-            case std::__1::future_status::ready:
+            case std::future_status::ready:
                 CHECK(future.get());
                 break;
             default:

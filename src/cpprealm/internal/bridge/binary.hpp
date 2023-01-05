@@ -18,7 +18,18 @@ namespace realm::internal::bridge {
         operator BinaryData() const; //NOLINT(google-explicit-constructor)
         char operator[](size_t i) const noexcept;
     private:
-        unsigned char m_data[16]{};
+#ifdef __i386__
+            std::aligned_storage<8, 4>::type m_data[1];
+#elif __x86_64__
+            std::aligned_storage<16, 8>::type m_data[1];
+#elif __arm__
+            std::aligned_storage<8, 4>::type m_data[1];
+#elif __aarch64__
+            std::aligned_storage<16, 8>::type m_data[1];
+#else
+            std::aligned_storage<8, 4>::type m_data[1];
+#endif
+
     };
 
     bool operator ==(const binary& lhs, const binary& rhs);

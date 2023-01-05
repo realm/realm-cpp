@@ -26,7 +26,17 @@ namespace realm::internal::bridge {
         }
     private:
         static constexpr int32_t nanoseconds_per_second = 1000000000;
-        unsigned char m_timestamp[32]{};
+#ifdef __i386__
+        std::aligned_storage<16, 4>::type m_timestamp[1];
+#elif __x86_64__
+        std::aligned_storage<16, 8>::type m_timestamp[1];
+#elif __arm__
+        std::aligned_storage<16, 8>::type m_timestamp[1];
+#elif __aarch64__
+        std::aligned_storage<16, 8>::type m_timestamp[1];
+#else
+        std::aligned_storage<12, 4>::type m_timestamp[1];
+#endif
     };
 }
 

@@ -8,7 +8,7 @@ TEST_CASE("run loop", "[results]") {
 #if __APPLE__
     SECTION("observation cfrunloop") {
         auto dog = Dog();
-        auto realm = realm::open<Dog>({path});
+        auto realm = realm::open<Dog>(path);
         realm.write([&realm, &dog] {
             realm.add(dog);
         });

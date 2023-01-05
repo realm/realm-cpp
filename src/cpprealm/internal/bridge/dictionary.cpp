@@ -7,7 +7,22 @@
 #include <realm/object-store/dictionary.hpp>
 
 namespace realm::internal::bridge {
+#ifdef __i386__
+    static_assert(SizeCheck<40, sizeof(Dictionary)>{});
+    static_assert(SizeCheck<4, alignof(Dictionary)>{});
+#elif __x86_64__
     static_assert(SizeCheck<80, sizeof(Dictionary)>{});
+    static_assert(SizeCheck<8, alignof(Dictionary)>{});
+#elif __arm__
+    static_assert(SizeCheck<40, sizeof(Dictionary)>{});
+    static_assert(SizeCheck<4, alignof(Dictionary)>{});
+#elif __aarch64__
+    static_assert(SizeCheck<80, sizeof(Dictionary)>{});
+    static_assert(SizeCheck<8, alignof(Dictionary)>{});
+#else
+    static_assert(SizeCheck<80, sizeof(Dictionary)>{});
+    static_assert(SizeCheck<8, alignof(Dictionary)>{});
+#endif
 
     dictionary::dictionary() {
         new (m_dictionary) Dictionary();
@@ -49,36 +64,36 @@ namespace realm::internal::bridge {
     }
 
     template <>
-    std::string dictionary::get(const std::string &key) {
-        return reinterpret_cast<Dictionary*>(m_dictionary)->get<StringData>(key);
+    std::string get(dictionary& dict, const std::string &key) {
+        return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get<StringData>(key);
     }
     template <>
-    uuid dictionary::get(const std::string &key) {
-        return reinterpret_cast<Dictionary*>(m_dictionary)->get<UUID>(key);
+    uuid get(dictionary& dict, const std::string &key) {
+        return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get<UUID>(key);
     }
     template <>
-    timestamp dictionary::get(const std::string &key) {
-        return reinterpret_cast<Dictionary*>(m_dictionary)->get<Timestamp>(key);
+    timestamp get(dictionary& dict, const std::string &key) {
+        return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get<Timestamp>(key);
     }
     template <>
-    binary dictionary::get(const std::string &key) {
-        return reinterpret_cast<Dictionary*>(m_dictionary)->get<BinaryData>(key);
+    binary get(dictionary& dict, const std::string &key) {
+        return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get<BinaryData>(key);
     }
     template <>
-    int64_t dictionary::get(const std::string &key) {
-        return reinterpret_cast<Dictionary*>(m_dictionary)->get<Int>(key);
+    int64_t get(dictionary& dict, const std::string &key) {
+        return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get<Int>(key);
     }
     template <>
-    obj_key dictionary::get(const std::string &key) {
-        return reinterpret_cast<Dictionary*>(m_dictionary)->get<ObjKey>(key);
+    obj_key get(dictionary& dict, const std::string &key) {
+        return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get<ObjKey>(key);
     }
     template <>
-    obj dictionary::get(const std::string &key) {
-        return reinterpret_cast<Dictionary*>(m_dictionary)->get_object(key);
+    obj get(dictionary& dict, const std::string &key) {
+        return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get_object(key);
     }
     template <>
-    bool dictionary::get(const std::string &key) {
-        return reinterpret_cast<Dictionary*>(m_dictionary)->get<Bool>(key);
+    bool get(dictionary& dict, const std::string &key) {
+        return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get<Bool>(key);
     }
 
     notification_token dictionary::add_notification_callback(std::shared_ptr<collection_change_callback>&& cb) {

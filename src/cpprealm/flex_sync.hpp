@@ -46,7 +46,7 @@ namespace realm {
         // Returns the unique ID for this subscription.
         std::string identifier;
         // The name representing this subscription.
-        util::Optional<std::string> name;
+        std::optional<std::string> name;
         // Returns the timestamp of when this subscription was originally created.
         std::chrono::time_point<std::chrono::system_clock> created_at;
         // Returns the timestamp of the last time this subscription was updated by calling update_query.
@@ -114,7 +114,21 @@ namespace realm {
 
     private:
         MutableSyncSubscriptionSet(internal::bridge::realm&, const sync::MutableSubscriptionSet& subscription_set);
-        unsigned char m_subscription_set[184]{};
+#ifdef __i386__
+        std::aligned_storage<116, 4>::type m_subscription_set[1];
+#elif __x86_64__
+    #if defined(__clang__)
+        std::aligned_storage<184, 8>::type m_subscription_set[1];
+    #elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<192, 8>::type m_subscription_set[1];
+    #endif
+        #elif __arm__
+            std::aligned_storage<136, 8>::type m_subscription_set[1];
+        #elif __aarch64__
+            std::aligned_storage<184, 8>::type m_subscription_set[1];
+        #else
+            std::aligned_storage<116, 4>::type m_subscription_set[1];
+#endif
         std::reference_wrapper<internal::bridge::realm> m_realm;
         friend struct SyncSubscriptionSet;
         sync::MutableSubscriptionSet get_subscription_set();
@@ -135,7 +149,21 @@ namespace realm {
     private:
         template <typename ...Ts>
         friend struct db;
-        unsigned char m_subscription_set[96]{};
+#ifdef __i386__
+        std::aligned_storage<60, 4>::type m_subscription_set[1];
+#elif __x86_64__
+    #if defined(__clang__)
+        std::aligned_storage<96, 8>::type m_subscription_set[1];
+    #elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<104, 8>::type m_subscription_set[1];
+    #endif
+        #elif __arm__
+            std::aligned_storage<64, 8>::type m_subscription_set[1];
+        #elif __aarch64__
+            std::aligned_storage<96, 8>::type m_subscription_set[1];
+        #else
+            std::aligned_storage<60, 4>::type m_subscription_set[1];
+#endif
         std::reference_wrapper<internal::bridge::realm> m_realm;
     };
 

@@ -8,8 +8,38 @@
 #include <utility>
 
 namespace realm {
-    static_assert(internal::bridge::SizeCheck<16, sizeof(app::AppCredentials)>{});
-    static_assert(internal::bridge::SizeCheck<72, sizeof(app::AppError)>{});
+#ifdef __i386__
+    static_assert(internal::bridge::SizeCheck<8, sizeof(realm::app::AppCredentials)>{});
+    static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppCredentials)>{});
+    static_assert(internal::bridge::SizeCheck<40, sizeof(realm::app::AppError)>{});
+    static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppError)>{});
+#elif __x86_64__
+    static_assert(internal::bridge::SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
+    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppCredentials)>{});
+    #if defined(__clang__)
+    static_assert(internal::bridge::SizeCheck<72, sizeof(realm::app::AppError)>{});
+    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
+    #elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(internal::bridge::SizeCheck<88, sizeof(realm::app::AppError)>{});
+    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
+    #endif
+#elif __arm__
+    static_assert(internal::bridge::SizeCheck<8, sizeof(realm::app::AppCredentials)>{});
+    static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppCredentials)>{});
+    static_assert(internal::bridge::SizeCheck<40, sizeof(realm::app::AppError)>{});
+    static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppError)>{});
+#elif __aarch64__
+    static_assert(internal::bridge::SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
+    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppCredentials)>{});
+    static_assert(internal::bridge::SizeCheck<72, sizeof(realm::app::AppError)>{});
+    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
+#else
+    static_assert(internal::bridge::SizeCheck<8, sizeof(realm::app::AppCredentials)>{});
+    static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppCredentials)>{});
+    static_assert(internal::bridge::SizeCheck<40, sizeof(realm::app::AppError)>{});
+    static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppError)>{});
+#endif
+
     static_assert((int)user::state::logged_in == (int)SyncUser::State::LoggedIn);
     static_assert((int)user::state::logged_out == (int)SyncUser::State::LoggedOut);
     static_assert((int)user::state::removed == (int)SyncUser::State::Removed);
@@ -183,7 +213,7 @@ namespace realm {
         return p;
     }
 
-    sync_manager user::sync_manager() const {
+    internal::bridge::sync_manager user::sync_manager() const {
         return m_user->sync_manager();
     }
 
@@ -233,7 +263,7 @@ namespace realm {
         return credentials(app::AppCredentials::function(payload));
     }
 
-    App::App(const std::string &app_id, const std::optional<std::string> &base_url) {
+    App::App(const std::string &app_id, const std::optional<std::string> &base_url, const std::optional<std::string> &path) {
 #if QT_CORE_LIB
         util::Scheduler::set_default_factory(util::make_qt);
 #endif
@@ -243,7 +273,7 @@ namespace realm {
 #if REALM_DISABLE_METADATA_ENCRYPTION
         config.metadata_mode = SyncManager::MetadataMode::NoEncryption;
 #else
-        config.metadata_mode = SyncManager::MetadataMode::Encryption;
+        config.metadata_mode = SyncManager::MetadataMode::NoEncryption;
 #endif
 #ifdef QT_CORE_LIB
         auto qt_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
@@ -252,7 +282,10 @@ namespace realm {
         }
         config.base_file_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
 #else
-        config.base_file_path = std::filesystem::current_path();
+        if (path)
+            config.base_file_path = *path;
+        else
+            config.base_file_path = std::filesystem::current_path();
 #endif
         config.user_agent_binding_info = "RealmCpp/0.0.1";
         config.user_agent_application_info = app_id;

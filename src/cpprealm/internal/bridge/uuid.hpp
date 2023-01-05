@@ -21,7 +21,17 @@ namespace realm::internal::bridge {
         [[nodiscard]] std::string to_base64() const;
         [[nodiscard]] std::array<uint8_t, 16> to_bytes() const;
     private:
-        unsigned char m_uuid[16]{};
+#ifdef __i386__
+        std::aligned_storage<16, 1>::type m_uuid[1];
+#elif __x86_64__
+        std::aligned_storage<16, 1>::type m_uuid[1];
+#elif __arm__
+        std::aligned_storage<16, 1>::type m_uuid[1];
+#elif __aarch64__
+        std::aligned_storage<16, 1>::type m_uuid[1];
+#else
+        std::aligned_storage<12, 1>::type m_uuid[1];
+#endif
         friend bool operator ==(const uuid&, const uuid&);
         friend bool operator !=(const uuid&, const uuid&);
         friend bool operator >(const uuid&, const uuid&);

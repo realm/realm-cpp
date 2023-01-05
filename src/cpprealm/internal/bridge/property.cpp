@@ -5,7 +5,26 @@
 #include <realm/object-store/property.hpp>
 
 namespace realm::internal::bridge {
+#ifdef __i386__
+    static_assert(SizeCheck<64, sizeof(Property)>{});
+    static_assert(SizeCheck<4, alignof(Property)>{});
+#elif __x86_64__
+    #if defined(__clang__)
     static_assert(SizeCheck<120, sizeof(Property)>{});
+    #elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(SizeCheck<152, sizeof(Property)>{});
+    #endif
+    static_assert(SizeCheck<8, alignof(Property)>{});
+#elif __arm__
+    static_assert(SizeCheck<64, sizeof(Property)>{});
+    static_assert(SizeCheck<8, alignof(Property)>{});
+#elif __aarch64__
+    static_assert(SizeCheck<120, sizeof(Property)>{});
+    static_assert(SizeCheck<8, alignof(Property)>{});
+#else
+    static_assert(SizeCheck<120, sizeof(Property)>{});
+    static_assert(SizeCheck<4, alignof(Property)>{});
+#endif
 
     property::property(const realm::Property &v) {
         new (m_property) Property(v);

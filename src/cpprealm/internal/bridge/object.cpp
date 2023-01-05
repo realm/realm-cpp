@@ -10,13 +10,80 @@
 #include <realm/object-store/list.hpp>
 #include <realm/object-store/dictionary.hpp>
 
+#include <memory>
+
 namespace realm::internal::bridge {
+#ifdef __i386__
+    static_assert(SizeCheck<64, sizeof(Object)>{});
+    static_assert(SizeCheck<4, alignof(Object)>{});
+    static_assert(SizeCheck<12, sizeof(IndexSet)>{});
+    static_assert(SizeCheck<4, alignof(IndexSet)>{});
+    static_assert(SizeCheck<84, sizeof(CollectionChangeSet)>{});
+    static_assert(SizeCheck<4, alignof(CollectionChangeSet)>{});
+    static_assert(SizeCheck<16, sizeof(IndexSet::IndexIterator)>{});
+    static_assert(SizeCheck<4, alignof(IndexSet::IndexIterator)>{});
+    static_assert(SizeCheck<4, sizeof(IndexSet::IndexIteratableAdaptor)>{});
+    static_assert(SizeCheck<4, alignof(IndexSet::IndexIteratableAdaptor)>{});
+    static_assert(SizeCheck<16, sizeof(NotificationToken)>{});
+    static_assert(SizeCheck<4, alignof(NotificationToken)>{});
+#elif __x86_64__
     static_assert(SizeCheck<104, sizeof(Object)>{});
+    static_assert(SizeCheck<8, alignof(Object)>{});
     static_assert(SizeCheck<24, sizeof(IndexSet)>{});
+    static_assert(SizeCheck<8, alignof(IndexSet)>{});
+    #if defined(__clang__)
     static_assert(SizeCheck<168, sizeof(CollectionChangeSet)>{});
+    #elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(SizeCheck<184, sizeof(CollectionChangeSet)>{});
+    #endif
+    static_assert(SizeCheck<8, alignof(CollectionChangeSet)>{});
     static_assert(SizeCheck<32, sizeof(IndexSet::IndexIterator)>{});
+    static_assert(SizeCheck<8, alignof(IndexSet::IndexIterator)>{});
     static_assert(SizeCheck<8, sizeof(IndexSet::IndexIteratableAdaptor)>{});
+    static_assert(SizeCheck<8, alignof(IndexSet::IndexIteratableAdaptor)>{});
     static_assert(SizeCheck<24, sizeof(NotificationToken)>{});
+    static_assert(SizeCheck<8, alignof(NotificationToken)>{});
+#elif __arm__
+    static_assert(SizeCheck<80, sizeof(Object)>{});
+    static_assert(SizeCheck<8, alignof(Object)>{});
+    static_assert(SizeCheck<12, sizeof(IndexSet)>{});
+    static_assert(SizeCheck<4, alignof(IndexSet)>{});
+    static_assert(SizeCheck<84, sizeof(CollectionChangeSet)>{});
+    static_assert(SizeCheck<4, alignof(CollectionChangeSet)>{});
+    static_assert(SizeCheck<16, sizeof(IndexSet::IndexIterator)>{});
+    static_assert(SizeCheck<4, alignof(IndexSet::IndexIterator)>{});
+    static_assert(SizeCheck<4, sizeof(IndexSet::IndexIteratableAdaptor)>{});
+    static_assert(SizeCheck<4, alignof(IndexSet::IndexIteratableAdaptor)>{});
+    static_assert(SizeCheck<16, sizeof(NotificationToken)>{});
+    static_assert(SizeCheck<8, alignof(NotificationToken)>{});
+#elif __aarch64__
+    static_assert(SizeCheck<104, sizeof(Object)>{});
+    static_assert(SizeCheck<8, alignof(Object)>{});
+    static_assert(SizeCheck<24, sizeof(IndexSet)>{});
+    static_assert(SizeCheck<8, alignof(IndexSet)>{});
+    static_assert(SizeCheck<168, sizeof(CollectionChangeSet)>{});
+    static_assert(SizeCheck<8, alignof(CollectionChangeSet)>{});
+    static_assert(SizeCheck<32, sizeof(IndexSet::IndexIterator)>{});
+    static_assert(SizeCheck<8, alignof(IndexSet::IndexIterator)>{});
+    static_assert(SizeCheck<8, sizeof(IndexSet::IndexIteratableAdaptor)>{});
+    static_assert(SizeCheck<8, alignof(IndexSet::IndexIteratableAdaptor)>{});
+    static_assert(SizeCheck<24, sizeof(NotificationToken)>{});
+    static_assert(SizeCheck<8, alignof(NotificationToken)>{});
+#else
+    static_assert(SizeCheck<64, sizeof(Object)>{});
+    static_assert(SizeCheck<4, alignof(Object)>{});
+    static_assert(SizeCheck<12, sizeof(IndexSet)>{});
+    static_assert(SizeCheck<4, alignof(IndexSet)>{});
+    static_assert(SizeCheck<84, sizeof(CollectionChangeSet)>{});
+    static_assert(SizeCheck<4, alignof(CollectionChangeSet)>{});
+    static_assert(SizeCheck<16, sizeof(IndexSet::IndexIterator)>{});
+    static_assert(SizeCheck<4, alignof(IndexSet::IndexIterator)>{});
+    static_assert(SizeCheck<4, sizeof(IndexSet::IndexIteratableAdaptor)>{});
+    static_assert(SizeCheck<4, alignof(IndexSet::IndexIteratableAdaptor)>{});
+    static_assert(SizeCheck<16, sizeof(NotificationToken)>{});
+    static_assert(SizeCheck<4, alignof(NotificationToken)>{});
+#endif
+
     object::object() {
         new (&m_object) Object();
     }
@@ -26,15 +93,15 @@ namespace realm::internal::bridge {
     object::object(const realm &realm, const struct obj &obj) {
         new (&m_object) Object(realm, obj);
     }
-    obj object::obj() const {
+    obj object::get_obj() const {
         return reinterpret_cast<const Object*>(m_object)->obj();
     }
 
     list object::get_list(const col_key& col_key) const {
-        return List(get_realm(), obj(), col_key);
+        return List(get_realm(), get_obj(), col_key);
     }
     dictionary object::get_dictionary(const col_key &v) const {
-        return Dictionary(get_realm(), obj(), v);
+        return Dictionary(get_realm(), get_obj(), v);
     }
     bool object::is_valid() const {
         return reinterpret_cast<const Object*>(m_object)->is_valid();

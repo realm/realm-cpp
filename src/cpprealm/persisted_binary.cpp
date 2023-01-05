@@ -4,9 +4,9 @@
 namespace realm {
     void persisted<std::vector<uint8_t>>::push_back(uint8_t v) {
         if (is_managed()) {
-            auto v2 = deserialize(m_object->obj().get<internal::bridge::binary>(managed));
+            auto v2 = deserialize(m_object->get_obj().get<internal::bridge::binary>(managed));
             v2.push_back(v);
-            m_object->obj().set(managed, serialize(v2));
+            m_object->get_obj().set(managed, serialize(v2));
         } else {
             unmanaged.push_back(v);
         }
@@ -14,7 +14,7 @@ namespace realm {
 
     uint8_t persisted<std::vector<uint8_t>>::operator[](size_t idx) {
         if (is_managed()) {
-            return m_object->obj().get<internal::bridge::binary>(managed)[idx];
+            return m_object->get_obj().get<internal::bridge::binary>(managed)[idx];
         } else {
             return unmanaged[idx];
         }
@@ -22,7 +22,7 @@ namespace realm {
 
     size_t persisted<std::vector<uint8_t>>::size() const {
         if (is_managed()) {
-            return m_object->obj().get<internal::bridge::binary>(managed).size();
+            return m_object->get_obj().get<internal::bridge::binary>(managed).size();
         } else {
             return unmanaged.size();
         }

@@ -31,7 +31,7 @@ namespace realm {
         std::enable_if_t<std::is_integral_v<T>, persisted&> // NOLINT(misc-unconventional-assign-operator)
         operator=(const T o) {
             if (this->is_managed()) {
-                this->m_object->obj().template set<bool>(
+                this->m_object->get_obj().template set<bool>(
                         this->managed,
                         static_cast<bool>(o));
             } else {
