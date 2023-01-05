@@ -36,6 +36,9 @@
 #include <cpprealm/internal/bridge/async_open_task.hpp>
 #include <utility>
 
+#include "realm/db.hpp"
+#include "realm/transaction.hpp"
+
 namespace realm {
 
 #if QT_CORE_LIB
@@ -198,6 +201,26 @@ template <typename ...Ts>
         }
     });
     return p;
+}
+
+template <typename ...Ts>
+struct static_db {
+    DB db;
+    template <typename T>
+    void bulk_insert(const std::vector<T>& objects) {
+        TransactionRef ref = db.start_write(true);
+        TableRef table = ref->get_table("class_" + T::schema::name);
+        for (auto& object : objects) {
+
+        }
+        ref->commit();
+    }
+};
+
+template <typename ...Ts>
+static inline void bulk_insert(const typename db<Ts...>::config& config) {
+    DB db = DB(nullptr, config.path());
+
 }
 
 }

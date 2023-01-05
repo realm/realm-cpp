@@ -24,7 +24,7 @@ struct Person: realm::object<Person> {
             realm::property<&Person::dog>("dog")
     );
 };
-//
+
 struct AllTypesObjectEmbedded: realm::embedded_object<AllTypesObjectEmbedded> {
     realm::persisted<std::string> str_col;
 

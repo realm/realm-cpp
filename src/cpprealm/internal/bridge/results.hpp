@@ -13,6 +13,7 @@ namespace realm::internal::bridge {
     struct notification_token;
     struct obj;
     struct collection_change_set;
+    struct collection_change_callback;
 
     struct results {
         results(const Results&); //NOLINT(google-explicit-constructor)

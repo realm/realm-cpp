@@ -33,9 +33,22 @@ namespace realm::internal::bridge {
     };
 
     struct mixed {
-        explicit mixed(const std::string&);
+//        explicit mixed(const std::variant<
+//                int64_t,
+//                bool,
+//                std::string,
+//                double,
+//                std::vector<uint8_t>,
+//                std::chrono::time_point<std::chrono::system_clock>,
+//                ::realm::uuid>&);
+        mixed(const std::string&);
         mixed(const int&); //NOLINT(google-explicit-constructor)
         mixed(const int64_t&); //NOLINT(google-explicit-constructor)
+        template <typename E>
+        mixed(std::enable_if_t<std::is_enum_v<E>, E> v)
+        : mixed(static_cast<int64_t>(v))
+        { //NOLINT(google-explicit-constructor)
+        }
         mixed(const double&); //NOLINT(google-explicit-constructor)
         mixed(const bool&); //NOLINT(google-explicit-constructor)
         mixed(const struct uuid&); //NOLINT(google-explicit-constructor)

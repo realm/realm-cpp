@@ -25,6 +25,7 @@
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/type_info.hpp>
+#include "cpprealm/experimental/link.hpp"
 
 namespace realm {
     template <typename, typename>
@@ -42,19 +43,29 @@ namespace realm {
         template <auto T>
         struct ptr_type_extractor : ptr_type_extractor_base<decltype(T)> {
         };
+
+        template<typename... Ts>
+        constexpr auto make_subpack_tuple(Ts&&... xs)
+        {
+            return std::tuple<Ts...>(std::forward<Ts>(xs)...);
+        }
+
+        template <typename T>
+        struct persisted_type_extractor {
+            using Result = T;
+        };
+        template <typename T>
+        struct persisted_type_extractor<realm::persisted<T, void>> {
+            using Result = T;
+        };
     }
 
-    template<typename... Ts>
-    constexpr auto make_subpack_tuple(Ts&&... xs)
-    {
-        return std::tuple<Ts...>(std::forward<Ts>(xs)...);
-    }
 
 // MARK: schema
 namespace schemagen {
     template <auto Ptr, bool IsPrimaryKey = false>
     struct property {
-        using Result = typename ptr_type_extractor<Ptr>::member_type::Result;
+        using Result = typename persisted_type_extractor<typename ptr_type_extractor<Ptr>::member_type>::Result;
         using Class = typename ptr_type_extractor<Ptr>::class_type;
         static constexpr auto Class::*ptr = Ptr;
         static constexpr bool is_primary_key = IsPrimaryKey;
@@ -79,13 +90,22 @@ namespace schemagen {
                 if constexpr (std::is_base_of_v<object_base<typename Result::value_type>,
                                                             typename Result::value_type>) {
                     property.set_object_link(Result::value_type::schema.name);
+                } else if constexpr (internal::type_info::is_link<typename Result::value_type>::value) {
+                    property.set_object_link(
+                            experimental::managed<typename Result::value_type::value_type, void>::schema.name);
                 }
             } else if constexpr (realm::internal::type_info::is_map<Result>::value) {
                 if constexpr (std::is_base_of_v<object_base<typename Result::mapped_type>,
                                                             typename Result::mapped_type>) {
                     property.set_object_link(Result::mapped_type::schema.name);
                     property.set_type(type | internal::bridge::property::type::Nullable);
+                } else if constexpr (internal::type_info::is_link<typename Result::mapped_type>::value) {
+                    property.set_object_link(experimental::managed<typename Result::mapped_type::value_type, void>::schema.name);
+                    property.set_type(type | internal::bridge::property::type::Nullable);
                 }
+            } else if constexpr (internal::type_info::is_link<Result>::value) {
+                property.set_object_link(experimental::managed<typename Result::value_type, void>::schema.name);
+                property.set_type(type | internal::bridge::property::type::Nullable);
             }
             return property;
         }
@@ -130,7 +150,11 @@ namespace schemagen {
             auto tup = std::make_tuple(props...);
             apply_name(tup);
         }
-
+        explicit constexpr schema(const char *name_, std::tuple<Properties...>&& props)
+                : name(name_)
+                , ps(props) {
+            apply_name(props);
+        }
         template<size_t N, typename P>
         static constexpr auto primary_key(P &) {
             if constexpr (P::is_primary_key) {
@@ -215,6 +239,13 @@ static constexpr auto schema(const char * name,
     return schemagen::schema<Cls, T...>(name, std::move(props)...);
 }
 
+template <typename ...T>
+static constexpr auto schema(const char * name,
+                             std::tuple<T...>&& props) {
+    auto i = std::get<0>(props);
+    using Cls = typename decltype(i)::Class;
+    return schemagen::schema<Cls, T...>(name, std::move(props));
+}
 }
 
 #endif /* realm_schema_hpp */

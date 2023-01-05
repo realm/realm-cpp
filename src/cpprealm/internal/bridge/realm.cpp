@@ -104,8 +104,11 @@ namespace realm::internal::bridge {
     }
 
     table realm::table_for_object_type(const std::string &object_type) {
-        auto name = table_name_for_object_type(object_type);
-        return read_group().get_table(name);
+        return read_group().get_table(object_type);
+    }
+
+    table realm::table_for_key(const int64_t key) {
+        return read_group().get_table(key);
     }
     realm::config::config() {
         new (m_config) RealmConfig();
@@ -136,6 +139,9 @@ namespace realm::internal::bridge {
     }
     void realm::config::set_scheduler(const std::shared_ptr<struct scheduler> &s) {
         reinterpret_cast<RealmConfig*>(m_config)->scheduler = std::make_shared<internal_scheduler>(s);
+    }
+    void realm::config::set_scheduler(const std::shared_ptr<util::Scheduler> &s) {
+        reinterpret_cast<RealmConfig*>(m_config)->scheduler = s;
     }
     void realm::config::set_sync_config(const std::optional<struct sync_config> &s) {
         if (s)
@@ -190,6 +196,13 @@ namespace realm::internal::bridge {
 
     async_open_task realm::get_synchronized_realm(const config &c) {
         return Realm::get_synchronized_realm(c);
+    }
+
+    realm realm::freeze() const {
+        return m_realm->freeze();
+    }
+    bool realm::refresh() {
+        return m_realm->refresh();
     }
 
     void realm::sync_config::set_error_handler(std::function<void(const sync_session &, const sync_error &)> &&fn) {

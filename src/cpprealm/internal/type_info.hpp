@@ -2,15 +2,29 @@
 #define REALM_TYPE_INFO_HPP
 
 #include <cpprealm/internal/bridge/property.hpp>
-#include <cpprealm/internal/bridge/uuid.hpp>
-#include <cpprealm/internal/bridge/binary.hpp>
-#include <cpprealm/internal/bridge/timestamp.hpp>
-#include <cpprealm/internal/bridge/mixed.hpp>
-#include <cpprealm/internal/bridge/obj_key.hpp>
-#include <cpprealm/internal/bridge/list.hpp>
+//#include <cpprealm/internal/bridge/uuid.hpp>
+//#include <cpprealm/internal/bridge/binary.hpp>
+//#include <cpprealm/internal/bridge/timestamp.hpp>
+//#include <cpprealm/internal/bridge/mixed.hpp>
+//#include <cpprealm/internal/bridge/obj_key.hpp>
+//#include <cpprealm/internal/bridge/list.hpp>
 
 #include <vector>
 #include <cpprealm/type_info.hpp>
+
+namespace realm::internal::bridge {
+    struct uuid;
+    struct binary;
+    struct mixed;
+    struct timestamp;
+    struct obj_key;
+    struct list;
+    struct dictionary;
+}
+
+namespace realm {
+    struct uuid;
+}
 
 namespace realm::internal::type_info {
     template <typename T, typename = void>
@@ -81,12 +95,6 @@ namespace realm::internal::type_info {
                 }
             }
         }
-
-        template<typename T>
-        using MixedPersistableConcept =
-                std::conjunction<is_variant_t<T>,
-                        std::conditional_t<check_variant_types<0, T>(), std::true_type, std::false_type>
-                >;
 
         namespace {
             static_assert(std::conjunction<
@@ -220,6 +228,12 @@ namespace realm::internal::type_info {
             return bridge::property::type::Dictionary | type_info<ValueType>::type();
         }
     };
+
+    template<typename T>
+    using MixedPersistableConcept =
+            std::conjunction<is_variant_t<T>,
+                    std::conditional_t<check_variant_types<0, T>(), std::true_type, std::false_type>
+            >;
     template <typename T>
     struct type_info<T, std::enable_if_t<MixedPersistableConcept<T>::value>> {
         using internal_type = bridge::mixed;

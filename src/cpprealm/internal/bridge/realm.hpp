@@ -10,6 +10,9 @@ namespace realm {
     class SyncConfig;
     struct scheduler;
     struct SyncUser;
+    namespace util {
+        class Scheduler;
+    }
 }
 
 namespace realm::internal::bridge {
@@ -68,6 +71,7 @@ namespace realm::internal::bridge {
             void set_path(const std::string&);
             void set_schema(const std::vector<object_schema>&);
             void set_scheduler(const std::shared_ptr<struct scheduler>&);
+            void set_scheduler(const std::shared_ptr<util::Scheduler>&);
             void set_sync_config(const std::optional<struct sync_config>&);
         private:
             unsigned char m_config[312]{};
@@ -82,6 +86,7 @@ namespace realm::internal::bridge {
         void begin_transaction() const;
         void commit_transaction() const;
         table table_for_object_type(const std::string& object_type);
+        table table_for_key(const int64_t key);
         template <typename T>
         T resolve(thread_safe_reference&& tsr);
         template <>
@@ -90,8 +95,10 @@ namespace realm::internal::bridge {
         object resolve(thread_safe_reference&& tsr);
         [[nodiscard]] std::shared_ptr<scheduler> scheduler() const;
         static async_open_task get_synchronized_realm(const config&);
+        [[nodiscard]] realm freeze() const;
+        bool refresh();
     private:
-        std::shared_ptr<Realm> m_realm;
+        std::shared_ptr<Realm> m_realm = nullptr;
         friend struct group;
     };
 

@@ -1,5 +1,5 @@
-#ifndef REALM_COL_KEY_HPP
-#define REALM_COL_KEY_HPP
+#ifndef CPP_REALM_BRIDGE_COL_KEY_HPP
+#define CPP_REALM_BRIDGE_COL_KEY_HPP
 
 #include <cinttypes>
 
@@ -18,4 +18,4 @@ namespace realm::internal::bridge {
     };
 }
 
-#endif //REALM_COL_KEY_HPP
+#endif //CPP_REALM_BRIDGE_COL_KEY_HPP

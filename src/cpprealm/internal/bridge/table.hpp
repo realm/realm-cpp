@@ -26,9 +26,9 @@ namespace realm {
             obj create_object_with_primary_key(const mixed &key) const;
 
             obj create_object(const obj_key &obj_key = {}) const;
-
+            obj get_object(const obj_key& key) const;
             table get_link_target(const col_key col_key) const;
-
+            int64_t get_key() const;
             [[nodiscard]] bool is_embedded() const;
 
             query query(const std::string &, const std::vector <mixed>&) const;

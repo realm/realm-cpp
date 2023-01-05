@@ -1,5 +1,5 @@
-#ifndef REALM_MAIN_HPP
-#define REALM_MAIN_HPP
+#ifndef CPP_REALM_MAIN_HPP
+#define CPP_REALM_MAIN_HPP
 
 #include <catch2/catch_all.hpp>
 #include <cpprealm/sdk.hpp>
@@ -47,4 +47,4 @@ struct realm_path {
 
 int main(int argc, char* argv[]);
 
-#endif //REALM_MAIN_HPP
+#endif //CPP_REALM_MAIN_HPP

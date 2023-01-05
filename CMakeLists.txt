@@ -8,7 +8,7 @@ endif()
 
 # Project-wide build flags
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
 set(REALM_BUILD_LIB_ONLY ON)
 add_subdirectory(realm-core EXCLUDE_FROM_ALL)
@@ -31,8 +31,41 @@ add_compile_definitions(REALM_VERSION_MINOR=0)
 add_compile_definitions(REALM_VERSION_PATCH=1)
 
 set(SOURCES
-    src/cpprealm/sdk.cpp
-    src/cpprealm/analytics.cpp) # REALM_SOURCES
+        src/cpprealm/sdk.cpp
+        src/cpprealm/analytics.cpp
+        src/cpprealm/internal/bridge/obj.cpp
+        src/cpprealm/persisted_string.cpp
+        src/cpprealm/internal/bridge/col_key.cpp
+        src/cpprealm/internal/bridge/object.cpp
+        src/cpprealm/internal/bridge/property.cpp
+        src/cpprealm/internal/bridge/object_schema.cpp
+        src/cpprealm/internal/bridge/mixed.cpp
+        src/cpprealm/internal/bridge/uuid.cpp
+        src/cpprealm/persisted_int.cpp
+        src/cpprealm/flex_sync.cpp
+        src/cpprealm/persisted_bool.cpp
+        src/cpprealm/internal/bridge/async_open_task.cpp
+        src/cpprealm/internal/bridge/binary.cpp
+        src/cpprealm/internal/bridge/timestamp.cpp
+        src/cpprealm/internal/bridge/obj_key.cpp
+        src/cpprealm/internal/bridge/table.cpp
+        src/cpprealm/internal/bridge/query.cpp
+        src/cpprealm/persisted_uuid.cpp
+        src/cpprealm/internal/bridge/scheduler.cpp
+        src/cpprealm/internal/bridge/realm.cpp
+        src/cpprealm/internal/bridge/results.cpp
+        src/cpprealm/internal/bridge/dictionary.cpp
+        src/cpprealm/internal/bridge/schema.cpp
+        src/cpprealm/scheduler.cpp
+        src/cpprealm/internal/bridge/thread_safe_reference.cpp
+        src/cpprealm/internal/bridge/lnklst.cpp
+        src/cpprealm/internal/bridge/list.cpp
+        src/cpprealm/experimental/managed_string.cpp
+        src/cpprealm/persisted_binary.cpp
+        src/cpprealm/app.cpp
+        src/cpprealm/internal/bridge/sync_error.cpp
+        src/cpprealm/internal/bridge/sync_session.cpp
+        src/cpprealm/internal/bridge/sync_manager.cpp ) # REALM_SOURCES
 
 set(HEADERS
     src/cpprealm/sdk.hpp
@@ -47,7 +80,7 @@ set(HEADERS
     src/cpprealm/thread_safe_reference.hpp
     src/cpprealm/type_info.hpp
     src/cpprealm/flex_sync.hpp
-        src/cpprealm/persisted_bool.hpp
+    src/cpprealm/persisted_bool.hpp
     src/cpprealm/persisted_int.hpp
     src/cpprealm/persisted_optional.hpp
     src/cpprealm/persisted_enum.hpp
@@ -59,7 +92,41 @@ set(HEADERS
     src/cpprealm/persisted_mixed.hpp
     src/cpprealm/persisted_map.hpp
     src/cpprealm/analytics.hpp
-    src/cpprealm/internal/generic_network_transport.hpp src/cpprealm/type_info.cpp src/cpprealm/thread_safe_reference.cpp src/cpprealm/internal/bridge/obj.hpp src/cpprealm/internal/bridge/obj.cpp src/cpprealm/persisted_uuid.hpp src/cpprealm/persisted_string.hpp src/cpprealm/persisted_string.cpp src/cpprealm/persisted_list.hpp src/cpprealm/persisted_custom.hpp src/cpprealm/internal/type_info.hpp src/cpprealm/internal/bridge/utils.hpp src/cpprealm/internal/bridge/col_key.hpp src/cpprealm/internal/bridge/col_key.cpp src/cpprealm/internal/bridge/object.cpp src/cpprealm/internal/bridge/object.hpp src/cpprealm/internal/bridge/property.cpp src/cpprealm/internal/bridge/property.hpp src/cpprealm/internal/bridge/object_schema.cpp src/cpprealm/internal/bridge/object_schema.hpp src/cpprealm/internal/bridge/mixed.cpp src/cpprealm/internal/bridge/mixed.hpp src/cpprealm/internal/bridge/uuid.cpp src/cpprealm/internal/bridge/uuid.hpp src/cpprealm/internal/bridge/binary.cpp src/cpprealm/internal/bridge/binary.hpp src/cpprealm/internal/bridge/timestamp.cpp src/cpprealm/internal/bridge/timestamp.hpp src/cpprealm/internal/bridge/obj_key.cpp src/cpprealm/internal/bridge/obj_key.hpp src/cpprealm/internal/bridge/table.cpp src/cpprealm/internal/bridge/table.hpp src/cpprealm/internal/bridge/query.cpp src/cpprealm/internal/bridge/query.hpp src/cpprealm/persisted_uuid.cpp src/cpprealm/internal/bridge/scheduler.cpp src/cpprealm/internal/bridge/scheduler.hpp src/cpprealm/scheduler.hpp src/cpprealm/internal/bridge/realm.cpp src/cpprealm/internal/bridge/realm.hpp src/cpprealm/internal/bridge/dictionary.cpp src/cpprealm/internal/bridge/dictionary.hpp src/cpprealm/internal/bridge/results.cpp src/cpprealm/internal/bridge/results.hpp src/cpprealm/internal/bridge/schema.cpp src/cpprealm/internal/bridge/schema.hpp src/cpprealm/scheduler.cpp src/cpprealm/internal/bridge/thread_safe_reference.cpp src/cpprealm/internal/bridge/thread_safe_reference.hpp src/cpprealm/internal/bridge/lnklst.cpp src/cpprealm/internal/bridge/lnklst.hpp src/cpprealm/internal/bridge/list.cpp src/cpprealm/internal/bridge/list.hpp src/cpprealm/persisted_binary.cpp src/cpprealm/internal/type_info.cpp src/cpprealm/persisted_int.cpp src/cpprealm/flex_sync.cpp src/cpprealm/persisted_bool.cpp src/cpprealm/internal/bridge/async_open_task.cpp src/cpprealm/internal/bridge/async_open_task.hpp src/cpprealm/app.cpp src/cpprealm/internal/bridge/sync_session.cpp src/cpprealm/internal/bridge/sync_session.hpp src/cpprealm/internal/bridge/sync_error.cpp src/cpprealm/internal/bridge/sync_error.hpp src/cpprealm/internal/bridge/sync_manager.cpp src/cpprealm/internal/bridge/sync_manager.hpp) # REALM_INSTALL_HEADERS
+    src/cpprealm/internal/generic_network_transport.hpp
+        src/cpprealm/internal/bridge/obj.hpp
+        src/cpprealm/persisted_uuid.hpp
+        src/cpprealm/persisted_string.hpp
+        src/cpprealm/persisted_list.hpp
+        src/cpprealm/persisted_custom.hpp
+        src/cpprealm/internal/type_info.hpp
+        src/cpprealm/internal/bridge/utils.hpp
+        src/cpprealm/internal/bridge/col_key.hpp
+        src/cpprealm/internal/bridge/object.hpp
+        src/cpprealm/internal/bridge/property.hpp
+        src/cpprealm/internal/bridge/object_schema.hpp
+        src/cpprealm/internal/bridge/mixed.hpp
+        src/cpprealm/internal/bridge/uuid.hpp
+        src/cpprealm/internal/bridge/binary.hpp
+        src/cpprealm/internal/bridge/timestamp.hpp
+        src/cpprealm/internal/bridge/obj_key.hpp
+        src/cpprealm/internal/bridge/table.hpp
+        src/cpprealm/internal/bridge/query.hpp
+        src/cpprealm/internal/bridge/scheduler.hpp
+        src/cpprealm/scheduler.hpp
+        src/cpprealm/internal/bridge/realm.hpp
+        src/cpprealm/internal/bridge/dictionary.hpp
+        src/cpprealm/internal/bridge/results.hpp
+        src/cpprealm/internal/bridge/schema.hpp
+        src/cpprealm/internal/bridge/thread_safe_reference.hpp
+        src/cpprealm/internal/bridge/lnklst.hpp
+        src/cpprealm/internal/bridge/list.hpp
+        src/cpprealm/internal/bridge/async_open_task.hpp
+        src/cpprealm/internal/bridge/sync_session.hpp
+        src/cpprealm/internal/bridge/sync_error.hpp
+        src/cpprealm/internal/bridge/sync_manager.hpp
+        src/cpprealm/experimental/db.hpp
+        src/cpprealm/experimental/link.hpp
+        src/cpprealm/experimental/managed_string.hpp src/cpprealm/experimental/macros.hpp src/cpprealm/experimental/observation.hpp src/cpprealm/experimental/observation.cpp) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm SHARED ${SOURCES} ${HEADERS})
 
@@ -141,9 +208,16 @@ FetchContent_Declare(
         GIT_TAG        v3.0.1 # or a later release
 )
 FetchContent_MakeAvailable(Catch2)
+set_source_files_properties(src/cpprealm/experimental/observation.hpp PROPERTIES COMPILE_FLAGS "-std=c++20")
+set_source_files_properties(src/cpprealm/experimental/managed_string.cpp PROPERTIES COMPILE_FLAGS "-std=c++20")
 
 add_executable(cpprealm_exe_tests tests/str_tests.cpp tests/list_tests.cpp tests/query_tests.cpp tests/main.hpp tests/sync_test_utils.hpp tests/test_objects.hpp tests/main.cpp tests/admin_utils.hpp tests/admin_utils.cpp tests/date_tests.cpp tests/mixed_tests.cpp tests/results_tests.cpp tests/binary_tests.cpp tests/flx_sync_tests.cpp tests/app_tests.cpp tests/embedded_object_tests.cpp tests/opt_tests.cpp tests/run_loop_tests.cpp tests/map_tests.cpp tests/perf_tests.cpp)
 target_link_libraries(cpprealm_exe_tests cpprealm Catch2::Catch2)
+set_property(TARGET cpprealm_exe_tests PROPERTY CXX_STANDARD 20)
+target_compile_features(cpprealm_exe_tests PUBLIC cxx_std_20)
+if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10 AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11)
+target_compile_options(cpprealm_exe_tests PUBLIC -fcoroutines)
+endif()
 file(COPY tests/setup_baas.rb DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY tests/dependencies.list DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY tests/config_overrides.json DESTINATION ${CMAKE_BINARY_DIR})

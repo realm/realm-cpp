@@ -16,8 +16,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef realm_sdk_hpp
-#define realm_sdk_hpp
+#ifndef cpp_realm_sdk_hpp
+#define cpp_realm_sdk_hpp
 
 #include <utility>
 
@@ -43,4 +43,4 @@
 #include <cpprealm/db.hpp>
 #include <cpprealm/thread_safe_reference.hpp>
 
-#endif /* realm_sdk_hpp */
+#endif /* cpp_realm_sdk_hpp */

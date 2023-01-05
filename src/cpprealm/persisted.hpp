@@ -286,7 +286,6 @@ protected:
         void assign_accessor(internal::bridge::object* object,
                              internal::bridge::col_key&& col_key) final {
             this->m_object = object;
-//            unmanaged.~T();
             new (&this->managed) internal::bridge::col_key(col_key);
         }
     };

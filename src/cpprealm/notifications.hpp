@@ -112,6 +112,7 @@ private:
 
 
 // MARK: PropertyChange
+
 /**
  Information about a specific property which changed in an `realm::object` change notification.
  */

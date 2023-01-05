@@ -8,6 +8,7 @@
 #include <cpprealm/internal/bridge/object.hpp>
 #include <cpprealm/internal/bridge/binary.hpp>
 #include <cpprealm/scheduler.hpp>
+#include <cpprealm/internal/type_info.hpp>
 
 namespace realm {
     class Group;
@@ -20,6 +21,7 @@ namespace realm {
     class Query;
     class ColKey;
     class LnkLst;
+    class Dictionary;
     template <typename T>
     struct object_base;
     class NotificationToken;
@@ -63,13 +65,68 @@ namespace realm::internal::bridge {
             using underlying = T;
         };
     }
+
+    struct dict {
+        class iterator {
+        public:
+            typedef std::forward_iterator_tag iterator_category;
+            typedef std::pair<const Mixed, Mixed> value_type;
+            typedef ptrdiff_t difference_type;
+            typedef const value_type* pointer;
+            typedef const value_type& reference;
+
+            value_type operator*() const;
+            iterator& operator++();
+            iterator& operator+=(ptrdiff_t adj);
+            iterator operator+(ptrdiff_t n) const;
+
+            size_t get_position();
+
+//        private:
+            unsigned char m_iterator[304]{};
+        };
+
+        dict(const ::realm::Dictionary&);
+        operator ::realm::Dictionary() const;
+
+        std::pair<mixed, mixed> get_pair(size_t ndx) const;
+        mixed get_key(size_t ndx) const;
+
+        size_t size() const;
+        bool is_null(size_t ndx) const;
+        mixed get_any(size_t ndx) const;
+        size_t find_any(mixed value) const;
+        size_t find_any_key(mixed value) const noexcept;
+        std::pair<iterator, bool> insert(const mixed& key, const mixed& value);
+        template <typename T>
+        std::pair<iterator, bool> insert(const mixed& key, const T& value) {
+            return insert(key, mixed(static_cast<typename type_info::type_info<T>::internal_type>(value)));
+        }
+        std::pair<iterator, bool> insert(mixed key, const obj& obj);
+
+        obj create_and_insert_linked_object(mixed key);
+
+        // throws std::out_of_range if key is not found
+        mixed get(mixed key) const;
+        // Noexcept version
+        std::optional<mixed> try_get(mixed key) const noexcept;
+        // adds entry if key is not found
+        const mixed operator[](mixed key);
+
+        obj get_object(StringData key);
+    private:
+        unsigned char m_dictionary[128]{};
+    };
+
     struct obj {
+        obj();
         obj(const Obj&); //NOLINT google-explicit-constructor
         operator Obj() const; //NOLINT google-explicit-constructor
         [[nodiscard]] table get_table() const noexcept;
         [[nodiscard]] table get_target_table(col_key) const noexcept;
         [[nodiscard]] bool is_null(const col_key& col_key) const;
         obj get_linked_object(const col_key& col_key);
+        dict get_dictionary(const col_key& col_key);
         template <typename T>
         T get(const col_key& col_key) const {
             if constexpr (is_optional<T>::value) {
@@ -94,6 +151,10 @@ namespace realm::internal::bridge {
         template <>
         [[nodiscard]] int64_t get(const col_key& col_key) const;
         template <>
+        [[nodiscard]] int get(const col_key& col_key) const {
+            return get<int64_t>(col_key);
+        }
+        template <>
         [[nodiscard]] bool get(const col_key& col_key) const;
         template <>
         [[nodiscard]] mixed get(const col_key& col_key) const;
@@ -113,7 +174,28 @@ namespace realm::internal::bridge {
 
         template <typename T>
         void set(const col_key& col_key, const T& value) {
-            set(col_key, persisted<T, void>::serialize(value));
+            if constexpr (type_info::MixedPersistableConcept<T>::value) {
+                std::visit([&col_key, this](auto&& arg) {
+                    using M = std::decay_t<decltype(arg)>;
+                    set(col_key, mixed(typename type_info::type_info<M>::internal_type(arg)));
+                }, value);
+            } else {
+                set(col_key, typename type_info::type_info<T>::internal_type(value));
+            }
+        }
+        template <typename T>
+        void set(const col_key& col_key, const std::optional<T>& value) {
+            if (!value) {
+                set_null(col_key);
+            } else {
+                if constexpr (type_info::MixedPersistableConcept<T>::value) {
+                    std::visit([this, &col_key](auto &&arg) {
+                        set(col_key, arg);
+                    }, *value);
+                } else {
+                    set(col_key, typename type_info::type_info<T, void>::internal_type(*value));
+                }
+            }
         }
         void set_list_values(const col_key& col_key, const std::vector<obj_key>& values);
         void set_list_values(const col_key& col_key, const std::vector<std::string>& values);

@@ -1,8 +1,11 @@
 #include <realm/sync/subscriptions.hpp>
 #include <cpprealm/flex_sync.hpp>
+#include <cpprealm/internal/bridge/utils.hpp>
 #include <realm/object-store/shared_realm.hpp>
 
 namespace realm {
+    static_assert(internal::bridge::SizeCheck<32, sizeof(SyncSubscription)>{});
+
     std::string_view SyncSubscription::object_class_name() {
         return reinterpret_cast<sync::Subscription*>(m_subscription)->object_class_name();
     }

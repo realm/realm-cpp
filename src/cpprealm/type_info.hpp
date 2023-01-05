@@ -23,7 +23,6 @@
 #include <variant>
 
 #include <realm/obj.hpp>
-#include "cpprealm/internal/bridge/obj.hpp"
 
 namespace realm {
     namespace internal {

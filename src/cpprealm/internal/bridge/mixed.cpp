@@ -1,6 +1,8 @@
 #include <cpprealm/internal/bridge/mixed.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 #include <realm/mixed.hpp>
+#include <cpprealm/internal/type_info.hpp>
+#include <cpprealm/persisted_uuid.hpp>
 
 namespace realm::internal::bridge {
 
@@ -25,7 +27,7 @@ namespace realm::internal::bridge {
     mixed::mixed(const struct uuid &v) {
         new (&m_mixed) Mixed(static_cast<UUID>(v));
     }
-    mixed::mixed(const realm::Mixed &v) {
+    mixed::mixed(const ::realm::Mixed &v) {
         if (v.get_type() == type_String) {
             m_owned_string = v.get_string();
         }
@@ -74,4 +76,13 @@ namespace realm::internal::bridge {
     data_type mixed::type() const noexcept {
         return data_type(static_cast<int>(reinterpret_cast<const Mixed *>(m_mixed)->get_type()));
     }
+
+//    mixed::mixed(
+//            const std::variant<int64_t, bool, std::string, double, std::vector<uint8_t>, std::chrono::time_point<std::chrono::system_clock>, ::realm::uuid> &v)
+//    : mixed(std::visit([](auto&& arg) {
+//        using M = typename type_info::type_info<std::decay_t<decltype(arg)>>::internal_type;
+//        return mixed(M(arg));
+//        }, v))
+//    {
+//    }
 }

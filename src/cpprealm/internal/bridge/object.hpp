@@ -94,11 +94,13 @@ namespace realm::internal::bridge {
         [[nodiscard]] bool is_valid() const;
 
         notification_token add_notification_callback(std::shared_ptr<collection_change_callback>&& cb);
+        notification_token add_notification_callback(const std::shared_ptr<collection_change_callback>& cb);
 
         [[nodiscard]] object_schema get_object_schema() const;
 
         [[nodiscard]] list get_list(const col_key&) const;
         [[nodiscard]] dictionary get_dictionary(const col_key&) const;
+        object freeze(internal::bridge::realm) const;
     private:
         unsigned char m_object[104]{};
     };

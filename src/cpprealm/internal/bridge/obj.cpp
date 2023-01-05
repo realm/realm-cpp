@@ -3,16 +3,112 @@
 #include "realm/obj.hpp"
 #include <realm/object-store/object_store.hpp>
 #include <realm/list.hpp>
+#include <realm/dictionary.hpp>
 
 #include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
-#include <cpprealm/internal/type_info.hpp>
 #include <cpprealm/internal/bridge/lnklst.hpp>
+#include <cpprealm/internal/bridge/uuid.hpp>
+#include <cpprealm/internal/bridge/timestamp.hpp>
+#include <cpprealm/internal/bridge/mixed.hpp>
 #include <cpprealm/object.hpp>
 
 namespace realm::internal::bridge {
     static_assert(SizeCheck<64, sizeof(Obj)>{});
+    static_assert(SizeCheck<128, sizeof(::realm::Dictionary)>{});
+    static_assert(SizeCheck<304, sizeof(::realm::Dictionary::Iterator)>{});
+
+    dict::iterator::value_type dict::iterator::operator*() const {
+        return reinterpret_cast<const ::realm::Dictionary::Iterator*>(m_iterator)->operator*();
+    }
+
+    dict::iterator &dict::iterator::operator++() {
+        new (&m_iterator)
+                ::realm::Dictionary::Iterator(reinterpret_cast<::realm::Dictionary::Iterator*>(m_iterator)->operator++());
+        return *this;
+    }
+
+    dict::iterator& dict::iterator::operator+=(ptrdiff_t adj) {
+        new (&m_iterator)
+                ::realm::Dictionary::Iterator(reinterpret_cast<::realm::Dictionary::Iterator*>(m_iterator)->operator+=(adj));
+        return *this;
+    }
+
+    dict::iterator dict::iterator::operator+(ptrdiff_t n) const {
+        reinterpret_cast<const ::realm::Dictionary::Iterator*>(m_iterator)->operator+(n);
+        return *this;
+    }
+
+    size_t dict::iterator::get_position() {
+        return reinterpret_cast<::realm::Dictionary::Iterator*>(m_iterator)->get_position();
+    }
+
+    dict::dict(const ::realm::Dictionary&v) {
+        new (&m_dictionary) ::realm::Dictionary(v);
+    }
+
+    dict::operator ::realm::Dictionary() const {
+        return *reinterpret_cast<const ::realm::Dictionary*>(m_dictionary);
+    }
+
+    std::pair<mixed, mixed> dict::get_pair(size_t ndx) const {
+        return reinterpret_cast<const ::realm::Dictionary*>(m_dictionary)->get_pair(ndx);
+    }
+
+    mixed dict::get_key(size_t ndx) const {
+        return reinterpret_cast<const ::realm::Dictionary*>(m_dictionary)->get_key(ndx);
+    }
+
+    size_t dict::size() const {
+        return reinterpret_cast<const ::realm::Dictionary*>(m_dictionary)->size();
+    }
+    bool dict::is_null(size_t ndx) const {
+        return reinterpret_cast<const ::realm::Dictionary*>(m_dictionary)->is_null(ndx);
+    }
+    mixed dict::get_any(size_t ndx) const {
+        return reinterpret_cast<const ::realm::Dictionary*>(m_dictionary)->get_any(ndx);
+    }
+    size_t dict::find_any(mixed value) const {
+        return reinterpret_cast<const ::realm::Dictionary*>(m_dictionary)->find_any(static_cast<Mixed>(value));
+    }
+    size_t dict::find_any_key(mixed value) const noexcept {
+        return reinterpret_cast<const ::realm::Dictionary*>(m_dictionary)->find_any_key(static_cast<Mixed>(value));
+    }
+    std::pair<dict::iterator, bool> dict::insert(const mixed& key, const mixed& value) {
+        auto pair = reinterpret_cast<::realm::Dictionary*>(m_dictionary)->insert(static_cast<Mixed>(key),
+                                                                                 static_cast<Mixed>(value));
+        dict::iterator i;
+        new (&i.m_iterator) ::realm::Dictionary::Iterator(pair.first);
+        return { i, pair.second };
+    }
+    std::pair<dict::iterator, bool> dict::insert(mixed key, const obj& obj) {
+        auto pair = reinterpret_cast<::realm::Dictionary*>(m_dictionary)->insert(static_cast<Mixed>(key), obj);
+        dict::iterator i;
+        new (&i.m_iterator) ::realm::Dictionary::Iterator(pair.first);
+        return { i, pair.second };
+    }
+
+    obj dict::create_and_insert_linked_object(mixed key) {
+        return reinterpret_cast<::realm::Dictionary*>(m_dictionary)->create_and_insert_linked_object(static_cast<Mixed>(key));
+    }
+
+    // throws std::out_of_range if key is not found
+    mixed dict::get(mixed key) const {
+        return reinterpret_cast<const ::realm::Dictionary*>(m_dictionary)->get(static_cast<Mixed>(key));
+    }
+    // Noexcept version
+    std::optional<mixed> dict::try_get(mixed key) const noexcept {
+        return reinterpret_cast<const ::realm::Dictionary*>(m_dictionary)->try_get(static_cast<Mixed>(key));
+    }
+    // adds entry if key is not found
+    const mixed dict::operator[](mixed key) {
+        return reinterpret_cast<::realm::Dictionary*>(m_dictionary)->operator[](static_cast<Mixed>(key));
+    }
+
+    obj dict::get_object(StringData key) {
+        return reinterpret_cast<::realm::Dictionary*>(m_dictionary)->get_object(key);
+    }
 
     group::group(realm& val)
     : m_realm(val)
@@ -31,6 +127,9 @@ namespace realm::internal::bridge {
         return *reinterpret_cast<const Obj*>(m_obj);
     }
 
+    dict obj::get_dictionary(const col_key &col_key) {
+        return reinterpret_cast<const Obj*>(m_obj)->get_dictionary(col_key);
+    }
     obj_key obj::get_key() const {
         return reinterpret_cast<const Obj*>(m_obj)->get_key();
     }
@@ -167,6 +266,10 @@ namespace realm::internal::bridge {
 
     obj obj::create_and_set_linked_object(const col_key &v) {
         return reinterpret_cast<Obj*>(m_obj)->create_and_set_linked_object(v);
+    }
+
+    obj::obj() {
+        new (&m_obj) Obj();
     }
 }
 

@@ -59,7 +59,7 @@ struct SyncSubscription {
 private:
     SyncSubscription(const sync::Subscription&);
 
-    unsigned char m_subscription[32];
+    unsigned char m_subscription[32]{};
     friend struct SyncSubscriptionSet;
     friend struct MutableSyncSubscriptionSet;
 };

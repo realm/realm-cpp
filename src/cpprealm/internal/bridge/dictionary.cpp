@@ -1,4 +1,5 @@
 #include <cpprealm/internal/bridge/dictionary.hpp>
+#include <cpprealm/persisted_uuid.hpp>
 #include <cpprealm/internal/bridge/mixed.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>

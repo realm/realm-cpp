@@ -81,6 +81,14 @@ namespace realm::internal::bridge {
     bool operator ==(table const& lhs, table const& rhs) {
         return static_cast<TableRef>(lhs) == static_cast<TableRef>(rhs);
     }
+
+    obj table::get_object(const obj_key &key) const {
+        return static_cast<const TableRef>(*this)->get_object(key);
+    }
+
+    int64_t table::get_key() const {
+        return static_cast<const TableRef>(*this)->get_key().value;
+    }
 //    query table::query(decltype(std::get<0>(PtrExtractor<&table::query>::SpreadArgs)) a,
 //                       decltype(std::get<1>(PtrExtractor<&table::query>::SpreadArgs)) b) const {
 //        return (*reinterpret_cast<const TableRef*>(m_table))->query(a,

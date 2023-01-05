@@ -36,6 +36,9 @@ namespace realm::internal::bridge {
     dictionary object::get_dictionary(const col_key &v) const {
         return Dictionary(get_realm(), obj(), v);
     }
+    object object::freeze(internal::bridge::realm v) const {
+        return reinterpret_cast<const Object*>(m_object)->freeze(v);
+    }
     bool object::is_valid() const {
         return reinterpret_cast<const Object*>(m_object)->is_valid();
     }
@@ -62,7 +65,20 @@ namespace realm::internal::bridge {
         } ccb(std::move(cb));
         return reinterpret_cast<Object*>(m_object)->add_notification_callback(ccb);
     }
-
+    notification_token object::add_notification_callback(const std::shared_ptr<collection_change_callback>& cb) {
+        struct wrapper : CollectionChangeCallback {
+            const std::shared_ptr<collection_change_callback> m_cb;
+            explicit wrapper(const std::shared_ptr<collection_change_callback>& cb)
+                    : m_cb(cb) {}
+            void before(const CollectionChangeSet& v) const {
+                m_cb->before(v);
+            }
+            void after(const CollectionChangeSet& v) const {
+                m_cb->after(v);
+            }
+        } ccb(cb);
+        return reinterpret_cast<Object*>(m_object)->add_notification_callback(ccb);
+    }
     bool index_set::empty() const {
         return reinterpret_cast<const IndexSet*>(m_idx_set)->empty();
     }
