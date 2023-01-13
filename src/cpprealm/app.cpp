@@ -33,11 +33,6 @@ namespace realm {
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppCredentials)>{});
     static_assert(internal::bridge::SizeCheck<72, sizeof(realm::app::AppError)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
-#else
-    static_assert(internal::bridge::SizeCheck<8, sizeof(realm::app::AppCredentials)>{});
-    static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppCredentials)>{});
-    static_assert(internal::bridge::SizeCheck<40, sizeof(realm::app::AppError)>{});
-    static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppError)>{});
 #endif
 
     static_assert((int)user::state::logged_in == (int)SyncUser::State::LoggedIn);

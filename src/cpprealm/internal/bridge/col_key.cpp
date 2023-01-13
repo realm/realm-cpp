@@ -9,15 +9,12 @@ namespace realm::internal::bridge {
 #elif __x86_64__
     static_assert(SizeCheck<8, sizeof(ColKey)>{});
     static_assert(SizeCheck<8, alignof(ColKey)>{});
-    #elif __arm__
+#elif __arm__
     static_assert(SizeCheck<8, sizeof(ColKey)>{});
     static_assert(SizeCheck<8, alignof(ColKey)>{});
-    #elif __aarch64__
+#elif __aarch64__
     static_assert(SizeCheck<8, sizeof(ColKey)>{});
     static_assert(SizeCheck<8, alignof(ColKey)>{});
-    #else
-    static_assert(SizeCheck<8, sizeof(ColKey)>{});
-    static_assert(SizeCheck<4, alignof(ColKey)>{});
 #endif
 
     col_key::col_key() noexcept {

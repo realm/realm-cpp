@@ -29,8 +29,6 @@ namespace realm::internal::bridge {
         std::aligned_storage<16, 1>::type m_uuid[1];
 #elif __aarch64__
         std::aligned_storage<16, 1>::type m_uuid[1];
-#else
-        std::aligned_storage<12, 1>::type m_uuid[1];
 #endif
         friend bool operator ==(const uuid&, const uuid&);
         friend bool operator !=(const uuid&, const uuid&);

@@ -128,6 +128,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
         realm::property<&AllTypesObject::map_embedded_col>("map_embedded_col"));
 };
 
+/*
 struct AllTypesAsymmetricObject: realm::asymmetric_object<AllTypesAsymmetricObject> {
     enum class Enum {
         one, two
@@ -207,7 +208,7 @@ struct AllTypesAsymmetricObject: realm::asymmetric_object<AllTypesAsymmetricObje
                                                  realm::property<&AllTypesAsymmetricObject::map_mixed_col>("map_mixed_col"),
                                                  realm::property<&AllTypesAsymmetricObject::map_embedded_col>("map_embedded_col"));
 };
-
+*/
 
 struct EmbeddedFoo: realm::embedded_object<EmbeddedFoo> {
     realm::persisted<int64_t> bar;
@@ -219,7 +220,7 @@ struct Foo: realm::object<Foo> {
     realm::persisted<int64_t> bar;
     realm::persisted<std::optional<EmbeddedFoo>> foo;
 
-    realm::persisted<int> bar2;
+    realm::persisted<int64_t> bar2;
     realm::persisted<std::optional<EmbeddedFoo>> foo2;
 
     Foo() = default;
@@ -254,11 +255,11 @@ inline bool operator==(const UppercaseString& lhs, const char* rhs) {
     return static_cast<std::string>(lhs) == rhs;
 }
 
-struct CustomStringObject : realm::object<CustomStringObject> {
-    realm::persisted<UppercaseString> str_col;
-    static constexpr auto schema = realm::schema("CustomStringObject",
-                                                    realm::property<&CustomStringObject::str_col>("str_col"));
-};
+//struct CustomStringObject : realm::object<CustomStringObject> {
+//    realm::persisted<UppercaseString> str_col;
+//    static constexpr auto schema = realm::schema("CustomStringObject",
+//                                                    realm::property<&CustomStringObject::str_col>("str_col"));
+//};
 struct IntTypesObject: realm::object<IntTypesObject> {
     realm::persisted<int64_t> int64_col;
 

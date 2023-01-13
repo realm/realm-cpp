@@ -1,7 +1,3 @@
-//
-// Created by Jason Flax on 12/5/22.
-//
-
 #ifndef CPP_REALM_THREAD_SAFE_REFERENCE_HPP
 #define CPP_REALM_THREAD_SAFE_REFERENCE_HPP
 
@@ -33,8 +29,6 @@ namespace realm::internal::bridge {
         std::aligned_storage<4, 4>::type m_thread_safe_reference[1];
 #elif __aarch64__
         std::aligned_storage<8, 8>::type m_thread_safe_reference[1];
-#else
-        std::aligned_storage<12, 4>::type m_thread_safe_reference[1];
 #endif
     };
 

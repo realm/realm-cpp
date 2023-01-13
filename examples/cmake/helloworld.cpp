@@ -53,6 +53,7 @@ void run_realm() {
     synced_realm.write([&synced_realm, &person]() {
         person.str_col = "sarah";
     });
+    user.sync_manager().path_for_realm()
 
     synced_realm.write([&synced_realm, &person]() {
         person.str_col = "bob";

@@ -21,9 +21,6 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<120, sizeof(Property)>{});
     static_assert(SizeCheck<8, alignof(Property)>{});
-#else
-    static_assert(SizeCheck<120, sizeof(Property)>{});
-    static_assert(SizeCheck<4, alignof(Property)>{});
 #endif
 
     property::property(const realm::Property &v) {

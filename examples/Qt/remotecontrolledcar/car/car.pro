@@ -14,10 +14,10 @@ target.path = $$PWD
 INSTALLS += target
 LIBS += -L/usr/local/lib \
     -lcpprealm \
-    -lrealm-object-store-dbg \
-    -lrealm-sync-dbg \
-    -lrealm-dbg \
-    -lrealm-parser-dbg \
+    -lrealm-object-store \
+    -lrealm-sync \
+    -lrealm \
+    -lrealm-parser \
     -lz -lcurl
 
 linux-g++*: LIBS += -lssl -lcrypto

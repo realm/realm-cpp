@@ -21,6 +21,7 @@
 
 #include <cpprealm/object.hpp>
 #include <cpprealm/persisted.hpp>
+#include <cpprealm/internal/bridge/realm.hpp>
 
 namespace realm {
     // For forward links

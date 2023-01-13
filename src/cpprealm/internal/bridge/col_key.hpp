@@ -19,11 +19,11 @@ namespace realm::internal::bridge {
         std::aligned_storage<8, 4>::type m_col_key[1];
 #elif __x86_64__
         std::aligned_storage<8, 8>::type m_col_key[1];
-    #elif __arm__
+#elif __arm__
         std::aligned_storage<8, 8>::type m_col_key[1];
-    #elif __aarch64__
+#elif __aarch64__
         std::aligned_storage<8, 8>::type m_col_key[1];
-    #else
+#else
         std::aligned_storage<8, 4>::type m_col_key[1];
 #endif
     };

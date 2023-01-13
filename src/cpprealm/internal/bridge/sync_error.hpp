@@ -41,8 +41,6 @@ namespace realm::internal::bridge {
         std::aligned_storage<80, 4>::type m_error[1];
 #elif __aarch64__
         std::aligned_storage<152, 8>::type m_error[1];
-#else
-        std::aligned_storage<80, 4>::type m_error[1];
 #endif
     };
 }

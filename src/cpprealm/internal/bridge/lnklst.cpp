@@ -18,9 +18,6 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<160, sizeof(LnkLst)>{});
     static_assert(SizeCheck<8, alignof(LnkLst)>{});
-#else
-    static_assert(SizeCheck<160, sizeof(LnkLst)>{});
-    static_assert(SizeCheck<8, alignof(LnkLst)>{});
 #endif
 
     lnklst::lnklst(const LnkLst &v) {

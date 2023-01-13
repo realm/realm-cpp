@@ -19,13 +19,13 @@
 #ifndef notifications_hpp
 #define notifications_hpp
 
+#include <cpprealm/persisted.hpp>
 #include <cpprealm/thread_safe_reference.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
 
 #include <any>
 #include <future>
 #include <utility>
-#include "persisted.hpp"
 
 namespace realm {
 template <typename T>

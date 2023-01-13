@@ -20,9 +20,6 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<152, sizeof(SyncError)>{});
     static_assert(SizeCheck<8, alignof(SyncError)>{});
-#else
-    static_assert(SizeCheck<80, sizeof(SyncError)>{});
-    static_assert(SizeCheck<4, alignof(SyncError)>{});
 #endif
     std::string sync_error::message() const {
         return reinterpret_cast<const SyncError*>(m_error)->message;

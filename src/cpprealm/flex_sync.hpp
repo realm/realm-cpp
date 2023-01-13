@@ -122,12 +122,10 @@ namespace realm {
     #elif defined(__GNUC__) || defined(__GNUG__)
         std::aligned_storage<192, 8>::type m_subscription_set[1];
     #endif
-        #elif __arm__
-            std::aligned_storage<136, 8>::type m_subscription_set[1];
-        #elif __aarch64__
-            std::aligned_storage<184, 8>::type m_subscription_set[1];
-        #else
-            std::aligned_storage<116, 4>::type m_subscription_set[1];
+#elif __arm__
+    std::aligned_storage<136, 8>::type m_subscription_set[1];
+#elif __aarch64__
+    std::aligned_storage<184, 8>::type m_subscription_set[1];
 #endif
         std::reference_wrapper<internal::bridge::realm> m_realm;
         friend struct SyncSubscriptionSet;
@@ -157,12 +155,10 @@ namespace realm {
     #elif defined(__GNUC__) || defined(__GNUG__)
         std::aligned_storage<104, 8>::type m_subscription_set[1];
     #endif
-        #elif __arm__
-            std::aligned_storage<64, 8>::type m_subscription_set[1];
-        #elif __aarch64__
-            std::aligned_storage<96, 8>::type m_subscription_set[1];
-        #else
-            std::aligned_storage<60, 4>::type m_subscription_set[1];
+#elif __arm__
+        std::aligned_storage<64, 8>::type m_subscription_set[1];
+#elif __aarch64__
+        std::aligned_storage<96, 8>::type m_subscription_set[1];
 #endif
         std::reference_wrapper<internal::bridge::realm> m_realm;
     };

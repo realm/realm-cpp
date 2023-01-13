@@ -42,9 +42,6 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<312, sizeof(Realm::Config)>{});
     static_assert(SizeCheck<8, alignof(Realm::Config)>{});
     #endif
-#else
-    static_assert(SizeCheck<368, sizeof(Realm::Config)>{});
-    static_assert(SizeCheck<16, alignof(Realm::Config)>{});
 #endif
 
     realm::realm(std::shared_ptr<Realm> v)
@@ -72,7 +69,6 @@ namespace realm::internal::bridge {
 
         ~internal_scheduler() override = default;
         void invoke(util::UniqueFunction<void ()> &&fn) override {
-//            auto f = fn.release();
             m_scheduler->invoke([fn = fn.release()]() {
                 fn->call();
             });

@@ -353,24 +353,6 @@ namespace realm {
         }
         __cpp_realm_friends
     };
-
-    namespace {
-        struct static_object : object<static_object> {
-            persisted<int64_t> int_col;
-
-            static constexpr auto schema = realm::schema("static_object",
-                                                         realm::property<&static_object::int_col>("int_col"));
-        };
-        struct static_embedded_object : embedded_object<static_embedded_object> {
-            persisted<int64_t> int_col;
-
-            static constexpr auto schema = realm::schema("static_embedded_object",
-                                         realm::property<&static_embedded_object::int_col>("int_col"));
-        };
-        static_assert(sizeof(persisted<std::vector<std::string>>));
-        static_assert(sizeof(persisted<std::vector<static_object>>));
-        static_assert(sizeof(persisted<std::vector<static_embedded_object>>));
-    }
 }
 
 #endif //CPP_REALM_LIST_HPP

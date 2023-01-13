@@ -251,13 +251,6 @@ namespace realm {
             is_managed = true;
         }
 
-        ////////
-        template <typename T>
-        std::enable_if_t<std::is_base_of_v<T, object_base<T>>, mapped_type&> // NOLINT(misc-unconventional-assign-operator)
-        operator=(const T o) {
-            return *this;
-        }
-
         box_base& operator=(const mapped_type& o) {
             if (is_managed) {
                 m_backing_map.get().insert(m_key, std::move(o));

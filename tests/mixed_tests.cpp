@@ -8,12 +8,12 @@ TEST_CASE("mixed", "[mixed]") {
    SECTION("unmanaged_managed_mixed_get_set", "[mixed]") {
        auto obj = AllTypesObject();
        obj.mixed_col = 42;
-       CHECK(obj.mixed_col == 42);
+       CHECK(obj.mixed_col == static_cast<int64_t>(42));
        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(path);
        realm.write([&realm, &obj] {
            realm.add(obj);
        });
-       CHECK(obj.mixed_col == 42);
+       CHECK(obj.mixed_col == static_cast<int64_t>(42));
        realm.write([&obj] {
            obj.mixed_col = "hello world";
        });

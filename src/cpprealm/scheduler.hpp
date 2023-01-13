@@ -36,69 +36,67 @@ namespace realm {
         [[nodiscard]] virtual bool can_invoke() const noexcept = 0;
     };
 
-    namespace {
-        struct looper {
-            using task = std::packaged_task<void()>;
-            std::queue<task> tasks;
-            std::atomic<bool> is_running = true;
-            bool is_moved = false;
+    struct looper {
+        using task = std::packaged_task<void()>;
+        std::queue<task> tasks;
+        std::atomic<bool> is_running = true;
+        bool is_moved = false;
 
-            looper(const looper &) = delete;
+        looper(const looper &) = delete;
 
-            looper(looper &&l) noexcept
-                    : tasks(std::move(l.tasks)), t(std::move(l.t)) {
-                l.is_moved = true;
+        looper(looper &&l) noexcept
+                : tasks(std::move(l.tasks)), t(std::move(l.t)) {
+            l.is_moved = true;
+        }
+
+        ~looper() {
+            if (!is_moved) {
+                is_running = false;
+                t.join();
             }
+        }
 
-            ~looper() {
-                if (!is_moved) {
-                    is_running = false;
-                    t.join();
-                }
-            }
-
-            looper() {
-                t = std::thread([&] {
-                    while (is_running) {
-                        if (size()) {
-                            front()();
-                            pop();
-                        }
+        looper() {
+            t = std::thread([&] {
+                while (is_running) {
+                    if (size()) {
+                        front()();
+                        pop();
                     }
-                });
-            }
+                }
+            });
+        }
 
-            task &front() {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                return tasks.front();
-            }
+        task &front() {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            return tasks.front();
+        }
 
-            size_t size() {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                return tasks.size();
-            }
+        size_t size() {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            return tasks.size();
+        }
 
-            task &push(task &&value) {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                tasks.push(std::move(value));
-                return tasks.front();
-            }
+        task &push(task &&value) {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            tasks.push(std::move(value));
+            return tasks.front();
+        }
 
-            task &push(std::function<void()> &&value) {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                tasks.push(std::packaged_task<void()>(std::move(value)));
-                return tasks.front();
-            }
+        task &push(std::function<void()> &&value) {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            tasks.push(std::packaged_task<void()>(std::move(value)));
+            return tasks.front();
+        }
 
-            void pop() {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                tasks.pop();
-            }
+        void pop() {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            tasks.pop();
+        }
 
-            std::thread t;
-            mutable std::mutex m_mutex;
-        };
-    }
+        std::thread t;
+        mutable std::mutex m_mutex;
+    };
 
     struct NoPlatformScheduler : public scheduler {
         static inline std::shared_ptr<scheduler> make() {

@@ -111,6 +111,11 @@ namespace realm::internal::type_info {
                     std::negation<std::is_same<Custom, bool>>,
                     std::negation<std::is_same<Custom, int64_t>>>;
             template <class Custom>
+            using is_double_persistable = std::conjunction<
+                    std::is_convertible<Custom, double>,
+                    std::is_constructible<Custom, double>,
+                    std::negation<std::is_same<Custom, double>>>;
+            template <class Custom>
             using is_string_persistable = is_persistable<Custom, std::string>;
             template <class Custom>
             using is_bool_persistable = std::conjunction<
@@ -136,6 +141,11 @@ namespace realm::internal::type_info {
             struct is_custom_persistable<Custom, std::enable_if_t<is_int_persistable<Custom>::value>> :
                     std::true_type {
                 using underlying = int64_t;
+            };
+            template <typename Custom>
+            struct is_custom_persistable<Custom, std::enable_if_t<is_double_persistable<Custom>::value>> :
+                    std::true_type {
+                using underlying = double;
             };
             template <typename Custom>
             struct is_custom_persistable<Custom, std::enable_if_t<is_bool_persistable<Custom>::value>> :

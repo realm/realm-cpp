@@ -28,11 +28,6 @@ namespace realm {
     static_assert(internal::bridge::SizeCheck<8, alignof(sync::SubscriptionSet)>{});
     static_assert(internal::bridge::SizeCheck<184, sizeof(sync::MutableSubscriptionSet)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
-#else
-    static_assert(internal::bridge::SizeCheck<60, sizeof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<4, alignof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<116, sizeof(sync::MutableSubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<4, alignof(sync::MutableSubscriptionSet)>{});
 #endif
     SyncSubscription::SyncSubscription(const sync::Subscription &v)
     {

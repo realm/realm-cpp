@@ -24,9 +24,6 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<64, sizeof(Obj)>{});
     static_assert(SizeCheck<8, alignof(Obj)>{});
-#else
-    static_assert(SizeCheck<64, sizeof(Obj)>{});
-    static_assert(SizeCheck<4, alignof(Obj)>{});
 #endif
 
     group::group(realm& val)

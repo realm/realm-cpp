@@ -56,10 +56,6 @@ private:
 
 template <typename ...Ts>
 struct thread_safe_reference<db<Ts...>> {
-//    thread_safe_reference(std::unique_ptr<ThreadSafeReference>&& tsr)
-//    : m_tsr(std::move(tsr))
-//    {
-//    }
     thread_safe_reference(internal::bridge::thread_safe_reference&& tsr)
             : m_tsr(std::move(tsr))
     {

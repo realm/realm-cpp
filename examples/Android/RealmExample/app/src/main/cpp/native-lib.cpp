@@ -20,7 +20,7 @@ public:
 
 // Realm specific vars
 realm::notification_token token;
-std::unique_ptr<Car> m_car;
+Car m_car;
 std::unique_ptr<realm::db<Car>> synced_realm;
 
 // JNI specific vars
@@ -56,12 +56,12 @@ Java_com_mongodb_realmexample_MainActivity_setupRealm(JNIEnv * env, jobject act,
     auto cars = synced_realm->objects<Car>();
 
     // Car with _id of 0 must already exist in Atlas.
-    m_car = std::make_unique<Car>(cars[0]);
+    m_car = cars[0];
     synced_realm->write([&]() {
-        m_car->speed += 1.0;
+        m_car.speed += 1.0;
     });
 
-    token = m_car->observe([&](auto changes) {
+    token = m_car.observe([&](auto changes) {
         JNIEnv* jnv;
         jvm->AttachCurrentThread(&jnv, NULL);
         std::string str;
@@ -76,40 +76,40 @@ Java_com_mongodb_realmexample_MainActivity_setupRealm(JNIEnv * env, jobject act,
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_mongodb_realmexample_MainActivity_moveForward(JNIEnv * env, jobject act) {
-    auto c = *(m_car->speed);
+    auto c = *(m_car.speed);
     synced_realm->write([&]() {
-        m_car->speed += 1.0;
+        m_car.speed += 1.0;
     });
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_mongodb_realmexample_MainActivity_moveBack(JNIEnv * env, jobject act) {
     synced_realm->write([]() {
-        m_car->speed -= 1.0;
+        m_car.speed -= 1.0;
     });
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_mongodb_realmexample_MainActivity_moveLeft(JNIEnv * env, jobject act) {
     synced_realm->write([]() {
-        m_car->wheelsAngle -= 20.0;
+        m_car.wheelsAngle -= 20.0;
     });
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_mongodb_realmexample_MainActivity_moveRight(JNIEnv * env, jobject act) {
     synced_realm->write([]() {
-        m_car->wheelsAngle += 20.0;
+        m_car.wheelsAngle += 20.0;
     });
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_mongodb_realmexample_MainActivity_changeColor(JNIEnv * env, jobject act) {
     synced_realm->write([&]() {
-        if (m_car->color < 5) {
-            m_car->color += 1;
+        if (m_car.color < 5) {
+            m_car.color += 1;
         } else {
-            m_car->color = 0;
+            m_car.color = 0;
         }
     });
 }
@@ -117,8 +117,8 @@ Java_com_mongodb_realmexample_MainActivity_changeColor(JNIEnv * env, jobject act
 extern "C" JNIEXPORT void JNICALL
 Java_com_mongodb_realmexample_MainActivity_resetCar(JNIEnv * env, jobject act) {
     synced_realm->write([&]() {
-        m_car->color = 0;
-        m_car->wheelsAngle = 0;
-        m_car->speed = 0;
+        m_car.color = 0;
+        m_car.wheelsAngle = 0;
+        m_car.speed = 0;
     });
 }

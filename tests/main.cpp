@@ -38,17 +38,14 @@ int main(int argc, char* argv[]) {
         config.testsOrTags.push_back("~[sync]");
 #else
         config.showDurations = Catch::ShowDurations::Always; // this is to help debug hangs
-//        config.reporterSpecifications.push_back(Catch::ReporterSpec{"console", {}, {}, {}});
-//        config.reporterSpecifications.push_back(Catch::ReporterSpec{"xml", {"TestResults.xml"}, {}, {}});
-        config.testsOrTags.emplace_back("~[performance]");
-//        config.testsOrTags.emplace_back("~[app]");
-//        config.testsOrTags.emplace_back("~[sync]");
+//        config.testsOrTags.emplace_back("~[performance]");
+        config.testsOrTags.emplace_back("~[app]");
+        config.testsOrTags.emplace_back("~[sync]");
 #endif
     }
 
     Catch::Session session;
     session.useConfigData(config);
     int result = session.run(argc, argv);
-//    int result = session.run();
     return result < 0xff ? result : 0xff;
 }

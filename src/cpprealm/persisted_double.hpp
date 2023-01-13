@@ -21,20 +21,108 @@
 #define REALM_PERSISTED_DOUBLE_HPP
 
 #include <cpprealm/persisted.hpp>
+#include <cpprealm/persisted_custom.hpp>
 
-//namespace realm {
-//    template<typename T>
-//    struct persisted<T, type_info::DoublePersistable<T>> : public persisted_add_assignable_base<T> {
-//        using persisted_add_assignable_base<T>::persisted_add_assignable_base;
-//        using persisted_add_assignable_base<T>::operator*;
-//        using persisted_add_assignable_base<T>::operator=;
-//        using persisted_add_assignable_base<T>::operator+;
-//        using persisted_add_assignable_base<T>::operator++;
-//        using persisted_add_assignable_base<T>::operator+=;
-//        using persisted_add_assignable_base<T>::operator-;
-//        using persisted_add_assignable_base<T>::operator-=;
-//        using persisted_add_assignable_base<T>::operator--;
-//    };
-//}
+namespace realm {
+
+    template<>
+    struct persisted<double> : persisted_primitive_base<double> {
+        template<typename T>
+        std::enable_if_t<std::is_arithmetic_v<T>, persisted &> // NOLINT(misc-unconventional-assign-operator)
+        operator=(const T &o) {
+            if (this->is_managed()) {
+                this->m_object->get_obj().template set<double>(
+                        this->managed,
+                        static_cast<double>(o));
+            } else {
+                new(&this->unmanaged) T(o);
+            }
+            return *this;
+        }
+
+        template<typename T>
+        std::enable_if_t<std::is_floating_point_v<T>>
+        operator+=(const T &o) {
+            if (this->is_managed()) {
+                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed));
+                this->m_object->get_obj().template set<double>(
+                        this->managed,
+                        static_cast<double>(old_val + o));
+            } else {
+                this->unmanaged += T(o);
+            }
+        }
+        void operator++() {
+            if (this->is_managed()) {
+                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed));
+                this->m_object->get_obj().template set<double>(
+                        this->managed,
+                        static_cast<double>(++old_val));
+            } else {
+                ++this->unmanaged;
+            }
+        }
+        template<typename T>
+        std::enable_if_t<std::is_floating_point_v<T>>
+        operator-=(const T &o) {
+            if (this->is_managed()) {
+                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed));
+                this->m_object->get_obj().template set<double>(
+                        this->managed,
+                        static_cast<double>(old_val - o));
+            } else {
+                this->unmanaged -= T(o);
+            }
+        }
+        void operator--() {
+            if (this->is_managed()) {
+                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed));
+                this->m_object->get_obj().template set<double>(
+                        this->managed,
+                        static_cast<double>(--old_val));
+            } else {
+                --this->unmanaged;
+            }
+        }
+        template<typename T>
+        std::enable_if_t<std::is_floating_point_v<T>>
+        operator*=(const T &o) {
+            if (this->is_managed()) {
+                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed));
+                this->m_object->get_obj().template set<int64_t>(
+                        this->managed,
+                        static_cast<double>(old_val * o));
+            } else {
+                this->unmanaged *= T(o);
+            }
+        }
+
+    protected:
+        static double serialize(double);
+
+        static double deserialize(double);
+
+        __cpp_realm_friends
+    };
+
+    __cpp_realm_generate_operator(double, >, greater)
+
+    __cpp_realm_generate_operator(double, <, less)
+
+    __cpp_realm_generate_operator(double, <=, less_equal)
+
+    __cpp_realm_generate_operator(double, >=, greater_equal)
+
+    __cpp_realm_generate_operator(double, ==, equal)
+
+    __cpp_realm_generate_operator(double, !=, not_equal)
+
+    namespace {
+        static_assert(sizeof(persisted<double>{} == 1));
+        static_assert(sizeof(persisted<double>{} == 1.0));
+        static_assert(sizeof(persisted<double>{}.operator=(1)));
+        static_assert(sizeof(persisted<double>{}.operator=(1.0)));
+    }
+} // namespace realm
 
 #endif //REALM_PERSISTED_DOUBLE_HPP

@@ -28,11 +28,6 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(TableRef)>{});
     static_assert(SizeCheck<16, sizeof(ConstTableRef)>{});
     static_assert(SizeCheck<8, alignof(ConstTableRef)>{});
-#else
-    static_assert(SizeCheck<12, sizeof(TableRef)>{});
-    static_assert(SizeCheck<4, alignof(TableRef)>{});
-    static_assert(SizeCheck<12, sizeof(ConstTableRef)>{});
-    static_assert(SizeCheck<4, alignof(ConstTableRef)>{});
 #endif
     table::table(const TableRef & ref)
     {

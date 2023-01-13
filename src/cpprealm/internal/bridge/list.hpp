@@ -94,8 +94,6 @@ namespace realm::internal::bridge {
         std::aligned_storage<40, 4>::type m_list[1];
 #elif __aarch64__
         std::aligned_storage<80, 8>::type m_list[1];
-#else
-        std::aligned_storage<80, 8>::type m_list[1];
 #endif
     };
 

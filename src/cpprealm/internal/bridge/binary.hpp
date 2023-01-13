@@ -26,8 +26,6 @@ namespace realm::internal::bridge {
             std::aligned_storage<8, 4>::type m_data[1];
 #elif __aarch64__
             std::aligned_storage<16, 8>::type m_data[1];
-#else
-            std::aligned_storage<8, 4>::type m_data[1];
 #endif
 
     };

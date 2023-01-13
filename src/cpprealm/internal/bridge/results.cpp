@@ -22,9 +22,6 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<896, sizeof(Results)>{});
     static_assert(SizeCheck<8, alignof(Results)>{});
-#else
-    static_assert(SizeCheck<192, sizeof(Results)>{});
-    static_assert(SizeCheck<8, alignof(Results)>{});
 #endif
 
     results::results(const realm &realm, const query &query) {

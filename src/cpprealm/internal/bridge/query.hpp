@@ -1,9 +1,10 @@
 #ifndef CPP_REALM_BRIDGE_QUERY_HPP
 #define CPP_REALM_BRIDGE_QUERY_HPP
 
+#include <cpprealm/internal/bridge/col_key.hpp>
+
 #include <string_view>
 #include <optional>
-#include <cpprealm/internal/bridge/col_key.hpp>
 
 namespace realm {
     struct uuid;
@@ -108,8 +109,6 @@ namespace realm::internal::bridge {
         std::aligned_storage<80, 8>::type m_query[1];
 #elif __aarch64__
         std::aligned_storage<128, 8>::type m_query[1];
-#else
-        std::aligned_storage<68, 4>::type m_query[1];
 #endif
 
     };

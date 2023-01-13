@@ -16,9 +16,6 @@ namespace realm::internal::bridge {
 #elif __aarch64__
         static_assert(SizeCheck<16, sizeof(OwnedBinaryData)>{});
         static_assert(SizeCheck<8, alignof(OwnedBinaryData)>{});
-#else
-        static_assert(SizeCheck<8, sizeof(OwnedBinaryData)>{});
-        static_assert(SizeCheck<4, alignof(OwnedBinaryData)>{});
 #endif
 
     char binary::operator[](size_t i) const noexcept {

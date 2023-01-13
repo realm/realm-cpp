@@ -70,8 +70,6 @@ namespace realm::internal::bridge {
         std::aligned_storage<24, 8>::type m_mixed[1];
 #elif __aarch64__
         std::aligned_storage<24, 8>::type m_mixed[1];
-#else
-        std::aligned_storage<24, 8>::type m_mixed[1];
 #endif
     };
 }

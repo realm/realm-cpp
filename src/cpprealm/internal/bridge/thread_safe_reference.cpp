@@ -21,9 +21,6 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<8, sizeof(ThreadSafeReference)>{});
     static_assert(SizeCheck<8, alignof(ThreadSafeReference)>{});
-#else
-    static_assert(SizeCheck<12, sizeof(ThreadSafeReference)>{});
-    static_assert(SizeCheck<4, alignof(ThreadSafeReference)>{});
 #endif
     thread_safe_reference::thread_safe_reference(const object &o) {
         new (&m_thread_safe_reference) ThreadSafeReference(static_cast<Object>(o));

@@ -36,11 +36,6 @@
 #include <utility>
 
 namespace realm {
-
-#if QT_CORE_LIB
-static std::function<std::shared_ptr<util::Scheduler>()> scheduler = &util::make_qt;
-#endif
-
     using sync_config = internal::bridge::realm::sync_config;
     using db_config = internal::bridge::realm::config;
 
@@ -103,15 +98,15 @@ struct db {
         add(object);
     }
 
-    template <typename T>
-    ObjectPredicate<asymmetric_object, T>
-    add(T& object)
-    {
-        auto actual_schema = m_realm.schema().find(T::schema.name);
-        auto group = m_realm.read_group();
-        auto table = group.get_table(actual_schema.table_key());
-        object.manage(table, m_realm);
-    }
+//    template <typename T>
+//    ObjectPredicate<asymmetric_object, T>
+//    add(T& object)
+//    {
+//        auto actual_schema = m_realm.schema().find(T::schema.name);
+//        auto group = m_realm.read_group();
+//        auto table = group.get_table(actual_schema.table_key());
+//        object.manage(table, m_realm);
+//    }
 
     template <typename T>
     void remove(T& object)
@@ -123,15 +118,10 @@ struct db {
         table.remove_object(object.m_object->get_obj().get_key());
     }
 
-    void removeAll()
-    {
-        abort();//REALM_TERMINATE("not implemented");
-    }
-
     template <typename T>
-    results<T> objects()
+    results<T, void> objects()
     {
-        return results<T>(internal::bridge::results(m_realm,
+        return results<T, void>(internal::bridge::results(m_realm,
                                                     m_realm.read_group().get_table(T::schema.name)));
     }
 
@@ -178,15 +168,11 @@ static db<Ts...> open(std::string&& path = std::filesystem::current_path().appen
                       std::shared_ptr<scheduler>&& scheduler = scheduler::make_default(),
                       const std::optional<sync_config>& sync_config = std::nullopt)
 {
-#if QT_CORE_LIB
-    util::Scheduler::set_default_factory(util::make_qt);
-#endif
     return db<Ts...>(db_config(path, scheduler, sync_config));
 }
 
 template <typename ...Ts>
 struct async_open_promise : public std::promise<thread_safe_reference<db<Ts...>>> {
-//    async_open_promise(const async_open_promise<Ts...>&) = delete;
 private:
     async_open_promise(internal::bridge::async_open_task&& task) // NOLINT(google-explicit-constructor)
     : async_open_task(std::move(task)) {}
@@ -198,9 +184,6 @@ private:
 template <typename ...Ts>
 [[nodiscard]] static inline async_open_promise<Ts...> async_open(const typename db<Ts...>::config& config) {
     // TODO: Add these flags to core
-#if QT_CORE_LIB
-    util::Scheduler::set_default_factory(util::make_qt);
-#endif
     auto c = config;
     std::vector<internal::bridge::object_schema> schema;
     (schema.push_back(Ts::schema.to_core_schema()), ...);

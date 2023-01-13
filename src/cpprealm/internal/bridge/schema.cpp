@@ -18,9 +18,6 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<24, sizeof(Schema)>{});
     static_assert(SizeCheck<8, alignof(Schema)>{});
-#else
-    static_assert(SizeCheck<24, sizeof(Schema)>{});
-    static_assert(SizeCheck<8, alignof(Schema)>{});
 #endif
 
     object_schema schema::find(const std::string &name) {

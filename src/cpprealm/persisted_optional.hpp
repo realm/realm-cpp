@@ -118,11 +118,11 @@ namespace realm {
             }
         }
 
-        T operator*() const {
+        std::optional<T> operator*() const {
             if (this->is_managed()) {
-                return *this->m_object->get_obj().template get<std::optional<T>>(managed);
+                return this->m_object->get_obj().template get<std::optional<T>>(managed);
             } else {
-                return *unmanaged;
+                return unmanaged;
             }
         }
     protected:
@@ -211,11 +211,7 @@ namespace realm {
     {
         if (a.should_detect_usage_for_queries) {
             auto query = internal::bridge::query(a.query->get_table());
-//            if (b) {
-                query.equal(a.managed, persisted<V>::serialize(b));
-//            } else {
-//                query.equal(a.managed, std::nullopt);
-//            }
+            query.equal(a.managed, persisted<V>::serialize(b));
             return query;
         }
 

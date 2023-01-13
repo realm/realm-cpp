@@ -122,7 +122,7 @@
     friend struct internal::bridge::list;    \
     template <typename> friend struct object_base;\
     template <typename> friend struct asymmetric_object;  \
-    template <typename> friend struct results;                  \
+    template <typename, typename> friend struct results;                  \
     template <typename TT> \
     friend inline typename std::enable_if<std::is_base_of<realm::object_base<TT>, TT>::value, std::ostream>::type& \
     operator<< (std::ostream& stream, const TT& object); \
@@ -231,7 +231,7 @@ protected:
 
         persisted_primitive_base& operator=(const T& o) noexcept {
             if (this->is_managed()) {
-                this->m_object.obj().template set(managed, serialize(o));
+                this->m_object->get_obj().template set(managed, persisted<T>::serialize(o));
             } else {
                 new (&unmanaged) T(o);
             }
@@ -308,7 +308,7 @@ class rbool {
     bool is_for_queries = false;
     friend rbool operator &&(const rbool& lhs, const rbool& rhs);
 
-    template <typename T>
+    template <typename T, typename>
     friend struct results;
 
     friend rbool operator ||(const rbool& lhs, const rbool& rhs);

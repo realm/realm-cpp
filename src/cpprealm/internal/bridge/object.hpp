@@ -34,8 +34,6 @@ namespace realm::internal::bridge {
         std::aligned_storage<16, 8>::type m_token[1];
 #elif __aarch64__
         std::aligned_storage<24, 8>::type m_token[1];
-#else
-        std::aligned_storage<16, 4>::type m_token[1];
 #endif
     };
 
@@ -65,8 +63,6 @@ namespace realm::internal::bridge {
             std::aligned_storage<16, 4>::type m_iterator[1];
 #elif __aarch64__
             std::aligned_storage<32, 8>::type m_iterator[1];
-#else
-            std::aligned_storage<16, 4>::type m_iterator[1];
 #endif
         };
 
@@ -85,8 +81,6 @@ namespace realm::internal::bridge {
             std::aligned_storage<4, 4>::type index_iterable_adaptor[1];
 #elif __aarch64__
             std::aligned_storage<8, 8>::type index_iterable_adaptor[1];
-#else
-            std::aligned_storage<4, 4>::type index_iterable_adaptor[1];
 #endif
         };
         index_iterable_adaptor as_indexes() const;
@@ -99,8 +93,6 @@ namespace realm::internal::bridge {
         std::aligned_storage<24, 4>::type m_idx_set[1];
 #elif __aarch64__
         std::aligned_storage<24, 8>::type m_idx_set[1];
-#else
-        std::aligned_storage<24, 4>::type m_idx_set[1];
 #endif
     };
     struct collection_change_set {
@@ -163,8 +155,6 @@ namespace realm::internal::bridge {
         std::aligned_storage<80, 8>::type m_object[1];
 #elif __aarch64__
         std::aligned_storage<104, 8>::type m_object[1];
-#else
-        std::aligned_storage<64, 4>::type m_object[1];
 #endif
     };
 }

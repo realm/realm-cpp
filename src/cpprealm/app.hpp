@@ -75,8 +75,6 @@ std::aligned_storage<88, 8>::type m_error[1];
     std::aligned_storage<40, 4>::type m_error[1];
 #elif __aarch64__
     std::aligned_storage<72, 8>::type m_error[1];
-#else
-    std::aligned_storage<40, 4>::type m_error[1];
 #endif
 };
 
@@ -249,20 +247,15 @@ public:
         credentials(app::AppCredentials&& credentials) noexcept;
         operator app::AppCredentials() const;
         friend class App;
-#if __ANDROID__
+
 #ifdef __i386__
-        std::aligned_storage<8, 4>::type m_credentials[1];
+    std::aligned_storage<8, 4>::type m_credentials[1];
 #elif __x86_64__
-        std::aligned_storage<16, 8>::type m_credentials[1];
+    std::aligned_storage<16, 8>::type m_credentials[1];
 #elif __arm__
     std::aligned_storage<8, 4>::type m_credentials[1];
 #elif __aarch64__
     std::aligned_storage<16, 8>::type m_credentials[1];
-#else
-    std::aligned_storage<8, 4>::type m_credentials[1];
-#endif
-#else
-        std::aligned_storage<16, 8>::type m_credentials[1];
 #endif
     };
 

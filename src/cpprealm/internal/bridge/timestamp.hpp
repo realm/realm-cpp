@@ -34,8 +34,6 @@ namespace realm::internal::bridge {
         std::aligned_storage<16, 8>::type m_timestamp[1];
 #elif __aarch64__
         std::aligned_storage<16, 8>::type m_timestamp[1];
-#else
-        std::aligned_storage<12, 4>::type m_timestamp[1];
 #endif
     };
 }

@@ -69,19 +69,6 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(IndexSet::IndexIteratableAdaptor)>{});
     static_assert(SizeCheck<24, sizeof(NotificationToken)>{});
     static_assert(SizeCheck<8, alignof(NotificationToken)>{});
-#else
-    static_assert(SizeCheck<64, sizeof(Object)>{});
-    static_assert(SizeCheck<4, alignof(Object)>{});
-    static_assert(SizeCheck<12, sizeof(IndexSet)>{});
-    static_assert(SizeCheck<4, alignof(IndexSet)>{});
-    static_assert(SizeCheck<84, sizeof(CollectionChangeSet)>{});
-    static_assert(SizeCheck<4, alignof(CollectionChangeSet)>{});
-    static_assert(SizeCheck<16, sizeof(IndexSet::IndexIterator)>{});
-    static_assert(SizeCheck<4, alignof(IndexSet::IndexIterator)>{});
-    static_assert(SizeCheck<4, sizeof(IndexSet::IndexIteratableAdaptor)>{});
-    static_assert(SizeCheck<4, alignof(IndexSet::IndexIteratableAdaptor)>{});
-    static_assert(SizeCheck<16, sizeof(NotificationToken)>{});
-    static_assert(SizeCheck<4, alignof(NotificationToken)>{});
 #endif
 
     object::object() {

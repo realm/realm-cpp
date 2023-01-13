@@ -39,7 +39,6 @@
 #include <cpprealm/results.hpp>
 #include <cpprealm/notifications.hpp>
 #include <cpprealm/object.hpp>
-#include <cpprealm/asymmetric_object.hpp>
 #include <cpprealm/app.hpp>
 #include <cpprealm/db.hpp>
 #include <cpprealm/thread_safe_reference.hpp>

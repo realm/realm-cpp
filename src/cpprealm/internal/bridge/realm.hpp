@@ -77,20 +77,18 @@ namespace realm::internal::bridge {
             std::aligned_storage<192, 8>::type m_config[1];
 #elif __x86_64__
     #if defined(__clang__)
-        std::aligned_storage<368, 16>::type m_config[1];
+            std::aligned_storage<368, 16>::type m_config[1];
     #elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<368, 8>::type m_config[1];
+            std::aligned_storage<368, 8>::type m_config[1];
     #endif
 #elif __arm__
             std::aligned_storage<192, 8>::type m_config[1];
 #elif __aarch64__
-#if __ANDROID__
+    #if __ANDROID__
             std::aligned_storage<368, 16>::type m_config[1];
-#else
+    #else
             std::aligned_storage<312, 8>::type m_config[1];
-#endif
-#else
-            std::aligned_storage<368, 16>::type m_config[1];
+    #endif
 #endif
         };
         realm();

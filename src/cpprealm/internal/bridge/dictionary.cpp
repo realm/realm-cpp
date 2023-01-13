@@ -19,9 +19,6 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<80, sizeof(Dictionary)>{});
     static_assert(SizeCheck<8, alignof(Dictionary)>{});
-#else
-    static_assert(SizeCheck<80, sizeof(Dictionary)>{});
-    static_assert(SizeCheck<8, alignof(Dictionary)>{});
 #endif
 
     dictionary::dictionary() {

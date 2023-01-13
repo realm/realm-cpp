@@ -15,9 +15,6 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<24, sizeof(Mixed)>{});
     static_assert(SizeCheck<8, alignof(Mixed)>{});
-#else
-    static_assert(SizeCheck<24, sizeof(Mixed)>{});
-    static_assert(SizeCheck<8, alignof(Mixed)>{});
 #endif
 
     mixed::mixed(const std::nullopt_t& v) {

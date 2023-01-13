@@ -52,6 +52,16 @@ namespace realm {
                 this->unmanaged += T(o);
             }
         }
+        void operator++() {
+            if (this->is_managed()) {
+                auto old_val = deserialize(this->m_object->get_obj().get<int64_t>(this->managed));
+                this->m_object->get_obj().template set<int64_t>(
+                        this->managed,
+                        static_cast<int64_t>(++old_val));
+            } else {
+                ++this->unmanaged;
+            }
+        }
         template<typename T>
         std::enable_if_t<std::is_integral_v<T>>
         operator-=(const T& o) {
@@ -62,6 +72,16 @@ namespace realm {
                         static_cast<int64_t>(old_val - o));
             } else {
                 this->unmanaged -= T(o);
+            }
+        }
+        void operator--() {
+            if (this->is_managed()) {
+                auto old_val = deserialize(this->m_object->get_obj().get<int64_t>(this->managed));
+                this->m_object->get_obj().template set<int64_t>(
+                        this->managed,
+                        static_cast<int64_t>(--old_val));
+            } else {
+                --this->unmanaged;
             }
         }
         template<typename T>
@@ -83,64 +103,6 @@ namespace realm {
         __cpp_realm_friends
     };
 
-    template <>
-    struct persisted<double> : persisted_primitive_base<double> {
-        template <typename T>
-        std::enable_if_t<std::is_arithmetic_v<T>, persisted&> // NOLINT(misc-unconventional-assign-operator)
-        operator=(const T& o) {
-            if (this->is_managed()) {
-                this->m_object->get_obj().template set<double>(
-                        this->managed,
-                        static_cast<double>(o));
-            } else {
-                new (&this->unmanaged) T(o);
-            }
-            return *this;
-        }
-        template<typename T>
-        std::enable_if_t<std::is_floating_point_v<T>>
-        operator+=(const T& o) {
-            if (this->is_managed()) {
-                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed));
-                this->m_object->get_obj().template set<double>(
-                        this->managed,
-                        static_cast<double>(old_val + o));
-            } else {
-                this->unmanaged += T(o);
-            }
-        }
-        template<typename T>
-        std::enable_if_t<std::is_floating_point_v<T>>
-        operator-=(const T& o) {
-            if (this->is_managed()) {
-                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed));
-                this->m_object->get_obj().template set<double>(
-                        this->managed,
-                        static_cast<double>(old_val - o));
-            } else {
-                this->unmanaged -= T(o);
-            }
-        }
-        template<typename T>
-        std::enable_if_t<std::is_floating_point_v<T>>
-        operator*=(const T& o) {
-            if (this->is_managed()) {
-                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed));
-                this->m_object->get_obj().template set<int64_t>(
-                        this->managed,
-                        static_cast<double>(old_val * o));
-            } else {
-                this->unmanaged *= T(o);
-            }
-        }
-    protected:
-        static double serialize(double);
-        static double deserialize(double);
-
-        __cpp_realm_friends
-    };
-
-
     __cpp_realm_generate_operator(int64_t, >, greater)
     __cpp_realm_generate_operator(int64_t, <, less)
     __cpp_realm_generate_operator(int64_t, <=, less_equal)
@@ -148,22 +110,10 @@ namespace realm {
     __cpp_realm_generate_operator(int64_t, ==, equal)
     __cpp_realm_generate_operator(int64_t, !=, not_equal)
 
-    __cpp_realm_generate_operator(double, >, greater)
-    __cpp_realm_generate_operator(double, <, less)
-    __cpp_realm_generate_operator(double, <=, less_equal)
-    __cpp_realm_generate_operator(double, >=, greater_equal)
-    __cpp_realm_generate_operator(double, ==, equal)
-    __cpp_realm_generate_operator(double, !=, not_equal)
-
     namespace {
         static_assert(sizeof(persisted<int64_t>{}.operator=(1)));
         static_assert(sizeof(persisted<int64_t>{} == 1));
-        static_assert(sizeof(persisted<int64_t>{} == 1.0));
-        static_assert(sizeof(persisted<double>{} == 1));
-        static_assert(sizeof(persisted<double>{} == 1.0));
         static_assert(sizeof(persisted<int64_t>{}.operator=(1.0)));
-        static_assert(sizeof(persisted<double>{}.operator=(1)));
-        static_assert(sizeof(persisted<double>{}.operator=(1.0)));
     }
 }
 

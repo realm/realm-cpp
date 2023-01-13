@@ -18,13 +18,10 @@ namespace realm::internal::bridge {
 #elif __x86_64__
     static_assert(SizeCheck<80, sizeof(List)>{});
     static_assert(SizeCheck<8, alignof(List)>{});
-    #elif __arm__
+#elif __arm__
     static_assert(SizeCheck<40, sizeof(List)>{});
     static_assert(SizeCheck<4, alignof(List)>{});
-    #elif __aarch64__
-    static_assert(SizeCheck<80, sizeof(List)>{});
-    static_assert(SizeCheck<8, alignof(List)>{});
-    #else
+#elif __aarch64__
     static_assert(SizeCheck<80, sizeof(List)>{});
     static_assert(SizeCheck<8, alignof(List)>{});
 #endif
