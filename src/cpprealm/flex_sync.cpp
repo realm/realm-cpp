@@ -29,7 +29,7 @@ namespace realm {
     static_assert(internal::bridge::SizeCheck<184, sizeof(sync::MutableSubscriptionSet)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
 #endif
-    SyncSubscription::SyncSubscription(const sync::Subscription &v)
+    sync_subscription::sync_subscription(const sync::Subscription &v)
     {
         identifier = v.id.to_string();
         name = v.name;
@@ -38,28 +38,28 @@ namespace realm {
         query_string = v.query_string;
         object_class_name = v.object_class_name;
     }
-    MutableSyncSubscriptionSet::MutableSyncSubscriptionSet(internal::bridge::realm& realm,
-                                                           const sync::MutableSubscriptionSet &subscription_set)
+    mutable_sync_subscription_set::mutable_sync_subscription_set(internal::bridge::realm& realm,
+                                                                 const sync::MutableSubscriptionSet &subscription_set)
             : m_realm(realm)
     {
         new (m_subscription_set) sync::MutableSubscriptionSet(subscription_set);
     }
-    void MutableSyncSubscriptionSet::insert_or_assign(const std::string &name, const internal::bridge::query &query) {
+    void mutable_sync_subscription_set::insert_or_assign(const std::string &name, const internal::bridge::query &query) {
         reinterpret_cast<sync::MutableSubscriptionSet *>(m_subscription_set)->insert_or_assign(name, query);
     }
 
     // Removes all subscriptions.
-    void MutableSyncSubscriptionSet::clear() {
+    void mutable_sync_subscription_set::clear() {
         reinterpret_cast<sync::MutableSubscriptionSet *>(m_subscription_set)->clear();
     }
 
-    sync::MutableSubscriptionSet MutableSyncSubscriptionSet::get_subscription_set() {
+    sync::MutableSubscriptionSet mutable_sync_subscription_set::get_subscription_set() {
         return *reinterpret_cast<sync::MutableSubscriptionSet *>(m_subscription_set);
     }
 
     // Removes a subscription for a given name. Will throw if subscription does
     // not exist.
-    void MutableSyncSubscriptionSet::remove(const std::string& name) {
+    void mutable_sync_subscription_set::remove(const std::string& name) {
         auto* set = reinterpret_cast<sync::MutableSubscriptionSet *>(m_subscription_set);
         if (set->erase(name))
             return;
@@ -68,29 +68,29 @@ namespace realm {
 
     // Finds a subscription for a given name. Will return `std::nullopt` is subscription does
     // not exist.
-    std::optional<SyncSubscription> MutableSyncSubscriptionSet::find(const std::string& name) {
+    std::optional<sync_subscription> mutable_sync_subscription_set::find(const std::string& name) {
         auto* set = reinterpret_cast<sync::MutableSubscriptionSet *>(m_subscription_set);
         if (auto it = set->find(name)) {
-            return SyncSubscription(*it);
+            return sync_subscription(*it);
         }
         return std::nullopt;
     }
 
-    size_t SyncSubscriptionSet::size() const {
+    size_t sync_subscription_set::size() const {
         return reinterpret_cast<const sync::SubscriptionSet *>(m_subscription_set)->size();
     }
 
-    std::optional<SyncSubscription> SyncSubscriptionSet::find(const std::string& name) {
+    std::optional<sync_subscription> sync_subscription_set::find(const std::string& name) {
         auto* set = reinterpret_cast<sync::SubscriptionSet *>(m_subscription_set);
         if (auto it = set->find(name)) {
-            return SyncSubscription(*it);
+            return sync_subscription(*it);
         }
         return std::nullopt;
     }
 
-    std::promise<bool> SyncSubscriptionSet::update(std::function<void(MutableSyncSubscriptionSet&)>&& fn) {
+    std::promise<bool> sync_subscription_set::update(std::function<void(mutable_sync_subscription_set&)>&& fn) {
         auto* set = reinterpret_cast<sync::SubscriptionSet *>(m_subscription_set);
-        auto mutable_set = MutableSyncSubscriptionSet(m_realm, set->make_mutable_copy());
+        auto mutable_set = mutable_sync_subscription_set(m_realm, set->make_mutable_copy());
         fn(mutable_set);
         new (&m_subscription_set) sync::SubscriptionSet(mutable_set.get_subscription_set().commit());
         std::promise<bool> p;
@@ -101,7 +101,7 @@ namespace realm {
         return p;
     }
 
-    SyncSubscriptionSet::SyncSubscriptionSet(internal::bridge::realm& realm)
+    sync_subscription_set::sync_subscription_set(internal::bridge::realm& realm)
             : m_realm(realm)
     {
         new (&m_subscription_set) sync::SubscriptionSet(static_cast<SharedRealm>(realm)->get_active_subscription_set());

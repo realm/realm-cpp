@@ -14,13 +14,13 @@ TEST_CASE("flx_sync", "[flx][sync]") {
         auto tsr = p.get_future().get();
         auto synced_realm = tsr.resolve();
 
-        auto update_success = synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
+        auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
             subs.clear();
         }).get_future().get();
         CHECK(update_success == true);
         CHECK(synced_realm.subscriptions().size() == 0);
 
-        update_success = synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
+        update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
             subs.add<AllTypesObject>("foo-strings", [](auto &obj) {
                 return obj.str_col == "foo";
             });
@@ -47,7 +47,7 @@ TEST_CASE("flx_sync", "[flx][sync]") {
 
         CHECK(objs[0]._id == 1);
 
-        synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
+        synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
             subs.update_subscription<AllTypesObject>("foo-strings", [](auto &obj) {
                 return obj.str_col == "bar" && obj._id == 123;
             });
@@ -69,7 +69,7 @@ TEST_CASE("flx_sync", "[flx][sync]") {
         objs = synced_realm.objects<AllTypesObject>();
         CHECK(objs.size() == 1);
 
-        synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
+        synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
             subs.update_subscription<AllTypesObject>("foo-strings");
         }).get_future().get();
 
@@ -89,7 +89,7 @@ TEST_CASE("flx_sync", "[flx][sync]") {
 
 TEST_CASE("tsr") {
     realm_path path;
-    auto realm = realm::open<Person, Dog>(path);
+    auto realm = realm::open<Person, Dog>({path});
 
     auto person = Person { .name = "John", .age = 17 };
     person.dog = Dog {.name = "Fido"};
@@ -101,7 +101,7 @@ TEST_CASE("tsr") {
     auto tsr = realm::thread_safe_reference<Person>(person);
     std::promise<void> p;
     auto t = std::thread([&tsr, &p, &path]() {
-        auto realm = realm::open<Person, Dog>(path);
+        auto realm = realm::open<Person, Dog>({path});
         auto person = realm.resolve(std::move(tsr));
         CHECK(*person.age == 17);
         realm.write([&] { realm.remove(person); });

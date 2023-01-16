@@ -15,7 +15,7 @@ TEST_CASE("string", "[str]") {
 
     SECTION("managed_str_get_set", "[str]") {
         auto obj = AllTypesObject();
-        auto realm = open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(path);
+        auto realm = open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
         realm.write([&realm, &obj] {
             realm.add(obj);
         });
@@ -33,7 +33,7 @@ TEST_CASE("string", "[str]") {
 
     SECTION("managed_str_contains", "[str]") {
         auto obj = AllTypesObject();
-        auto realm = open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(path);
+        auto realm = open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
         realm.write([&realm, &obj] {
             realm.add(obj);
             obj.str_col = "foo";

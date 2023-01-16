@@ -1,11 +1,11 @@
 #ifndef CPP_REALM_BRIDGE_REALM_HPP
 #define CPP_REALM_BRIDGE_REALM_HPP
 
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-#include <functional>
 
 namespace realm {
     class Realm;
@@ -59,11 +59,9 @@ namespace realm::internal::bridge {
         };
 
         struct config {
-            config();
             config(const RealmConfig&); //NOLINT(google-explicit-constructor)
-            config(const std::string& path,
-                   const std::shared_ptr<scheduler>& scheduler,
-                   const std::optional<sync_config>& sync_config);
+            config(const std::optional<std::string>& path = std::nullopt,
+                   const std::optional<std::shared_ptr<scheduler>>& scheduler = std::nullopt);
             [[nodiscard]] std::string path() const;
             [[nodiscard]] struct sync_config sync_config() const;
             [[nodiscard]] std::shared_ptr<struct scheduler> scheduler();

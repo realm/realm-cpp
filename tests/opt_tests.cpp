@@ -20,7 +20,7 @@ TEST_CASE("optional") {
     realm_path path;
 
     SECTION("unmanaged_managed_optional_get_set") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(path);
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
         {
             auto obj = AllTypesObject();
             check_nulls<0>(obj);

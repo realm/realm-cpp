@@ -61,7 +61,7 @@ namespace realm {
 
         template<typename, typename>
         friend struct results_base;
-        friend struct MutableSyncSubscriptionSet;
+        friend struct mutable_sync_subscription_set;
     };
 
     template<typename T, typename>

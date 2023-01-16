@@ -42,7 +42,7 @@ namespace realm {
 template <typename ...Ts>
 struct db {
     using config = db_config;
-    explicit db(config&& config = {})
+    explicit db(config&& config)
     {
         std::vector<internal::bridge::object_schema> schema;
         (schema.push_back(Ts::schema.to_core_schema()), ...);
@@ -55,9 +55,9 @@ struct db {
         }
     }
 
-    SyncSubscriptionSet subscriptions()
+    sync_subscription_set subscriptions()
     {
-        return SyncSubscriptionSet(m_realm);
+        return sync_subscription_set(m_realm);
     }
 
     void write(std::function<void()>&& block) const
@@ -164,11 +164,9 @@ private:
 };
 
 template <typename ...Ts>
-static db<Ts...> open(std::string&& path = std::filesystem::current_path().append("default.realm"),
-                      std::shared_ptr<scheduler>&& scheduler = scheduler::make_default(),
-                      const std::optional<sync_config>& sync_config = std::nullopt)
+static db<Ts...> open(db_config&& config = {})
 {
-    return db<Ts...>(db_config(path, scheduler, sync_config));
+    return db<Ts...>(std::move(config));
 }
 
 template <typename ...Ts>
@@ -198,6 +196,5 @@ template <typename ...Ts>
     });
     return p;
 }
-
 }
 #endif /* realm_realm_hpp */

@@ -42,7 +42,7 @@ namespace realm {
 
 // A SyncSubscription represents a single query that may be OR'd with other queries on the same object class to be
 // send to the server in a QUERY or IDENT message.
-    struct SyncSubscription {
+    struct sync_subscription {
         // Returns the unique ID for this subscription.
         std::string identifier;
         // The name representing this subscription.
@@ -56,15 +56,15 @@ namespace realm {
         // Returns the name of the object class of the query for this subscription.
         std::string_view object_class_name;
     private:
-        SyncSubscription(const sync::Subscription&);
+        sync_subscription(const sync::Subscription&);
 
-        friend struct SyncSubscriptionSet;
-        friend struct MutableSyncSubscriptionSet;
+        friend struct sync_subscription_set;
+        friend struct mutable_sync_subscription_set;
     };
 
 // A MutableSyncSubscriptionSet represents a single query that may be OR'd with other queries on the same object class to be
 // send to the server in a QUERY or IDENT message.
-    struct MutableSyncSubscriptionSet {
+    struct mutable_sync_subscription_set {
     private:
         void insert_or_assign(const std::string& name, const internal::bridge::query&);
     public:
@@ -95,7 +95,7 @@ namespace realm {
 
         // Finds a subscription for a given name. Will return `std::nullopt` is subscription does
         // not exist.
-        std::optional<SyncSubscription> find(const std::string& name);
+        std::optional<sync_subscription> find(const std::string& name);
 
         // Updates a subscription for a given name.
         // Will throw if subscription does not exist.
@@ -113,7 +113,7 @@ namespace realm {
 
 
     private:
-        MutableSyncSubscriptionSet(internal::bridge::realm&, const sync::MutableSubscriptionSet& subscription_set);
+        mutable_sync_subscription_set(internal::bridge::realm&, const sync::MutableSubscriptionSet& subscription_set);
 #ifdef __i386__
         std::aligned_storage<116, 4>::type m_subscription_set[1];
 #elif __x86_64__
@@ -128,22 +128,22 @@ namespace realm {
     std::aligned_storage<184, 8>::type m_subscription_set[1];
 #endif
         std::reference_wrapper<internal::bridge::realm> m_realm;
-        friend struct SyncSubscriptionSet;
+        friend struct sync_subscription_set;
         sync::MutableSubscriptionSet get_subscription_set();
     };
 
-    struct SyncSubscriptionSet {
+    struct sync_subscription_set {
     public:
         /// The total number of subscriptions in the set.
         [[nodiscard]] size_t size() const;
 
         // Finds a subscription for a given name. Will return `std::nullopt` is subscription does
         // not exist.
-        std::optional<SyncSubscription> find(const std::string& name);
+        std::optional<sync_subscription> find(const std::string& name);
 
-        std::promise<bool> update(std::function<void(MutableSyncSubscriptionSet&)>&& fn);
+        std::promise<bool> update(std::function<void(mutable_sync_subscription_set&)>&& fn);
 
-        explicit SyncSubscriptionSet(internal::bridge::realm& realm);
+        explicit sync_subscription_set(internal::bridge::realm& realm);
     private:
         template <typename ...Ts>
         friend struct db;

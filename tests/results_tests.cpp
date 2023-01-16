@@ -7,7 +7,7 @@ using namespace realm;
 TEST_CASE("results", "[results]") {
     realm_path path;
     SECTION("results_notifications") {
-        auto realm = realm::open<Person, Dog>(path);
+        auto realm = realm::open<Person, Dog>({path});
 
         auto person = Person{.name = "John", .age = 42};
         realm.write([&realm, &person]() {
@@ -40,7 +40,7 @@ TEST_CASE("results", "[results]") {
     }
 
     SECTION("results_notifications_insertions") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(path);
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
         realm.write([&realm] {
             realm.add(AllTypesObject{._id = 1});
         });
@@ -87,7 +87,7 @@ TEST_CASE("results", "[results]") {
     SECTION("results_notifications_deletions") {
         auto obj = AllTypesObject();
 
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(path);
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
         realm.write([&realm, &obj] {
             realm.add(obj);
         });
@@ -118,7 +118,7 @@ TEST_CASE("results", "[results]") {
     SECTION("results_notifications_modifications") {
         auto obj = AllTypesObject();
 
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(path);
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
         realm.write([&realm, &obj] {
             realm.add(obj);
         });

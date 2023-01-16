@@ -19,6 +19,8 @@
 #include <realm/sync/config.hpp>
 #include <realm/object-store/util/scheduler.hpp>
 
+#include <filesystem>
+
 namespace realm::internal::bridge {
 #ifdef __i386__
     static_assert(SizeCheck<192, sizeof(Realm::Config)>{});
@@ -90,14 +92,21 @@ namespace realm::internal::bridge {
     realm::config::config(const RealmConfig &v) {
         new (&m_config) RealmConfig(v);
     }
-    realm::config::config(const std::string &path,
-                          const std::shared_ptr<struct scheduler>& scheduler,
-                          const std::optional<struct sync_config> &s) {
+    realm::config::config(const std::optional<std::string>& path,
+                          const std::optional<std::shared_ptr<struct scheduler>>& scheduler) {
         RealmConfig config;
-        config.path = path;
-        config.scheduler = std::make_shared<internal_scheduler>(scheduler);
-        if (s)
-            config.sync_config = static_cast<std::shared_ptr<SyncConfig>>(*s);
+        if (path) {
+            config.path = *path;
+        } else {
+            config.path = std::filesystem::current_path().append("default.realm");
+        }
+
+        if (scheduler) {
+            config.scheduler = std::make_shared<internal_scheduler>(*scheduler);
+        } else {
+            config.scheduler = std::make_shared<internal_scheduler>(scheduler::make_default());
+        }
+
         config.schema_version = 0;
         new (&m_config) RealmConfig(config);
     }
@@ -129,9 +138,6 @@ namespace realm::internal::bridge {
 
     table realm::table_for_object_type(const std::string &object_type) {
         return read_group().get_table(object_type);
-    }
-    realm::config::config() {
-        new (m_config) RealmConfig();
     }
     realm::realm() {
 

@@ -17,7 +17,7 @@ inline void validate_equals(db<Ts...>& realm, u_int equal_count, std::function<r
 TEST_CASE("query") {
     realm_path path;
     SECTION("tsq_basic_comparison", "[query]") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(path);
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
         auto date = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
         auto create_obj = [&]() {
@@ -85,7 +85,7 @@ TEST_CASE("query") {
     }
 
     SECTION("tsq_greater_less_than", "[query]") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(path);
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
         auto date = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
         auto create_obj = [&]() {
@@ -150,7 +150,7 @@ TEST_CASE("query") {
     }
 
     SECTION("tsq_compound", "[query]") {
-        auto realm = realm::open<Person, Dog>(path);
+        auto realm = realm::open<Person, Dog>({path});
 
         auto person = Person{.name = "John", .age = 42};
         realm.write([&realm, &person]() {
@@ -178,7 +178,7 @@ TEST_CASE("query") {
         CHECK(results.size() == 1);
     }
     SECTION("equality") {
-        auto realm = realm::open<Person, Dog>(path);
+        auto realm = realm::open<Person, Dog>({path});
 
         auto person = Person { .name = "John", .age = 42 };
         realm.write([&realm, &person](){

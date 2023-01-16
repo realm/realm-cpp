@@ -4,7 +4,7 @@
 TEST_CASE("object_notifications") {
     realm_path path;
     SECTION("observe") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(path);
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
 
         auto date = std::chrono::time_point<std::chrono::system_clock>();
         auto uuid = realm::uuid();
@@ -157,7 +157,7 @@ TEST_CASE("object_notifications") {
     }
 
     SECTION("optional objects") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(path);
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
 
         auto foo = AllTypesObject();
         auto o = AllTypesObjectLink();
