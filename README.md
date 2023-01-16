@@ -96,9 +96,11 @@ auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
 auto synced_realm_ref = user.realm<Car>("foo").get_future().get();
 auto realm = synced_realm_ref.resolve();
 
-auto car = realm.object_new<Car>(0);
-realm.write([&car](){
-    car.accelerate();
+auto cars = realm.results<Car>();
+realm.write([&cars](){
+    for (auto& car : cars) {
+        car.accelerate();
+    }
 });
 ```
 

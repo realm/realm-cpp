@@ -8,7 +8,8 @@
 #include <cpprealm/internal/bridge/mixed.hpp>
 #include <cpprealm/internal/bridge/obj_key.hpp>
 #include <cpprealm/internal/bridge/list.hpp>
-#include "cpprealm/internal/bridge/obj.hpp"
+#include <cpprealm/internal/bridge/obj.hpp>
+#include <cpprealm/internal/bridge/object_id.hpp>
 #include <realm/obj.hpp>
 
 #include <variant>
@@ -126,6 +127,8 @@ namespace realm::internal::type_info {
             template <class Custom>
             using is_uuid_persistable = is_persistable<Custom, uuid>;
             template <class Custom>
+            using is_object_id_persistable = is_persistable<Custom, object_id>;
+            template <class Custom>
             using is_binary_persistable = is_persistable<Custom, std::vector<uint8_t>>;
             template <class Custom, typename C = std::chrono::system_clock, typename D = typename C::duration>
             using is_time_point_persistable = is_persistable<Custom, std::chrono::time_point<C, D>>;
@@ -156,6 +159,11 @@ namespace realm::internal::type_info {
             struct is_custom_persistable<Custom, std::enable_if_t<is_uuid_persistable<Custom>::value>> :
                     std::true_type {
                 using underlying = uuid;
+            };
+            template <typename Custom>
+            struct is_custom_persistable<Custom, std::enable_if_t<is_object_id_persistable<Custom>::value>> :
+                    std::true_type {
+                using underlying = object_id;
             };
             template <typename Custom>
             struct is_custom_persistable<Custom, std::enable_if_t<is_binary_persistable<Custom>::value>> :
@@ -210,6 +218,13 @@ namespace realm::internal::type_info {
         using internal_type = bridge::uuid;
         static constexpr bridge::property::type type() {
             return bridge::property::type::UUID;
+        }
+    };
+    template <>
+    struct type_info<object_id> {
+        using internal_type = bridge::object_id;
+        static constexpr bridge::property::type type() {
+            return bridge::property::type::ObjectId;
         }
     };
     template <>

@@ -5,10 +5,10 @@
 class Car : public realm::object<Car>
 {
 public:
-    realm::persisted<int> _id;
+    realm::persisted<int64_t> _id;
     realm::persisted<double> wheelsAngle; // used when applying rotation
     realm::persisted<double> speed; // delta movement along the body axis
-    realm::persisted<int> color;
+    realm::persisted<int64_t> color;
 
     static constexpr auto schema = realm::schema("Car",
                                                  realm::property<&Car::_id, true>("_id"),
@@ -44,7 +44,7 @@ Java_com_mongodb_realmexample_MainActivity_setupRealm(JNIEnv * env, jobject act,
     auto tsr = p.get_future().get();
     synced_realm = std::make_unique<realm::db<Car>>(tsr.resolve());
 
-    synced_realm->subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
+    synced_realm->subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
         if (!subs.find("car")) {
             subs.add<Car>("car", [](Car& obj) {
                 return obj._id == 0;

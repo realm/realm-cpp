@@ -21,6 +21,7 @@
 
 #include <cpprealm/persisted.hpp>
 #include <cpprealm/persisted_uuid.hpp>
+#include <cpprealm/persisted_object_id.hpp>
 #include <cpprealm/persisted_custom.hpp>
 
 namespace realm {
@@ -31,7 +32,8 @@ namespace realm {
             double,
             std::vector<uint8_t>,
             std::chrono::time_point<std::chrono::system_clock>,
-            uuid>;
+            uuid,
+            object_id>;
 
     template<typename T>
     struct persisted<T, std::enable_if_t<realm::internal::type_info::MixedPersistableConcept<T>::value>> final :
@@ -56,6 +58,8 @@ namespace realm {
                 case internal::bridge::data_type::Double: return static_cast<double>(value);
                 case internal::bridge::data_type::UUID:
                     return static_cast<uuid>(static_cast<internal::bridge::uuid>(value));
+                case internal::bridge::data_type::ObjectId:
+                    return static_cast<object_id>(static_cast<internal::bridge::object_id>(value));
                 default: abort();
             }
         }

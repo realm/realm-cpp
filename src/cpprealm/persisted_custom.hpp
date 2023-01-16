@@ -3,6 +3,7 @@
 
 #include <cpprealm/persisted.hpp>
 #include <cpprealm/persisted_uuid.hpp>
+#include <cpprealm/persisted_object_id.hpp>
 #include <cpprealm/internal/type_info.hpp>
 
 //namespace realm {

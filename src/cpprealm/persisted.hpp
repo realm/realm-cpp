@@ -79,6 +79,13 @@
         __friend_rbool_operators__(uuid, <=) \
         __friend_rbool_operators__(uuid, ==) \
         __friend_rbool_operators__(uuid, !=)  \
+                            \
+        __friend_rbool_operators__(object_id, >)  \
+        __friend_rbool_operators__(object_id, <) \
+        __friend_rbool_operators__(object_id, >=)   \
+        __friend_rbool_operators__(object_id, <=) \
+        __friend_rbool_operators__(object_id, ==) \
+        __friend_rbool_operators__(object_id, !=)  \
         \
         __friend_rbool_operators__(std::string, !=) \
         __friend_rbool_operators__(std::string, ==) \

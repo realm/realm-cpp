@@ -341,6 +341,11 @@ namespace realm {
         using box_base<uuid>::operator=;
     };
     template <>
+    struct box<object_id> : public box_base<object_id> {
+        using box_base<object_id>::box_base;
+        using box_base<object_id>::operator=;
+    };
+    template <>
     struct box<std::vector<uint8_t>> : public box_base<std::vector<uint8_t>> {
         using box_base<std::vector<uint8_t>>::box_base;
         using box_base<std::vector<uint8_t>>::operator=;

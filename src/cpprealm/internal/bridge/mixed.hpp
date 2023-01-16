@@ -8,6 +8,7 @@
 #include <cpprealm/internal/bridge/uuid.hpp>
 #include <cpprealm/internal/bridge/timestamp.hpp>
 #include <cpprealm/internal/bridge/obj_key.hpp>
+#include <cpprealm/internal/bridge/object_id.hpp>
 
 namespace realm {
     class Mixed;
@@ -41,6 +42,7 @@ namespace realm::internal::bridge {
         mixed(const double&); //NOLINT(google-explicit-constructor)
         mixed(const bool&); //NOLINT(google-explicit-constructor)
         mixed(const struct uuid&); //NOLINT(google-explicit-constructor)
+        mixed(const struct object_id&); //NOLINT(google-explicit-constructor)
         mixed(const struct timestamp&); //NOLINT(google-explicit-constructor)
         mixed(const struct obj_key&); //NOLINT(google-explicit-constructor)
         mixed(const struct binary&); //NOLINT(google-explicit-constructor)
@@ -52,6 +54,7 @@ namespace realm::internal::bridge {
         operator double() const; //NOLINT(google-explicit-constructor)
         operator bool() const; //NOLINT(google-explicit-constructor)
         operator bridge::uuid() const; //NOLINT(google-explicit-constructor)
+        operator bridge::object_id() const; //NOLINT(google-explicit-constructor)
         operator bridge::timestamp() const; //NOLINT(google-explicit-constructor)
         operator bridge::obj_key() const; //NOLINT(google-explicit-constructor)
         operator bridge::binary() const; //NOLINT(google-explicit-constructor)

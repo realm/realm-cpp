@@ -16,6 +16,7 @@ namespace realm::internal::bridge {
     struct timestamp;
     struct obj_key;
     struct uuid;
+    struct object_id;
     struct notification_token;
     struct collection_change_callback;
     struct obj;
@@ -54,6 +55,8 @@ namespace realm::internal::bridge {
     [[nodiscard]] std::string get(dictionary&, const std::string&);
     template <>
     [[nodiscard]] uuid get(dictionary&, const std::string&);
+    template <>
+    [[nodiscard]] object_id get(dictionary&, const std::string&);
     template <>
     [[nodiscard]] timestamp get(dictionary&, const std::string&);
     template <>

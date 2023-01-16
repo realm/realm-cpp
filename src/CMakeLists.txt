@@ -32,7 +32,9 @@ set(SOURCES
     cpprealm/internal/bridge/sync_error.cpp
     cpprealm/internal/bridge/sync_manager.cpp
     cpprealm/internal/bridge/async_open_task.cpp
-    cpprealm/persisted_double.cpp) # REALM_SOURCES
+    cpprealm/persisted_double.cpp
+    cpprealm/internal/bridge/object_id.cpp
+    cpprealm/persisted_object_id.cpp) # REALM_SOURCES
 
 set(HEADERS
     cpprealm/sdk.hpp
@@ -59,9 +61,6 @@ set(HEADERS
     cpprealm/persisted_binary.hpp
     cpprealm/persisted_mixed.hpp
     cpprealm/persisted_map.hpp
-    cpprealm/persisted_uuid.hpp
-    cpprealm/persisted_string.hpp
-    cpprealm/persisted_list.hpp
     cpprealm/persisted_custom.hpp
     cpprealm/analytics.hpp
     cpprealm/scheduler.hpp
@@ -90,7 +89,9 @@ set(HEADERS
     cpprealm/internal/bridge/sync_session.hpp
     cpprealm/internal/bridge/sync_error.hpp
     cpprealm/internal/bridge/sync_manager.hpp
-    cpprealm/internal/bridge/async_open_task.hpp) # REALM_INSTALL_HEADERS
+    cpprealm/internal/bridge/async_open_task.hpp
+    cpprealm/internal/bridge/object_id.hpp
+    cpprealm/persisted_object_id.hpp) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm STATIC ${SOURCES} ${HEADERS})
 

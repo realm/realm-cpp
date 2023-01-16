@@ -7,6 +7,7 @@
 #include <optional>
 
 namespace realm {
+    struct object_id;
     struct uuid;
     class Query;
 }
@@ -15,6 +16,7 @@ namespace realm::internal::bridge {
     struct col_key;
     struct timestamp;
     struct binary;
+    struct object_id;
     struct uuid;
     struct mixed;
 
@@ -63,6 +65,14 @@ namespace realm::internal::bridge {
         query& greater_equal(col_key column_key, uuid value);
         query& less_equal(col_key column_key, uuid value);
         query& less(col_key column_key, uuid value);
+
+        // Conditions: ObjectId
+        query& equal(col_key column_key, object_id value);
+        query& not_equal(col_key column_key, object_id value);
+        query& greater(col_key column_key, object_id value);
+        query& greater_equal(col_key column_key, object_id value);
+        query& less_equal(col_key column_key, object_id value);
+        query& less(col_key column_key, object_id value);
 
         // Conditions: string
         query& equal(col_key column_key, std::string_view value, bool case_sensitive = true);

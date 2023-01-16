@@ -53,6 +53,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
     realm::persisted<Enum> enum_col;
     realm::persisted<std::chrono::time_point<std::chrono::system_clock>> date_col;
     realm::persisted<realm::uuid> uuid_col;
+    realm::persisted<realm::object_id> object_id_col;
     realm::persisted<std::vector<std::uint8_t>> binary_col;
     realm::persisted<realm::mixed> mixed_col;
 
@@ -62,6 +63,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
     realm::persisted<std::optional<Enum>> opt_enum_col;
     realm::persisted<std::optional<std::chrono::time_point<std::chrono::system_clock>>> opt_date_col;
     realm::persisted<std::optional<realm::uuid>> opt_uuid_col;
+    realm::persisted<std::optional<realm::object_id>> opt_object_id_col;
     realm::persisted<std::optional<std::vector<uint8_t>>> opt_binary_col;
     realm::persisted<std::optional<AllTypesObjectLink>> opt_obj_col;
     realm::persisted<std::optional<AllTypesObjectEmbedded>> opt_embedded_obj_col;
@@ -70,6 +72,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
     realm::persisted<std::vector<bool>> list_bool_col;
     realm::persisted<std::vector<std::string>> list_str_col;
     realm::persisted<std::vector<realm::uuid>> list_uuid_col;
+    realm::persisted<std::vector<realm::object_id>> list_object_id_col;
     realm::persisted<std::vector<std::vector<std::uint8_t>>> list_binary_col;
     realm::persisted<std::vector<std::chrono::time_point<std::chrono::system_clock>>> list_date_col;
     realm::persisted<std::vector<realm::mixed>> list_mixed_col;
@@ -80,6 +83,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
     realm::persisted<std::map<std::string, bool>> map_bool_col;
     realm::persisted<std::map<std::string, std::string>> map_str_col;
     realm::persisted<std::map<std::string, realm::uuid>> map_uuid_col;
+    realm::persisted<std::map<std::string, realm::object_id>> map_object_id_col;
     realm::persisted<std::map<std::string, std::vector<std::uint8_t>>> map_binary_col;
     realm::persisted<std::map<std::string, std::chrono::time_point<std::chrono::system_clock>>> map_date_col;
     realm::persisted<std::map<std::string, Enum>> map_enum_col;
@@ -94,6 +98,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
         realm::property<&AllTypesObject::enum_col>("enum_col"),
         realm::property<&AllTypesObject::date_col>("date_col"),
         realm::property<&AllTypesObject::uuid_col>("uuid_col"),
+        realm::property<&AllTypesObject::object_id_col>("object_id_col"),
         realm::property<&AllTypesObject::binary_col>("binary_col"),
         realm::property<&AllTypesObject::mixed_col>("mixed_col"),
 
@@ -106,11 +111,13 @@ struct AllTypesObject: realm::object<AllTypesObject> {
         realm::property<&AllTypesObject::opt_obj_col>("opt_obj_col"),
         realm::property<&AllTypesObject::opt_embedded_obj_col>("opt_embedded_obj_col"),
         realm::property<&AllTypesObject::opt_uuid_col>("opt_uuid_col"),
+        realm::property<&AllTypesObject::opt_object_id_col>("opt_object_id_col"),
 
         realm::property<&AllTypesObject::list_int_col>("list_int_col"),
         realm::property<&AllTypesObject::list_bool_col>("list_bool_col"),
         realm::property<&AllTypesObject::list_str_col>("list_str_col"),
         realm::property<&AllTypesObject::list_uuid_col>("list_uuid_col"),
+        realm::property<&AllTypesObject::list_object_id_col>("list_object_id_col"),
         realm::property<&AllTypesObject::list_binary_col>("list_binary_col"),
         realm::property<&AllTypesObject::list_date_col>("list_date_col"),
         realm::property<&AllTypesObject::list_mixed_col>("list_mixed_col"),
@@ -123,6 +130,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
         realm::property<&AllTypesObject::map_enum_col>("map_enum_col"),
         realm::property<&AllTypesObject::map_date_col>("map_date_col"),
         realm::property<&AllTypesObject::map_uuid_col>("map_uuid_col"),
+        realm::property<&AllTypesObject::map_object_id_col>("map_object_id_col"),
         realm::property<&AllTypesObject::map_mixed_col>("map_mixed_col"),
         realm::property<&AllTypesObject::map_link_col>("map_link_col"),
         realm::property<&AllTypesObject::map_embedded_col>("map_embedded_col"));

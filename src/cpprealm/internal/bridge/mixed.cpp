@@ -40,6 +40,9 @@ namespace realm::internal::bridge {
     mixed::mixed(const struct uuid &v) {
         new (&m_mixed) Mixed(static_cast<UUID>(v));
     }
+    mixed::mixed(const struct object_id &v) {
+        new (&m_mixed) Mixed(static_cast<ObjectId>(v));
+    }
     mixed::mixed(const realm::Mixed &v) {
         if (v.get_type() == type_String) {
             m_owned_string = v.get_string();
@@ -76,6 +79,9 @@ namespace realm::internal::bridge {
     }
     mixed::operator bridge::uuid() const {
         return static_cast<const uuid &>(reinterpret_cast<const Mixed *>(m_mixed)->get_uuid());
+    }
+    mixed::operator bridge::object_id() const {
+        return static_cast<const object_id &>(reinterpret_cast<const Mixed *>(m_mixed)->get_object_id());
     }
     mixed::operator int64_t() const {
         return static_cast<const int64_t &>(reinterpret_cast<const Mixed *>(m_mixed)->get_int());

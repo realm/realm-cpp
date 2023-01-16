@@ -9,6 +9,7 @@
 #include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
 #include <cpprealm/internal/bridge/binary.hpp>
+#include <cpprealm/internal/bridge/object_id.hpp>
 #include <cpprealm/scheduler.hpp>
 
 namespace realm {
@@ -52,6 +53,7 @@ namespace realm::internal::bridge {
     struct table;
     struct dictionary;
     struct uuid;
+    struct object_id;
     struct list;
     struct row;
 
@@ -73,6 +75,8 @@ namespace realm::internal::bridge {
     [[nodiscard]] std::string get(const obj&, const col_key& col_key);
     template <>
     [[nodiscard]] uuid get(const obj&, const col_key& col_key);
+    template <>
+    [[nodiscard]] object_id get(const obj&, const col_key& col_key);
     template <>
     [[nodiscard]] binary get(const obj&, const col_key& col_key);
     template <>
@@ -119,6 +123,7 @@ namespace realm::internal::bridge {
         __cpp_realm_generate_obj_set(timestamp)
         __cpp_realm_generate_obj_set(binary)
         __cpp_realm_generate_obj_set(uuid)
+        __cpp_realm_generate_obj_set(object_id)
         __cpp_realm_generate_obj_set(obj_key)
 
         template <typename T>
@@ -130,6 +135,7 @@ namespace realm::internal::bridge {
         void set_list_values(const col_key& col_key, const std::vector<bool>& values);
         void set_list_values(const col_key& col_key, const std::vector<int64_t>& values);
         void set_list_values(const col_key& col_key, const std::vector<internal::bridge::uuid>& values);
+        void set_list_values(const col_key& col_key, const std::vector<internal::bridge::object_id>& values);
         void set_list_values(const col_key& col_key, const std::vector<binary>& values);
         void set_list_values(const col_key& col_key, const std::vector<mixed>& values);
         void set_list_values(const col_key& col_key, const std::vector<timestamp>& values);

@@ -1,10 +1,11 @@
-#include "query.hpp"
+#include <cpprealm/internal/bridge/query.hpp>
 #include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 #include <realm/query.hpp>
 #include <cpprealm/internal/bridge/binary.hpp>
 #include <cpprealm/internal/bridge/timestamp.hpp>
 #include <cpprealm/internal/bridge/uuid.hpp>
+#include <cpprealm/internal/bridge/object_id.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/mixed.hpp>
 
@@ -92,6 +93,13 @@ namespace realm::internal::bridge {
     __generate_query_operator(less_equal, internal::bridge::uuid)
     __generate_query_operator(equal, internal::bridge::uuid)
     __generate_query_operator(not_equal, internal::bridge::uuid)
+
+    __generate_query_operator(greater, internal::bridge::object_id)
+    __generate_query_operator(less, internal::bridge::object_id)
+    __generate_query_operator(greater_equal, internal::bridge::object_id)
+    __generate_query_operator(less_equal, internal::bridge::object_id)
+    __generate_query_operator(equal, internal::bridge::object_id)
+    __generate_query_operator(not_equal, internal::bridge::object_id)
 
     __generate_query_operator(equal, bool)
     __generate_query_operator(not_equal, bool)

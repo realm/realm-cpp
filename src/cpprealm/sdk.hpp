@@ -35,6 +35,7 @@
 #include <cpprealm/persisted_optional.hpp>
 #include <cpprealm/persisted_timestamp.hpp>
 #include <cpprealm/persisted_uuid.hpp>
+#include <cpprealm/persisted_object_id.hpp>
 #include <cpprealm/schema.hpp>
 #include <cpprealm/results.hpp>
 #include <cpprealm/notifications.hpp>

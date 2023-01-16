@@ -69,6 +69,10 @@ namespace realm::internal::bridge {
         return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get<UUID>(key);
     }
     template <>
+    object_id get(dictionary& dict, const std::string &key) {
+        return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get<ObjectId>(key);
+    }
+    template <>
     timestamp get(dictionary& dict, const std::string &key) {
         return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get<Timestamp>(key);
     }
