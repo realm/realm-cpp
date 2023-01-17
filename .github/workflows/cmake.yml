@@ -240,4 +240,4 @@ jobs:
         - name: Generate Gradle build
           run: ./examples/Android/RealmExample/gradlew init
         - name: Run Linters and Test
-          run: ./gradlew check
+          run: ./examples/Android/RealmExample/gradlew check
