@@ -168,7 +168,7 @@ struct object_base {
                 }
             }
 
-            std::optional<std::vector<typename decltype(T::schema)::variant_t>> readValues(internal::bridge::collection_change_set const& c) {
+            std::optional<std::vector<typename decltype(T::schema)::variant_t>> read_values(internal::bridge::collection_change_set const& c) {
                 if (c.empty()) {
                     return std::nullopt;
                 }
@@ -187,12 +187,12 @@ struct object_base {
 
             void before(internal::bridge::collection_change_set const& c) override
             {
-                old_values = readValues(c);
+                old_values = read_values(c);
             }
 
             void after(internal::bridge::collection_change_set const& c) override
             {
-                auto new_values = readValues(c);
+                auto new_values = read_values(c);
                 if (deleted) {
                     block(nullptr, {}, {}, {}, nullptr);
                 } else if (new_values) {
