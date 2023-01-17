@@ -229,12 +229,13 @@ jobs:
         - uses: actions/cache@v2
           with:
             path: |
-              example/Android/RealmExample/.gradle/caches
-              example/Android/RealmExample/.gradle/wrapper
-            key: ${{ runner.os }}-gradle-${{ hashFiles('example/Android/RealmExample/*.gradle*', 'example/Android/RealmExample/gradle-wrapper.properties') }}
+              examples/Android/RealmExample/.gradle/caches
+              examples/Android/RealmExample/.gradle/wrapper
+            key: ${{ runner.os }}-gradle-${{ hashFiles('examples/Android/RealmExample/*.gradle*', 'examples/Android/RealmExample/gradle-wrapper.properties') }}
             restore-keys: |
               ${{ runner.os }}-gradle-
               
         - name: Make gradlew executable
-          run: chmod +x ./example/Android/RealmExample/gradlew
-
+          run: chmod +x ./examples/Android/RealmExample/gradlew
+        - name: Generate app bundle
+          run: ./examples/Android/RealmExample/gradlew app:bundleRelease --stacktrace
