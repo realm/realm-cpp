@@ -64,7 +64,7 @@ if(NOT APPLE AND NOT WINDOWS_STORE AND NOT ANDROID)
         add_subdirectory(${libuv_SOURCE_DIR} ${libuv_BINARY_DIR} EXCLUDE_FROM_ALL)
         set(libuv_target uv_a)
     endif()
-    
+
     target_link_libraries(cpprealm PUBLIC ${libuv_target})
 
     target_compile_definitions(cpprealm PUBLIC REALM_DISABLE_METADATA_ENCRYPTION=1 REALM_ENABLE_SYNC=1)
@@ -100,7 +100,7 @@ else()
     )
 endif()
 
-if (NOT ANDROID)
+if (NOT ANDROID AND NOT CPPREALM_NO_TESTS)
 Include(FetchContent)
 FetchContent_Declare(
         Catch2
@@ -117,4 +117,8 @@ file(COPY tests/config_overrides.json DESTINATION ${CMAKE_BINARY_DIR})
 
 add_test(cpprealm_tests cpprealm_exe_tests)
 enable_testing()
+endif()
+
+if (NOT ANDROID AND NOT CPPREALM_NO_EXAMPLES)
+    add_subdirectory(examples)
 endif()
