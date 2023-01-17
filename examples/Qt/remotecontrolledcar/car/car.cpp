@@ -78,7 +78,7 @@ void Car::decelerate()
 
 void Car::turnLeft()
 {
-    if (wheelsAngle > -40.0) { }
+    if (wheelsAngle > -40.0)
         wheelsAngle -= 10.0;
 }
 
