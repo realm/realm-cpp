@@ -3,6 +3,28 @@
 
 #include <cpprealm/sdk.hpp>
 
+struct OneStrCol : realm::object {
+    realm::persisted<std::string> str_col;
+    static constexpr auto schema = realm::schema("OneStrCol",
+        realm::property<&OneStrCol::str_col>("str_col"));
+};
+
+struct TwoCols : realm::object {
+    realm::persisted<std::string> str_col;
+    realm::persisted<int> int_col;
+    static constexpr auto schema = realm::schema("TwoCols",
+        realm::property<&TwoCols::str_col>("str_col"),
+        realm::property<&TwoCols::int_col>("int_col"));
+};
+
+struct TwoColsRev : realm::object {
+    realm::persisted<int> int_col;
+    realm::persisted<std::string> str_col;
+    static constexpr auto schema = realm::schema("TwoColsRev",
+        realm::property<&TwoColsRev::int_col>("int_col"),
+        realm::property<&TwoColsRev::str_col>("str_col"));
+};
+
 struct Dog: realm::object {
     realm::persisted<std::string> name;
     realm::persisted<int> age;

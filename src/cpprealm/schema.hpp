@@ -290,14 +290,15 @@ namespace internal {
         template<size_t N, typename P>
         constexpr variant_t
         property_value_for_name(std::string_view property_name, const Class &cls, P &property) const {
-            if constexpr (N + 1 == sizeof...(Properties)) {
+            if constexpr (N < sizeof...(Properties)) {
                 if (property_name == std::string_view(names[N])) {
                     return variant_t { std::in_place_index<N>, *(cls.*property.ptr) };
                 }
-                return variant_t{};
-            } else {
-                return property_value_for_name<N + 1>(property_name, cls, std::get<N + 1>(properties));
+                if constexpr (N + 1 < sizeof...(Properties)) {
+                    return property_value_for_name<N + 1>(property_name, cls, std::get<N + 1>(properties));
+                }
             }
+            return variant_t{};
         }
 
         constexpr auto property_value_for_name(std::string_view property_name, const Class &cls) const {
