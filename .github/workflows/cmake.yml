@@ -209,30 +209,32 @@ jobs:
   #         require_tests: true
 
   build:
-    runs-on: ubuntu-latest
-    name: Android
-    - name: Fetch Sources
-      uses: actions/checkout@v2
-      with:
-        # Number of commits to fetch. 0 indicates all history for all branches and tags.
-        fetch-depth: 0
+      name: Setup Environment and build
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout the code to specific branch
+          uses: actions/checkout@v2
+          with:
+              submodules: 'recursive'
+              
+        - name: Set up JDK
+          uses: actions/setup-java@v2
+          with:
+            distribution: 'zulu'
+            java-version: '11'
+                  
+        - name: Setup Android SDK
+          uses: android-actions/setup-android@v2
+                
+        - uses: actions/cache@v2
+          with:
+            path: |
+              example/Android/RealmExample/.gradle/caches
+              example/Android/RealmExample/.gradle/wrapper
+            key: ${{ runner.os }}-gradle-${{ hashFiles('example/Android/RealmExample/*.gradle*', 'example/Android/RealmExample/gradle-wrapper.properties') }}
+            restore-keys: |
+              ${{ runner.os }}-gradle-
+              
+        - name: Make gradlew executable
+          run: chmod +x ./gradlew
 
-    - name: Setup JDK
-      uses: actions/setup-java@v2
-      with:
-        distribution: 'zulu'
-        java-version: '11'
-
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v2
-    # Cache Gradle dependencies and Gradle Wrapper
-    - name: Setup Gradle Cache
-      uses: actions/cache@v2
-      with:
-        path: |
-          example/Android/RealmExample/.gradle/caches
-                    example/Android/RealmExample/.gradle/wrapper
-        key: ${{ runner.os }}-${{ hashFiles('example/Android/RealmExample/*.gradle*') }}-${{ hashFiles('example/Android/RealmExample/gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('example/Android/RealmExample/**/buildSrc/**/*.kt') }}
-
-    - name: Make gradlew executable
-      run: chmod +x ./gradlew
