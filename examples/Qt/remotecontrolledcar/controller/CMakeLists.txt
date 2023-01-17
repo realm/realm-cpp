@@ -1,7 +1,8 @@
-# Generated from controller.pro.
-
 cmake_minimum_required(VERSION 3.16)
 project(controller LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -13,32 +14,22 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
   set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/dbus/remotecontrolledcar/controller")
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/realm/remotecontrolledcar/controller")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS DBus)
-find_package(Qt6 COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
-# special case begin
-set(controller_SRCS)
-qt6_add_dbus_interface(controller_SRCS
-    car.xml
-    car_interface
-)
-# special case end
 qt_add_executable(controller
+    ../car/car.h ../car/car.cpp
     controller.cpp controller.h controller.ui
     main.cpp
-    ${controller_SRCS} # special case
 )
 set_target_properties(controller PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
-target_link_libraries(controller PUBLIC
+target_link_libraries(controller PRIVATE
+    cpprealm
     Qt::Core
-    Qt::DBus
     Qt::Gui
     Qt::Widgets
 )
