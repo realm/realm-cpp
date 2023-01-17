@@ -22,8 +22,8 @@ struct Dog: realm::object {
     realm::persisted<int> age;
 
     static constexpr auto schema = realm::schema("Dog",
-                                                 realm::property<&Dog::name>("name"),
-                                                 realm::property<&Dog::age>("age"));
+            realm::property<&Dog::name>("name"),
+            realm::property<&Dog::age>("age"));
 };
 
 struct Person: realm::object {
@@ -34,18 +34,28 @@ struct Person: realm::object {
     realm::persisted<std::optional<Dog>> dog;
 
     static constexpr auto schema = realm::schema("Person",
-                                                 realm::property<&Person::_id, true>("_id"), // primary key
-                                                 realm::property<&Person::name>("name"),
-                                                 realm::property<&Person::age>("age"),
-                                                 realm::property<&Person::dog>("dog"));
+            realm::property<&Person::_id, true>("_id"), // primary key
+            realm::property<&Person::name>("name"),
+            realm::property<&Person::age>("age"),
+            realm::property<&Person::dog>("dog"));
 };
+
+struct Car : realm::object {
+    realm::persisted<int> _id;
+    realm::persisted<double> speed = 0.0;
+    void accelerate() { speed += 0.5; }
+    static constexpr auto schema = realm::schema("Car",
+            realm::property<&Car::_id, true>("_id"), // primary key
+            realm::property<&Car::speed>("speed"));
+};
+
 // Use them like regular objects.
 auto dog = Dog { .name = "Rex", .age = 1 };
 std::cout<<"name of dog: "<<dog.name<<std::endl;
 
 // Get the default Realm with compile time schema checking.
 auto realm = realm::open<Person, Dog>();
-// Persist your data easily with a write transaction 
+// Persist your data easily with a write transaction
 realm.write([&realm, &dog] {
     realm.add(dog);
 });
@@ -72,19 +82,20 @@ realm.write([&realm, &dog] {
 });
 
 //  Set up the listener & observe object notifications.
-token = dog.observe<Dog>([](auto&& change) {
+token = dog.observe<Dog>([] (auto&& change) {
     if (change.error) {
-        std::cout<<"An error occurred: "<<error<<std::endl;
+        std::cout << "An error occurred: " << change.error << std::endl;
     } else if (change.is_deleted) {
-        std::cout<<"The object was deleted."<<std::endl;
+        std::cout << "The object was deleted." << std::endl;
     } else {
-        std::cout<<"Property "<<property.name<<" changed to "<<property.new_value<<std::endl;
+        for (auto &&property : change.property_changes)
+            std::cout << "Property " << property.name << " changed to " << property.new_value << std::endl;
     }
-}
+});
 
 // Update the dog's name to see the effect.
 realm.write([&dog] {
-    dog.name = "Wolfie"
+    dog.name = "Wolfie";
 });
 ```
 
@@ -93,11 +104,10 @@ The [MongoDB Realm Sync](https://www.mongodb.com/realm/mobile/sync) service make
 ```cpp
 auto app = realm::App("<app-id>");
 auto user = app.login(realm::App::Credentials::anonymous()).get_future().get();
-auto synced_realm_ref = user.realm<Car>("foo").get_future().get();
-auto realm = synced_realm_ref.resolve();
+auto realm = realm::open<Car>(user.flexible_sync_configuration());
 
-auto car = realm.object_new<Car>(0);
-realm.write([&car](){
+// observers will receive property change notification after sync
+realm.write([&car] () {
     car.accelerate();
 });
 ```
@@ -129,9 +139,9 @@ git submodule update --init --recursive
 mkdir build.debug
 cd build.debug
 cmake -D CMAKE_BUILD_TYPE=debug ..
-sudo cmake --build . --target install  
+sudo cmake --build . --target install
 ```
 
 You can then link to your library with `-lcpprealm`.
- 
+
 <img style="width: 0px; height: 0px;" src="https://3eaz4mshcd.execute-api.us-east-1.amazonaws.com/prod?s=https://github.com/realm/realm-cocoa#README.md">
