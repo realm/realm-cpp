@@ -207,3 +207,32 @@ jobs:
           report_paths: '.build/**/TestResults.xml'
           annotate_only: true
           require_tests: true
+
+  build-android:
+    runs-on: ubuntu-latest
+    name: Android
+    - name: Fetch Sources
+      uses: actions/checkout@v2
+      with:
+        # Number of commits to fetch. 0 indicates all history for all branches and tags.
+        fetch-depth: 0
+
+    - name: Setup JDK
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'zulu'
+        java-version: '11'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
+    # Cache Gradle dependencies and Gradle Wrapper
+    - name: Setup Gradle Cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          example/Android/RealmExample/.gradle/caches
+                    example/Android/RealmExample/.gradle/wrapper
+        key: ${{ runner.os }}-${{ hashFiles('example/Android/RealmExample/*.gradle*') }}-${{ hashFiles('example/Android/RealmExample/gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('example/Android/RealmExample/**/buildSrc/**/*.kt') }}
+
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
