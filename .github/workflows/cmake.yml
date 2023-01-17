@@ -237,5 +237,5 @@ jobs:
               
         - name: Make gradlew executable
           run: chmod +x ./examples/Android/RealmExample/gradlew
-        - name: Generate app bundle
-          run: ./examples/Android/RealmExample/gradlew app:bundleRelease --stacktrace
+        - name: Generate Gradle build
+          run: ./examples/Android/RealmExample/gradlew init
