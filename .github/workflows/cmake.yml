@@ -235,11 +235,9 @@ jobs:
             restore-keys: |
               ${{ runner.os }}-gradle-
 
-        - name: Change directory
-          run: cd examples/Android/RealmExample    
-        - name: Make gradlew executable
-          run: chmod +x ./gradlew
-        - name: Generate Gradle build
-          run: ./gradlew init
-        - name: Run Linters and Test
-          run: ./gradlew build
+        - name: Build
+          run: |
+            cd examples/Android/RealmExample
+            chmod +x ./gradlew
+            ./gradlew init
+            ./gradlew build
