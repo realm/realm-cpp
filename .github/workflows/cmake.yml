@@ -239,3 +239,5 @@ jobs:
           run: chmod +x ./examples/Android/RealmExample/gradlew
         - name: Generate Gradle build
           run: ./examples/Android/RealmExample/gradlew init
+        - name: Run Linters and Test
+          run: ./gradlew check
