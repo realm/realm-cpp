@@ -15,36 +15,36 @@ on:
   pull_request:
 
 jobs:
-  deploy-cluster:
-    runs-on: ubuntu-latest
-    name: Deploy Cluster
-    outputs:
-      clusterName: ${{ steps.deploy-cluster.outputs.clusterName }}
-    steps:
-      - uses: realm/ci-actions/mdb-realm/deploy@30bd9ead57756016f2e2ac7630433cf0883d1bae
-        id: deploy-cluster
-        with:
-          atlasUrl: ${{ env.REALM_ATLAS_ENDPOINT }}
-          realmUrl: ${{ env.REALM_BAAS_ENDPOINT }}
-          projectId: ${{ env.REALM_ATLAS_PROJECT_ID }}
-          apiKey: ${{ env.REALM_ATLAS_API_KEY }}
-          privateApiKey: ${{ env.REALM_ATLAS_PRIVATE_API_KEY }}
+  # deploy-cluster:
+  #   runs-on: ubuntu-latest
+  #   name: Deploy Cluster
+  #   outputs:
+  #     clusterName: ${{ steps.deploy-cluster.outputs.clusterName }}
+  #   steps:
+  #     - uses: realm/ci-actions/mdb-realm/deploy@30bd9ead57756016f2e2ac7630433cf0883d1bae
+  #       id: deploy-cluster
+  #       with:
+  #         atlasUrl: ${{ env.REALM_ATLAS_ENDPOINT }}
+  #         realmUrl: ${{ env.REALM_BAAS_ENDPOINT }}
+  #         projectId: ${{ env.REALM_ATLAS_PROJECT_ID }}
+  #         apiKey: ${{ env.REALM_ATLAS_API_KEY }}
+  #         privateApiKey: ${{ env.REALM_ATLAS_PRIVATE_API_KEY }}
 
-  delete-cluster:
-    runs-on: ubuntu-latest
-    name: Delete Cluster
-    if: always()
-    needs:
-      - build-macos
-      - build-linux
-    steps:
-      - uses: realm/ci-actions/mdb-realm/cleanup@30bd9ead57756016f2e2ac7630433cf0883d1bae
-        with:
-          atlasUrl: ${{ env.REALM_ATLAS_ENDPOINT }}
-          realmUrl: ${{ env.REALM_BAAS_ENDPOINT }}
-          projectId: ${{ env.REALM_ATLAS_PROJECT_ID }}
-          apiKey: ${{ env.REALM_ATLAS_API_KEY }}
-          privateApiKey: ${{ env.REALM_ATLAS_PRIVATE_API_KEY }}
+  # delete-cluster:
+  #   runs-on: ubuntu-latest
+  #   name: Delete Cluster
+  #   if: always()
+  #   needs:
+  #     - build-macos
+  #     - build-linux
+  #   steps:
+  #     - uses: realm/ci-actions/mdb-realm/cleanup@30bd9ead57756016f2e2ac7630433cf0883d1bae
+  #       with:
+  #         atlasUrl: ${{ env.REALM_ATLAS_ENDPOINT }}
+  #         realmUrl: ${{ env.REALM_BAAS_ENDPOINT }}
+  #         projectId: ${{ env.REALM_ATLAS_PROJECT_ID }}
+  #         apiKey: ${{ env.REALM_ATLAS_API_KEY }}
+  #         privateApiKey: ${{ env.REALM_ATLAS_PRIVATE_API_KEY }}
 
   # build-macos:
   #   runs-on: macos-12
