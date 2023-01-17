@@ -234,10 +234,12 @@ jobs:
             key: ${{ runner.os }}-gradle-${{ hashFiles('examples/Android/RealmExample/*.gradle*', 'examples/Android/RealmExample/gradle-wrapper.properties') }}
             restore-keys: |
               ${{ runner.os }}-gradle-
-              
+
+        - name: Change directory
+          run: cd examples/Android/RealmExample    
         - name: Make gradlew executable
-          run: chmod +x ./examples/Android/RealmExample/gradlew
+          run: chmod +x ./gradlew
         - name: Generate Gradle build
-          run: ./examples/Android/RealmExample/gradlew init
+          run: ./gradlew init
         - name: Run Linters and Test
-          run: ./examples/Android/RealmExample/gradlew check
+          run: ./gradlew build

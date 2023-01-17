@@ -33,20 +33,20 @@ Java_com_mongodb_realmexample_MainActivity_setupRealm(JNIEnv * env, jobject act,
     global_ref = env->NewGlobalRef(act);
     env->GetJavaVM(&jvm);
 
-//    const char *raw_path = env->GetStringUTFChars(jraw_path, NULL);
-//    env->ReleaseStringUTFChars(jraw_path, raw_path);
-//    auto path = std::string(raw_path);
-//
-//    auto app = realm::App("qt-car-demo-tdbmy", std::nullopt, path);
-//    realm::User user = app.login(realm::App::Credentials::anonymous()).get_future().get();
-//    db = std::make_unique<realm::db<Car>>(realm::open<Car>(user.flexible_sync_configuration()));
-//    db->subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
-//        if (!subs.find("car")) {
-//            subs.add<Car>("car", [](auto& c) {
-//                return c._id == 0;
-//            });
-//        }
-//    }).get_future().get();
+    const char *raw_path = env->GetStringUTFChars(jraw_path, NULL);
+    env->ReleaseStringUTFChars(jraw_path, raw_path);
+    auto path = std::string(raw_path);
+
+    auto app = realm::App("qt-car-demo-tdbmy", std::nullopt, path);
+    realm::User user = app.login(realm::App::Credentials::anonymous()).get_future().get();
+    db = std::make_unique<realm::db<Car>>(realm::open<Car>(user.flexible_sync_configuration()));
+    db->subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
+        if (!subs.find("car")) {
+            subs.add<Car>("car", [](auto& c) {
+                return c._id == 0;
+            });
+        }
+    }).get_future().get();
 
     db->refresh(); // Bring Realm up to date after initial data sync.
     auto cars = db->objects<Car>();
