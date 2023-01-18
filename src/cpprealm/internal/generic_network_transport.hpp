@@ -20,9 +20,9 @@
 #define realm_cpp_generic_network_transport
 
 #include <realm/object-store/sync/impl/sync_client.hpp>
+#include <realm/object-store/sync/generic_network_transport.hpp>
 
-namespace realm {
-namespace internal {
+namespace realm::internal {
 
 class DefaultTransport : public app::GenericNetworkTransport {
 public:
@@ -30,7 +30,6 @@ public:
                                 util::UniqueFunction<void(const app::Response&)>&& completion);
 };
 
-} // namespace internal
 } // namespace realm
 
 #endif //realm_cpp_generic_network_transport

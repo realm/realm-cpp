@@ -19,50 +19,40 @@
 #ifndef notifications_hpp
 #define notifications_hpp
 
-#include <cpprealm/type_info.hpp>
-
-#include <realm/object-store/list.hpp>
-#include <realm/object-store/object.hpp>
-#include <realm/object-store/object_store.hpp>
-#include <realm/object-store/shared_realm.hpp>
+#include <cpprealm/persisted.hpp>
+#include <cpprealm/thread_safe_reference.hpp>
+#include <cpprealm/internal/bridge/dictionary.hpp>
 
 #include <any>
-#include "persisted.hpp"
+#include <future>
+#include <utility>
 
 namespace realm {
-
-struct Realm;
-struct NotificationToken;
-struct notification_token;
+template <typename T>
 struct object_base;
 template <typename T>
 struct ObjectChange;
 
-template <typename T>
-struct persisted_container_base;
 /**
  A token which is returned from methods which subscribe to changes to a `realm::object`.
  */
 struct notification_token {
+    notification_token(notification_token&& nt) noexcept = default;
+    notification_token& operator=(notification_token&&) = default;
     notification_token() = default;
-private:
-    explicit notification_token(realm::NotificationToken&& token)
-    : m_token(std::move(token))
-    {
-    }
 
-    friend struct object_base;
-    template <typename T>
-    friend struct persisted_container_base;
-    template <typename T>
-    friend struct results;
-    realm::NotificationToken m_token;
+    notification_token(internal::bridge::notification_token&& token)
+            : m_token(token) {}
+
+    internal::bridge::notification_token m_token;
+    internal::bridge::dictionary m_dictionary;
+    internal::bridge::realm m_realm;
 };
 
 template <typename T>
 struct collection_change {
     /// The list being observed.
-    const persisted_container_base<T>* collection;
+    const persisted<T>* collection;
     std::vector<uint64_t> deletions;
     std::vector<uint64_t> insertions;
     std::vector<uint64_t> modifications;
@@ -80,13 +70,21 @@ struct collection_change {
 
 
 template <typename T>
-struct collection_callback_wrapper {
-    static_assert(realm::type_info::ListPersistableConcept<T>::value);
-    util::UniqueFunction<void(collection_change<T>)> handler;
+struct collection_callback_wrapper : internal::bridge::collection_change_callback {
+    std::function<void(collection_change<T>)> handler;
     persisted<T>& collection;
     bool ignoreChangesInInitialNotification;
 
-    void operator()(realm::CollectionChangeSet const& changes) {
+    collection_callback_wrapper(std::function<void(collection_change<T>)> handler,
+                                persisted<T>& collection,
+                                bool ignoreChangesInInitialNotification)
+    : handler(handler)
+    , collection(collection)
+    , ignoreChangesInInitialNotification(ignoreChangesInInitialNotification)
+    {}
+
+    void before(const realm::internal::bridge::collection_change_set &c) final {}
+    void after(internal::bridge::collection_change_set const& changes) final {
         if (ignoreChangesInInitialNotification) {
             ignoreChangesInInitialNotification = false;
             handler({&collection, {},{},{}});
@@ -95,17 +93,17 @@ struct collection_callback_wrapper {
             handler({&collection, {},{},{}});
 
         }
-        else if (!changes.collection_root_was_deleted || !changes.deletions.empty()) {
+        else if (!changes.collection_root_was_deleted() || !changes.deletions().empty()) {
             handler({&collection,
-                to_vector(changes.deletions),
-                to_vector(changes.insertions),
-                to_vector(changes.modifications),
+                to_vector(changes.deletions()),
+                to_vector(changes.insertions()),
+                to_vector(changes.modifications()),
             });
         }
     }
 
 private:
-    std::vector<uint64_t> to_vector(const IndexSet& index_set) {
+    std::vector<uint64_t> to_vector(const internal::bridge::index_set& index_set) {
         auto vector = std::vector<uint64_t>();
         for (auto index : index_set.as_indexes()) {
             vector.push_back(index);

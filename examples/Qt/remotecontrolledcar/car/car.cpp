@@ -57,8 +57,11 @@ QRectF Car::boundingRect() const
     return QRectF(-35, -81, 70, 115);
 }
 
-Car::Car() : wheelsAngle(0), speed(0), color(Qt::green)
+Car::Car()
 {
+    wheelsAngle = 0;
+    speed = 0;
+    color = Qt::green;
     startTimer(1000 / 33);
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsFocusable, true);

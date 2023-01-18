@@ -19,27 +19,162 @@
 #ifndef REALM_PERSISTED_OPTIONAL_HPP
 #define REALM_PERSISTED_OPTIONAL_HPP
 
+#include "cpprealm/internal/bridge/obj.hpp"
 #include <cpprealm/persisted.hpp>
 
 namespace realm {
-    template<typename T>
-    struct persisted<T, type_info::OptionalPersistable<T>> : public persisted_noncontainer_base<T> {
-        using persisted_noncontainer_base<T>::persisted_noncontainer_base;
-        using persisted_noncontainer_base<T>::operator=;
-        using persisted_noncontainer_base<T>::operator*;
-    };
     template <typename T>
-    std::enable_if_t<type_info::is_optional<T>::value, rbool>
-    inline operator==(const persisted<T>& a, const T& b)
+    struct persisted<std::optional<T>, std::enable_if_t<internal::type_info::is_primitive<T>::value>> :
+            public persisted_base<std::optional<T>> {
+        persisted() {
+            new (&unmanaged) T();
+        }
+        persisted(const persisted& v) {
+            *this = v;
+        }
+        persisted(persisted&& v) {
+            *this = std::move(v);
+        }
+        persisted(const T& value) {
+            new (&unmanaged) std::optional<T>(value);
+        }
+        persisted(T&& value) {
+            new (&unmanaged) std::optional<T>(std::move(value));
+        }
+        ~persisted() {
+            if (this->is_managed()) {
+                managed.~col_key();
+            } else {
+                unmanaged = std::nullopt;
+            }
+        }
+        persisted& operator=(const persisted& v) {
+            if (v.is_managed()) {
+                this->m_object = v.m_object;
+                new (&managed) internal::bridge::col_key(v.managed);
+            } else {
+                new (&unmanaged) std::optional<T>(v.unmanaged);
+            }
+            return *this;
+        }
+        persisted& operator=(persisted&& v) {
+            if (v.is_managed()) {
+                this->m_object = v.m_object;
+                new (&managed) internal::bridge::col_key(std::move(v.managed));
+            } else {
+                new (&unmanaged) std::optional<T>(std::move(v.unmanaged));
+            }
+            return *this;
+        }
+        persisted& operator=(const char* o) {
+            static_assert(std::is_same_v<std::string, T>);
+            *this = std::move(std::optional<T>(o));
+            return *this;
+        }
+        persisted& operator=(T&& o) {
+            *this = std::move(std::optional<T>(o));
+            return *this;
+        }
+        persisted& operator=(const T& o) {
+            *this = std::optional<T>(o);
+            return *this;
+        }
+        persisted& operator=(std::optional<T>&& o) {
+            if (auto& obj = this->m_object) {
+                if (o) {
+                    obj->get_obj().set(this->managed,
+                                   persisted<T>::serialize(*o));
+                } else {
+                    obj->get_obj().set_null(this->managed);
+                }
+            } else {
+                if (o)
+                    new (&this->unmanaged) std::optional<T>(std::move(*o));
+                else
+                    new (&this->unmanaged) std::optional<T>();
+            }
+            return *this;
+        }
+
+        persisted& operator=(const std::optional<T>& o) {
+            if (auto& obj = this->m_object) {
+                if (o) {
+                    obj->obj().set(this->managed,
+                                   internal::type_info::serialize(*o));
+                } else {
+                    obj->obj().set_null(this->managed);
+                }
+            } else {
+                new (&this->unmanaged) T(o);
+            }
+            return *this;
+        }
+
+        operator bool() const {
+            if (this->is_managed()) {
+                return !this->m_object->get_obj().is_null(managed);
+            } else {
+                return unmanaged.operator bool();
+            }
+        }
+
+        std::optional<T> operator*() const {
+            if (this->is_managed()) {
+                return this->m_object->get_obj().template get<std::optional<T>>(managed);
+            } else {
+                return unmanaged;
+            }
+        }
+    protected:
+        union {
+            std::optional<T> unmanaged;
+            internal::bridge::col_key managed;
+        };
+
+        void manage(internal::bridge::object* object,
+                    internal::bridge::col_key&& col_key) override {
+            if (this->unmanaged) {
+                object->get_obj().set(col_key, persisted<T>::serialize(*unmanaged));
+            } else {
+                object->get_obj().set_null(col_key);
+            }
+            unmanaged = std::nullopt;
+            assign_accessor(object, std::move(col_key));
+        }
+        void assign_accessor(internal::bridge::object* object,
+                             internal::bridge::col_key&& col_key) override {
+            this->m_object = *object;
+            new (&managed) internal::bridge::col_key(std::move(col_key));
+        }
+
+        inline static std::optional<typename internal::type_info::type_info<T>::internal_type>
+        serialize(const std::optional<T>& value) {
+            if (!value) {
+                return std::nullopt;
+            }
+            return persisted<T>::serialize(*value);
+        }
+        static std::optional<T> deserialize(const std::optional<typename internal::type_info::type_info<T>::internal_type>& value) {
+            if (!value) {
+                return std::nullopt;
+            }
+            return persisted<T>::deserialize(*value);
+        }
+
+        __cpp_realm_friends
+    };
+
+    template <typename T>
+    rbool inline operator==(const persisted<std::optional<T>>& a, const std::optional<T>& b)
     {
         if (a.should_detect_usage_for_queries) {
-            auto query = Query(a.query->get_table());
+            auto query = internal::bridge::query(a.query->get_table());
             if (b) {
-                query.equal(a.managed, type_info::persisted_type<T>::convert_if_required(*b));
+                query.equal(a.managed, internal::type_info::serialize(*b));
             } else {
                 query.equal(a.managed, realm::null{});
             }
-            return {std::move(query)};
+            return query;
         }
 
         if (a && b) {
@@ -50,33 +185,46 @@ namespace realm {
             return false;
         }
     }
+
     template <typename T>
-    std::enable_if_t<type_info::is_optional<T>::value, rbool>
-    inline operator==(const persisted<T>& a, const typename T::value_type& b)
+    rbool inline operator==(const persisted<std::optional<T>>& a, const char* b)
     {
         if (a.should_detect_usage_for_queries) {
-            auto query = Query(a.query->get_table());
-            query.equal(a.managed, type_info::persisted_type<typename T::value_type>::convert_if_required(b));
-            return {std::move(query)};
+            auto query = internal::bridge::query(a.query->get_table());
+            if (b) {
+                query.equal(a.managed, b);
+            } else {
+                query.equal(a.managed, std::nullopt);
+            }
+            return query;
         }
 
-        if (*a) {
-            return **a == b;
+        if (a) {
+            return *a == b;
         } else {
             return false;
         }
     }
-    template <typename T>
-    std::enable_if_t<type_info::is_optional<T>::value, rbool>
-    inline operator==(const persisted<T>& a, const std::nullopt_t&)
+
+    template <typename T, typename V>
+    rbool inline operator==(const persisted<std::optional<T>>& a, const V& b)
     {
         if (a.should_detect_usage_for_queries) {
-            auto query = Query(a.query->get_table());
-            query.equal(a.managed, std::nullopt);
-            return {std::move(query)};
+            auto query = internal::bridge::query(a.query->get_table());
+            query.equal(a.managed, persisted<V>::serialize(b));
+            return query;
         }
 
-        return !*a;
+        if (a) {
+            return *a == b;
+        } else {
+            return false;
+        }
+    }
+
+    namespace {
+        static_assert(sizeof(persisted<std::optional<int64_t>>{}));
+        static_assert(sizeof(persisted<std::optional<std::string>>{}));
     }
 }
 
