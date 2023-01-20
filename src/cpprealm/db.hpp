@@ -26,6 +26,7 @@
 #include <cpprealm/analytics.hpp>
 #endif
 
+#include <cpprealm/asymmetric_object.hpp>
 #include <cpprealm/results.hpp>
 #include <cpprealm/task.hpp>
 #include <cpprealm/flex_sync.hpp>
@@ -98,15 +99,15 @@ struct db {
         add(object);
     }
 
-//    template <typename T>
-//    ObjectPredicate<asymmetric_object, T>
-//    add(T& object)
-//    {
-//        auto actual_schema = m_realm.schema().find(T::schema.name);
-//        auto group = m_realm.read_group();
-//        auto table = group.get_table(actual_schema.table_key());
-//        object.manage(table, m_realm);
-//    }
+    template <typename T>
+    ObjectPredicate<asymmetric_object, T>
+    add(T& object)
+    {
+        auto actual_schema = m_realm.schema().find(T::schema.name);
+        auto group = m_realm.read_group();
+        auto table = group.get_table(actual_schema.table_key());
+        object.manage(table, m_realm);
+    }
 
     template <typename T>
     void remove(T& object)

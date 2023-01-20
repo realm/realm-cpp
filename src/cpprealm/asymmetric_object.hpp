@@ -52,7 +52,7 @@ namespace realm {
             if (!this->m_object) {
                 if constexpr (T::schema.HasPrimaryKeyProperty) {
                     auto val = (static_cast<T&>(*this)).*decltype(T::schema)::PrimaryKeyProperty::ptr;
-                    this->m_object = internal::bridge::object(realm, target_table.create_object_with_primary_key(*val));
+                    this->m_object = internal::bridge::object(realm, target_table.create_object_with_primary_key(internal::bridge::mixed(*val)));
                 } else {
                     this->m_object = internal::bridge::object(realm, target_table.create_object());
                 }
@@ -60,7 +60,7 @@ namespace realm {
                     ((static_cast<T&>(*this).*(std::decay_t<decltype(p)>::ptr))
                             .manage(&*this->m_object, this->m_object->get_obj().get_table().get_column_key(p.name)), ...);
                 }, T::schema.ps);
-//                assign_accessors(*this->m_object);
+                this->assign_accessors(*this->m_object);
             }
         }
     };

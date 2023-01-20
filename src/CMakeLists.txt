@@ -43,6 +43,7 @@ set(HEADERS
     cpprealm/db.hpp
     cpprealm/notifications.hpp
     cpprealm/object.hpp
+    cpprealm/asymmetric_object.hpp
     cpprealm/persisted.hpp
     cpprealm/schema.hpp
     cpprealm/task.hpp
