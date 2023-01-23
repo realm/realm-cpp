@@ -19,7 +19,6 @@
 #include <thread>
 #include <filesystem>
 #include <sstream>
-#include <numeric>
 
 #include "admin_utils.hpp"
 
@@ -264,9 +263,7 @@ RealmServer RealmServer::shared = RealmServer();
 
 app::Response Admin::Endpoint::request(app::HttpMethod method, bson::BsonDocument&& body) const
 {
-    std::stringstream ss;
-    ss << body;
-    auto body_str = ss.str();
+    auto body_str = (std::stringstream() << body).str();
     std::string url = m_url + "?bypass_service_change=DestructiveSyncProtocolVersionIncrease";
     auto response = do_http_request({
         .method = method,

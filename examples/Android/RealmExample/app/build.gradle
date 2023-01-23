@@ -18,7 +18,6 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags '-std=c++17'
-                targets "realmexample"
             }
         }
     }

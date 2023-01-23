@@ -94,6 +94,12 @@ jobs:
       - name: Compile
         run: cmake --build --preset ${{ matrix.preset }} --config ${{ matrix.configuration }}
 
+      - name: Open a tmate debug session
+        if: ${{ failure() && runner.debug }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          timeout-minutes: 15
+
       - name: Test
         working-directory: .build/cmake-preset-${{ matrix.preset }}
         run: ./${{ matrix.configuration }}/cpprealm_exe_tests
@@ -106,12 +112,6 @@ jobs:
           annotate_only: true
           require_tests: true
 
-      - name: Open a tmate debug session
-        if: ${{ failure() && runner.debug }}
-        uses: mxschmitt/action-tmate@v3
-        with:
-          timeout-minutes: 15
-
   build-linux:
     runs-on: ubuntu-22.04
     name: Linux ${{ matrix.configuration }} (${{ matrix.compiler.name }} ${{ matrix.compiler.version }})
@@ -123,8 +123,8 @@ jobs:
             version: 11
           - name: gcc
             version: 12
-#          - name: clang
-#            version: 14
+          # - name: clang
+          #   version: 14
         configuration:
           - Debug
           - Release
@@ -159,8 +159,7 @@ jobs:
           cache-restore-keys: vcpkg-linux-${{ matrix.compiler.name }}-${{ matrix.compiler.version }}-
       
       - name: Install Linux Dependencies
-        run: |
-          sudo apt-get update
+        run: | 
           sudo apt-get install -y \
             libcurl4-openssl-dev \
             libssl-dev \
@@ -172,7 +171,6 @@ jobs:
       - name: Setup GCC ${{ matrix.compiler.version }}
         if: matrix.compiler.name == 'gcc'
         run: |
-          sudo apt-get update
           sudo apt-get install -y g++-${{ matrix.compiler.version }}
           sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-${{ matrix.compiler.version }} 100
           sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-${{ matrix.compiler.version }} 100
@@ -180,7 +178,6 @@ jobs:
       - name: Setup Clang ${{ matrix.compiler.version }}
         if: matrix.compiler.name == 'clang'
         run: |
-          sudo apt-get update
           sudo apt-get install -y clang-${{ matrix.compiler.version }}
           sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-${{ matrix.compiler.version }} 100
           sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-${{ matrix.compiler.version }} 100
@@ -193,6 +190,12 @@ jobs:
       - name: Compile
         run: cmake --build --preset linux --config ${{ matrix.configuration }}
 
+      - name: Open a tmate debug session
+        if: ${{ failure() && runner.debug }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          timeout-minutes: 15
+
       - name: Test
         working-directory: .build/cmake-preset-linux
         run: ./${{ matrix.configuration }}/cpprealm_exe_tests
@@ -204,9 +207,3 @@ jobs:
           report_paths: '.build/**/TestResults.xml'
           annotate_only: true
           require_tests: true
-
-      - name: Open a tmate debug session
-        if: ${{ failure() && runner.debug }}
-        uses: mxschmitt/action-tmate@v3
-        with:
-          timeout-minutes: 15

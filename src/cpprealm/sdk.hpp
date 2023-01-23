@@ -21,21 +21,20 @@
 
 #include <utility>
 
+#include <cpprealm/type_info.hpp>
 #include <cpprealm/persisted.hpp>
 #include <cpprealm/persisted_binary.hpp>
 #include <cpprealm/persisted_bool.hpp>
 #include <cpprealm/persisted_double.hpp>
-#include <cpprealm/persisted_custom.hpp>
 #include <cpprealm/persisted_embedded.hpp>
 #include <cpprealm/persisted_enum.hpp>
 #include <cpprealm/persisted_int.hpp>
 #include <cpprealm/persisted_list.hpp>
-#include <cpprealm/persisted_map.hpp>
 #include <cpprealm/persisted_mixed.hpp>
 #include <cpprealm/persisted_optional.hpp>
+#include <cpprealm/persisted_string.hpp>
 #include <cpprealm/persisted_timestamp.hpp>
 #include <cpprealm/persisted_uuid.hpp>
-#include <cpprealm/persisted_object_id.hpp>
 #include <cpprealm/schema.hpp>
 #include <cpprealm/results.hpp>
 #include <cpprealm/notifications.hpp>
