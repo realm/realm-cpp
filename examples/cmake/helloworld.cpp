@@ -1,9 +1,6 @@
-#include <chrono>
-#include <stdio.h>
-#include <future>
-#include <thread>
+#include "utils.hpp"
+
 #include <cpprealm/sdk.hpp>
-#include <realm/object-store/sync/sync_session.hpp>
 
 struct FooObject: realm::object {
 
@@ -23,22 +20,6 @@ struct FooObject: realm::object {
         realm::property<&FooObject::uuid_col>("uuid_col"),
         realm::property<&FooObject::binary_col>("binary_col"));
 };
-
-std::promise<void> wait_for_sync_uploads(const realm::User& user) {
-    auto sync_sessions = user.m_user->sync_manager()->get_all_sessions();
-    auto session = sync_sessions[0];
-    std::promise<void> p;
-    session->wait_for_upload_completion([&p] (auto) { p.set_value(); });
-    return p;
-}
-
-std::promise<void> wait_for_sync_downloads(const realm::User& user) {
-    auto sync_sessions = user.m_user->sync_manager()->get_all_sessions();
-    auto session = sync_sessions[0];
-    std::promise<void> p;
-    session->wait_for_download_completion([&p](auto) { p.set_value(); });
-    return p;
-}
 
 void run_realm() {
     auto app = realm::App("cpp-sdk-2-pgjiz");
@@ -69,25 +50,33 @@ void run_realm() {
     });
 
     auto token = person.observe<FooObject>([](auto&& change) {
-        std::cout << "property changed" << std::endl;
+        if (change.error) {
+            std::cout << "An error occurred: " << change.error << std::endl;
+        } else if (change.is_deleted) {
+            std::cout << "The object was deleted." << std::endl;
+        } else {
+            for (auto &&property : change.property_changes) {
+                std::cout << "Property " << property.name << " changed"
+                    << " from " << property.old_value
+                    << " to " << property.new_value
+                    << std::endl;
+            }
+        }
     });
 
-    wait_for_sync_uploads(user).get_future().get();
-    wait_for_sync_downloads(user).get_future().get();
+    wait_for_sync(user);
 
     synced_realm.write([&synced_realm, &person]() {
         person.str_col = "sarah";
     });
 
-    wait_for_sync_uploads(user).get_future().get();
-    wait_for_sync_downloads(user).get_future().get();
+    wait_for_sync(user);
 
     synced_realm.write([&synced_realm, &person]() {
         person.str_col = "bob";
     });
 
-    wait_for_sync_uploads(user).get_future().get();
-    wait_for_sync_downloads(user).get_future().get();
+    wait_for_sync(user);
 }
 
 int main() {
