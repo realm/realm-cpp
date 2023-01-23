@@ -20,7 +20,6 @@
 
 #include <catch2/catch_all.hpp>
 #include <realm/util/features.h>
-#include <filesystem>
 
 int main(int argc, char* argv[]) {
     Catch::ConfigData config;
@@ -34,9 +33,6 @@ int main(int argc, char* argv[]) {
         // skip app and sync tests on Mobile and Windows platforms if we're not running on CI or have an explicit BAAS endpoint set
         config.testsOrTags.push_back("~[app]");
         config.testsOrTags.push_back("~[sync]");
-#else
-        config.showDurations = Catch::ShowDurations::Always; // this is to help debug hangs
-//        config.testsOrTags.emplace_back("~[performance]");
 #endif
     }
 

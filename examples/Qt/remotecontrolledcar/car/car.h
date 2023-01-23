@@ -55,7 +55,7 @@
 #include <QBrush>
 #include <cpprealm/sdk.hpp>
 
-class Car : public QGraphicsObject, public realm::object<Car>
+class Car : public QGraphicsObject, public realm::object
 {
     Q_OBJECT
 public:

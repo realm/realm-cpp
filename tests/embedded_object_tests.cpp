@@ -5,7 +5,7 @@
 TEST_CASE("embedded_objects") {
     realm_path path;
     SECTION("observe") {
-        auto realm = realm::open<Foo, EmbeddedFoo>({path});
+        auto realm = realm::open<Foo, EmbeddedFoo>({.path=path});
 
         auto foo = Foo();
         foo.foo = EmbeddedFoo{.bar=42};
@@ -14,28 +14,23 @@ TEST_CASE("embedded_objects") {
             realm.add(foo);
         });
 
-        CHECK(foo.foo->bar == 42);
-        EmbeddedFoo e_foo = *(*foo.foo);
-        std::promise<bool> p;
-        auto token = e_foo.observe([&p](auto change) {
-            if (change.is_deleted) return;
+        CHECK((*foo.foo).bar == 42);
+        bool did_run;
+        EmbeddedFoo e_foo = (*foo.foo);
+        auto token = e_foo.observe<EmbeddedFoo>([&did_run](auto change) {
+            CHECK(change.property_changes.size() == 1);
+            CHECK(change.property_changes[0].old_value == std::nullopt);
+            CHECK(std::get<int>(*(change.property_changes[0].new_value)) == 84);
             CHECK(change.object->bar == 84);
-            p.set_value(true);
+            did_run = true;
         });
         realm.write([&foo]() {
-            foo.foo->bar = 84;
+            (*foo.foo).bar = 84;
         });
-        CHECK(foo.foo->bar == 84);
+        CHECK((*foo.foo).bar == 84);
         realm.write([&foo, &realm] {
             realm.remove(foo);
         });
-        auto future = p.get_future();
-        switch (future.wait_for(std::chrono::seconds(5))) {
-            case std::future_status::ready:
-                CHECK(future.get());
-                break;
-            default:
-                FAIL("observation timed out");
-        }
+        CHECK(did_run);
     }
 }

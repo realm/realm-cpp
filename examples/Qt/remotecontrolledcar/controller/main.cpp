@@ -55,8 +55,8 @@
 void get_car(Controller& controller)
 {
     auto realm_app = realm::App("qt-car-demo-tdbmy");
-    auto user = realm_app.login(realm::App::credentials::anonymous()).get_future().get();
-    auto realm = realm::db<Car>(user.flexible_sync_configuration());
+    auto user = realm_app.login(realm::App::Credentials::anonymous()).get_future().get();
+    auto realm = realm::open<Car>(user.flexible_sync_configuration());
     realm.subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
         if (!subs.find("foo")) {
             subs.add<Car>("foo");
