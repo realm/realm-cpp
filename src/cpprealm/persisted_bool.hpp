@@ -27,6 +27,11 @@ namespace realm {
     struct persisted<bool> : public persisted_primitive_base<bool> {
         operator bool() const; // NOLINT(google-explicit-constructor)
 
+        persisted<bool>() = default;
+        persisted<bool>(const bool value) {
+            new (&this->unmanaged) bool(value);
+        }
+
         template <typename T>
         std::enable_if_t<std::is_integral_v<T>, persisted&> // NOLINT(misc-unconventional-assign-operator)
         operator=(const T o) {

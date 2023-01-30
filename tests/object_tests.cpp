@@ -1,20 +1,6 @@
 #include "test_objects.hpp"
 #include "main.hpp"
 
-enum class PrimaryKeyEnum {
-    one, two
-};
-template<typename PrimaryKey>
-struct TestPrimaryKeyObject : realm::object<TestPrimaryKeyObject<PrimaryKey>> {
-    realm::persisted<PrimaryKey> _id;
-    realm::persisted<std::string> firstName;
-    realm::persisted<std::string> lastName;
-    static constexpr auto schema = realm::schema("TestPrimaryKeyObject",
-        realm::property<&TestPrimaryKeyObject::_id, true>("_id"),
-        realm::property<&TestPrimaryKeyObject::firstName>("firstName"),
-        realm::property<&TestPrimaryKeyObject::lastName>("lastName"));
-};
-
 TEST_CASE("all_primary_key_types") {
     SECTION("primary_keys") {
         std::tuple<int64_t, realm::object_id, std::string, realm::uuid, PrimaryKeyEnum> primary_keys

@@ -41,11 +41,15 @@ namespace realm {
         persisted(T&& value) {
             new (&unmanaged) std::optional<T>(std::move(value));
         }
+        persisted(const char *v)
+        {
+            new (&unmanaged) std::optional<T>(v);
+        }
         ~persisted() {
             if (this->is_managed()) {
                 managed.~col_key();
             } else {
-                unmanaged = std::nullopt;
+                new (&unmanaged) std::optional<T>(std::nullopt);
             }
         }
         persisted& operator=(const persisted& v) {
@@ -141,7 +145,8 @@ namespace realm {
             } else {
                 object->get_obj().set_null(col_key);
             }
-            unmanaged = std::nullopt;
+            new (&this->unmanaged) std::optional<T>();
+
             assign_accessor(object, std::move(col_key));
         }
         void assign_accessor(internal::bridge::object* object,

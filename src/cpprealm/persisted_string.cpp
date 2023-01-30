@@ -2,11 +2,11 @@
 
 namespace realm {
     persisted<std::string>::persisted() {
-        unmanaged = "";
+        new (&this->unmanaged) std::string("");
     }
     persisted<std::string>::persisted(const char *v)
     {
-        unmanaged = v;
+        new (&this->unmanaged) std::string(v);
     }
     rbool persisted<std::string>::contains(const std::string &s) const {
         if (should_detect_usage_for_queries) {
@@ -64,7 +64,7 @@ namespace realm {
         if (this->is_managed()) {
             m_object->get_obj().set(managed, std::string(v));
         } else {
-            unmanaged = v;
+            new (&this->unmanaged) std::string(v);
         }
         return *this;
     }

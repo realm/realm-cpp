@@ -24,7 +24,21 @@ struct Person: realm::object<Person> {
             realm::property<&Person::dog>("dog")
     );
 };
-//
+
+enum class PrimaryKeyEnum {
+    one, two
+};
+template<typename PrimaryKey>
+struct TestPrimaryKeyObject : realm::object<TestPrimaryKeyObject<PrimaryKey>> {
+    realm::persisted<PrimaryKey> _id;
+    realm::persisted<std::string> firstName;
+    realm::persisted<std::string> lastName;
+    static constexpr auto schema = realm::schema("TestPrimaryKeyObject",
+                                                 realm::property<&TestPrimaryKeyObject::_id, true>("_id"),
+                                                 realm::property<&TestPrimaryKeyObject::firstName>("firstName"),
+                                                 realm::property<&TestPrimaryKeyObject::lastName>("lastName"));
+};
+
 struct AllTypesObjectEmbedded: realm::embedded_object<AllTypesObjectEmbedded> {
     realm::persisted<std::string> str_col;
 
