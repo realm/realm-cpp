@@ -48,7 +48,8 @@ namespace realm::internal::bridge {
         mixed(const struct binary&); //NOLINT(google-explicit-constructor)
         mixed(const mixed&) = default;
         mixed(const Mixed&); //NOLINT(google-explicit-constructor)
-
+        template<typename T>
+        mixed(const std::optional<T>& o);  //NOLINT(google-explicit-constructor)
         operator std::string() const; //NOLINT(google-explicit-constructor)
         operator int64_t() const; //NOLINT(google-explicit-constructor)
         operator double() const; //NOLINT(google-explicit-constructor)

@@ -75,16 +75,11 @@ namespace realm::internal::bridge {
         return static_cast<TableRef>(*this)->get_link_target(col_key);
     }
 
-    obj table::create_object_with_primary_key(const mixed &key) const {
+    obj table::create_object_with_primary_key(const bridge::mixed& key) const {
         return static_cast<TableRef>(*this)->create_object_with_primary_key(static_cast<const Mixed>(key));
     }
 
     bool operator ==(table const& lhs, table const& rhs) {
         return static_cast<TableRef>(lhs) == static_cast<TableRef>(rhs);
     }
-//    query table::query(decltype(std::get<0>(PtrExtractor<&table::query>::SpreadArgs)) a,
-//                       decltype(std::get<1>(PtrExtractor<&table::query>::SpreadArgs)) b) const {
-//        return (*reinterpret_cast<const TableRef*>(m_table))->query(a,
-//                                                                    *reinterpret_cast<const std::vector<Mixed>*>(&b));
-//    }
 }

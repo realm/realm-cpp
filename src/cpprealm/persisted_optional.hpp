@@ -99,13 +99,16 @@ namespace realm {
         persisted& operator=(const std::optional<T>& o) {
             if (auto& obj = this->m_object) {
                 if (o) {
-                    obj->obj().set(this->managed,
-                                   internal::type_info::serialize(*o));
+                    obj->get_obj().set(this->managed,
+                                       persisted<T>::serialize(*o));
                 } else {
-                    obj->obj().set_null(this->managed);
+                    obj->get_obj().set_null(this->managed);
                 }
             } else {
-                new (&this->unmanaged) T(o);
+                if (o)
+                    new (&this->unmanaged) std::optional<T>(*o);
+                else
+                    new (&this->unmanaged) std::optional<T>();
             }
             return *this;
         }

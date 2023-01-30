@@ -1,6 +1,84 @@
 #include "test_objects.hpp"
 #include "main.hpp"
 
+enum class PrimaryKeyEnum {
+    one, two
+};
+template<typename PrimaryKey>
+struct TestPrimaryKeyObject : realm::object<TestPrimaryKeyObject<PrimaryKey>> {
+    realm::persisted<PrimaryKey> _id;
+    realm::persisted<std::string> firstName;
+    realm::persisted<std::string> lastName;
+    static constexpr auto schema = realm::schema("TestPrimaryKeyObject",
+        realm::property<&TestPrimaryKeyObject::_id, true>("_id"),
+        realm::property<&TestPrimaryKeyObject::firstName>("firstName"),
+        realm::property<&TestPrimaryKeyObject::lastName>("lastName"));
+};
+
+TEST_CASE("all_primary_key_types") {
+    SECTION("primary_keys") {
+        std::tuple<int64_t, realm::object_id, std::string, realm::uuid, PrimaryKeyEnum> primary_keys
+            = {123, realm::object_id::generate(), "primary_key", realm::uuid("68b696d7-320b-4402-a412-d9cee10fc6a3"), PrimaryKeyEnum::one};
+        auto n = sizeof(primary_keys);
+        for (size_t i = 0; i < n; i++) {
+            {
+                realm_path path;
+                using ObjectType = TestPrimaryKeyObject<std::remove_reference<decltype(std::get<0>(
+                        primary_keys))>::type>;
+                auto realm = realm::open<ObjectType>({path});
+                auto obj = ObjectType();
+                obj._id = std::get<decltype(*obj._id)>(primary_keys);
+                realm.write([&realm, &obj] {
+                    realm.add(obj);
+                });
+                auto res = realm.objects<ObjectType>()[0];
+                CHECK(res._id == std::get<decltype(*obj._id)>(primary_keys));
+            }
+        }
+    }
+
+    SECTION("optional_primary_keys") {
+        std::tuple<std::optional<int64_t>, std::optional<realm::object_id>, std::optional<std::string>, std::optional<realm::uuid>, std::optional<PrimaryKeyEnum>> primary_keys
+            = {123, realm::object_id::generate(), "primary_key", realm::uuid("68b696d7-320b-4402-a412-d9cee10fc6a3"), PrimaryKeyEnum::one};
+        auto n = sizeof(primary_keys);
+        for (size_t i = 0; i < n; i++) {
+            {
+                realm_path path;
+                using ObjectType = TestPrimaryKeyObject<std::remove_reference<decltype(std::get<0>(
+                        primary_keys))>::type>;
+                auto realm = realm::open<ObjectType>({path});
+                auto obj = ObjectType();
+                obj._id = std::get<decltype(*obj._id)>(primary_keys);
+                realm.write([&realm, &obj] {
+                    realm.add(obj);
+                });
+                auto res = realm.objects<ObjectType>()[0];
+                CHECK(*res._id == *std::get<decltype(*obj._id)>(primary_keys));
+            }
+        }
+    }
+
+    SECTION("optional_primary_keys_null_values") {
+        std::tuple<std::optional<int64_t>, std::optional<realm::object_id>, std::optional<std::string>, std::optional<realm::uuid>, std::optional<PrimaryKeyEnum>> primary_keys;
+        auto n = sizeof(primary_keys);
+        for (size_t i = 0; i < n; i++) {
+            {
+                realm_path path;
+                using ObjectType = TestPrimaryKeyObject<std::remove_reference<decltype(std::get<0>(
+                        primary_keys))>::type>;
+                auto realm = realm::open<ObjectType>({path});
+                auto obj = ObjectType();
+                obj._id = std::nullopt;
+                realm.write([&realm, &obj] {
+                    realm.add(obj);
+                });
+                auto res = realm.objects<ObjectType>()[0];
+                CHECK(!res._id);
+            }
+        }
+    }
+}
+
 TEST_CASE("object_notifications") {
     realm_path path;
     SECTION("observe") {

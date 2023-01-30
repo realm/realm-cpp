@@ -17,6 +17,16 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(Mixed)>{});
 #endif
 
+#define CPPREALM_OPTIONAL_MIXED(type) \
+    template<> \
+    mixed::mixed(const std::optional<type>& o) { \
+        if (o) { \
+            *this = mixed(*o); \
+        } else { \
+            new (&m_mixed) Mixed(realm::none); \
+        } \
+    } \
+
     mixed::mixed(const std::nullopt_t& v) {
         new (&m_mixed) Mixed(v);
     }
@@ -58,6 +68,18 @@ namespace realm::internal::bridge {
     mixed::mixed(const bool &v) {
         new (&m_mixed) Mixed(v);
     }
+
+    CPPREALM_OPTIONAL_MIXED(std::string);
+    CPPREALM_OPTIONAL_MIXED(timestamp);
+    CPPREALM_OPTIONAL_MIXED(int);
+    CPPREALM_OPTIONAL_MIXED(int64_t);
+    CPPREALM_OPTIONAL_MIXED(double);
+    CPPREALM_OPTIONAL_MIXED(struct uuid);
+    CPPREALM_OPTIONAL_MIXED(struct object_id);
+    CPPREALM_OPTIONAL_MIXED(struct binary);
+    CPPREALM_OPTIONAL_MIXED(struct obj_key);
+    CPPREALM_OPTIONAL_MIXED(bool);
+
     mixed::operator Mixed() const {
         if (!is_null() && type() == data_type::String) {
             return m_owned_string;

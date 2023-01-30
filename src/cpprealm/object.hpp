@@ -251,7 +251,7 @@ protected:
         if (!m_object) {
             if constexpr (T::schema.HasPrimaryKeyProperty) {
                 auto val = (static_cast<T&>(*this)).*decltype(T::schema)::PrimaryKeyProperty::ptr;
-                m_object = internal::bridge::object(realm, target_table.create_object_with_primary_key(*val));
+                m_object = internal::bridge::object(realm, target_table.create_object_with_primary_key(internal::bridge::mixed(*val)));
             } else {
                 m_object = internal::bridge::object(realm, target_table.create_object());
             }
