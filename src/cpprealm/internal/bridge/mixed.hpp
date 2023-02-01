@@ -3,6 +3,7 @@
 
 #include <string>
 #include <optional>
+#include <variant>
 #include <cpprealm/internal/bridge/property.hpp>
 #include <cpprealm/internal/bridge/binary.hpp>
 #include <cpprealm/internal/bridge/uuid.hpp>

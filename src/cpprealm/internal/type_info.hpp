@@ -12,7 +12,6 @@
 #include <cpprealm/internal/bridge/object_id.hpp>
 #include <realm/obj.hpp>
 
-#include <variant>
 #include <vector>
 
 namespace realm::internal::type_info {
