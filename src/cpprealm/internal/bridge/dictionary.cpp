@@ -93,6 +93,10 @@ namespace realm::internal::bridge {
         return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get_object(key);
     }
     template <>
+    mixed get(dictionary& dict, const std::string &key) {
+        return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get_any(key);
+    }
+    template <>
     bool get(dictionary& dict, const std::string &key) {
         return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get<Bool>(key);
     }

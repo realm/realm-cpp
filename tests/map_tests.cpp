@@ -11,7 +11,7 @@ TEST_CASE("map", "[map]") {
             {"a", 42}
         };
         obj.map_str_col = {
-            {"a", "foo"}
+            {"a", std::string("foo")}
         };
         obj.map_bool_col = {
             {"a", true}
@@ -115,7 +115,7 @@ TEST_CASE("map", "[map]") {
     SECTION("managed_map_observe", "[mixed]") {
         auto obj = AllTypesObject();
         obj.map_str_col = {
-                {"a", "foo"}
+                {"a", std::string("foo")}
         };
         auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
         realm.write([&realm, &obj] {

@@ -149,6 +149,14 @@ namespace realm {
     template <typename T>
     struct persisted<std::vector<T>, std::enable_if_t<internal::type_info::is_primitive<T>::value>>
             : internal::persisted_list_base<std::vector<T>> {
+        using internal::persisted_list_base<std::vector<T>>::persisted_list_base;
+
+        persisted(const std::vector<T>& vals) {
+            new (&this->unmanaged) std::vector<T>(vals);
+        }
+        persisted(std::vector<T>&& vals) {
+            new (&this->unmanaged) std::vector<T>(std::move(vals));
+        }
         void push_back(const T& value)
         {
             if (this->is_managed()) this->m_list.template add(value);
@@ -192,6 +200,14 @@ namespace realm {
     template <class T>
     struct persisted<std::vector<T>, std::enable_if_t<std::is_base_of_v<object<T>, T>>> :
             internal::persisted_list_base<std::vector<T>> {
+        using internal::persisted_list_base<std::vector<T>>::persisted_list_base;
+
+        persisted(const std::vector<T>& vals) {
+            new (&this->unmanaged) std::vector<T>(vals);
+        }
+        persisted(std::vector<T>&& vals) {
+            new (&this->unmanaged) std::vector<T>(std::move(vals));
+        }
         void push_back(T& a) {
             if (this->m_object) {
                 if (!a.m_object) {
@@ -277,6 +293,14 @@ namespace realm {
     template <class T>
     struct persisted<std::vector<T>, std::enable_if_t<std::is_base_of_v<embedded_object<T>, T>>> :
             internal::persisted_list_base<std::vector<T>> {
+        using internal::persisted_list_base<std::vector<T>>::persisted_list_base;
+
+        persisted(const std::vector<T>& vals) {
+            new (&this->unmanaged) std::vector<T>(vals);
+        }
+        persisted(std::vector<T>&& vals) {
+            new (&this->unmanaged) std::vector<T>(std::move(vals));
+        }
         void push_back(T& a) {
             if (this->m_object) {
                 if (!a.m_object) {

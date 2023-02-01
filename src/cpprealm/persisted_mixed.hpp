@@ -25,20 +25,18 @@
 #include <cpprealm/persisted_custom.hpp>
 
 namespace realm {
-    using mixed = std::variant<
-            int64_t,
-            bool,
-            std::string,
-            double,
-            std::vector<uint8_t>,
-            std::chrono::time_point<std::chrono::system_clock>,
-            uuid,
-            object_id>;
-
     template<typename T>
     struct persisted<T, std::enable_if_t<realm::internal::type_info::MixedPersistableConcept<T>::value>> final :
             public persisted_primitive_base<T> {
         using persisted_primitive_base<T>::operator=;
+
+        persisted()=default;
+        persisted(const realm::mixed& value) {
+            new(&this->unmanaged) realm::mixed(value);
+        }
+        persisted(realm::mixed&& value) {
+            new(&this->unmanaged) realm::mixed(std::move(value));
+        }
     protected:
         static internal::bridge::mixed serialize(const T& value) {
             return std::visit([](auto& arg) {
@@ -87,7 +85,7 @@ namespace realm {
     }
 
     __cpp_realm_generate_mixed_operator(==)
-
+    __cpp_realm_generate_mixed_operator(!=)
     template <typename T>
     inline std::ostream& operator<< (std::ostream& stream, const persisted<T, std::enable_if_t<realm::internal::type_info::MixedPersistableConcept<T>::value>>& value)
     {

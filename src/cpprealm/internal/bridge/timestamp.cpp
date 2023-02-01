@@ -46,4 +46,17 @@ namespace realm::internal::bridge {
     timestamp::operator Timestamp() const {
         return *reinterpret_cast<const Timestamp*>(m_timestamp);
     }
+
+
+#define __cpp_realm_gen_timestamp_op(op) \
+    bool operator op(const timestamp& a, const timestamp& b) { \
+        return *reinterpret_cast<const Timestamp*>(a.m_timestamp) op *reinterpret_cast<const Timestamp*>(b.m_timestamp); \
+    } \
+
+    __cpp_realm_gen_timestamp_op(==)
+    __cpp_realm_gen_timestamp_op(!=)
+    __cpp_realm_gen_timestamp_op(>)
+    __cpp_realm_gen_timestamp_op(<)
+    __cpp_realm_gen_timestamp_op(>=)
+    __cpp_realm_gen_timestamp_op(<=)
 }

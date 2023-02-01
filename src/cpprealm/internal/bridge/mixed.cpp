@@ -120,4 +120,15 @@ namespace realm::internal::bridge {
     bool mixed::is_null() const noexcept {
         return reinterpret_cast<const Mixed *>(m_mixed)->is_null();
     }
+#define __cpp_realm_gen_mixed_op(op) \
+    bool operator op(const mixed& a, const mixed& b) { \
+        return *reinterpret_cast<const Mixed*>(a.m_mixed) op *reinterpret_cast<const Mixed*>(b.m_mixed);                                        \
+    }
+
+    __cpp_realm_gen_mixed_op(==)
+    __cpp_realm_gen_mixed_op(!=)
+    __cpp_realm_gen_mixed_op(>)
+    __cpp_realm_gen_mixed_op(<)
+    __cpp_realm_gen_mixed_op(>=)
+    __cpp_realm_gen_mixed_op(<=)
 }

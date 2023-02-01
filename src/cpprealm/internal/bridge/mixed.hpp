@@ -12,6 +12,16 @@
 
 namespace realm {
     class Mixed;
+
+    using mixed = std::variant<
+            int64_t,
+            bool,
+            std::string,
+            double,
+            std::vector<uint8_t>,
+            std::chrono::time_point<std::chrono::system_clock>,
+            uuid,
+            object_id>;
 }
 
 namespace realm::internal::bridge {
@@ -75,7 +85,20 @@ namespace realm::internal::bridge {
 #elif __aarch64__
         std::aligned_storage<24, 8>::type m_mixed[1];
 #endif
+        friend bool operator ==(const mixed&, const mixed&);
+        friend bool operator !=(const mixed&, const mixed&);
+        friend bool operator >(const mixed&, const mixed&);
+        friend bool operator <(const mixed&, const mixed&);
+        friend bool operator >=(const mixed&, const mixed&);
+        friend bool operator <=(const mixed&, const mixed&);
     };
+
+    bool operator ==(const mixed&, const mixed&);
+    bool operator !=(const mixed&, const mixed&);
+    bool operator >(const mixed&, const mixed&);
+    bool operator <(const mixed&, const mixed&);
+    bool operator >=(const mixed&, const mixed&);
+    bool operator <=(const mixed&, const mixed&);
 }
 
 

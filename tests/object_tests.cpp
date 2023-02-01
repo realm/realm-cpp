@@ -65,6 +65,117 @@ TEST_CASE("all_primary_key_types") {
     }
 }
 
+TEST_CASE("object_initialization") {
+    realm_path path;
+    auto date = std::chrono::time_point<std::chrono::system_clock>();
+    auto uuid = realm::uuid();
+    auto o = AllTypesObjectLink();
+
+    o._id = 1;
+    o.str_col = "link object";
+    AllTypesObjectEmbedded embedded_obj;
+    embedded_obj.str_col = "embedded obj";
+    auto object_id = realm::object_id::generate();
+
+    auto obj = AllTypesObject {
+        ._id = 123,
+        .str_col = "foo",
+        .bool_col = true,
+        .enum_col = AllTypesObject::Enum::two,
+        .date_col = date,
+        .uuid_col = uuid,
+        .binary_col = std::vector<uint8_t>({1}),
+        .mixed_col = realm::mixed("mixed"),
+        .object_id_col = object_id,
+
+        .opt_int_col = 2,
+        .opt_str_col = "opt string",
+        .opt_bool_col = true,
+        .opt_enum_col = AllTypesObject::Enum::two,
+        .opt_date_col = date,
+        .opt_uuid_col = uuid,
+        .opt_object_id_col = object_id,
+        .opt_binary_col = std::vector<uint8_t>({ 1 }),
+
+        .opt_obj_col = o,
+        .opt_embedded_obj_col = embedded_obj,
+
+        .list_int_col = std::vector<int64_t>({1}),
+        .list_bool_col = std::vector<bool>({true}),
+        .list_str_col = std::vector<std::string>({"bar"}),
+        .list_uuid_col = std::vector<realm::uuid>({uuid}),
+        .list_object_id_col = std::vector<realm::object_id>({object_id}),
+        .list_binary_col = std::vector<std::vector<uint8_t>>({{ 1 }}),
+        .list_date_col = std::vector<std::chrono::time_point<std::chrono::system_clock>>({date}),
+        .list_mixed_col = std::vector<realm::mixed>({realm::mixed("mixed str")}),
+        .list_embedded_obj_col = std::vector<AllTypesObjectEmbedded>({embedded_obj}),
+        .list_obj_col = std::vector<AllTypesObjectLink>({o}),
+
+        .map_int_col = std::map<std::string, int64_t>({{"foo", 1}}),
+        .map_bool_col = std::map<std::string, bool>({{"foo", true}}),
+        .map_str_col = std::map<std::string, std::string>({{"foo", "bar"}}),
+        .map_uuid_col = std::map<std::string, realm::uuid>({{"foo", uuid}}),
+        .map_object_id_col = std::map<std::string, realm::object_id>({{"foo", object_id}}),
+        .map_binary_col = std::map<std::string, std::vector<std::uint8_t>>({{"foo", {1}}}),
+        .map_date_col = std::map<std::string, std::chrono::time_point<std::chrono::system_clock>>({{"foo", date}}),
+        .map_enum_col = std::map<std::string, AllTypesObject::Enum>({{"foo", AllTypesObject::Enum::one}}),
+        .map_mixed_col = std::map<std::string, realm::mixed>({{"foo", realm::mixed("bar")}}),
+        .map_link_col = std::map<std::string, std::optional<AllTypesObjectLink>>({{"foo", o}}),
+        .map_embedded_col = std::map<std::string, std::optional<AllTypesObjectEmbedded>>({{"foo", embedded_obj}})
+    };
+
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+    realm.write([&obj, &realm]() {
+        realm.add(obj);
+    });
+
+    CHECK(obj.is_managed());
+    CHECK(*obj._id == 123);
+    CHECK(*obj.str_col == "foo");
+    CHECK(*obj.bool_col == true);
+    CHECK(*obj.enum_col == AllTypesObject::Enum::two);
+    CHECK(*obj.date_col == date);
+    CHECK(*obj.uuid_col == uuid);
+    CHECK(*obj.binary_col == std::vector<uint8_t>({1}));
+    CHECK(*obj.mixed_col == realm::mixed("mixed"));
+    CHECK(*obj.object_id_col == object_id);
+
+    CHECK(*obj.opt_int_col == 2);
+    CHECK(*obj.opt_str_col == "opt string");
+    CHECK(*obj.opt_bool_col == true);
+    CHECK(*obj.opt_enum_col == AllTypesObject::Enum::two);
+    CHECK(*obj.opt_date_col == date);
+    CHECK(*obj.opt_uuid_col == uuid);
+    CHECK(*obj.opt_binary_col == std::vector<uint8_t>({1}));
+    CHECK(*obj.opt_object_id_col == object_id);
+
+    CHECK(!o.is_managed());
+    CHECK(!embedded_obj.is_managed());
+
+    CHECK(*obj.opt_obj_col == o);
+    CHECK(*obj.opt_embedded_obj_col == embedded_obj);
+
+    CHECK(obj.list_int_col[0] == 1);
+    CHECK(obj.list_bool_col[0] == true);
+    CHECK(obj.list_str_col[0] == "bar");
+    CHECK(obj.list_uuid_col[0] == uuid);
+    CHECK(obj.list_date_col[0] == date);
+    CHECK(obj.list_uuid_col[0] == uuid);
+    CHECK(obj.list_mixed_col[0] == realm::mixed("mixed str"));
+    CHECK(obj.list_obj_col[0] == o);
+    CHECK(obj.list_embedded_obj_col[0] == embedded_obj);
+
+    CHECK(obj.map_int_col["foo"] == 1);
+    CHECK(obj.map_bool_col["foo"] == true);
+    CHECK(obj.map_str_col["foo"] == "bar");
+    CHECK(obj.map_uuid_col["foo"] == uuid);
+    CHECK(obj.map_date_col["foo"] == date);
+    CHECK(obj.map_uuid_col["foo"] == uuid);
+    CHECK(obj.map_mixed_col["foo"] == realm::mixed("bar"));
+    CHECK(obj.map_link_col["foo"] == o);
+    CHECK(obj.map_embedded_col["foo"] == embedded_obj);
+}
+
 TEST_CASE("object_notifications") {
     realm_path path;
     SECTION("observe") {

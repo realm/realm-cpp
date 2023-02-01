@@ -104,13 +104,13 @@ namespace realm {
 
 
         persisted_map_base() {
-            new (&this->unmanaged) std::map<std::string, T>();
+            new (&this->unmanaged) std::map<std::string, mapped_type>();
         }
         persisted_map_base(const persisted_map_base& v) {
             if (v.is_managed()) {
                 new (&this->managed) internal::bridge::dictionary(v.managed);
             } else {
-                new (&this->unmanaged) T(v.unmanaged);
+                new (&this->unmanaged) std::map<std::string, mapped_type>(v.unmanaged);
             }
         }
         ~persisted_map_base() {
@@ -120,14 +120,20 @@ namespace realm {
                 this->unmanaged.~map();
             }
         }
-        persisted_map_base& operator=(const std::map<std::string, typename T::mapped_type>& o) {
+        persisted_map_base(const std::map<std::string, mapped_type>& v) {
+            new (&this->unmanaged) std::map<std::string, mapped_type>(v);
+        }
+        persisted_map_base(std::map<std::string, mapped_type>&& v) {
+            new (&this->unmanaged) std::map<std::string, mapped_type>(std::move(v));
+        }
+        persisted_map_base& operator=(const std::map<std::string, mapped_type>& o) {
             if (this->is_managed()) {
                 this->managed.clear();
                 for (auto& [k, v] : o) {
-                    if constexpr (internal::type_info::is_optional<typename T::mapped_type>::value) {
-                        this->managed.insert(k, internal::bridge::mixed(persisted<typename T::mapped_type>::serialize(*v)));
+                    if constexpr (internal::type_info::is_optional<mapped_type>::value) {
+                        this->managed.insert(k, internal::bridge::mixed(persisted<mapped_type>::serialize(*v)));
                     } else {
-                        this->managed.insert(k, internal::bridge::mixed(persisted<typename T::mapped_type>::serialize(v)));
+                        this->managed.insert(k, internal::bridge::mixed(persisted<mapped_type>::serialize(v)));
                     }
                 }
             } else {
@@ -289,8 +295,7 @@ namespace realm {
                         return rhs == this->operator*();
                     }
                 } else {
-                    return persisted<mapped_type>::serialize(rhs) ==
-                            internal::bridge::get<typename internal::type_info::type_info<mapped_type>::internal_type>(this->m_backing_map.get(), this->m_key);
+                    return internal::bridge::get<typename internal::type_info::type_info<mapped_type>::internal_type>(this->m_backing_map.get(), this->m_key) == persisted<mapped_type>::serialize(rhs);
                 }
             } else {
                 return rhs == m_val.get();
@@ -341,9 +346,20 @@ namespace realm {
         using box_base<uuid>::operator=;
     };
     template <>
+    struct box<realm::mixed> : public box_base<realm::mixed> {
+        using box_base<realm::mixed>::box_base;
+        using box_base<realm::mixed>::operator=;
+//        using box_base<realm::mixed>::operator==;
+    };
+    template <>
     struct box<object_id> : public box_base<object_id> {
         using box_base<object_id>::box_base;
         using box_base<object_id>::operator=;
+    };
+    template <>
+    struct box<std::chrono::time_point<std::chrono::system_clock>> : public box_base<std::chrono::time_point<std::chrono::system_clock>> {
+        using box_base<std::chrono::time_point<std::chrono::system_clock>>::box_base;
+        using box_base<std::chrono::time_point<std::chrono::system_clock>>::operator=;
     };
     template <>
     struct box<std::vector<uint8_t>> : public box_base<std::vector<uint8_t>> {
@@ -356,7 +372,7 @@ namespace realm {
         using box_base<std::string>::operator=;
     };
     template <typename V>
-struct box<std::optional<V>, std::enable_if_t<std::is_base_of_v<object_base<V>, V>>> : public box_base<std::optional<V>> {
+    struct box<std::optional<V>, std::enable_if_t<std::is_base_of_v<object_base<V>, V>>> : public box_base<std::optional<V>> {
         using box_base<std::optional<V>>::box_base;
         using box_base<std::optional<V>>::operator=;
         using box_base<std::optional<V>>::operator==;

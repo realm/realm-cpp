@@ -29,6 +29,14 @@ namespace realm {
 
     template <>
     struct persisted<std::vector<uint8_t>> : public persisted_primitive_base<std::vector<uint8_t>> {
+        persisted()=default;
+        persisted(const std::vector<uint8_t>& value) {
+            new(&this->unmanaged) std::vector<uint8_t>(value);
+        }
+        persisted(std::vector<uint8_t>&& value) {
+            new(&this->unmanaged) std::vector<uint8_t>(std::move(value));
+        }
+
         /// Returns a reference to the element at specified location pos. No bounds checking is performed.
         uint8_t operator[](size_t idx);
         /// Appends the given element value to the end of the container.

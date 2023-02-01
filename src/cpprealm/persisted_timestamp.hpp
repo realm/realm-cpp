@@ -38,7 +38,7 @@ namespace realm {
         }
     protected:
         static internal::bridge::timestamp serialize(const time_point& v) {
-            return v;
+            return static_cast<internal::bridge::timestamp>(v);
         }
         static time_point deserialize(const internal::bridge::timestamp& v) {
             return v;
@@ -51,29 +51,6 @@ namespace realm {
 
         __cpp_realm_friends
     };
-
-
-#define __cpp_realm_generate_timestamp_operator(op) \
-    template <typename V> \
-    rbool operator op(const persisted<time_point>& a, const V& b) { \
-        if (a.should_detect_usage_for_queries) { \
-            auto query = internal::bridge::query(a.query->get_table()); \
-            if (#op[0] == '>')                                          \
-                query.greater(a.managed, persisted<V>::serialize(b));  \
-            else if (#op[0] == '<')                                    \
-                query.less(a.managed, persisted<V>::serialize(b));     \
-            else if (!strcmp(#op, ">="))                                \
-                query.greater_equal(a.managed, persisted<V>::serialize(b)); \
-            else if (!strcmp(#op, "<="))                                   \
-                query.less_equal(a.managed, persisted<V>::serialize(b));   \
-            return query; \
-        } \
-        return *a op b; \
-    }                                               \
-    template <typename V> \
-    rbool operator op(const persisted<time_point>& a, const persisted<V>& b) { \
-        return a op *b; \
-    }
 
     __cpp_realm_generate_operator(std::chrono::time_point<std::chrono::system_clock>, ==, equal)
     __cpp_realm_generate_operator(std::chrono::time_point<std::chrono::system_clock>, !=, not_equal)

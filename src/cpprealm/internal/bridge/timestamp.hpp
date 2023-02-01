@@ -35,7 +35,20 @@ namespace realm::internal::bridge {
 #elif __aarch64__
         std::aligned_storage<16, 8>::type m_timestamp[1];
 #endif
+        friend bool operator ==(const timestamp&, const timestamp&);
+        friend bool operator !=(const timestamp&, const timestamp&);
+        friend bool operator >(const timestamp&, const timestamp&);
+        friend bool operator <(const timestamp&, const timestamp&);
+        friend bool operator >=(const timestamp&, const timestamp&);
+        friend bool operator <=(const timestamp&, const timestamp&);
     };
+
+    bool operator ==(const timestamp&, const timestamp&);
+    bool operator !=(const timestamp&, const timestamp&);
+    bool operator >(const timestamp&, const timestamp&);
+    bool operator <(const timestamp&, const timestamp&);
+    bool operator >=(const timestamp&, const timestamp&);
+    bool operator <=(const timestamp&, const timestamp&);
 }
 
 #endif //CPP_REALM_BRIDGE_TIMESTAMP_HPP
