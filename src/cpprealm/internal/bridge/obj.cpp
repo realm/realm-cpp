@@ -144,6 +144,9 @@ namespace realm::internal::bridge {
     void obj::set_list_values(const col_key &col_key, const std::vector<int64_t> &values) {
         reinterpret_cast<Obj*>(m_obj)->set_list_values(col_key, values);
     }
+    void obj::set_list_values(const col_key &col_key, const std::vector<double> &values) {
+        reinterpret_cast<Obj*>(m_obj)->set_list_values(col_key, values);
+    }
     void obj::set_list_values(const col_key &col_key, const std::vector<internal::bridge::uuid> &values) {
         std::vector<UUID> v;
         for (auto& v2 : values) {

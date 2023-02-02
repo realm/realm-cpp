@@ -85,6 +85,10 @@ namespace realm::internal::bridge {
         return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get<Int>(key);
     }
     template <>
+    double get(dictionary& dict, const std::string &key) {
+        return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get<Double>(key);
+    }
+    template <>
     obj_key get(dictionary& dict, const std::string &key) {
         return reinterpret_cast<Dictionary*>(dict.m_dictionary)->get<ObjKey>(key);
     }

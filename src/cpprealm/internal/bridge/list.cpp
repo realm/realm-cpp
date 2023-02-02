@@ -68,6 +68,9 @@ namespace realm::internal::bridge {
     void list::add(const int64_t &v) {
         reinterpret_cast<List *>(m_list)->add(v);
     }
+    void list::add(const double &v) {
+        reinterpret_cast<List *>(m_list)->add(v);
+    }
     void list::add(const binary &v) {
         reinterpret_cast<List *>(m_list)->add(static_cast<BinaryData>(v));
     }
@@ -100,6 +103,10 @@ namespace realm::internal::bridge {
     template <>
     int64_t get(const list& lst, size_t idx) {
         return reinterpret_cast<const List *>(lst.m_list)->get<Int>(idx);
+    }
+    template <>
+    double get(const list& lst, size_t idx) {
+        return reinterpret_cast<const List *>(lst.m_list)->get<Double>(idx);
     }
     template <>
     binary get(const list& lst, size_t idx) {

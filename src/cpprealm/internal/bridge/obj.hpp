@@ -134,6 +134,7 @@ namespace realm::internal::bridge {
         void set_list_values(const col_key& col_key, const std::vector<std::string>& values);
         void set_list_values(const col_key& col_key, const std::vector<bool>& values);
         void set_list_values(const col_key& col_key, const std::vector<int64_t>& values);
+        void set_list_values(const col_key& col_key, const std::vector<double>& values);
         void set_list_values(const col_key& col_key, const std::vector<internal::bridge::uuid>& values);
         void set_list_values(const col_key& col_key, const std::vector<internal::bridge::object_id>& values);
         void set_list_values(const col_key& col_key, const std::vector<binary>& values);

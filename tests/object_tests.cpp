@@ -79,6 +79,7 @@ TEST_CASE("object_initialization") {
 
     auto obj = AllTypesObject {
         ._id = 123,
+        .double_col = 12.34,
         .str_col = "foo",
         .bool_col = true,
         .enum_col = AllTypesObject::Enum::two,
@@ -89,6 +90,7 @@ TEST_CASE("object_initialization") {
         .object_id_col = object_id,
 
         .opt_int_col = 2,
+        .opt_double_col = 2.34,
         .opt_str_col = "opt string",
         .opt_bool_col = true,
         .opt_enum_col = AllTypesObject::Enum::two,
@@ -101,6 +103,7 @@ TEST_CASE("object_initialization") {
         .opt_embedded_obj_col = embedded_obj,
 
         .list_int_col = std::vector<int64_t>({1}),
+        .list_double_col = std::vector<double>({1.23}),
         .list_bool_col = std::vector<bool>({true}),
         .list_str_col = std::vector<std::string>({"bar"}),
         .list_uuid_col = std::vector<realm::uuid>({uuid}),
@@ -112,6 +115,7 @@ TEST_CASE("object_initialization") {
         .list_obj_col = std::vector<AllTypesObjectLink>({o}),
 
         .map_int_col = std::map<std::string, int64_t>({{"foo", 1}}),
+        .map_double_col = std::map<std::string, double>({{"foo", 1.23}}),
         .map_bool_col = std::map<std::string, bool>({{"foo", true}}),
         .map_str_col = std::map<std::string, std::string>({{"foo", "bar"}}),
         .map_uuid_col = std::map<std::string, realm::uuid>({{"foo", uuid}}),
@@ -131,6 +135,7 @@ TEST_CASE("object_initialization") {
 
     CHECK(obj.is_managed());
     CHECK(*obj._id == 123);
+    CHECK(*obj.double_col == 12.34);
     CHECK(*obj.str_col == "foo");
     CHECK(*obj.bool_col == true);
     CHECK(*obj.enum_col == AllTypesObject::Enum::two);
@@ -141,6 +146,7 @@ TEST_CASE("object_initialization") {
     CHECK(*obj.object_id_col == object_id);
 
     CHECK(*obj.opt_int_col == 2);
+    CHECK(*obj.opt_double_col == 2.34);
     CHECK(*obj.opt_str_col == "opt string");
     CHECK(*obj.opt_bool_col == true);
     CHECK(*obj.opt_enum_col == AllTypesObject::Enum::two);
@@ -156,6 +162,7 @@ TEST_CASE("object_initialization") {
     CHECK(*obj.opt_embedded_obj_col == embedded_obj);
 
     CHECK(obj.list_int_col[0] == 1);
+    CHECK(obj.list_double_col[0] == 1.23);
     CHECK(obj.list_bool_col[0] == true);
     CHECK(obj.list_str_col[0] == "bar");
     CHECK(obj.list_uuid_col[0] == uuid);
@@ -166,6 +173,7 @@ TEST_CASE("object_initialization") {
     CHECK(obj.list_embedded_obj_col[0] == embedded_obj);
 
     CHECK(obj.map_int_col["foo"] == 1);
+    CHECK(obj.map_double_col["foo"] == 1.23);
     CHECK(obj.map_bool_col["foo"] == true);
     CHECK(obj.map_str_col["foo"] == "bar");
     CHECK(obj.map_uuid_col["foo"] == uuid);

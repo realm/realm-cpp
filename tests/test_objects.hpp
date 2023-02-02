@@ -62,6 +62,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
     };
 
     realm::persisted<int64_t> _id;
+    realm::persisted<double> double_col;
     realm::persisted<bool> bool_col;
     realm::persisted<std::string> str_col;
     realm::persisted<Enum> enum_col;
@@ -72,6 +73,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
     realm::persisted<realm::mixed> mixed_col;
 
     realm::persisted<std::optional<int64_t>> opt_int_col;
+    realm::persisted<std::optional<double>> opt_double_col;
     realm::persisted<std::optional<std::string>> opt_str_col;
     realm::persisted<std::optional<bool>> opt_bool_col;
     realm::persisted<std::optional<Enum>> opt_enum_col;
@@ -83,6 +85,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
     realm::persisted<std::optional<AllTypesObjectEmbedded>> opt_embedded_obj_col;
 
     realm::persisted<std::vector<int64_t>> list_int_col;
+    realm::persisted<std::vector<double>> list_double_col;
     realm::persisted<std::vector<bool>> list_bool_col;
     realm::persisted<std::vector<std::string>> list_str_col;
     realm::persisted<std::vector<realm::uuid>> list_uuid_col;
@@ -94,6 +97,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
     realm::persisted<std::vector<AllTypesObjectEmbedded>> list_embedded_obj_col;
 
     realm::persisted<std::map<std::string, int64_t>> map_int_col;
+    realm::persisted<std::map<std::string, double>> map_double_col;
     realm::persisted<std::map<std::string, bool>> map_bool_col;
     realm::persisted<std::map<std::string, std::string>> map_str_col;
     realm::persisted<std::map<std::string, realm::uuid>> map_uuid_col;
@@ -107,6 +111,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
 
     static constexpr auto schema = realm::schema("AllTypesObject",
         realm::property<&AllTypesObject::_id, true>("_id"),
+        realm::property<&AllTypesObject::double_col>("double_col"),
         realm::property<&AllTypesObject::bool_col>("bool_col"),
         realm::property<&AllTypesObject::str_col>("str_col"),
         realm::property<&AllTypesObject::enum_col>("enum_col"),
@@ -117,6 +122,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
         realm::property<&AllTypesObject::mixed_col>("mixed_col"),
 
         realm::property<&AllTypesObject::opt_int_col>("opt_int_col"),
+        realm::property<&AllTypesObject::opt_double_col>("opt_double_col"),
         realm::property<&AllTypesObject::opt_str_col>("opt_str_col"),
         realm::property<&AllTypesObject::opt_bool_col>("opt_bool_col"),
         realm::property<&AllTypesObject::opt_binary_col>("opt_binary_col"),
@@ -128,6 +134,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
         realm::property<&AllTypesObject::opt_object_id_col>("opt_object_id_col"),
 
         realm::property<&AllTypesObject::list_int_col>("list_int_col"),
+        realm::property<&AllTypesObject::list_double_col>("list_double_col"),
         realm::property<&AllTypesObject::list_bool_col>("list_bool_col"),
         realm::property<&AllTypesObject::list_str_col>("list_str_col"),
         realm::property<&AllTypesObject::list_uuid_col>("list_uuid_col"),
@@ -139,6 +146,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
         realm::property<&AllTypesObject::list_embedded_obj_col>("list_embedded_obj_col"),
 
         realm::property<&AllTypesObject::map_int_col>("map_int_col"),
+        realm::property<&AllTypesObject::map_double_col>("map_double_col"),
         realm::property<&AllTypesObject::map_str_col>("map_str_col"),
         realm::property<&AllTypesObject::map_bool_col>("map_bool_col"),
         realm::property<&AllTypesObject::map_enum_col>("map_enum_col"),

@@ -67,6 +67,8 @@ namespace realm::internal::bridge {
     [[nodiscard]] obj_key get(dictionary&, const std::string&);
     template <>
     [[nodiscard]] int64_t get(dictionary&, const std::string&);
+    template <>
+    [[nodiscard]] double get(dictionary&, const std::string&);
 }
 
 #endif //CPP_REALM_BRIDGE_DICTIONARY_HPP

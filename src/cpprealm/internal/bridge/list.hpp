@@ -43,6 +43,7 @@ namespace realm::internal::bridge {
 
         void add(const std::string&);
         void add(const int64_t &);
+        void add(const double &);
         void add(const bool &);
         void add(const binary &);
         void add(const uuid &);
@@ -59,9 +60,9 @@ namespace realm::internal::bridge {
         [[nodiscard]] realm get_realm() const;
 
         void set(size_t pos, const int64_t &);
+        void set(size_t pos, const double &);
         void set(size_t pos, const bool &);
         void set(size_t pos, const std::string &);
-        void set(size_t pos, const double &);
         void set(size_t pos, const uuid &);
         void set(size_t pos, const object_id &);
         void set(size_t pos, const mixed &);
@@ -107,6 +108,8 @@ namespace realm::internal::bridge {
     [[nodiscard]] std::string get(const list&, size_t idx);
     template <>
     [[nodiscard]] int64_t get(const list&, size_t idx);
+    template <>
+    [[nodiscard]] double get(const list&, size_t idx);
     template <>
     [[nodiscard]] binary get(const list&, size_t idx);
     template <>

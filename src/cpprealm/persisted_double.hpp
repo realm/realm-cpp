@@ -27,6 +27,8 @@ namespace realm {
 
     template<>
     struct persisted<double> : persisted_primitive_base<double> {
+        using persisted_primitive_base<double>::persisted_primitive_base;
+
         template<typename T>
         std::enable_if_t<std::is_arithmetic_v<T>, persisted &> // NOLINT(misc-unconventional-assign-operator)
         operator=(const T &o) {
@@ -106,15 +108,10 @@ namespace realm {
     };
 
     __cpp_realm_generate_operator(double, >, greater)
-
     __cpp_realm_generate_operator(double, <, less)
-
     __cpp_realm_generate_operator(double, <=, less_equal)
-
     __cpp_realm_generate_operator(double, >=, greater_equal)
-
     __cpp_realm_generate_operator(double, ==, equal)
-
     __cpp_realm_generate_operator(double, !=, not_equal)
 
     namespace {

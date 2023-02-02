@@ -331,6 +331,11 @@ namespace realm {
         using box_base<int64_t>::operator=;
     };
     template <>
+    struct box<double> : public box_base<double> {
+        using box_base<double>::box_base;
+        using box_base<double>::operator=;
+    };
+    template <>
     struct box<bool> : public box_base<bool> {
         using box_base<bool>::box_base;
         using box_base<bool>::operator=;
@@ -349,7 +354,6 @@ namespace realm {
     struct box<realm::mixed> : public box_base<realm::mixed> {
         using box_base<realm::mixed>::box_base;
         using box_base<realm::mixed>::operator=;
-//        using box_base<realm::mixed>::operator==;
     };
     template <>
     struct box<object_id> : public box_base<object_id> {
