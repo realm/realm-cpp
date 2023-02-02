@@ -97,7 +97,7 @@ namespace realm {
             }
         }
             protected:
-        static int64_t serialize(int64_t);
+        static int64_t serialize(int64_t, const std::optional<internal::bridge::realm>& = std::nullopt);
         static int64_t deserialize(int64_t);
 
         __cpp_realm_friends

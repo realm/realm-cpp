@@ -70,9 +70,12 @@ TEST_CASE("object_initialization") {
     auto date = std::chrono::time_point<std::chrono::system_clock>();
     auto uuid = realm::uuid();
     auto o = AllTypesObjectLink();
-
     o._id = 1;
     o.str_col = "link object";
+
+    auto o2 = AllTypesObjectLink();
+    o2._id = 2;
+    o2.str_col = "link object 2";
     AllTypesObjectEmbedded embedded_obj;
     embedded_obj.str_col = "embedded obj";
     auto object_id = realm::object_id::generate();
@@ -80,14 +83,15 @@ TEST_CASE("object_initialization") {
     auto obj = AllTypesObject {
         ._id = 123,
         .double_col = 12.34,
-        .str_col = "foo",
         .bool_col = true,
+        .str_col = "foo",
         .enum_col = AllTypesObject::Enum::two,
         .date_col = date,
         .uuid_col = uuid,
+        .object_id_col = object_id,
         .binary_col = std::vector<uint8_t>({1}),
         .mixed_col = realm::mixed("mixed"),
-        .object_id_col = object_id,
+        .my_mixed_col = AllTypesObject::foo_mixed(o2),
 
         .opt_int_col = 2,
         .opt_double_col = 2.34,
@@ -111,8 +115,8 @@ TEST_CASE("object_initialization") {
         .list_binary_col = std::vector<std::vector<uint8_t>>({{ 1 }}),
         .list_date_col = std::vector<std::chrono::time_point<std::chrono::system_clock>>({date}),
         .list_mixed_col = std::vector<realm::mixed>({realm::mixed("mixed str")}),
-        .list_embedded_obj_col = std::vector<AllTypesObjectEmbedded>({embedded_obj}),
         .list_obj_col = std::vector<AllTypesObjectLink>({o}),
+        .list_embedded_obj_col = std::vector<AllTypesObjectEmbedded>({embedded_obj}),
 
         .map_int_col = std::map<std::string, int64_t>({{"foo", 1}}),
         .map_double_col = std::map<std::string, double>({{"foo", 1.23}}),
@@ -143,6 +147,13 @@ TEST_CASE("object_initialization") {
     CHECK(*obj.uuid_col == uuid);
     CHECK(*obj.binary_col == std::vector<uint8_t>({1}));
     CHECK(*obj.mixed_col == realm::mixed("mixed"));
+
+    auto r = realm.objects<AllTypesObjectLink>()[0];
+    auto mixed_object = obj.my_mixed_col.get_object_value<AllTypesObjectLink>();
+    CHECK(mixed_object == r);
+    CHECK(*mixed_object._id == 2);
+    CHECK(*mixed_object.str_col == "link object 2");
+
     CHECK(*obj.object_id_col == object_id);
 
     CHECK(*obj.opt_int_col == 2);
@@ -182,6 +193,55 @@ TEST_CASE("object_initialization") {
     CHECK(obj.map_mixed_col["foo"] == realm::mixed("bar"));
     CHECK(obj.map_link_col["foo"] == o);
     CHECK(obj.map_embedded_col["foo"] == embedded_obj);
+
+    auto allTypeObjects = realm.objects<AllTypesObject>();
+    auto results_obj = allTypeObjects[0];
+    CHECK(results_obj.is_managed());
+    CHECK(*results_obj._id == 123);
+    CHECK(*results_obj.double_col == 12.34);
+    CHECK(*results_obj.str_col == "foo");
+    CHECK(*results_obj.bool_col == true);
+    CHECK(*results_obj.enum_col == AllTypesObject::Enum::two);
+    CHECK(*results_obj.date_col == date);
+    CHECK(*results_obj.uuid_col == uuid);
+    CHECK(*results_obj.binary_col == std::vector<uint8_t>({1}));
+    CHECK(*results_obj.mixed_col == realm::mixed("mixed"));
+    CHECK(*results_obj.object_id_col == object_id);
+
+    CHECK(*results_obj.opt_int_col == 2);
+    CHECK(*results_obj.opt_double_col == 2.34);
+    CHECK(*results_obj.opt_str_col == "opt string");
+    CHECK(*results_obj.opt_bool_col == true);
+    CHECK(*results_obj.opt_enum_col == AllTypesObject::Enum::two);
+    CHECK(*results_obj.opt_date_col == date);
+    CHECK(*results_obj.opt_uuid_col == uuid);
+    CHECK(*results_obj.opt_binary_col == std::vector<uint8_t>({1}));
+    CHECK(*results_obj.opt_object_id_col == object_id);
+
+    CHECK(*results_obj.opt_obj_col == o);
+    CHECK(*results_obj.opt_embedded_obj_col == embedded_obj);
+
+    CHECK(results_obj.list_int_col[0] == 1);
+    CHECK(results_obj.list_double_col[0] == 1.23);
+    CHECK(results_obj.list_bool_col[0] == true);
+    CHECK(results_obj.list_str_col[0] == "bar");
+    CHECK(results_obj.list_uuid_col[0] == uuid);
+    CHECK(results_obj.list_date_col[0] == date);
+    CHECK(results_obj.list_uuid_col[0] == uuid);
+    CHECK(results_obj.list_mixed_col[0] == realm::mixed("mixed str"));
+    CHECK(results_obj.list_obj_col[0] == o);
+    CHECK(results_obj.list_embedded_obj_col[0] == embedded_obj);
+
+    CHECK(results_obj.map_int_col["foo"] == 1);
+    CHECK(results_obj.map_double_col["foo"] == 1.23);
+    CHECK(results_obj.map_bool_col["foo"] == true);
+    CHECK(results_obj.map_str_col["foo"] == "bar");
+    CHECK(results_obj.map_uuid_col["foo"] == uuid);
+    CHECK(results_obj.map_date_col["foo"] == date);
+    CHECK(results_obj.map_uuid_col["foo"] == uuid);
+    CHECK(results_obj.map_mixed_col["foo"] == realm::mixed("bar"));
+    CHECK(results_obj.map_link_col["foo"] == o);
+    CHECK(results_obj.map_embedded_col["foo"] == embedded_obj);
 }
 
 TEST_CASE("object_notifications") {

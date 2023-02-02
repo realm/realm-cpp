@@ -100,7 +100,7 @@ namespace realm {
         }
 
     protected:
-        static double serialize(double);
+        static double serialize(double, const std::optional<internal::bridge::realm>& = std::nullopt);
 
         static double deserialize(double);
 

@@ -53,7 +53,7 @@ namespace realm {
         }
     }
 
-    std::string persisted<std::string>::serialize(const std::string &v) {
+    std::string persisted<std::string>::serialize(const std::string &v, const std::optional<internal::bridge::realm>&) {
         return v;
     }
     std::string persisted<std::string>::deserialize(const std::string &v) {

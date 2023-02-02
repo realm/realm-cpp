@@ -45,11 +45,11 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(Query)>{});
 #endif
 
-    query::query(const realm::internal::bridge::table &table) {
+    query::query(const table &table) {
         new (&m_query) Query(static_cast<ConstTableRef>(table));
     }
 
-    query::query(const realm::Query &v) {
+    query::query(const Query &v) {
         new (&m_query) Query(v);
     }
 
@@ -59,7 +59,7 @@ namespace realm::internal::bridge {
     table query::get_table() {
         return reinterpret_cast<Query*>(m_query)->get_table();
     }
-    query query::and_query(const realm::internal::bridge::query &v) {
+    query query::and_query(const query &v) {
         return reinterpret_cast<Query*>(m_query)->and_query(v);
     }
 

@@ -15,7 +15,7 @@ namespace realm {
         persisted(const char*);
         persisted();
     protected:
-        static std::string serialize(const std::string&);
+        static std::string serialize(const std::string&, const std::optional<internal::bridge::realm>& = std::nullopt);
         static std::string deserialize(const std::string&);
 
         __cpp_realm_friends

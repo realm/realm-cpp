@@ -16,6 +16,7 @@ namespace realm {
 namespace realm::internal::bridge {
     struct realm;
     struct obj;
+    struct obj_link;
     struct object_schema;
     struct list;
     struct col_key;
@@ -131,6 +132,7 @@ namespace realm::internal::bridge {
         object(); //NOLINT(google-explicit-constructor)
         object(const Object&); //NOLINT(google-explicit-constructor)
         object(const realm &realm, const obj &obj); //NOLINT(google-explicit-constructor)
+        object(const realm &realm, const obj_link& link);
 
         operator Object() const; //NOLINT(google-explicit-constructor)
 

@@ -1,4 +1,5 @@
 #include <cpprealm/internal/bridge/obj.hpp>
+#include <cpprealm/internal/bridge/obj_key.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
 #include <cpprealm/internal/bridge/object_schema.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
@@ -80,10 +81,12 @@ namespace realm::internal::bridge {
     object::object(const realm &realm, const struct obj &obj) {
         new (&m_object) Object(realm, obj);
     }
+    object::object(const realm &realm, const struct obj_link& link) {
+        new (&m_object) Object(realm, link);
+    }
     obj object::get_obj() const {
         return reinterpret_cast<const Object*>(m_object)->obj();
     }
-
     list object::get_list(const col_key& col_key) const {
         return List(get_realm(), get_obj(), col_key);
     }

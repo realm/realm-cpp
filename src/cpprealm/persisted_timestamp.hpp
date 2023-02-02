@@ -37,7 +37,7 @@ namespace realm {
             }
         }
     protected:
-        static internal::bridge::timestamp serialize(const time_point& v) {
+        static internal::bridge::timestamp serialize(const time_point& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
             return static_cast<internal::bridge::timestamp>(v);
         }
         static time_point deserialize(const internal::bridge::timestamp& v) {

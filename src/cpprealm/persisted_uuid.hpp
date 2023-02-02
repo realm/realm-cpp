@@ -43,7 +43,7 @@ namespace realm {
         using persisted_primitive_base<uuid>::persisted_primitive_base;
 
     protected:
-        static internal::bridge::uuid serialize(const uuid&);
+        static internal::bridge::uuid serialize(const uuid&, const std::optional<internal::bridge::realm>& = std::nullopt);
         static uuid deserialize(const internal::bridge::uuid&);
 
         __cpp_realm_friends

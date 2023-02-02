@@ -18,7 +18,7 @@ namespace realm {
         return m_object_id.to_string();
     }
 
-    internal::bridge::object_id persisted<object_id>::serialize(const object_id &v) {
+    internal::bridge::object_id persisted<object_id>::serialize(const object_id &v, const std::optional<internal::bridge::realm>&) {
         return static_cast<internal::bridge::object_id>(v);
     }
 

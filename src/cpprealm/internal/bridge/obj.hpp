@@ -29,6 +29,7 @@ namespace realm {
 
     namespace internal::bridge {
         struct obj_key;
+        struct obj_link;
     }
     namespace internal::type_info {
         template <typename T, std::enable_if_t<std::is_base_of_v<object_base<T>, T>>>
@@ -50,6 +51,7 @@ namespace realm::internal::bridge {
     struct object_schema;
     struct timestamp;
     struct obj_key;
+    struct obj_link;
     struct table;
     struct dictionary;
     struct uuid;
@@ -150,6 +152,7 @@ namespace realm::internal::bridge {
         }
 
         [[nodiscard]] obj_key get_key() const;
+        [[nodiscard]] obj_link get_link() const;
         lnklst get_linklist(const col_key& col_key);
         void set_null(const col_key&);
         obj create_and_set_linked_object(const col_key&);

@@ -35,7 +35,7 @@ namespace realm {
         using persisted_primitive_base<object_id>::persisted_primitive_base;
 
     protected:
-        static internal::bridge::object_id serialize(const object_id&);
+        static internal::bridge::object_id serialize(const object_id&, const std::optional<internal::bridge::realm>& = std::nullopt);
         static object_id deserialize(const internal::bridge::object_id&);
 
 

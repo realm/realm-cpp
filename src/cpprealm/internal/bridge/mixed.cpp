@@ -1,6 +1,12 @@
 #include <cpprealm/internal/bridge/mixed.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
+
 #include <realm/mixed.hpp>
+//#include <cpprealm/object.hpp>
+
+//#include <cpprealm/internal/bridge/obj.hpp>
+//#include <cpprealm/internal/bridge/realm.hpp>
+//#include <cpprealm/internal/bridge/schema.hpp>
 
 namespace realm::internal::bridge {
 #ifdef __i386__
@@ -62,6 +68,9 @@ namespace realm::internal::bridge {
     mixed::mixed(const struct binary &v) {
         new (&m_mixed) Mixed(static_cast<BinaryData>(v));
     }
+    mixed::mixed(const struct obj_link &v) {
+        new (&m_mixed) Mixed(static_cast<ObjLink>(v));
+    }
     mixed::mixed(const struct obj_key &v) {
         new (&m_mixed) Mixed(static_cast<ObjKey>(v));
     }
@@ -77,6 +86,7 @@ namespace realm::internal::bridge {
     CPPREALM_OPTIONAL_MIXED(struct uuid);
     CPPREALM_OPTIONAL_MIXED(struct object_id);
     CPPREALM_OPTIONAL_MIXED(struct binary);
+    CPPREALM_OPTIONAL_MIXED(struct obj_link);
     CPPREALM_OPTIONAL_MIXED(struct obj_key);
     CPPREALM_OPTIONAL_MIXED(bool);
 
@@ -96,8 +106,11 @@ namespace realm::internal::bridge {
     mixed::operator bridge::timestamp() const {
         return reinterpret_cast<const Mixed*>(m_mixed)->get_timestamp();
     }
+    mixed::operator bridge::obj_link() const {
+        return reinterpret_cast<const Mixed*>(m_mixed)->get<ObjLink>();
+    }
     mixed::operator bridge::obj_key() const {
-        return reinterpret_cast<const Mixed*>(m_mixed)->get_link().get_obj_key();
+        return reinterpret_cast<const Mixed*>(m_mixed)->get<ObjKey>();
     }
     mixed::operator bridge::uuid() const {
         return static_cast<const uuid &>(reinterpret_cast<const Mixed *>(m_mixed)->get_uuid());

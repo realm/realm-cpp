@@ -28,7 +28,7 @@ namespace realm {
         using persisted_primitive_base<T>::operator=;
 
     protected:
-        static int64_t serialize(const T& v) {
+        static int64_t serialize(const T& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
             return static_cast<int64_t>(v);
         }
         static T deserialize(const int64_t& v) {

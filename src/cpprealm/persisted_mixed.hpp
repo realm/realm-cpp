@@ -23,6 +23,7 @@
 #include <cpprealm/persisted_uuid.hpp>
 #include <cpprealm/persisted_object_id.hpp>
 #include <cpprealm/persisted_custom.hpp>
+#include <cpprealm/internal/bridge/schema.hpp>
 
 namespace realm {
     template<typename T>
@@ -31,17 +32,37 @@ namespace realm {
         using persisted_primitive_base<T>::operator=;
 
         persisted()=default;
-        persisted(const realm::mixed& value) {
-            new(&this->unmanaged) realm::mixed(value);
+
+        persisted(const T& value) {
+            new(&this->unmanaged) T(value);
         }
-        persisted(realm::mixed&& value) {
-            new(&this->unmanaged) realm::mixed(std::move(value));
+        persisted(T&& value) {
+            new(&this->unmanaged) T(std::move(value));
+        }
+
+        template<typename Object, typename = std::enable_if_t<std::is_base_of_v<object_base<Object>, Object>>>
+        Object get_object_value() {
+            internal::bridge::mixed val = this->m_object->get_obj().template get<typename internal::type_info::type_info<T>::internal_type>(
+                    this->managed);
+            Object o;
+            o.assign_accessors(
+                    internal::bridge::object(this->m_object->get_realm(), val.operator internal::bridge::obj_link()));
+            return o;
         }
     protected:
-        static internal::bridge::mixed serialize(const T& value) {
-            return std::visit([](auto& arg) {
+        static internal::bridge::mixed serialize(const T& value, const std::optional<internal::bridge::realm>& realm = std::nullopt) {
+            return std::visit([&realm](auto& arg) {
                 using M = std::decay_t<decltype(arg)>;
-                return internal::bridge::mixed(static_cast<M>(arg));
+                if constexpr (std::is_base_of<object_base<M>, M>::value) {
+                    internal::bridge::realm r = *realm;
+                    auto actual_schema = r.schema().find(M::schema.name);
+                    auto group = r.read_group();
+                    auto table = group.get_table(actual_schema.table_key());
+                    const_cast<M&>(arg).manage(table, r);
+                    return internal::bridge::mixed(const_cast<M&>(arg).m_object->get_obj().get_link());
+                } else {
+                    return internal::bridge::mixed(static_cast<M>(arg));
+                }
             }, value);
         }
         static T deserialize(const internal::bridge::mixed& value) {
@@ -58,6 +79,8 @@ namespace realm {
                     return static_cast<uuid>(static_cast<internal::bridge::uuid>(value));
                 case internal::bridge::data_type::ObjectId:
                     return static_cast<object_id>(static_cast<internal::bridge::object_id>(value));
+                case internal::bridge::data_type::TypedLink:
+                    REALM_TERMINATE("Objects stored in mixed properties must be accessed via `get_object_value()`");
                 default: abort();
             }
         }

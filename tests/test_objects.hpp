@@ -61,6 +61,17 @@ struct AllTypesObject: realm::object<AllTypesObject> {
         one, two
     };
 
+    using foo_mixed = std::variant<int64_t,
+            bool,
+            std::string,
+            double,
+            std::vector<uint8_t>,
+            std::chrono::time_point<std::chrono::system_clock>,
+            realm::uuid,
+            realm::object_id,
+            AllTypesObjectLink>;
+
+
     realm::persisted<int64_t> _id;
     realm::persisted<double> double_col;
     realm::persisted<bool> bool_col;
@@ -71,6 +82,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
     realm::persisted<realm::object_id> object_id_col;
     realm::persisted<std::vector<std::uint8_t>> binary_col;
     realm::persisted<realm::mixed> mixed_col;
+    realm::persisted<foo_mixed> my_mixed_col;
 
     realm::persisted<std::optional<int64_t>> opt_int_col;
     realm::persisted<std::optional<double>> opt_double_col;
@@ -120,6 +132,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
         realm::property<&AllTypesObject::object_id_col>("object_id_col"),
         realm::property<&AllTypesObject::binary_col>("binary_col"),
         realm::property<&AllTypesObject::mixed_col>("mixed_col"),
+        realm::property<&AllTypesObject::my_mixed_col>("my_mixed_col"),
 
         realm::property<&AllTypesObject::opt_int_col>("opt_int_col"),
         realm::property<&AllTypesObject::opt_double_col>("opt_double_col"),

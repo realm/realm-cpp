@@ -45,7 +45,7 @@ namespace realm {
             return *this;
         }
     protected:
-        static bool serialize(bool v);
+        static bool serialize(bool v, const std::optional<internal::bridge::realm>& = std::nullopt);
         static bool deserialize(bool v);
 
         __cpp_realm_friends

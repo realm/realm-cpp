@@ -5,7 +5,7 @@ namespace realm {
         return (*this).operator*();
     }
 
-    bool persisted<bool>::serialize(bool v) {
+    bool persisted<bool>::serialize(bool v, const std::optional<internal::bridge::realm>&) {
         return v;
     }
 

@@ -44,7 +44,7 @@ namespace realm {
         /// Returns the number of elements in the container.
         [[nodiscard]] size_t size() const;
     protected:
-        static internal::bridge::binary serialize(const std::vector<uint8_t>& v);
+        static internal::bridge::binary serialize(const std::vector<uint8_t>& v, const std::optional<internal::bridge::realm>& = std::nullopt);
         static std::vector<uint8_t> deserialize(const internal::bridge::binary &v);
 
         __cpp_realm_friends

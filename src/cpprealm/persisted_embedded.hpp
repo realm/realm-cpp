@@ -197,7 +197,7 @@ namespace realm {
             this->col_key = std::move(col_key);
         }
 
-        static internal::bridge::obj_key serialize(const T& v) {
+        static internal::bridge::obj_key serialize(const T& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
             return v.m_object->get_obj().get_key();
         }
         std::optional<T> m_property_object;

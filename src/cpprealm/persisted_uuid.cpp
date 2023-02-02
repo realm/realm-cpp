@@ -21,7 +21,7 @@ namespace realm {
         return m_uuid.to_bytes();
     }
 
-    internal::bridge::uuid persisted<uuid>::serialize(const uuid &v) {
+    internal::bridge::uuid persisted<uuid>::serialize(const uuid &v, const std::optional<internal::bridge::realm>&) {
         return static_cast<internal::bridge::uuid>(v);
     }
     uuid persisted<uuid>::deserialize(const internal::bridge::uuid &v) {

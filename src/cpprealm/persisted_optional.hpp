@@ -156,7 +156,7 @@ namespace realm {
         }
 
         inline static std::optional<typename internal::type_info::type_info<T>::internal_type>
-        serialize(const std::optional<T>& value) {
+        serialize(const std::optional<T>& value, const std::optional<internal::bridge::realm>& = std::nullopt) {
             if (!value) {
                 return std::nullopt;
             }

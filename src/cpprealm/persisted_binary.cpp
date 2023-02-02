@@ -28,7 +28,8 @@ namespace realm {
         }
     }
 
-    internal::bridge::binary persisted<std::vector<uint8_t>>::serialize(const std::vector<uint8_t> &v) {
+    internal::bridge::binary persisted<std::vector<uint8_t>>::serialize(const std::vector<uint8_t> &v,
+                                                                        const std::optional<internal::bridge::realm> &) {
         return v;
     }
 

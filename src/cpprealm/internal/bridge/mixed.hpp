@@ -14,6 +14,9 @@
 namespace realm {
     class Mixed;
 
+    template<typename T>
+    struct object_base;
+
     using mixed = std::variant<
             int64_t,
             bool,
@@ -26,6 +29,7 @@ namespace realm {
 }
 
 namespace realm::internal::bridge {
+//    struct realm;
     enum class data_type {
         // Note: Value assignments must be kept in sync with <realm/column_type.h>
         // Note: Any change to this enum is a file-format breaking change.
@@ -55,6 +59,7 @@ namespace realm::internal::bridge {
         mixed(const struct uuid&); //NOLINT(google-explicit-constructor)
         mixed(const struct object_id&); //NOLINT(google-explicit-constructor)
         mixed(const struct timestamp&); //NOLINT(google-explicit-constructor)
+        mixed(const struct obj_link&); //NOLINT(google-explicit-constructor)
         mixed(const struct obj_key&); //NOLINT(google-explicit-constructor)
         mixed(const struct binary&); //NOLINT(google-explicit-constructor)
         mixed(const mixed&) = default;
@@ -68,6 +73,7 @@ namespace realm::internal::bridge {
         operator bridge::uuid() const; //NOLINT(google-explicit-constructor)
         operator bridge::object_id() const; //NOLINT(google-explicit-constructor)
         operator bridge::timestamp() const; //NOLINT(google-explicit-constructor)
+        operator bridge::obj_link() const; //NOLINT(google-explicit-constructor)
         operator bridge::obj_key() const; //NOLINT(google-explicit-constructor)
         operator bridge::binary() const; //NOLINT(google-explicit-constructor)
 

@@ -127,6 +127,7 @@
     friend class persisted_map_base;      \
     friend struct internal::bridge::obj;  \
     friend struct internal::bridge::list;    \
+    friend struct internal::bridge::mixed; \
     template <typename> friend struct object_base;\
     template <typename> friend struct asymmetric_object;  \
     template <typename, typename> friend struct results;                  \
@@ -299,7 +300,7 @@ protected:
 
         void manage(internal::bridge::object* object,
                     internal::bridge::col_key&& col_key) final {
-            object->get_obj().set(col_key, persisted<T>::serialize(unmanaged));
+            object->get_obj().set(col_key, persisted<T>::serialize(unmanaged, object->get_realm()));
             assign_accessor(object, std::move(col_key));
         }
         void assign_accessor(internal::bridge::object* object,
