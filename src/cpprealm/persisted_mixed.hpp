@@ -26,18 +26,30 @@
 #include <cpprealm/internal/bridge/schema.hpp>
 
 namespace realm {
+    using mixed_data_type = internal::bridge::data_type;
     template<typename T>
     struct persisted<T, std::enable_if_t<realm::internal::type_info::MixedPersistableConcept<T>::value>> final :
             public persisted_primitive_base<T> {
         using persisted_primitive_base<T>::operator=;
 
-        persisted()=default;
+        persisted() {
+            new(&this->unmanaged) T();
+        }
 
         persisted(const T& value) {
             new(&this->unmanaged) T(value);
         }
         persisted(T&& value) {
             new(&this->unmanaged) T(std::move(value));
+        }
+
+        mixed_data_type get_data_type() const {
+            if (!this->m_object) {
+                REALM_TERMINATE("Object must be managed to check `data_type`.");
+            }
+            internal::bridge::mixed val = this->m_object->get_obj().template get<typename internal::type_info::type_info<T>::internal_type>(
+                    this->managed);
+            return val.type();
         }
 
         template<typename Object, typename = std::enable_if_t<std::is_base_of_v<object_base<Object>, Object>>>
@@ -66,6 +78,9 @@ namespace realm {
             }, value);
         }
         static T deserialize(const internal::bridge::mixed& value) {
+            if (value.is_null()) {
+                return std::monostate();
+            }
             switch (value.type()) {
                 case internal::bridge::data_type::Int: return value.operator int64_t();
                 case internal::bridge::data_type::Bool: return value.operator bool();
@@ -109,6 +124,30 @@ namespace realm {
 
     __cpp_realm_generate_mixed_operator(==)
     __cpp_realm_generate_mixed_operator(!=)
+
+    template <template <typename ...> typename Variant, typename ...Ts>
+    std::enable_if_t<internal::type_info::is_variant_t<Variant<Ts...>>::value, rbool>
+    operator ==(const persisted<Variant<Ts...>>& a, const std::nullopt_t& b)
+    {
+        if (a.should_detect_usage_for_queries) {
+            auto query = internal::bridge::query(a.query->get_table());
+            query.equal(a.managed, b);
+            return query;
+        }
+        REALM_TERMINATE("Mixed property must be managed for queries.");
+    }
+
+    template <template <typename ...> typename Variant, typename ...Ts>
+    std::enable_if_t<internal::type_info::is_variant_t<Variant<Ts...>>::value, rbool>
+    operator !=(const persisted<Variant<Ts...>>& a, const std::nullopt_t& b)
+    {
+        if (a.should_detect_usage_for_queries) {
+            auto query = internal::bridge::query(a.query->get_table());
+            query.not_equal(a.managed, b);
+            return query;
+        }
+        REALM_TERMINATE("Mixed property must be managed for queries.");
+    }
     template <typename T>
     inline std::ostream& operator<< (std::ostream& stream, const persisted<T, std::enable_if_t<realm::internal::type_info::MixedPersistableConcept<T>::value>>& value)
     {
@@ -121,6 +160,8 @@ namespace realm {
                     if (i < arg.size() - 1) stream << ",";
                 }
                 stream << " }";
+            } else if constexpr (std::is_same_v<M, std::monostate>) {
+                stream << "null";
             } else {
                 stream << static_cast<M>(arg);
             }

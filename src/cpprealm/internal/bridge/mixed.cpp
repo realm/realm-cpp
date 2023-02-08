@@ -33,8 +33,8 @@ namespace realm::internal::bridge {
         } \
     } \
 
-    mixed::mixed(const std::nullopt_t& v) {
-        new (&m_mixed) Mixed(v);
+    mixed::mixed(const std::monostate&) {
+        new (&m_mixed) Mixed(std::nullopt);
     }
 
     mixed::mixed(const std::string &v) {
@@ -60,10 +60,14 @@ namespace realm::internal::bridge {
         new (&m_mixed) Mixed(static_cast<ObjectId>(v));
     }
     mixed::mixed(const realm::Mixed &v) {
-        if (v.get_type() == type_String) {
-            m_owned_string = v.get_string();
+        if (v.is_null()) {
+            new (&m_mixed) Mixed();
+        } else {
+            if (v.get_type() == type_String) {
+                m_owned_string = v.get_string();
+            }
+            new (&m_mixed) Mixed(v);
         }
-        new (&m_mixed) Mixed(v);
     }
     mixed::mixed(const struct binary &v) {
         new (&m_mixed) Mixed(static_cast<BinaryData>(v));

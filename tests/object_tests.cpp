@@ -147,7 +147,9 @@ TEST_CASE("object_initialization") {
     CHECK(*obj.uuid_col == uuid);
     CHECK(*obj.binary_col == std::vector<uint8_t>({1}));
     CHECK(*obj.mixed_col == realm::mixed("mixed"));
+    CHECK(obj.mixed_col.get_data_type() == realm::mixed_data_type::String);
 
+    CHECK(obj.my_mixed_col.get_data_type() == realm::mixed_data_type::TypedLink);
     auto r = realm.objects<AllTypesObjectLink>()[0];
     auto mixed_object = obj.my_mixed_col.get_object_value<AllTypesObjectLink>();
     CHECK(mixed_object == r);

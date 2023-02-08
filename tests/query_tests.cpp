@@ -193,4 +193,32 @@ TEST_CASE("query") {
         CHECK(john.age == 42);
         CHECK(john.name == "John");
     }
+
+    SECTION("optionals") {
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+
+        auto obj = AllTypesObject();
+        realm.write([&]() {
+            realm.add(obj);
+        });
+        auto res = realm.objects<AllTypesObject>().where([](auto& obj) {
+            return obj.opt_str_col == std::nullopt;
+        });
+        CHECK(res.size() == 1);
+
+        res = realm.objects<AllTypesObject>().where([](auto& obj) {
+            return obj.opt_str_col != std::nullopt;
+        });
+        CHECK(res.size() == 0);
+
+        res = realm.objects<AllTypesObject>().where([](auto& obj) {
+            return obj.mixed_col == std::nullopt;
+        });
+        CHECK(res.size() == 1);
+
+        res = realm.objects<AllTypesObject>().where([](auto& obj) {
+            return obj.mixed_col != std::nullopt;
+        });
+        CHECK(res.size() == 0);
+    }
 }

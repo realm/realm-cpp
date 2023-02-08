@@ -39,7 +39,7 @@ namespace realm::internal::bridge {
     }
 
 #ifdef __i386__
-    static_assert(SizeCheck<16, sizeof(ObjLink)>{});
+    static_assert(SizeCheck<12, sizeof(ObjLink)>{});
     static_assert(SizeCheck<4, alignof(ObjLink)>{});
 #elif __x86_64__
     static_assert(SizeCheck<16, sizeof(ObjLink)>{});

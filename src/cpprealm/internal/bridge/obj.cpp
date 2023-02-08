@@ -125,15 +125,15 @@ namespace realm::internal::bridge {
         reinterpret_cast<Obj*>(m_obj)->set<ObjKey>(col_key, value);
     }
     void obj::set(const col_key &col_key, const mixed &value) {
-        // If we have a Link we need to make it typed link
-        // manage the object
-        if (value.type() == data_type::Link) {
+        if (value.is_null()) {
+            reinterpret_cast<Obj*>(m_obj)->set(col_key, Mixed());
+        } else if (value.type() == data_type::Link) {
             reinterpret_cast<Obj *>(m_obj)->set(col_key,
                                                 Mixed(ObjLink(reinterpret_cast<Obj *>(m_obj)->get_table()->get_key(),
                                                               value.operator bridge::obj_key())));
-            return;
+        } else {
+            reinterpret_cast<Obj*>(m_obj)->set(col_key, static_cast<Mixed>(value));
         }
-        reinterpret_cast<Obj*>(m_obj)->set(col_key, static_cast<Mixed>(value));
     }
     void obj::set(const col_key &col_key, const timestamp &value) {
         reinterpret_cast<Obj*>(m_obj)->set<Timestamp>(col_key, value);

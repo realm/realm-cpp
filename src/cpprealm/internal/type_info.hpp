@@ -75,7 +75,9 @@ namespace realm::internal::type_info {
             } else if constexpr (N >= std::variant_size_v<Variant>) {
                 return true;
             } else {
-                if constexpr (is_primitive<std::variant_alternative_t<N, Variant>>::value) {
+                if constexpr (std::is_same_v<std::variant_alternative_t<N, Variant>, std::monostate>) {
+                    return check_variant_types<N + 1, Variant>();
+                } else if constexpr (is_primitive<std::variant_alternative_t<N, Variant>>::value) {
                     return check_variant_types<N + 1, Variant>();
                 } else if constexpr (std::is_base_of_v<object<std::variant_alternative_t<N, Variant>>, std::variant_alternative_t<N, Variant>>) {
                     return check_variant_types<N + 1, Variant>();

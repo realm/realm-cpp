@@ -41,6 +41,12 @@ namespace realm {
         persisted(T&& value) {
             new (&unmanaged) std::optional<T>(std::move(value));
         }
+        persisted(const std::optional<T>& value) {
+            new (&unmanaged) std::optional<T>(value);
+        }
+        persisted(std::optional<T>&& value) {
+            new (&unmanaged) std::optional<T>(std::move(value));
+        }
         persisted(const char *v)
         {
             new (&unmanaged) std::optional<T>(v);
@@ -171,6 +177,36 @@ namespace realm {
 
         __cpp_realm_friends
     };
+
+    template <typename T>
+    rbool inline operator==(const persisted<std::optional<T>>& a, const std::nullopt_t& b)
+    {
+        if (a.should_detect_usage_for_queries) {
+            auto query = internal::bridge::query(a.query->get_table());
+            query.equal(a.managed, b);
+            return query;
+        }
+        if (!a) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    template <typename T>
+    rbool inline operator!=(const persisted<std::optional<T>>& a, const std::nullopt_t& b)
+    {
+        if (a.should_detect_usage_for_queries) {
+            auto query = internal::bridge::query(a.query->get_table());
+            query.not_equal(a.managed, b);
+            return query;
+        }
+        if (a) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     template <typename T>
     rbool inline operator==(const persisted<std::optional<T>>& a, const std::optional<T>& b)

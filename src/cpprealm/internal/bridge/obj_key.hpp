@@ -39,7 +39,7 @@ namespace realm::internal::bridge {
         obj_key get_obj_key();
     private:
 #ifdef __i386__
-        std::aligned_storage<16, 4>::type m_obj_link[1];
+        std::aligned_storage<12, 4>::type m_obj_link[1];
 #elif __x86_64__
         std::aligned_storage<16, 8>::type m_obj_link[1];
 #elif __arm__

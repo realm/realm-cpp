@@ -63,9 +63,6 @@ namespace realm::internal::bridge {
         return reinterpret_cast<Query*>(m_query)->and_query(v);
     }
 
-    __generate_query_operator(equal, std::nullopt_t)
-    __generate_query_operator(not_equal, std::nullopt_t)
-
     __generate_query_operator(greater, int64_t)
     __generate_query_operator(less, int64_t)
     __generate_query_operator(greater_equal, int64_t)
@@ -103,6 +100,15 @@ namespace realm::internal::bridge {
 
     __generate_query_operator(equal, bool)
     __generate_query_operator(not_equal, bool)
+
+    query& query::equal(col_key column_key, std::nullopt_t) {
+        *reinterpret_cast<Query *>(m_query) = reinterpret_cast<Query *>(m_query)->equal(column_key, realm::null{});
+        return *this;
+    }
+    query& query::not_equal(col_key column_key, std::nullopt_t) {
+        *reinterpret_cast<Query *>(m_query) = reinterpret_cast<Query *>(m_query)->not_equal(column_key, realm::null{});
+        return *this;
+    }
 
     __generate_query_operator_case_sensitive(equal, std::string_view)
     __generate_query_operator_case_sensitive(not_equal, std::string_view)

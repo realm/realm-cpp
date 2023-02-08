@@ -61,7 +61,9 @@ struct AllTypesObject: realm::object<AllTypesObject> {
         one, two
     };
 
-    using foo_mixed = std::variant<int64_t,
+    using foo_mixed = std::variant<
+            std::monostate,
+            int64_t,
             bool,
             std::string,
             double,

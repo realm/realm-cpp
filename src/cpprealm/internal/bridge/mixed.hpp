@@ -18,6 +18,7 @@ namespace realm {
     struct object_base;
 
     using mixed = std::variant<
+            std::monostate,
             int64_t,
             bool,
             std::string,
@@ -51,7 +52,7 @@ namespace realm::internal::bridge {
 
     struct mixed {
         explicit mixed(const std::string&);
-        mixed(const std::nullopt_t&); //NOLINT(google-explicit-constructor)
+        mixed(const std::monostate&); //NOLINT(google-explicit-constructor)
         mixed(const int&); //NOLINT(google-explicit-constructor)
         mixed(const int64_t&); //NOLINT(google-explicit-constructor)
         mixed(const double&); //NOLINT(google-explicit-constructor)
