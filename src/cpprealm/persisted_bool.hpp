@@ -23,12 +23,36 @@
 #include <cpprealm/persisted.hpp>
 
 namespace realm {
-    template<typename T>
-    struct persisted<T, type_info::BoolPersistable<T>> : public persisted_noncontainer_base<T> {
-        using persisted_noncontainer_base<T>::persisted_noncontainer_base;
-        using persisted_noncontainer_base<T>::operator*;
-        using persisted_noncontainer_base<T>::operator=;
+    template <>
+    struct persisted<bool> : public persisted_primitive_base<bool> {
+        operator bool() const; // NOLINT(google-explicit-constructor)
+
+        persisted<bool>() = default;
+        persisted<bool>(const bool value) {
+            new (&this->unmanaged) bool(value);
+        }
+
+        template <typename T>
+        std::enable_if_t<std::is_integral_v<T>, persisted&> // NOLINT(misc-unconventional-assign-operator)
+        operator=(const T o) {
+            if (this->is_managed()) {
+                this->m_object->get_obj().template set<bool>(
+                        this->managed,
+                        static_cast<bool>(o));
+            } else {
+                new (&this->unmanaged) T(o);
+            }
+            return *this;
+        }
+    protected:
+        static bool serialize(bool v, const std::optional<internal::bridge::realm>& = std::nullopt);
+        static bool deserialize(bool v);
+
+        __cpp_realm_friends
     };
+
+    __cpp_realm_generate_operator(bool, ==, equal)
+    __cpp_realm_generate_operator(bool, !=, not_equal)
 }
 
 #endif //REALM_PERSISTED_BOOL_HPP

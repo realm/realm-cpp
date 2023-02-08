@@ -20,23 +20,21 @@
 #define realm_object_hpp
 
 #include <cpprealm/notifications.hpp>
-#include <cpprealm/type_info.hpp>
+#include <cpprealm/thread_safe_reference.hpp>
 #include <cpprealm/schema.hpp>
-
-#include <realm/obj.hpp>
-#include <realm/table.hpp>
-#include <realm/object-store/object.hpp>
-#include <realm/object-store/object_store.hpp>
-#include <realm/object-store/shared_realm.hpp>
+#include <cpprealm/internal/type_info.hpp>
 
 #include <any>
+#include <iostream>
+#include <future>
 
 namespace realm {
 
 struct Realm;
 struct NotificationToken;
+template <typename T>
 struct object;
-
+class Object;
 
 
 // MARK: ObjectChange
@@ -46,7 +44,6 @@ struct object;
  */
 template <typename T>
 struct ObjectChange {
-    static_assert(type_info::ObjectBasePersistableConcept<T>::value);
     /// The object being observed.
     const T* object;
     /// The object has been deleted from the Realm.
@@ -76,8 +73,10 @@ using ObjectNotificationCallback = std::function<void(const T*,
                                                       const std::exception_ptr error)>;
 } // anonymous namespace
 
+
+template <typename T>
 struct object_base {
-    bool is_managed() const noexcept {
+    [[nodiscard]] bool is_managed() const noexcept {
         return m_object && m_object->is_valid();
     }
     /**
@@ -126,39 +125,40 @@ struct object_base {
      @parameter block: The block to call with information about changes to the object.
      @returns: A token which must be held for as long as you want updates to be delivered.
      */
-    template <typename T>
-    notification_token observe(std::function<void(ObjectChange<T>)> block)
-    {
-
-        struct ObjectChangeCallbackWrapper {
-            ObjectNotificationCallback<T> block{};
-            const T& object;
-            const Object& m_object;
+    notification_token observe(std::function<void(ObjectChange<T>)> block, bool queue = false) {
+        struct ObjectChangeCallbackWrapper : internal::bridge::collection_change_callback {
+            ObjectChangeCallbackWrapper(ObjectNotificationCallback<T> b,
+                                        const T* obj,
+                                        const internal::bridge::object& internal_object)
+                    : block(b), object(obj), m_object(internal_object) {}
+            ObjectNotificationCallback<T> block;
+            const T* object;
+            const internal::bridge::object m_object;
 
             std::optional<std::vector<std::string>> property_names = std::nullopt;
             std::optional<std::vector<typename decltype(T::schema)::variant_t>> old_values = std::nullopt;
             bool deleted = false;
 
-            void populateProperties(realm::CollectionChangeSet const& c)
+            void populateProperties(internal::bridge::collection_change_set const& c)
             {
                 if (property_names) {
                     return;
                 }
-                if (!c.deletions.empty()) {
+                if (!c.deletions().empty()) {
                     deleted = true;
                     return;
                 }
-                if (c.columns.empty()) {
+                if (c.columns().empty()) {
                     return;
                 }
 
                 // FIXME: It's possible for the column key of a persisted property
                 // to equal the column key of a computed property.
                 auto properties = std::vector<std::string>();
-                const TableRef table = m_object.obj().get_table();
+                auto table = m_object.get_obj().get_table();
 
-                for (size_t i = 0; i < std::tuple_size<decltype(T::schema.properties)>{}; i++) {
-                    if (c.columns.count(table->get_column_key(T::schema.names[i]).value)) {
+                for (auto i = 0; i < std::tuple_size<decltype(T::schema.properties)>{}; i++) {
+                    if (c.columns().count(table.get_column_key(T::schema.names[i]).value())) {
                         properties.push_back(T::schema.names[i]);
                     }
                 }
@@ -168,7 +168,7 @@ struct object_base {
                 }
             }
 
-            std::optional<std::vector<typename decltype(T::schema)::variant_t>> readValues(realm::CollectionChangeSet const& c) {
+            std::optional<std::vector<typename decltype(T::schema)::variant_t>> read_values(internal::bridge::collection_change_set const& c) {
                 if (c.empty()) {
                     return std::nullopt;
                 }
@@ -179,24 +179,24 @@ struct object_base {
 
                 std::vector<typename decltype(T::schema)::variant_t> values;
                 for (auto& name : *property_names) {
-                    auto value = T::schema.property_value_for_name(name, object);
+                    auto value = T::schema.property_value_for_name(name, *object);
                     values.push_back(value);
                 }
                 return values;
             }
 
-            void before(realm::CollectionChangeSet const& c)
+            void before(internal::bridge::collection_change_set const& c) override
             {
-                old_values = readValues(c);
+                old_values = read_values(c);
             }
 
-            void after(realm::CollectionChangeSet const& c)
+            void after(internal::bridge::collection_change_set const& c) override
             {
-                auto new_values = readValues(c);
+                auto new_values = read_values(c);
                 if (deleted) {
                     block(nullptr, {}, {}, {}, nullptr);
                 } else if (new_values) {
-                    block(&object,
+                    block(object,
                           *property_names,
                           old_values ? *old_values : std::vector<typename decltype(T::schema)::variant_t>{},
                           *new_values,
@@ -213,7 +213,7 @@ struct object_base {
         if (!is_managed()) {
             throw std::runtime_error("Only objects which are managed by a Realm support change notifications");
         }
-        return notification_token(m_object->add_notification_callback(ObjectChangeCallbackWrapper {
+        auto wrapper = ObjectChangeCallbackWrapper {
                 [block](const T* ptr,
                         std::vector<std::string> property_names,
                         std::vector<typename decltype(T::schema)::variant_t> old_values,
@@ -236,37 +236,54 @@ struct object_base {
                             if (!new_values.empty()) {
                                 property.new_value = new_values[i];
                             }
-                            property_changes.push_back(property);
+                            property_changes.push_back(std::move(property));
                         }
                         block(ObjectChange<T> { .object = ptr, .property_changes = property_changes });
                     }
-                }, *static_cast<T*>(this), *m_object}));
+                }, static_cast<T*>(this), *m_object};
+        return m_object->add_notification_callback(
+                std::make_shared<ObjectChangeCallbackWrapper>(wrapper));
     }
 protected:
-    std::optional<Object> m_object;
-    template <typename T, typename>
-    friend struct persisted_base;
-    template <typename T>
-    friend class persisted_object_container_base;
-    template <typename T, typename>
-    friend struct type_info::persisted_type;
-    template <typename Class, typename ...Properties>
-    friend struct internal::schema;
-    template <auto Ptr, bool IsPrimaryKey>
-    friend struct property;
-    template <typename T, typename>
-    friend struct thread_safe_reference;
-    template <typename ...Ts>
-    friend struct db;
+    std::optional<internal::bridge::object> m_object;
+    void manage(const internal::bridge::table& target_table,
+                const internal::bridge::realm& realm) {
+        if (!m_object) {
+            if constexpr (T::schema.HasPrimaryKeyProperty) {
+                auto val = (static_cast<T&>(*this)).*decltype(T::schema)::PrimaryKeyProperty::ptr;
+                m_object = internal::bridge::object(realm, target_table.create_object_with_primary_key(internal::bridge::mixed(*val)));
+            } else {
+                m_object = internal::bridge::object(realm, target_table.create_object());
+            }
+            std::apply([this](auto&&... p) {
+                ((static_cast<T&>(*this).*(std::decay_t<decltype(p)>::ptr))
+                        .manage(&*m_object, m_object->get_obj().get_table().get_column_key(p.name)), ...);
+            }, T::schema.ps);
+            assign_accessors(*m_object);
+        }
+    }
+    void manage(internal::bridge::object&& object) {
+        m_object = std::move(object);
+        std::apply([this](auto&&... p) {
+            ((static_cast<T&>(*this).*(std::decay_t<decltype(p)>::ptr))
+                    .manage(&*m_object, m_object->get_obj().get_table().get_column_key(p.name)), ...);
+        }, T::schema.ps);
+        assign_accessors(*m_object);
+    }
+    void assign_accessors(const internal::bridge::object& object) {
+        m_object = object;
+        std::apply([this](auto&&... p) {
+            ((static_cast<T&>(*this).*(std::decay_t<decltype(p)>::ptr))
+                .assign_accessor(&*m_object, m_object->get_obj().get_table().get_column_key(p.name)), ...);
+        }, T::schema.ps);
+    }
 
-    template <typename T>
-    friend typename std::enable_if<std::is_base_of<realm::object_base, T>::value, std::ostream>::type&
-    operator<< (std::ostream& stream, const T& object);
-    template <typename T>
-    friend inline auto operator==(
-            const T& lhs,
-            const T& rhs) -> std::enable_if_t<type_info::ObjectBasePersistableConcept<T>::value, bool>;
-};
+    __cpp_realm_friends
+    template <typename, typename> friend struct thread_safe_reference;
+        template <typename V>
+        friend inline std::enable_if_t<std::is_base_of_v<object_base<V>, V>, bool> operator==(const V& lhs,
+                                                                                            const V& rhs);
+    };
 // MARK: Object
 /**
  `realm::object` is a class used to define Realm model objects.
@@ -296,7 +313,8 @@ protected:
  You can retrieve all objects of a given type from a Realm by calling the `objects(_:)` instance method.
 
  */
-struct object : public object_base {
+template <typename T>
+struct object : public object_base<T> {
 };
 
 /**
@@ -333,28 +351,45 @@ struct object : public object_base {
  };
  ```
  */
-struct embedded_object : public object_base {
+template <typename T>
+struct embedded_object : public object_base<T> {
 };
 
+namespace {
+    template <size_t N, typename T>
+    constexpr bool check_equals(const T& lhs, const T& rhs) {
+        if constexpr (N + 1 >= std::tuple_size<decltype(T::schema.properties)>::value) {
+            return true;
+        } else {
+            auto ptr = std::get<N>(T::schema.properties).ptr;
+            if ((lhs.*ptr) != (rhs.*ptr)) {
+                return false;
+            } else {
+                return check_equals<N + 1>(lhs, rhs);
+            }
+        }
+    }
+}
+
 template <typename T>
-inline auto operator==(const T& lhs,
-                       const T& rhs) -> std::enable_if_t<type_info::ObjectBasePersistableConcept<T>::value, bool> {
+inline std::enable_if_t<std::is_base_of_v<object_base<T>, T>, bool> operator==(const T& lhs,
+                       const T& rhs) {
     if (lhs.is_managed() && rhs.is_managed()) {
-        const Object& a = *lhs.m_object;
-        const Object& b = *rhs.m_object;
+        auto& a = *lhs.m_object;
+        auto& b = *rhs.m_object;
 
         if (a.get_realm() != b.get_realm()) {
             return false;
         }
 
-        const Obj obj1 = a.obj();
-        const Obj obj2 = b.obj();
+        auto obj1 = a.get_obj();
+        auto obj2 = b.get_obj();
         // if table and index are the same
         return obj1.get_table() == obj2.get_table()
             && obj1.get_key() == obj2.get_key();
+    } else {
+        return check_equals<0>(lhs, rhs);
     }
-
-    return false;
 }
 
 } // namespace realm

@@ -23,42 +23,46 @@
 #include <cpprealm/persisted.hpp>
 
 namespace realm {
-    template<typename T>
-    struct persisted<T, type_info::BinaryPersistable<T>> : public persisted_noncontainer_base<T> {
-        using persisted_noncontainer_base<T>::persisted_noncontainer_base;
-        using persisted_noncontainer_base<T>::operator*;
-        using persisted_noncontainer_base<T>::operator=;
-        typename T::value_type operator[](typename T::size_type idx) {
-            if (this->m_object) {
-                realm::BinaryData binary = this->m_object->obj().template get<BinaryData>(this->managed);
-                return binary[idx];
-            } else {
-                return this->unmanaged[idx];
-            }
+    namespace internal::bridge {
+        struct binary;
+    }
+
+    template <>
+    struct persisted<std::vector<uint8_t>> : public persisted_primitive_base<std::vector<uint8_t>> {
+        persisted()=default;
+        persisted(const std::vector<uint8_t>& value) {
+            new(&this->unmanaged) std::vector<uint8_t>(value);
         }
-        void push_back(const typename T::value_type& a) {
-            if (this->m_object) {
-                std::string data = this->m_object->obj().template get<BinaryData>(this->managed).data();
-                data = data + reinterpret_cast<char&>(a);
-                auto binary = BinaryData(data);
-                this->m_object->obj()
-                        .template set<BinaryData>(this->managed, binary);
-            } else {
-                this->unmanaged.push_back(a);
-            }
+        persisted(std::vector<uint8_t>&& value) {
+            new(&this->unmanaged) std::vector<uint8_t>(std::move(value));
         }
-        void push_back(typename T::value_type&& a) {
-            if (this->m_object) {
-                std::string data = this->m_object->obj().template get<BinaryData>(this->managed).data();
-                data = data + reinterpret_cast<char&>(a);
-                auto binary = BinaryData(data);
-                this->m_object->obj()
-                        .template set<BinaryData>(this->managed, binary);
-            } else {
-                this->unmanaged.push_back(a);
-            }
-        }
+
+        /// Returns a reference to the element at specified location pos. No bounds checking is performed.
+        uint8_t operator[](size_t idx);
+        /// Appends the given element value to the end of the container.
+        void push_back(uint8_t);
+        /// Returns the number of elements in the container.
+        [[nodiscard]] size_t size() const;
+    protected:
+        static internal::bridge::binary serialize(const std::vector<uint8_t>& v, const std::optional<internal::bridge::realm>& = std::nullopt);
+        static std::vector<uint8_t> deserialize(const internal::bridge::binary &v);
+
+        __cpp_realm_friends
     };
+
+    __cpp_realm_generate_operator(std::vector<uint8_t>, ==, equal)
+    __cpp_realm_generate_operator(std::vector<uint8_t>, !=, not_equal)
+
+    inline std::ostream& operator<< (std::ostream& stream, const persisted<std::vector<uint8_t>>& value)
+    {
+        stream << "{ ";
+        for (auto& c : *value) {
+            stream << c << ", ";
+        }
+        stream.seekp(-2);
+        stream << " }";
+        return stream;
+    }
 }
 
 #endif //REALM_PERSISTED_BINARY_HPP

@@ -19,36 +19,66 @@
 #ifndef REALM_PERSISTED_TIMESTAMP_HPP
 #define REALM_PERSISTED_TIMESTAMP_HPP
 
+#include "cpprealm/internal/bridge/obj.hpp"
 #include <cpprealm/persisted.hpp>
 
 namespace realm {
-    template<typename T>
-    struct persisted<T, type_info::TimestampPersistable<T>> : public persisted_noncontainer_base<T> {
-        using persisted_noncontainer_base<T>::persisted_noncontainer_base;
-        using persisted_noncontainer_base<T>::operator*;
-        using persisted_noncontainer_base<T>::operator=;
-        template <typename C, typename U, typename V>
-        friend persisted<C>& operator +=(persisted<C>& a, std::chrono::duration<U, V> b);
-        constexpr auto time_since_epoch() const {
-            if (auto& object = this->m_object) {
-                auto obj = object->obj();
-                auto ts = static_cast<T>(obj.template get<Timestamp>(this->managed));
-                return ts.time_since_epoch();
+    using time_point = std::chrono::time_point<std::chrono::system_clock, std::chrono::system_clock::duration>;
+    template <>
+    struct persisted<time_point> : public persisted_primitive_base<time_point> {
+        using persisted_primitive_base<time_point>::persisted_primitive_base;
+
+        auto time_since_epoch() const {
+            if (this->is_managed()) {
+                auto ts = this->m_object->get_obj().template get<internal::bridge::timestamp>(this->managed);
+                return ts.get_time_point().time_since_epoch();
             } else {
                 return this->unmanaged.time_since_epoch();
             }
         }
-    };
-    template <typename T, typename U, typename V>
-    persisted<T>& operator +=(persisted<T>& a, std::chrono::duration<U, V> b) {
-        if (auto& object = a.m_object) {
-            auto obj = object->obj();
-            auto ts = obj.template get<Timestamp>(a.managed);
-            obj.template set(a.managed, Timestamp(ts.get_time_point() + b));
-        } else {
-            a.unmanaged += b;
+    protected:
+        static internal::bridge::timestamp serialize(const time_point& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+            return static_cast<internal::bridge::timestamp>(v);
         }
-        return a;
+        static time_point deserialize(const internal::bridge::timestamp& v) {
+            return v;
+        }
+
+        template <typename U, typename V, typename S>
+        friend persisted<std::chrono::time_point<U, V>>& operator +=(
+                persisted<std::chrono::time_point<U, V>>& lhs,
+                std::chrono::duration<S> rhs);
+
+        __cpp_realm_friends
+    };
+
+    __cpp_realm_generate_operator(std::chrono::time_point<std::chrono::system_clock>, ==, equal)
+    __cpp_realm_generate_operator(std::chrono::time_point<std::chrono::system_clock>, !=, not_equal)
+    __cpp_realm_generate_operator(std::chrono::time_point<std::chrono::system_clock>, >, greater)
+    __cpp_realm_generate_operator(std::chrono::time_point<std::chrono::system_clock>, <, less)
+    __cpp_realm_generate_operator(std::chrono::time_point<std::chrono::system_clock>, >=, greater_equal)
+    __cpp_realm_generate_operator(std::chrono::time_point<std::chrono::system_clock>, <=, less_equal)
+
+    template <typename S>
+    inline persisted<time_point>& operator +=(
+            persisted<time_point>& lhs,
+            const std::chrono::duration<S>& rhs)
+    {
+        if (lhs.is_managed()) {
+            auto ts = lhs.m_object->get_obj().template get<internal::bridge::timestamp>(lhs.managed);
+            lhs.m_object->get_obj().set(lhs.managed, internal::bridge::timestamp(ts.get_time_point() + rhs));
+        } else {
+            lhs.unmanaged += rhs;
+        }
+        return lhs;
+    }
+
+    template <typename S>
+    rbool operator ==(
+            persisted<time_point>& lhs,
+            std::chrono::duration<S> rhs)
+    {
+        return lhs == rhs;
     }
 }
 

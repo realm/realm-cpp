@@ -92,13 +92,15 @@ realm.write([&dog] {
 The [MongoDB Realm Sync](https://www.mongodb.com/realm/mobile/sync) service makes it simple to keep data in sync across users, devices, and your backend in real-time.
 ```cpp
 auto app = realm::App("<app-id>");
-auto user = app.login(realm::App::Credentials::anonymous()).get_future().get();
+auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
 auto synced_realm_ref = user.realm<Car>("foo").get_future().get();
 auto realm = synced_realm_ref.resolve();
 
-auto car = realm.object_new<Car>(0);
-realm.write([&car](){
-    car.accelerate();
+auto cars = realm.results<Car>();
+realm.write([&cars](){
+    for (auto& car : cars) {
+        car.accelerate();
+    }
 });
 ```
 
