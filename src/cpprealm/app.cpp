@@ -290,10 +290,10 @@ namespace realm {
                                                  .transport = std::make_shared<internal::DefaultTransport>(),
                                                  .base_url = base_url ? base_url : util::Optional<std::string>(),
                                                  .device_info = {
-                                                         .sdk = "Realm Cpp",
                                                          .platform = "Realm Cpp",
                                                          .platform_version = "?",
                                                          .sdk_version = "0.0.1",
+                                                         .sdk = "Realm Cpp"
                                                  }},
                                          config);
     }
