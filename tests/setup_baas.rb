@@ -17,14 +17,14 @@ DEPENDENCIES = File.open(Dir.glob("#{BASE_DIR}/**/dependencies.list")[0]).map { 
   line.chomp.split("=")
 }.to_h
 
-MONGODB_VERSION='5.0.6'
-GO_VERSION='1.17.8'
+MONGODB_VERSION='6.0.0-rc13'
+GO_VERSION='1.19.3'
 NODE_VERSION='16.13.1'
 STITCH_VERSION=DEPENDENCIES["STITCH_VERSION"]
 
 MONGODB_URL="https://fastdl.mongodb.org/osx/mongodb-macos-x86_64-#{MONGODB_VERSION}.tgz"
 TRANSPILER_TARGET='node16-macos'
-SERVER_STITCH_LIB_URL="https://s3.amazonaws.com/stitch-artifacts/stitch-support/stitch-support-macos-debug-4.3.2-721-ge791a2e-patch-5e2a6ad2a4cf473ae2e67b09.tgz"
+SERVER_STITCH_LIB_URL="https://s3.amazonaws.com/static.realm.io/stitch-support/stitch-support-macos-4.4.17-rc1-2-g85de0cc.tgz"
 MONGO_DIR="#{BUILD_DIR}/mongodb-macos-x86_64-#{MONGODB_VERSION}"
 
 def setup_mongod

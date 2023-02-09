@@ -2,11 +2,6 @@
 #include <cpprealm/internal/bridge/utils.hpp>
 
 #include <realm/mixed.hpp>
-//#include <cpprealm/object.hpp>
-
-//#include <cpprealm/internal/bridge/obj.hpp>
-//#include <cpprealm/internal/bridge/realm.hpp>
-//#include <cpprealm/internal/bridge/schema.hpp>
 
 namespace realm::internal::bridge {
 #ifdef __i386__
