@@ -286,13 +286,16 @@ namespace realm {
         config.user_agent_application_info = app_id;
 
         m_app = app::App::get_shared_app(app::App::Config{
-                .app_id=app_id,
-                .transport = std::make_shared<internal::DefaultTransport>(),
-                .base_url = base_url ? base_url : util::Optional<std::string>(),
-                .platform="Realm Cpp",
-                .platform_version="?",
-                .sdk_version="0.0.1",
-        }, config);
+                                                 .app_id = app_id,
+                                                 .transport = std::make_shared<internal::DefaultTransport>(),
+                                                 .base_url = base_url ? base_url : util::Optional<std::string>(),
+                                                 .device_info = {
+                                                         .sdk = "Realm Cpp",
+                                                         .platform = "Realm Cpp",
+                                                         .platform_version = "?",
+                                                         .sdk_version = "0.0.1",
+                                                 }},
+                                         config);
     }
 
 
