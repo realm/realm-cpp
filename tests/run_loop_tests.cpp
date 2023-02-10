@@ -3,7 +3,7 @@
 #include <functional>
 #include <mutex>
 
-#if REALM_USE_UV
+#if REALM_HAVE_UV
 #include <uv.h>
 #elif REALM_PLATFORM_APPLE
 #include <realm/util/cf_ptr.hpp>
@@ -125,14 +125,9 @@ bool RunLoopScheduler::is_same_as(const scheduler* other) const noexcept
 
 bool RunLoopScheduler::can_invoke() const noexcept
 {
-    // The main thread may not be in a run loop yet if we're called from
-    // something like `applicationDidFinishLaunching:`, but it presumably will
-    // be in the future
     if (pthread_main_np())
         return true;
 
-    // Current mode indicates why the current callout from the runloop was made,
-    // and is null if a runloop callout isn't currently being processed
     if (auto mode = CFRunLoopCopyCurrentMode(CFRunLoopGetCurrent())) {
         CFRelease(mode);
         return true;
