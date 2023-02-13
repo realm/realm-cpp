@@ -47,6 +47,10 @@ namespace realm::internal::bridge {
         reinterpret_cast<Dictionary*>(m_dictionary)->remove_all();
     }
 
+    size_t dictionary::find(const std::string& key) {
+        return reinterpret_cast<Dictionary*>(m_dictionary)->find_any(key);
+    }
+
     void dictionary::remove_all() {
         clear();
     }

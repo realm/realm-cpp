@@ -10,6 +10,7 @@ namespace realm {
     }
     persisted<std::string>& persisted<std::string>::operator =(const std::string& v) {
         new (&this->unmanaged) std::string(v);
+        return *this;
     }
     persisted<std::string>::persisted(const std::string& v) {
         new (&this->unmanaged) std::string(v);
