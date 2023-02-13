@@ -170,7 +170,13 @@ namespace realm {
 
         iterator find(const typename T::key_type& key) {
             if (this->m_object) {
-                return iterator(managed.find(key), this);
+                // Dictionary's `find` searches for the index of the value and not the key.
+                auto i = managed.get_key_index(key);
+                if (i == size_t(-1)) {
+                    return iterator(size(), this);
+                } else {
+                    return iterator(managed.get_key_index(key), this);
+                }
             } else {
                 return iterator(this->unmanaged.find(key), this);
             }
@@ -180,7 +186,9 @@ namespace realm {
             if (this->m_object) {
                 managed.remove(key);
             } else {
-                this->unmanaged.erase(this->unmanaged.find(key));
+                auto it = this->unmanaged.find(key);
+                if (it != this->unmanaged.end())
+                    this->unmanaged.erase(it);
             }
         }
         void clear();
