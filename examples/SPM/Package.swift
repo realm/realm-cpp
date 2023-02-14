@@ -37,10 +37,7 @@ let package = Package(
             dependencies: [
                 .product(name: "realm-cpp-sdk", package: "realm-cpp")
             ],
-            cxxSettings: cxxSettings),
-        .testTarget(
-            name: "SPMRealmCxxTests",
-            dependencies: ["SPMRealmCxx"]),
+            cxxSettings: cxxSettings)
     ],
-    cxxLanguageStandard: .cxx20
+    cxxLanguageStandard: .cxx17
 )

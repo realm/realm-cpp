@@ -1,6 +1,5 @@
-**Make sure cpprealm is installed before hand, then build the example project.**
-
 You will first need to create a [Atlas Device Sync App and turn development mode on for it.](https://www.mongodb.com/docs/atlas/app-services/sync/get-started/)
+Make sure to enable anonymous authentication.
 
 Change to the example project directory.  
 ```
