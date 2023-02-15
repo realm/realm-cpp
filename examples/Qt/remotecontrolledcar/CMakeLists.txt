@@ -1,4 +1,8 @@
-# Generated from remotecontrolledcar.pro.
+cmake_minimum_required(VERSION 3.16)
+project(remotecontrolledcar LANGUAGES CXX)
 
-qt_internal_add_example(car)
-qt_internal_add_example(controller)
+set(CPPREALM_NO_TESTS 1)
+add_subdirectory(../../../ cpprealm-build)
+
+add_subdirectory(car)
+add_subdirectory(controller)

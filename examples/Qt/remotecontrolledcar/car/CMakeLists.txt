@@ -1,7 +1,8 @@
-# Generated from car.pro.
-
 cmake_minimum_required(VERSION 3.16)
 project(car LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -13,34 +14,21 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
   set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/dbus/remotecontrolledcar/car")
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/realm/remotecontrolledcar/car")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS DBus)
-find_package(Qt6 COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
-# special case begin
-set(car_SRCS)
-qt6_add_dbus_adaptor(car_SRCS
-    car.xml
-    qobject.h
-    "" # empty parent_class value on purpose to not pass -l flag
-    car_adaptor
-)
-# special case end
 qt_add_executable(car
     car.cpp car.h
     main.cpp
-    ${car_SRCS} # special case
 )
 set_target_properties(car PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
-target_link_libraries(car PUBLIC
+target_link_libraries(car PRIVATE
+    cpprealm
     Qt::Core
-    Qt::DBus
     Qt::Gui
     Qt::Widgets
 )
