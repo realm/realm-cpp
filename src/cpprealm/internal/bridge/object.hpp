@@ -26,6 +26,7 @@ namespace realm::internal::bridge {
         notification_token();
         notification_token(NotificationToken&&);
         operator NotificationToken() const;
+        void unregister();
     private:
 #ifdef __i386__
         std::aligned_storage<16, 4>::type m_token[1];

@@ -49,9 +49,6 @@ namespace realm::internal::bridge {
     realm::realm(std::shared_ptr<Realm> v)
     : m_realm(std::move(v)){}
 
-    realm::realm(thread_safe_reference&& tsr)
-            : m_realm(Realm::get_shared_realm(std::move(tsr))){}
-
     realm::operator std::shared_ptr<Realm>() const {
         return m_realm;
     }
@@ -88,6 +85,14 @@ namespace realm::internal::bridge {
         }
         std::shared_ptr<scheduler> m_scheduler;
     };
+
+    realm::realm(thread_safe_reference&& tsr, const std::optional<std::shared_ptr<struct scheduler>>& s) {
+        if (s) {
+            m_realm = Realm::get_shared_realm(std::move(tsr), std::make_shared<internal_scheduler>(*s));
+        } else {
+            m_realm = Realm::get_shared_realm(std::move(tsr));
+        }
+    }
 
     realm::config::config(const RealmConfig &v) {
         new (&m_config) RealmConfig(v);

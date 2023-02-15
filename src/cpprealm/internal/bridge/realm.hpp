@@ -92,7 +92,7 @@ namespace realm::internal::bridge {
         realm();
         realm(const config&); //NOLINT(google-explicit-constructor)
         realm(std::shared_ptr<Realm>); //NOLINT(google-explicit-constructor)
-        realm(thread_safe_reference&& tsr); //NOLINT(google-explicit-constructor)
+        realm(thread_safe_reference&& tsr, const std::optional<std::shared_ptr<scheduler>>&); //NOLINT(google-explicit-constructor)
         operator std::shared_ptr<Realm>() const; //NOLINT(google-explicit-constructor)
         group read_group();
         [[nodiscard]] config get_config() const;

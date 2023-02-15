@@ -67,9 +67,9 @@ struct thread_safe_reference<db<Ts...>> {
     thread_safe_reference& operator=(thread_safe_reference&&) noexcept = default;
     ~thread_safe_reference() = default;
 
-    db<Ts...> resolve()
+    db<Ts...> resolve(const std::optional<std::shared_ptr<scheduler>>& s = std::nullopt)
     {
-        return db<Ts...>(internal::bridge::realm(std::move(m_tsr)));
+        return db<Ts...>(internal::bridge::realm(std::move(m_tsr), s));
     }
 
     explicit operator bool() const noexcept
