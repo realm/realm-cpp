@@ -42,5 +42,5 @@ let package = Package(
             name: "SPMRealmCxxTests",
             dependencies: ["SPMRealmCxx"]),
     ],
-    cxxLanguageStandard: .cxx20
+    cxxLanguageStandard: .cxx17
 )
