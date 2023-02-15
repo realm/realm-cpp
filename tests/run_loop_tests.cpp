@@ -593,7 +593,6 @@ TEST_CASE("run loops", "[run loops]") {
 
             std::unique_lock<std::mutex> lock2(m2);
             v2.wait(lock2, [&] { return signal2; });
-            std::cout << "done" << std::endl;
         }
     }
 }
