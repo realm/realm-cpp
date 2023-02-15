@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  DOXYGEN_PROJECT_NUMBER: Pre-alpha version ${{ github.ref_name }}@${{ github.sha }}
+  DOXYGEN_PROJECT_NUMBER: Alpha version ${{ github.ref_name }}@${{ github.sha }}
 
 jobs:
   publish:
