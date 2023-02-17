@@ -442,7 +442,7 @@ TEST_CASE("list", "[list]") {
        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
 
        auto obj = AllTypesObject();
-       obj.list_mixed_col.push_back(42);
+       obj.list_mixed_col.push_back(static_cast<int64_t>(42));
        obj.list_mixed_col.push_back(true);
        obj.list_mixed_col.push_back("hello world");
        obj.list_mixed_col.push_back(42.42);

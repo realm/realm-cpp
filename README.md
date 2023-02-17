@@ -135,5 +135,20 @@ sudo cmake --build . --target install
 ```
 
 You can then link to your library with `-lcpprealm`.
- 
+
+If you are using cmake you can link `cpprealm` using `find_library()` and `target_link_libraries()` see [examples/cmake/CMakeLists.txt](./examples/cmake/CMakeLists.txt) or the short example below
+
+```cmake
+cmake_minimum_required(VERSION 3.15)
+project (cmake-example)
+find_library(REALMCPP_LIB NAMES cpprealm)
+find_library(REALM_LIB NAMES realm)
+add_executable(example example.cpp)
+target_link_libraries(example
+        cpprealm
+        realm
+)
+```
+Note that you will probably need other libs to get cpprealm running (Threads, SSL, Curl, ...)
+
 <img style="width: 0px; height: 0px;" src="https://3eaz4mshcd.execute-api.us-east-1.amazonaws.com/prod?s=https://github.com/realm/realm-cocoa#README.md">
