@@ -2,7 +2,7 @@
 
 struct Foo: realm::object<Foo> {
 
-    realm::persisted<int> _id;
+    realm::persisted<int64_t> _id;
     realm::persisted<bool> bool_col;
     realm::persisted<std::string> str_col;
     realm::persisted<std::chrono::time_point<std::chrono::system_clock>> date_col;
@@ -28,11 +28,11 @@ void run_realm() {
     auto tsr = realm::async_open<Foo>(flx_sync_config).get_future().get();
     auto synced_realm = tsr.resolve();
 
-    auto update_success = synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet& subs) {
+    auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set& subs) {
         subs.clear();
     }).get_future().get();
 
-    update_success = synced_realm.subscriptions().update([](realm::MutableSyncSubscriptionSet& subs) {
+    update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set& subs) {
         subs.add<Foo>("foo-strings", [](auto& obj) {
             return obj.str_col != "alex"; // sync all objects where name does not equal 'alex'
         });
@@ -53,7 +53,7 @@ void run_realm() {
     synced_realm.write([&synced_realm, &person]() {
         person.str_col = "sarah";
     });
-    user.sync_manager().path_for_realm()
+    // user.sync_manager().path_for_realm();
 
     synced_realm.write([&synced_realm, &person]() {
         person.str_col = "bob";

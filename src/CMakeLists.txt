@@ -93,8 +93,16 @@ set(HEADERS
     cpprealm/internal/bridge/object_id.hpp
     cpprealm/persisted_object_id.hpp) # REALM_INSTALL_HEADERS
 
-add_library(cpprealm STATIC ${SOURCES} ${HEADERS})
-
+add_library(cpprealm SHARED
+        ${SOURCES}
+)
+target_include_directories(cpprealm PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/cpprealm
+)
 set_target_properties(cpprealm PROPERTIES PUBLIC_HEADER "${HEADERS}")
+
+install(TARGETS cpprealm
+    ARCHIVE DESTINATION lib
+)
 
 install(DIRECTORY cpprealm/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm)

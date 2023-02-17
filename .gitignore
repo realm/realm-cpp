@@ -9,4 +9,7 @@ Package.resolved
 # Qt demo apps
 examples/*.pro.user
 docs/
-
+# other builds
+*cmake-build*
+#ide
+*.idea
