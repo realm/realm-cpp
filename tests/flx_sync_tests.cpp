@@ -110,3 +110,55 @@ TEST_CASE("tsr") {
     t.join();
     p.get_future().get();
 }
+
+TEST_CASE("realm_is_populated_on_async_open") {
+    auto app = realm::App(Admin::shared().create_app({"str_col", "_id"}), Admin::shared().base_url());
+    {
+        auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
+        auto flx_sync_config = user.flexible_sync_configuration();
+        auto synced_realm = realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config).get_future().get().resolve();
+
+        auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
+            subs.clear();
+        }).get_future().get();
+        CHECK(update_success == true);
+        CHECK(synced_realm.subscriptions().size() == 0);
+
+        update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
+            subs.add<AllTypesObject>("foo-strings", [](auto &obj) {
+                return obj.str_col == "foo";
+            });
+        }).get_future().get();
+        CHECK(update_success == true);
+
+        synced_realm.write([&synced_realm]() {
+            for (size_t i = 0; i < 1000; i++) {
+                synced_realm.add(AllTypesObject{._id=i, .str_col="foo"});
+            }
+        });
+
+        auto sync_session = synced_realm.get_sync_session();
+        auto upload_completion = sync_session->wait_for_upload_completion();
+        upload_completion.get_future().get();
+    }
+
+    {
+        app.register_user("foo@mongodb.com", "foobar").get_future().get();
+        auto user = app.login(realm::App::credentials::username_password("foo@mongodb.com", "foobar")).get_future().get();
+        auto synced_realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(user.flexible_sync_configuration());
+        synced_realm.refresh();
+        auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
+                                                         subs.add<AllTypesObject>("foo-strings", [](auto &obj) {
+                                                             return obj.str_col == "foo";
+                                                         });
+                                                     }).get_future().get();
+        CHECK(update_success == true);
+        auto objs = synced_realm.objects<AllTypesObject>();
+        CHECK(objs.size() < 1000);
+
+        auto sync_session = synced_realm.get_sync_session();
+        sync_session->wait_for_download_completion().get_future().get();
+        synced_realm.refresh();
+        CHECK(objs.size() == 1000);
+    }
+}

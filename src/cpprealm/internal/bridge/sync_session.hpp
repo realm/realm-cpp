@@ -4,6 +4,7 @@
 #include <memory>
 #include <functional>
 #include <system_error>
+#include <future>
 
 namespace realm {
     struct SyncSession;
@@ -26,8 +27,14 @@ namespace realm {
             // Register a callback that will be called when all pending downloads have been completed.
             // Works the same way as `wait_for_upload_completion()`.
             void wait_for_download_completion(std::function<void(std::error_code)>&& callback);
+            // Register a callback that will be called when all pending uploads have completed.
+            // The callback is run asynchronously, and upon whatever thread the underlying sync client
+            // chooses to run it on.
+            std::promise<void> wait_for_upload_completion();
+            // Register a callback that will be called when all pending downloads have been completed.
+            std::promise<void> wait_for_download_completion();
         private:
-            std::shared_ptr<SyncSession> m_session;
+            std::weak_ptr<SyncSession> m_session;
         };
     }
 }

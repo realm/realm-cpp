@@ -103,6 +103,7 @@ namespace realm::internal::bridge {
         [[nodiscard]] std::shared_ptr<struct scheduler> scheduler() const;
         static async_open_task get_synchronized_realm(const config&);
         bool refresh();
+        [[nodiscard]] std::optional<sync_session> get_sync_session() const;
     private:
         std::shared_ptr<Realm> m_realm;
         friend struct group;

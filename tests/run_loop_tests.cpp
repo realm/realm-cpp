@@ -513,7 +513,10 @@ TEST_CASE("run loops", "[run loops]") {
                                  .get_future()
                                  .get()
                                  .resolve();
-
+            realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
+                                                subs.add<AllTypesObject>("AllTypesObject_flx");
+                                                subs.add<AllTypesObjectLink>("AllTypesObjectLink_flx");
+                                             }).get_future().get();
             auto obj = AllTypesObject();
             obj.opt_obj_col = AllTypesObjectLink();
             realm.write([&]() {
@@ -582,6 +585,12 @@ TEST_CASE("run loops", "[run loops]") {
                                  .get_future()
                                  .get()
                                  .resolve();
+            realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
+                                     subs.add<AllTypesObject>("AllTypesObject_flx");
+                                     subs.add<AllTypesObjectLink>("AllTypesObjectLink_flx");
+                                 })
+                    .get_future()
+                    .get();
             auto obj = realm.objects<AllTypesObject>()[0];
             realm.write([&]() {
                 obj.double_col = 1.23;
