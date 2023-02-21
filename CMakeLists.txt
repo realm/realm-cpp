@@ -100,7 +100,7 @@ else()
     )
 endif()
 
-if (NOT ANDROID)
+if (NOT REALM_CPP_NO_TESTS)
 Include(FetchContent)
 FetchContent_Declare(
         Catch2

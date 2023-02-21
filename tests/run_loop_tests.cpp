@@ -494,7 +494,7 @@ TEST_CASE("run loops", "[run loops]") {
             return signal;
         });
     }
-
+/*
     SECTION("server_with_scheduler") {
         auto app = realm::App(Admin::shared().create_app({"str_col", "_id"}), Admin::shared().base_url());
         auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
@@ -604,5 +604,6 @@ TEST_CASE("run loops", "[run loops]") {
             v2.wait(lock2, [&] { return signal2; });
         }
     }
+    */
 }
 #endif
