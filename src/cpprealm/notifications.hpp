@@ -43,6 +43,9 @@ struct notification_token {
 
     notification_token(internal::bridge::notification_token&& token)
             : m_token(token) {}
+    void unregister() {
+        m_token.unregister();
+    }
 
     internal::bridge::notification_token m_token;
     internal::bridge::dictionary m_dictionary;

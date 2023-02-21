@@ -173,13 +173,18 @@ struct AllTypesObject: realm::object<AllTypesObject> {
         realm::property<&AllTypesObject::map_embedded_col>("map_embedded_col"));
 };
 
-/*
+struct EmbeddedFoo: realm::embedded_object<EmbeddedFoo> {
+    realm::persisted<int64_t> bar;
+
+    static constexpr auto schema = realm::schema("EmbeddedFoo", realm::property<&EmbeddedFoo::bar>("bar"));
+};
+
 struct AllTypesAsymmetricObject: realm::asymmetric_object<AllTypesAsymmetricObject> {
     enum class Enum {
         one, two
     };
 
-    realm::persisted<int64_t> _id;
+    realm::persisted<realm::object_id> _id;
     realm::persisted<bool> bool_col;
     realm::persisted<std::string> str_col;
     realm::persisted<Enum> enum_col;
@@ -195,7 +200,7 @@ struct AllTypesAsymmetricObject: realm::asymmetric_object<AllTypesAsymmetricObje
     realm::persisted<std::optional<std::chrono::time_point<std::chrono::system_clock>>> opt_date_col;
     realm::persisted<std::optional<realm::uuid>> opt_uuid_col;
     realm::persisted<std::optional<std::vector<uint8_t>>> opt_binary_col;
-    realm::persisted<std::optional<AllTypesObjectEmbedded>> opt_embedded_obj_col;
+    realm::persisted<std::optional<EmbeddedFoo>> opt_embedded_obj_col;
 
     realm::persisted<std::vector<int64_t>> list_int_col;
     realm::persisted<std::vector<bool>> list_bool_col;
@@ -204,7 +209,7 @@ struct AllTypesAsymmetricObject: realm::asymmetric_object<AllTypesAsymmetricObje
     realm::persisted<std::vector<std::vector<std::uint8_t>>> list_binary_col;
     realm::persisted<std::vector<std::chrono::time_point<std::chrono::system_clock>>> list_date_col;
     realm::persisted<std::vector<realm::mixed>> list_mixed_col;
-    realm::persisted<std::vector<AllTypesObjectEmbedded>> list_embedded_obj_col;
+    realm::persisted<std::vector<EmbeddedFoo>> list_embedded_obj_col;
 
     realm::persisted<std::map<std::string, int64_t>> map_int_col;
     realm::persisted<std::map<std::string, bool>> map_bool_col;
@@ -214,7 +219,7 @@ struct AllTypesAsymmetricObject: realm::asymmetric_object<AllTypesAsymmetricObje
     realm::persisted<std::map<std::string, std::chrono::time_point<std::chrono::system_clock>>> map_date_col;
     realm::persisted<std::map<std::string, Enum>> map_enum_col;
     realm::persisted<std::map<std::string, realm::mixed>> map_mixed_col;
-    realm::persisted<std::map<std::string, std::optional<AllTypesObjectEmbedded>>> map_embedded_col;
+    realm::persisted<std::map<std::string, std::optional<EmbeddedFoo>>> map_embedded_col;
 
     static constexpr auto schema = realm::schema("AllTypesAsymmetricObject",
                                                  realm::property<&AllTypesAsymmetricObject::_id, true>("_id"),
@@ -252,13 +257,6 @@ struct AllTypesAsymmetricObject: realm::asymmetric_object<AllTypesAsymmetricObje
                                                  realm::property<&AllTypesAsymmetricObject::map_uuid_col>("map_uuid_col"),
                                                  realm::property<&AllTypesAsymmetricObject::map_mixed_col>("map_mixed_col"),
                                                  realm::property<&AllTypesAsymmetricObject::map_embedded_col>("map_embedded_col"));
-};
-*/
-
-struct EmbeddedFoo: realm::embedded_object<EmbeddedFoo> {
-    realm::persisted<int64_t> bar;
-
-    static constexpr auto schema = realm::schema("EmbeddedFoo", realm::property<&EmbeddedFoo::bar>("bar"));
 };
 
 struct Foo: realm::object<Foo> {

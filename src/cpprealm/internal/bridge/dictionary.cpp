@@ -5,6 +5,7 @@
 #include <cpprealm/internal/bridge/object.hpp>
 
 #include <realm/object-store/dictionary.hpp>
+#include <realm/object-store/results.hpp>
 
 namespace realm::internal::bridge {
 #ifdef __i386__
@@ -47,17 +48,26 @@ namespace realm::internal::bridge {
         reinterpret_cast<Dictionary*>(m_dictionary)->remove_all();
     }
 
+    size_t dictionary::find(const std::string& key) {
+        return reinterpret_cast<Dictionary*>(m_dictionary)->find_any(key);
+    }
+
     void dictionary::remove_all() {
         clear();
     }
 
     void dictionary::remove(const std::string& key) {
-        reinterpret_cast<Dictionary*>(m_dictionary)->erase(key);
+        reinterpret_cast<Dictionary*>(m_dictionary)->try_erase(key);
     }
 
     std::pair<std::string, mixed> dictionary::get_pair(size_t idx) {
         auto pair = reinterpret_cast<Dictionary*>(m_dictionary)->get_pair(idx);
         return { pair.first, static_cast<mixed>(pair.second) };
+    }
+
+    size_t dictionary::get_key_index(const std::string& key) {
+        Results keys = reinterpret_cast<Dictionary*>(m_dictionary)->get_keys();
+        return keys.index_of(StringData(key));
     }
 
     template <>

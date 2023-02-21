@@ -13,6 +13,8 @@ namespace realm {
         [[nodiscard]] rbool contains(const std::string&) const;
         persisted& operator =(const char*);
         persisted(const char*);
+        persisted& operator =(const std::string&);
+        persisted(const std::string&);
         persisted();
     protected:
         static std::string serialize(const std::string&, const std::optional<internal::bridge::realm>& = std::nullopt);

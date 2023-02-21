@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="Remote Host (9766a4cb-40a2-4f2e-b9f8-c8ceb2f535ac)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/tmp/tmp.aHQKjfDA8a" local="$PROJECT_DIR$" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-remote" />
+            <excludedPath local="true" path="$PROJECT_DIR$/.build/cmake-preset-android-armeabi-v7a" />
+            <excludedPath local="true" path="$PROJECT_DIR$/.build/cmake-preset-default" />
+            <excludedPath local="true" path="$PROJECT_DIR$/.build/cmake-preset-android-arm64-v8a" />
+            <excludedPath local="true" path="$PROJECT_DIR$/.build/cmake-preset-android-x86" />
+            <excludedPath local="true" path="$PROJECT_DIR$/.build/cmake-preset-linux" />
+            <excludedPath local="true" path="$PROJECT_DIR$/.build/cmake-preset-macos" />
+            <excludedPath local="true" path="$PROJECT_DIR$/.build/cmake-preset-android-x86_64" />
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>

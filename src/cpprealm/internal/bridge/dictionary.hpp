@@ -31,8 +31,9 @@ namespace realm::internal::bridge {
         void remove_all();
         void remove(const std::string&);
         std::pair<std::string, mixed> get_pair(size_t);
+        [[nodiscard]] size_t get_key_index(const std::string&);
         void clear();
-
+        [[nodiscard]] size_t find(const std::string&);
         obj insert_embedded(const std::string&);
         notification_token add_notification_callback(std::shared_ptr<collection_change_callback>&& cb);
     private:

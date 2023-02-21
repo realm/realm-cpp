@@ -26,6 +26,7 @@
 #include <cpprealm/analytics.hpp>
 #endif
 
+#include <cpprealm/asymmetric_object.hpp>
 #include <cpprealm/results.hpp>
 #include <cpprealm/task.hpp>
 #include <cpprealm/flex_sync.hpp>
@@ -33,11 +34,13 @@
 #include <cpprealm/scheduler.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
 #include <cpprealm/internal/bridge/async_open_task.hpp>
+#include <cpprealm/internal/bridge/sync_session.hpp>
 #include <utility>
 
 namespace realm {
     using sync_config = internal::bridge::realm::sync_config;
     using db_config = internal::bridge::realm::config;
+    using sync_session = internal::bridge::sync_session;
 
 template <typename ...Ts>
 struct db {
@@ -98,15 +101,15 @@ struct db {
         add(object);
     }
 
-//    template <typename T>
-//    ObjectPredicate<asymmetric_object, T>
-//    add(T& object)
-//    {
-//        auto actual_schema = m_realm.schema().find(T::schema.name);
-//        auto group = m_realm.read_group();
-//        auto table = group.get_table(actual_schema.table_key());
-//        object.manage(table, m_realm);
-//    }
+    template <typename T>
+    ObjectPredicate<asymmetric_object, T>
+    add(T& object)
+    {
+        auto actual_schema = m_realm.schema().find(T::schema.name);
+        auto group = m_realm.read_group();
+        auto table = group.get_table(actual_schema.table_key());
+        object.manage(table, m_realm);
+    }
 
     template <typename T>
     void remove(T& object)
@@ -143,6 +146,17 @@ struct db {
     [[maybe_unused]] bool refresh()
     {
         return m_realm.refresh();
+    }
+
+    /**
+     An object encapsulating an Atlas App Services "session". Sessions represent the
+     communication between the client (and a local Realm file on disk), and the server
+
+     Sessions are always created by the SDK and vended out through various APIs. The
+     lifespans of sessions associated with Realms are managed automatically.
+    */
+    std::optional<sync_session> get_sync_session() const {
+        return m_realm.get_sync_session();
     }
 
 private:

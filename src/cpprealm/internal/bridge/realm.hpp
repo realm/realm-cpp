@@ -92,7 +92,7 @@ namespace realm::internal::bridge {
         realm();
         realm(const config&); //NOLINT(google-explicit-constructor)
         realm(std::shared_ptr<Realm>); //NOLINT(google-explicit-constructor)
-        realm(thread_safe_reference&& tsr); //NOLINT(google-explicit-constructor)
+        realm(thread_safe_reference&& tsr, const std::optional<std::shared_ptr<scheduler>>&); //NOLINT(google-explicit-constructor)
         operator std::shared_ptr<Realm>() const; //NOLINT(google-explicit-constructor)
         group read_group();
         [[nodiscard]] config get_config() const;
@@ -103,6 +103,7 @@ namespace realm::internal::bridge {
         [[nodiscard]] std::shared_ptr<struct scheduler> scheduler() const;
         static async_open_task get_synchronized_realm(const config&);
         bool refresh();
+        [[nodiscard]] std::optional<sync_session> get_sync_session() const;
     private:
         std::shared_ptr<Realm> m_realm;
         friend struct group;

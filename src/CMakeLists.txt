@@ -43,6 +43,7 @@ set(HEADERS
     cpprealm/db.hpp
     cpprealm/notifications.hpp
     cpprealm/object.hpp
+    cpprealm/asymmetric_object.hpp
     cpprealm/persisted.hpp
     cpprealm/schema.hpp
     cpprealm/task.hpp
@@ -94,7 +95,6 @@ set(HEADERS
     cpprealm/persisted_object_id.hpp) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm STATIC ${SOURCES} ${HEADERS})
-
-set_target_properties(cpprealm PROPERTIES PUBLIC_HEADER "${HEADERS}")
-
+include(GNUInstallDirs)
+install(TARGETS cpprealm ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(DIRECTORY cpprealm/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm)

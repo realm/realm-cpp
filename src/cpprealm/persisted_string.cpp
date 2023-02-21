@@ -8,6 +8,13 @@ namespace realm {
     {
         new (&this->unmanaged) std::string(v);
     }
+    persisted<std::string>& persisted<std::string>::operator =(const std::string& v) {
+        new (&this->unmanaged) std::string(v);
+        return *this;
+    }
+    persisted<std::string>::persisted(const std::string& v) {
+        new (&this->unmanaged) std::string(v);
+    }
     rbool persisted<std::string>::contains(const std::string &s) const {
         if (should_detect_usage_for_queries) {
             auto query = internal::bridge::query(this->query->get_table());

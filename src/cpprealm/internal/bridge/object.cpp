@@ -161,6 +161,9 @@ namespace realm::internal::bridge {
     notification_token::notification_token(NotificationToken &&v) {
         new (&m_token) NotificationToken(std::move(v));
     }
+    void notification_token::unregister() {
+        reinterpret_cast<NotificationToken *>(m_token)->unregister();
+    }
 
     collection_change_set::collection_change_set(const CollectionChangeSet &v) {
         new (&m_change_set) CollectionChangeSet(v);

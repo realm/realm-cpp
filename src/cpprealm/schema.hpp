@@ -29,6 +29,8 @@
 namespace realm {
     template <typename, typename>
     struct persisted;
+    template<typename>
+    struct asymmetric_object;
     namespace {
         template <typename T>
         struct ptr_type_extractor_base;
@@ -158,7 +160,7 @@ namespace schemagen {
         using PrimaryKeyProperty = decltype(primary_key());
         static constexpr bool HasPrimaryKeyProperty = !std::is_void_v<PrimaryKeyProperty>;
         static constexpr bool IsEmbedded = std::is_base_of_v<embedded_object<Class>, Class>;
-//        static constexpr bool IsAsymmetric = std::is_base_of_v<asymmetric_object<Class>, Class>;
+        static constexpr bool IsAsymmetric = std::is_base_of_v<asymmetric_object<Class>, Class>;
 
         [[nodiscard]] internal::bridge::object_schema to_core_schema() const {
             internal::bridge::object_schema schema;
@@ -173,9 +175,9 @@ namespace schemagen {
             if constexpr (IsEmbedded) {
                 schema.set_object_type(internal::bridge::object_schema::object_type::Embedded);
             }
-//            if constexpr (IsAsymmetric) {
-//                schema.set_object_type(internal::bridge::object_schema::object_type::TopLevelAsymmetric);
-//            }
+            if constexpr (IsAsymmetric) {
+                schema.set_object_type(internal::bridge::object_schema::object_type::TopLevelAsymmetric);
+            }
             return schema;
         }
 

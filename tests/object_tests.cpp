@@ -84,7 +84,7 @@ TEST_CASE("object_initialization") {
         ._id = 123,
         .double_col = 12.34,
         .bool_col = true,
-        .str_col = "foo",
+        .str_col = std::string("foo"),
         .enum_col = AllTypesObject::Enum::two,
         .date_col = date,
         .uuid_col = uuid,

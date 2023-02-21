@@ -297,11 +297,11 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
 }
 
 [[nodiscard]] std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::string app_name) const {
+    auto info = static_cast<bson::BsonDocument>(apps.post({{"name", app_name}}));
+    app_name = static_cast<std::string>(info["client_app_id"]);
     if (m_cluster_name) {
         app_name += "-" + *m_cluster_name;
     }
-    
-    auto info = static_cast<bson::BsonDocument>(apps.post({{"name", app_name}}));
     auto app_id = static_cast<std::string>(info["_id"]);
 
     auto app = apps[app_id];
@@ -375,7 +375,23 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
                return doc;
            };
            )"
-        }}));
+    }}));
+
+    static_cast<void>(app["functions"].post({
+        {"name", "asymmetricSyncData"},
+        {"private", false},
+        {"can_evaluate", {}},
+        {"source",
+                R"(
+               exports = async function(data) {
+                   const user = context.user;
+                   const mongodb = context.services.get(")" + util::format("db-%1", app_name) + R"(");
+                   const objectCollection = mongodb.db(")" + util::format("test_data") + R"(").collection("AllTypesAsymmetricObject");
+                   doc = await objectCollection.find({"_id": BSON.ObjectId(data._id)});
+                   return doc;
+               };
+           )"
+    }}));
 
     bson::BsonDocument userData = {
         {"schema", bson::BsonDocument {
@@ -391,8 +407,67 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
                          {"data_source", util::format("db-%1", app_name)},
                          {"database", "test_data"},
                          {"collection", "UserData"}}
-        },
+        }
     };
+
+    auto embeddedFooSchema = bson::BsonDocument {
+        {"title", "EmbeddedFoo"},
+        {"bsonType", "object"},
+        {"required", bson::BsonArray({"bar"})},
+        {"properties", bson::BsonDocument{
+            {"bar", bson::BsonDocument{{"bsonType", "long"}}}}
+        }
+    };
+
+    bson::BsonDocument asymmetricObject = {
+            {"schema", bson::BsonDocument {
+                    {"properties", bson::BsonDocument {
+                            {"_id", bson::BsonDocument {{"bsonType", "objectId"}}},
+                            {"bool_col", bson::BsonDocument {{"bsonType", "bool"}}},
+                            {"str_col", bson::BsonDocument {{"bsonType", "string"}}},
+                            {"enum_col", bson::BsonDocument {{"bsonType", "long"}}},
+                            {"date_col", bson::BsonDocument {{"bsonType", "date"}}},
+                            {"uuid_col", bson::BsonDocument {{"bsonType", "uuid"}}},
+                            {"binary_col", bson::BsonDocument {{"bsonType", "binData"}}},
+                            {"mixed_col", bson::BsonDocument {{"bsonType", "mixed"}}},
+                            {"opt_int_col", bson::BsonDocument {{"bsonType", "long"}}},
+                            {"opt_str_col", bson::BsonDocument {{"bsonType", "string"}}},
+                            {"opt_bool_col", bson::BsonDocument {{"bsonType", "bool"}}},
+                            {"opt_binary_col", bson::BsonDocument {{"bsonType", "binData"}}},
+                            {"opt_date_col", bson::BsonDocument {{"bsonType", "date"}}},
+                            {"opt_enum_col", bson::BsonDocument {{"bsonType", "long"}}},
+                            {"opt_embedded_obj_col", embeddedFooSchema},
+                            {"opt_uuid_col", bson::BsonDocument {{"bsonType", "uuid"}}},
+
+                            {"list_int_col", bson::BsonDocument {{"bsonType", "array"}, {"items", bson::BsonDocument{{"bsonType", "long"}}}}},
+                            {"list_bool_col", bson::BsonDocument {{"bsonType", "array"}, {"items", bson::BsonDocument{{"bsonType", "bool"}}}}},
+                            {"list_str_col", bson::BsonDocument {{"bsonType", "array"}, {"items", bson::BsonDocument{{"bsonType", "string"}}}}},
+                            {"list_uuid_col", bson::BsonDocument {{"bsonType", "array"}, {"items", bson::BsonDocument{{"bsonType", "uuid"}}}}},
+                            {"list_binary_col", bson::BsonDocument {{"bsonType", "array"}, {"items", bson::BsonDocument{{"bsonType", "binData"}}}}},
+                            {"list_date_col", bson::BsonDocument {{"bsonType", "array"}, {"items", bson::BsonDocument{{"bsonType", "date"}}}}},
+                            {"list_mixed_col", bson::BsonDocument {{"bsonType", "array"}, {"items", bson::BsonDocument{{"bsonType", "mixed"}}}}},
+                            {"list_embedded_obj_col", bson::BsonDocument {{"bsonType", "array"}, {"items", embeddedFooSchema}}},
+
+                            {"map_int_col", bson::BsonDocument {{"bsonType", "object"}, {"additionalProperties", bson::BsonDocument{{"bsonType", "long"}}}}},
+                            {"map_str_col", bson::BsonDocument {{"bsonType", "object"}, {"additionalProperties", bson::BsonDocument{{"bsonType", "string"}}}}},
+                            {"map_bool_col", bson::BsonDocument {{"bsonType", "object"}, {"additionalProperties", bson::BsonDocument{{"bsonType", "bool"}}}}},
+                            {"map_enum_col", bson::BsonDocument {{"bsonType", "object"}, {"additionalProperties", bson::BsonDocument{{"bsonType", "long"}}}}},
+                            {"map_date_col", bson::BsonDocument {{"bsonType", "object"}, {"additionalProperties", bson::BsonDocument{{"bsonType", "date"}}}}},
+                            {"map_uuid_col", bson::BsonDocument {{"bsonType", "object"}, {"additionalProperties", bson::BsonDocument{{"bsonType", "uuid"}}}}},
+                            {"map_mixed_col", bson::BsonDocument {{"bsonType", "object"}, {"additionalProperties", bson::BsonDocument{{"bsonType", "mixed"}}}}},
+                            {"map_embedded_col", bson::BsonDocument {{"bsonType", "object"}, {"additionalProperties", embeddedFooSchema}}},
+                    }},
+                    {"required", bson::BsonArray {"_id", "bool_col", "str_col", "enum_col", "date_col", "uuid_col", "binary_col"}},
+                    {"title", "AllTypesAsymmetricObject"}
+            }},
+            {"metadata", bson::BsonDocument {
+                    {"data_source", util::format("db-%1", app_name)},
+                    {"database", "test_data"},
+                    {"collection", "AllTypesAsymmetricObject"}}
+            }
+    };
+
+    static_cast<void>(app["schemas"].post(std::move(asymmetricObject)));
     static_cast<void>(app["schemas"].post(std::move(userData)));
 
     bson::BsonDocument mongodb_service_response(app["services"].post({
@@ -404,9 +479,11 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
 
     bson::BsonDocument service_config = {
         {"flexible_sync", bson::BsonDocument {
+            {"type", "flexible"},
             {"state", "enabled"},
-            {"database_name", util::format("test-data-app-%1", app_id)},
+            {"database_name", "test_data"},
             {"queryable_fields_names", queryable_fields},
+            {"asymmetric_tables", bson::BsonArray({"AllTypesAsymmetricObject"})},
             {"permissions", bson::BsonDocument{
                 {"rules",        bson::BsonDocument()},
                 {"defaultRoles", bson::BsonArray{bson::BsonDocument{
@@ -441,7 +518,7 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
     auto config = app["sync"]["config"];
     config.put({{"development_mode_enabled", true}});
 
-    bson::BsonDocument rules = {
+    bson::BsonDocument user_data_rule = {
         {"database", "test_data"},
         {"collection", "UserData"},
         {"roles", bson::BsonArray {
@@ -454,7 +531,22 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
         }
     };
 
-    static_cast<void>(app["services"][static_cast<std::string>(mongodb_service_id)]["rules"].post(rules));
+    bson::BsonDocument asymmetric_object_rule = {
+            {"database", app_name},
+            {"collection", "AllTypesAsymmetricObject"},
+            {"roles", bson::BsonArray {
+                    bson::BsonDocument {{"name", "default"},
+                                        {"apply_when", {}},
+                                        {"insert", true},
+                                        {"delete", true},
+                                        {"additional_fields", {}}},
+            }
+            }
+    };
+
+    static_cast<void>(app["services"][static_cast<std::string>(mongodb_service_id)]["rules"].post(user_data_rule));
+    static_cast<void>(app["services"][static_cast<std::string>(mongodb_service_id)]["rules"].post(asymmetric_object_rule));
+
     app["custom_user_data"].patch(bson::BsonDocument {
         {"mongo_service_id", mongodb_service_id},
         {"enabled", true},

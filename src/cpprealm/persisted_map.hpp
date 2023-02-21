@@ -168,20 +168,42 @@ namespace realm {
             }
         }
 
-        void erase(size_type pos);
+        iterator find(const typename T::key_type& key) {
+            if (this->m_object) {
+                // Dictionary's `find` searches for the index of the value and not the key.
+                auto i = managed.get_key_index(key);
+                if (i == size_t(-1)) {
+                    return iterator(size(), this);
+                } else {
+                    return iterator(managed.get_key_index(key), this);
+                }
+            } else {
+                return iterator(this->unmanaged.find(key), this);
+            }
+        }
+
+        void erase(const typename T::key_type& key) {
+            if (this->m_object) {
+                managed.remove(key);
+            } else {
+                auto it = this->unmanaged.find(key);
+                if (it != this->unmanaged.end())
+                    this->unmanaged.erase(it);
+            }
+        }
         void clear();
         notification_token observe(std::function<void(collection_change<T>)>);
 
         typename T::mapped_type operator[](typename T::key_type& key) {
             if (auto& obj = this->m_object) {
-                return obj->obj().get_dictionary(this->managed)[key];
+                return obj->get_obj().get_dictionary(this->managed)[key];
             } else {
                 return this->unmanaged[key];
             }
         }
         typename T::mapped_type operator[](size_t& key) {
             if (auto& obj = this->m_object) {
-                auto dictionary = obj->obj().get_dictionary(this->managed);
+                auto dictionary = obj->get_obj().get_dictionary(this->managed);
                 return dictionary[dictionary.get_key(key)];
             } else {
                 return this->unmanaged[key];

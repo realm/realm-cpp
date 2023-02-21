@@ -39,6 +39,7 @@
 #include <cpprealm/schema.hpp>
 #include <cpprealm/results.hpp>
 #include <cpprealm/notifications.hpp>
+#include <cpprealm/asymmetric_object.hpp>
 #include <cpprealm/object.hpp>
 #include <cpprealm/app.hpp>
 #include <cpprealm/db.hpp>

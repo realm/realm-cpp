@@ -144,19 +144,6 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.1
         with:
           key: ccache-linux-${{ matrix.compiler.name }}-${{ matrix.compiler.version }}
-
-      - name: Get vcpkg submodule commit sha
-        id: vcpkg_cache_key
-        working-directory: realm-core/tools/vcpkg/ports
-        shell: bash
-        run: echo "::set-output name=commit::$(git rev-parse HEAD)" 
-      - name: Setup Vcpkg
-        continue-on-error: true
-        uses: friendlyanon/setup-vcpkg@v1
-        with:
-          path: realm-core/tools/vcpkg/ports
-          cache-key: vcpkg-linux-${{ matrix.compiler.name }}-${{ matrix.compiler.version }}-${{ hashFiles('./realm-core/tools/vcpkg/vcpkg.json') }}-${{ steps.vcpkg_cache_key.outputs.commit }}
-          cache-restore-keys: vcpkg-linux-${{ matrix.compiler.name }}-${{ matrix.compiler.version }}-
       
       - name: Install Linux Dependencies
         run: |

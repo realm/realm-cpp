@@ -16,6 +16,7 @@
 #include <realm/object-store/shared_realm.hpp>
 #include <realm/object-store/thread_safe_reference.hpp>
 #include <realm/object-store/dictionary.hpp>
+#include <realm/object-store/sync/sync_user.hpp>
 #include <realm/sync/config.hpp>
 #include <realm/object-store/util/scheduler.hpp>
 
@@ -48,9 +49,6 @@ namespace realm::internal::bridge {
 
     realm::realm(std::shared_ptr<Realm> v)
     : m_realm(std::move(v)){}
-
-    realm::realm(thread_safe_reference&& tsr)
-            : m_realm(Realm::get_shared_realm(std::move(tsr))){}
 
     realm::operator std::shared_ptr<Realm>() const {
         return m_realm;
@@ -88,6 +86,14 @@ namespace realm::internal::bridge {
         }
         std::shared_ptr<scheduler> m_scheduler;
     };
+
+    realm::realm(thread_safe_reference&& tsr, const std::optional<std::shared_ptr<struct scheduler>>& s) {
+        if (s) {
+            m_realm = Realm::get_shared_realm(std::move(tsr), std::make_shared<internal_scheduler>(*s));
+        } else {
+            m_realm = Realm::get_shared_realm(std::move(tsr));
+        }
+    }
 
     realm::config::config(const RealmConfig &v) {
         new (&m_config) RealmConfig(v);
@@ -241,8 +247,19 @@ namespace realm::internal::bridge {
         reinterpret_cast<RealmConfig*>(m_config)->path = path;
     }
 
-    bool realm::refresh()
-    {
+    bool realm::refresh() {
         return m_realm->refresh();
     }
+
+    [[nodiscard]] std::optional<sync_session> realm::get_sync_session() const {
+        auto& config = m_realm->config().sync_config;
+        if (!config) {
+            return std::nullopt;
+        }
+        if (auto session = config->user->session_for_on_disk_path(m_realm->config().path)) {
+            return sync_session(std::move(session));
+        }
+        return std::nullopt;
+    }
+
 }

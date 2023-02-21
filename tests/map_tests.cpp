@@ -143,4 +143,43 @@ TEST_CASE("map", "[map]") {
                 FAIL("observation timed out");
         }
     }
+
+    SECTION("find_erase") {
+        auto obj = AllTypesObject();
+        obj.map_str_col = {
+                {"a", std::string("baz")},
+                {"b", std::string("food")}
+        };
+
+        // find
+        CHECK(obj.map_str_col.find("a") != obj.map_str_col.end());
+        CHECK(obj.map_str_col.find("foo") == obj.map_str_col.end());
+        // erase
+        obj.map_str_col.erase("a");
+        CHECK(obj.map_str_col.find("a") == obj.map_str_col.end());
+        obj.map_str_col.erase("foo");
+        CHECK(obj.map_str_col.find("foo") == obj.map_str_col.end());
+
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+        realm.write([&realm, &obj] {
+            obj.map_str_col["c"] = "boo";
+            obj.map_str_col["d"] = "boop";
+            realm.add(obj);
+        });
+
+        // find
+        CHECK(obj.map_str_col.find("baz") == obj.map_str_col.end());
+        CHECK(obj.map_str_col.find("foo") == obj.map_str_col.end());
+        // erase
+        realm.write([&realm, &obj] {
+            // should not throw if key does not exist.
+            obj.map_str_col.erase("a");
+            obj.map_str_col.erase("c");
+            obj.map_str_col.erase("foo");
+        });
+        CHECK(obj.map_str_col.find("a") == obj.map_str_col.end());
+        CHECK(obj.map_str_col.find("foo") == obj.map_str_col.end());
+        CHECK(obj.map_str_col.find("c") == obj.map_str_col.end());
+        CHECK(obj.map_str_col.find("d") != obj.map_str_col.end());
+    }
 }
