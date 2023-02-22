@@ -62,38 +62,40 @@ int main(int argc, char *argv[])
     QGraphicsScene scene;
     scene.setSceneRect(-500, -500, 1000, 1000);
     scene.setItemIndexMethod(QGraphicsScene::NoIndex);
-
+    Car* qt_car = new Car();
+    CarModel realm_car;
     realm::notification_token token;
     auto realm_app = realm::App("qt-car-demo-tdbmy");
     auto user = realm_app.login(realm::App::credentials::anonymous()).get_future().get();
-    auto realm = realm::db<Car>(user.flexible_sync_configuration());
-    realm.subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
+    auto realm = realm::db<CarModel>(user.flexible_sync_configuration());
+    realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
         if (!subs.find("foo")) {
-            subs.add<Car>("foo", [](auto& c) { return c._id == 0; }); // Subscription to get all cars
+            subs.add<CarModel>("foo", [](auto& c) { return c._id == 0; });
         }
     }).get_future().get();
+    realm.get_sync_session()->wait_for_download_completion().get_future().get();
     realm.refresh();
 
-    auto car = std::make_shared<Car>();
     // invoke on the main thread
-    QMetaObject::invokeMethod(qApp, [&realm, &car, &token]() mutable {
-        auto results = realm.objects<Car>();
+    QMetaObject::invokeMethod(qApp, [&realm, &token, &qt_car, &realm_car]() mutable {
+        auto results = realm.objects<CarModel>();
         if (results.size() > 0) {
-            car = results[0];
+            realm_car = results[0];
         } else {
-            realm.write([&realm, car] {
-                realm.add(*car);
+            realm.write([&realm, &realm_car] {
+                realm_car._id = 0;
+                realm.add(realm_car);
             });
         }
 
-        token = car->observe([car](auto&&) {
-            car->on_change();
+        token = realm_car.observe([&qt_car](auto&& change) {
+            qt_car->on_change(*change.object);
         });
     });
 
     auto item = scene.addPixmap(QPixmap(":/images/circuit.png"));
     item->setOffset(-500, -500);
-    scene.addItem(car.get());
+    scene.addItem(qt_car);
 
     QGraphicsView view(&scene);
     view.setRenderHint(QPainter::Antialiasing);

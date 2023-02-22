@@ -67,31 +67,31 @@ Car::Car()
     setFlag(QGraphicsItem::ItemIsFocusable, true);
 }
 
-void Car::accelerate()
+void CarModel::accelerate()
 {
     if (speed < 10.0)
         ++speed;
 }
 
-void Car::decelerate()
+void CarModel::decelerate()
 {
     if (speed > -10.0)
         --speed;
 }
 
-void Car::turnLeft()
+void CarModel::turnLeft()
 {
     if (wheelsAngle > -40.0) { }
         wheelsAngle -= 10.0;
 }
 
-void Car::turnRight()
+void CarModel::turnRight()
 {
     if (wheelsAngle < 40.0)
        wheelsAngle += 10.0;
 }
 
-void Car::setColor(Qt::GlobalColor color)
+void CarModel::setColor(Qt::GlobalColor color)
 {
     this->color = color;
 }
@@ -105,7 +105,7 @@ void Car::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidg
     painter->drawRect(-20, -58, 40, 2); // front axel
     painter->drawRect(-20, 7, 40, 2); // rear axel
 
-    painter->setBrush(*color);
+    painter->setBrush(color);
     painter->drawRect(-25, -79, 50, 10); // front wing
 
     painter->drawEllipse(-25, -48, 50, 20); // side pods
@@ -122,13 +122,13 @@ void Car::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidg
 
     painter->save();
     painter->translate(-20, -58);
-    painter->rotate(*wheelsAngle);
+    painter->rotate(wheelsAngle);
     painter->drawRect(-10, -7, 10, 15); // front left
     painter->restore();
 
     painter->save();
     painter->translate(20, -58);
-    painter->rotate(*wheelsAngle);
+    painter->rotate(wheelsAngle);
     painter->drawRect(0, -7, 10, 15); // front left
     painter->restore();
 
@@ -136,22 +136,24 @@ void Car::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidg
     painter->drawRect(19, 0, 12, 17);  // rear right
 }
 
-void Car::on_change()
+void Car::on_change(const CarModel& model)
 {
-    const qreal axelDistance = 54;
-    qreal wheelsAngleRads = qDegreesToRadians(*wheelsAngle);
-    qreal turnDistance = ::cos(wheelsAngleRads) * axelDistance * 2;
-    qreal turnRateRads = wheelsAngleRads / turnDistance;  // rough estimate
-    qreal turnRate = qRadiansToDegrees(turnRateRads);
-    qreal rotation = *speed * turnRate;
-
-    setTransform(QTransform().rotate(rotation), true);
-    setTransform(QTransform::fromTranslate(0, -(*speed)), true);
-    update();
+    wheelsAngle = *model.wheelsAngle;
+    speed = *model.speed;
+    color = *model.color;
 }
 
 void Car::timerEvent(QTimerEvent *event)
 {
     Q_UNUSED(event);
-    on_change();
+    const qreal axelDistance = 54;
+    qreal wheelsAngleRads = qDegreesToRadians(wheelsAngle);
+    qreal turnDistance = ::cos(wheelsAngleRads) * axelDistance * 2;
+    qreal turnRateRads = wheelsAngleRads / turnDistance;  // rough estimate
+    qreal turnRate = qRadiansToDegrees(turnRateRads);
+    qreal rotation = speed * turnRate;
+
+    setTransform(QTransform().rotate(rotation), true);
+    setTransform(QTransform::fromTranslate(0, -(speed)), true);
+    update();
 }

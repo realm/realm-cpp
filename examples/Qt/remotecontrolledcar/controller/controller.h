@@ -57,11 +57,10 @@
 class Controller : public QWidget
 {
     Q_OBJECT
-
 public:
     Controller(QWidget *parent = nullptr);
-    std::unique_ptr<Car> car;
-    std::unique_ptr<realm::db<Car>> realm;
+    CarModel car;
+    std::unique_ptr<realm::db<CarModel>> realm;
 protected:
     void timerEvent(QTimerEvent *event);
 
