@@ -130,7 +130,7 @@ set(TEST_SOURCES
     tests/object_tests.cpp 
     tests/object_id_tests.cpp)
 
-if (REALM_ENABLE_SYNC)
+if (REALM_ENABLE_SYNC_TESTS)
 add_executable(cpprealm_exe_tests 
     ${TEST_SOURCES}
     tests/sync_test_utils.hpp 
