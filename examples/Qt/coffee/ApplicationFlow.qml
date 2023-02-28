@@ -40,7 +40,8 @@ ApplicationFlowForm {
         brewing.start()
         backend.startBrew(choosingCoffee.sideBar.currentCoffeeId,
                           choosingCoffee.milkSlider.value,
-                          choosingCoffee.sideBar.currentCoffeeAmount);
+                          choosingCoffee.sideBar.currentCoffeeAmount,
+                          choosingCoffee.sugarSlider.value);
     }
 //! [1]
 
