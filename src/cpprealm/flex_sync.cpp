@@ -24,10 +24,15 @@ namespace realm {
     static_assert(internal::bridge::SizeCheck<136, sizeof(sync::MutableSubscriptionSet)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
 #elif __aarch64__
-    static_assert(internal::bridge::SizeCheck<96, sizeof(sync::SubscriptionSet)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<184, sizeof(sync::MutableSubscriptionSet)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
+#ifdef __linux__
+    static_assert(internal::bridge::SizeCheck<192, sizeof(sync::MutableSubscriptionSet)>{});
+    static_assert(internal::bridge::SizeCheck<104, sizeof(sync::SubscriptionSet)>{});
+#else
+    static_assert(internal::bridge::SizeCheck<184, sizeof(sync::MutableSubscriptionSet)>{});
+    static_assert(internal::bridge::SizeCheck<96, sizeof(sync::SubscriptionSet)>{});
+#endif
 #endif
     sync_subscription::sync_subscription(const sync::Subscription &v)
     {

@@ -74,7 +74,11 @@ std::aligned_storage<88, 8>::type m_error[1];
 #elif __arm__
     std::aligned_storage<40, 4>::type m_error[1];
 #elif __aarch64__
+#ifdef __linux__
+    std::aligned_storage<88, 8>::type m_error[1];
+#else
     std::aligned_storage<72, 8>::type m_error[1];
+#endif
 #endif
 };
 

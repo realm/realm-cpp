@@ -61,7 +61,11 @@ namespace realm::internal::bridge {
 #elif __arm__
         std::aligned_storage<64, 8>::type m_property[1];
 #elif __aarch64__
+#ifdef __linux__
+        std::aligned_storage<152, 8>::type m_property[1];
+#else
         std::aligned_storage<120, 8>::type m_property[1];
+#endif
 #endif
     };
 

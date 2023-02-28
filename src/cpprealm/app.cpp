@@ -31,10 +31,13 @@ namespace realm {
 #elif __aarch64__
     static_assert(internal::bridge::SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppCredentials)>{});
-    static_assert(internal::bridge::SizeCheck<72, sizeof(realm::app::AppError)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
+#ifdef __linux__
+    static_assert(internal::bridge::SizeCheck<88, sizeof(realm::app::AppError)>{});
+#else
+    static_assert(internal::bridge::SizeCheck<72, sizeof(realm::app::AppError)>{});
 #endif
-
+#endif
     static_assert((int)user::state::logged_in == (int)SyncUser::State::LoggedIn);
     static_assert((int)user::state::logged_out == (int)SyncUser::State::LoggedOut);
     static_assert((int)user::state::removed == (int)SyncUser::State::Removed);

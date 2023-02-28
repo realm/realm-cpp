@@ -118,13 +118,16 @@ namespace realm::internal::bridge {
 #elif __arm__
         std::aligned_storage<84, 4>::type m_change_set[1];
 #elif __aarch64__
+#ifdef __linux__
+        std::aligned_storage<184, 8>::type m_change_set[1];
+#else
         std::aligned_storage<168, 8>::type m_change_set[1];
+#endif
 #else
         std::aligned_storage<84, 4>::type m_change_set[1];
 #endif
     };
     struct collection_change_callback {
-//        operator CollectionChangeCallback() const;
         virtual void before(collection_change_set const& c) = 0;
         virtual void after(collection_change_set const& c) = 0;
     };

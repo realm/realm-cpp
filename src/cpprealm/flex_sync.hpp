@@ -125,7 +125,11 @@ namespace realm {
 #elif __arm__
     std::aligned_storage<136, 8>::type m_subscription_set[1];
 #elif __aarch64__
-    std::aligned_storage<184, 8>::type m_subscription_set[1];
+#ifdef __linux__
+        std::aligned_storage<192, 8>::type m_subscription_set[1];
+#else
+        std::aligned_storage<184, 8>::type m_subscription_set[1];
+#endif
 #endif
         std::reference_wrapper<internal::bridge::realm> m_realm;
         friend struct sync_subscription_set;
@@ -158,7 +162,11 @@ namespace realm {
 #elif __arm__
         std::aligned_storage<64, 8>::type m_subscription_set[1];
 #elif __aarch64__
+#ifdef __linux__
+        std::aligned_storage<104, 8>::type m_subscription_set[1];
+#else
         std::aligned_storage<96, 8>::type m_subscription_set[1];
+#endif
 #endif
         std::reference_wrapper<internal::bridge::realm> m_realm;
     };

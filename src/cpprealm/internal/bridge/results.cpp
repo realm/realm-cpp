@@ -20,7 +20,11 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<568, sizeof(Results)>{});
     static_assert(SizeCheck<8, alignof(Results)>{});
 #elif __aarch64__
+#ifdef __linux__
+    static_assert(SizeCheck<912, sizeof(Results)>{});
+#else
     static_assert(SizeCheck<896, sizeof(Results)>{});
+#endif
     static_assert(SizeCheck<8, alignof(Results)>{});
 #endif
 

@@ -41,6 +41,8 @@ namespace realm::internal::bridge {
     #if __ANDROID__
     static_assert(SizeCheck<368, sizeof(Realm::Config)>{});
     static_assert(SizeCheck<16, alignof(Realm::Config)>{});
+    #elif __linux__
+    static_assert(SizeCheck<328, sizeof(Realm::Config)>{});
     #else
     static_assert(SizeCheck<312, sizeof(Realm::Config)>{});
     static_assert(SizeCheck<8, alignof(Realm::Config)>{});

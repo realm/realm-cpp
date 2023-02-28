@@ -36,7 +36,11 @@ namespace realm::internal::bridge {
 #elif __arm__
         std::aligned_storage<568, 8>::type m_results[1];
 #elif __aarch64__
+#ifdef __linux__
+        std::aligned_storage<912, 8>::type m_results[1];
+#else
         std::aligned_storage<896, 8>::type m_results[1];
+#endif
 #endif
     };
 

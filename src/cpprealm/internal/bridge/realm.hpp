@@ -84,6 +84,8 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     #if __ANDROID__
             std::aligned_storage<368, 16>::type m_config[1];
+    #elif __linux__
+            std::aligned_storage<328, 8>::type m_config[1];
     #else
             std::aligned_storage<312, 8>::type m_config[1];
     #endif

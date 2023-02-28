@@ -118,7 +118,11 @@ namespace realm::internal::bridge {
 #elif __arm__
         std::aligned_storage<80, 8>::type m_query[1];
 #elif __aarch64__
+#ifdef __linux__
+        std::aligned_storage<136, 8>::type m_query[1];
+#else
         std::aligned_storage<128, 8>::type m_query[1];
+#endif
 #endif
 
     };

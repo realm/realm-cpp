@@ -18,7 +18,11 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<80, sizeof(SyncError)>{});
     static_assert(SizeCheck<4, alignof(SyncError)>{});
 #elif __aarch64__
+#ifdef __linux__
+    static_assert(SizeCheck<176, sizeof(SyncError)>{});
+#else
     static_assert(SizeCheck<152, sizeof(SyncError)>{});
+#endif
     static_assert(SizeCheck<8, alignof(SyncError)>{});
 #endif
     std::string sync_error::message() const {
