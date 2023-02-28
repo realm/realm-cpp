@@ -55,7 +55,6 @@ Flickable {
 
             id: espressoButton
             text: model.name
-//            source: "images/icons/coffees/Espresso.png"
             onClicked: {
                 sideBar.currentCoffeeId = qsTr(model.id)
                 sideBar.currentCoffee = qsTr(model.name)
