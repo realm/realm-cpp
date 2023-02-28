@@ -15,23 +15,23 @@ ApplicationWindow {
 
     CoffeeMachineManager {
         id: backend
-//        onEnableMachine: {
-//            outOfOrderView.visible = false;
-//            coffeeView.visible = true;
-//        }
-//        onDisableMachine: {
-//            outOfOrderView.visible = true;
-//            coffeeView.visible = false;
-//        }
+        onEnableMachine: {
+            outOfOrderView.visible = false;
+            coffeeView.visible = true;
+        }
+        onDisableMachine: {
+            outOfOrderView.visible = true;
+            coffeeView.visible = false;
+        }
     }
 
-//    ApplicationFlow {
-//        id: coffeeView
-//    }
+    ApplicationFlow {
+        id: coffeeView
+    }
 
     Text {
         id: outOfOrderView
-//        visible: false
+        visible: false
         text: "Out of order. Help is coming."
         font.family: "Helvetica"
         font.pointSize: 24
