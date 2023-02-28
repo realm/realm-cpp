@@ -44,7 +44,7 @@ Flickable {
         width: 354
         height: 768
 
-        model: backend.myTableModel
+        model: backend.drinkSelectionModel
 
         delegate: CoffeeButton {
             required property var model

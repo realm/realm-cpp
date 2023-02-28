@@ -13,24 +13,28 @@ ApplicationWindow {
     height: Constants.height
     title: qsTr("Coffee")
 
-    Barista {
-            id: backend
-            onUserNameChanged: {
-                textField1.color = "red"
-            }
+    CoffeeMachineManager {
+        id: backend
+        onEnableMachine: {
+            outOfOrderView.visible = false;
+            coffeeView.visible = true;
         }
+        onDisableMachine: {
+            outOfOrderView.visible = true;
+            coffeeView.visible = false;
+        }
+    }
 
     ApplicationFlow {
+        id: coffeeView
     }
-//    TextField {
-//            id: textField1
-//            text: backend.userName
-//            placeholderText: qsTr("User name")
-//            anchors.centerIn: parent
-//            onEditingFinished: backend.userName = text
-//        }
-//    Button {
-//        text: "Ok"
-//        onClicked: backend.submit()
-//    }
+
+    Text {
+        id: outOfOrderView
+        visible: false
+        text: "Out of order. Help is coming."
+        font.family: "Helvetica"
+        font.pointSize: 24
+        color: "white"
+    }
 }

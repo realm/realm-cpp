@@ -13,6 +13,7 @@ Image {
 
     property int duration: 250
     property alias text: label.text
+
 //! [0]
     MouseArea {
         anchors.fill: parent
@@ -106,7 +107,4 @@ Image {
             }
         }
     }
-
-
-
 }

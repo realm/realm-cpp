@@ -11,10 +11,6 @@ ApplicationFlowForm {
 
     property int animationDuration: 400
 
-    Barista {
-            id: backend
-        }
-
 //! [0]
     choosingCoffee.brewButtonSelection.onClicked: {
         applicationFlow.state = "settings"
@@ -23,10 +19,8 @@ ApplicationFlowForm {
     }
 //! [0]
 
-
     choosingCoffee.sideBar.onCoffeeSelected: {
         applicationFlow.state = "selection"
-        backend.prepareForBrew(choosingCoffee.sideBar.currentCoffeeId);
     }
 
     choosingCoffee.backButton.onClicked: {
@@ -45,7 +39,7 @@ ApplicationFlowForm {
         brewing.coffeeName = choosingCoffee.sideBar.currentCoffee
         brewing.start()
         backend.startBrew(choosingCoffee.sideBar.currentCoffeeId,
-                          choosingCoffee.sideBar.currentMilk,
+                          choosingCoffee.milkSlider.value,
                           choosingCoffee.sideBar.currentCoffeeAmount);
     }
 //! [1]
