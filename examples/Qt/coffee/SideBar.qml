@@ -27,7 +27,7 @@ Flickable {
     height: 768
 
 
-    contentWidth: 250
+    contentWidth: 354
     boundsBehavior: Flickable.StopAtBounds
     contentHeight: 1506
     clip: true
@@ -41,10 +41,11 @@ Flickable {
     }
 
     TableView {
-        width: 354
+        implicitWidth: 250
         height: 768
 
         model: backend.drinkSelectionModel
+        anchors.horizontalCenter: parent.horizontalCenter
 
         delegate: CoffeeButton {
             required property var model
@@ -54,7 +55,7 @@ Flickable {
 
             id: espressoButton
             text: model.name
-            source: "images/icons/coffees/Espresso.png"
+//            source: "images/icons/coffees/Espresso.png"
             onClicked: {
                 sideBar.currentCoffeeId = qsTr(model.id)
                 sideBar.currentCoffee = qsTr(model.name)
