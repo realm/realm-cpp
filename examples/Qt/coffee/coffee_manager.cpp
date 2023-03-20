@@ -1,4 +1,4 @@
-#include "barista.hpp"
+#include "coffee_manager.hpp"
 #include <iostream>
 
 CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
@@ -94,7 +94,7 @@ void CoffeeMachineManager::startBrew(const QString &coffeeId, int64_t milkQty, i
 {
     auto realm = realm::open<CoffeeMachineModel, DrinkTemplate>(mUser.flexible_sync_configuration());
     // TODO: fix bug here which doesn't allow setting property on `mCoffeeMachine`. m_obj goes out of scope
-    auto machine = realm.objects<CoffeeMachineModel>()[0];
+    auto machine = mCoffeeMachine;//realm.objects<CoffeeMachineModel>()[0];
     realm.write([&]() {
         machine.espressoQty -= espressoQty;
         machine.milkQty -= milkQty;

@@ -5,7 +5,7 @@ QMAKE_CXXFLAGS+="-std=c++17"
 INCLUDEPATH += /usr/local/include/ /usr/include/
 
 SOURCES += main.cpp \
-    barista.cpp
+    coffee_manager.cpp
 
 RESOURCES += qml.qrc
 
@@ -32,7 +32,8 @@ DISTFILES += \
     images/ui components/loader/loading bg.png
 
 HEADERS += \
-    barista.hpp
+    coffee_manager.hpp \
+    realm_models.hpp
 
 CONFIG += qmltypes
 QML_IMPORT_NAME = io.mongo.barista

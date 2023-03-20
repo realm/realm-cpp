@@ -1,12 +1,5 @@
-#ifndef BARISTA_HPP
-#define BARISTA_HPP
-
-#include <qqml.h>
-#include <QAbstractTableModel>
-#include <QItemSelectionModel>
-#include <QModelIndex>
-#include <QObject>
-#include <QString>
+#ifndef REALM_MODELS_HPP
+#define REALM_MODELS_HPP
 
 #include <cpprealm/sdk.hpp>
 
@@ -58,53 +51,4 @@ public:
     );
 };
 
-class DrinkSelectionModel : public QAbstractTableModel
-{
-  Q_OBJECT
- public :
-    enum Role
-    {
-        Id = Qt::UserRole + 1,
-        Name,
-        MilkQty,
-        EspressoQty
-    };
-    DrinkSelectionModel(CoffeeMachineModel& machine);
-    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
-    Q_INVOKABLE QVariant data(const QModelIndex &index, int role) const override;
-    QHash<int, QByteArray> roleNames() const override;
- private:
-   CoffeeMachineModel& mMachine;
-   realm::notification_token mToken;
-};
-
-
-class CoffeeMachineManager : public QObject
-{
-    Q_OBJECT
-    Q_PROPERTY(NOTIFY enableMachine NOTIFY disableMachine)
-    Q_PROPERTY(QAbstractTableModel* drinkSelectionModel READ drinkSelectionModel CONSTANT)
-
-    QML_ELEMENT
-
-public:
-    explicit CoffeeMachineManager(QObject *parent = nullptr);
-
-    Q_INVOKABLE void prepareForBrew(const QString &coffeeId);
-    Q_INVOKABLE void startBrew(const QString &coffeeId, int64_t milkQty, int64_t espressoQty, int64_t sugarQty);
-
-    DrinkSelectionModel *drinkSelectionModel() { return mDrinksTableModel.data(); }
-
-signals:
-    void enableMachine();
-    void disableMachine();
-
-private:
-    realm::user mUser;
-    CoffeeMachineModel mCoffeeMachine;
-    QScopedPointer<DrinkSelectionModel> mDrinksTableModel;
-    realm::notification_token mToken;
-};
-
-#endif // BARISTA_HPP
+#endif // REALM_MODELS_HPP
