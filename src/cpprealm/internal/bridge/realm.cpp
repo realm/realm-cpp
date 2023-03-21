@@ -16,9 +16,10 @@
 #include <realm/object-store/shared_realm.hpp>
 #include <realm/object-store/thread_safe_reference.hpp>
 #include <realm/object-store/dictionary.hpp>
+#include <realm/object-store/impl/realm_coordinator.hpp>
 #include <realm/object-store/sync/sync_user.hpp>
-#include <realm/sync/config.hpp>
 #include <realm/object-store/util/scheduler.hpp>
+#include <realm/sync/config.hpp>
 
 #include <filesystem>
 
@@ -101,6 +102,7 @@ namespace realm::internal::bridge {
     realm::config::config(const std::optional<std::string>& path,
                           const std::optional<std::shared_ptr<struct scheduler>>& scheduler) {
         RealmConfig config;
+        config.cache = true;
         if (path) {
             config.path = *path;
         } else {
@@ -116,7 +118,6 @@ namespace realm::internal::bridge {
         config.schema_version = 0;
         new (&m_config) RealmConfig(config);
     }
-
 
     realm::sync_config::sync_config(const std::shared_ptr<SyncConfig> &v) {
         m_config = v;
@@ -145,6 +146,39 @@ namespace realm::internal::bridge {
     table realm::table_for_object_type(const std::string &object_type) {
         return read_group().get_table(object_type);
     }
+
+    // Global realm state
+    static auto& s_realm_cache_mutex = *new std::mutex();
+    static auto& s_realms_per_path = *new std::map<std::string, std::map<std::thread::id, SharedRealm>>();
+
+    static void cache_realm(const std::string& path, std::thread::id key, SharedRealm realm) {
+        std::lock_guard<std::mutex> lock(s_realm_cache_mutex);
+        s_realms_per_path[path][key] = realm;
+    }
+
+    static SharedRealm get_thread_local_cached_realm_for_path(const std::string& path, std::thread::id key) {
+        std::lock_guard<std::mutex> lock(s_realm_cache_mutex);
+        auto path_it = s_realms_per_path.find(path);
+        if (path_it == s_realms_per_path.end()) {
+            return nullptr;
+        } else if (auto thread_it = path_it->second.find(key); thread_it != path_it->second.end()) {
+            if (!thread_it->second->config().scheduler->is_on_thread()) {
+                // We can get here if we have a stale cached
+                // Realm which is bound to a thread that no longer exists. In this case
+                // we'll just create a new realm and replace the cache entry with one bound to the
+                // thread that now exists.
+                return nullptr;
+            }
+            return thread_it->second;
+        } else {
+            return nullptr;
+        }
+    }
+
+    static std::thread::id cache_key_for_thread() {
+        return std::this_thread::get_id();
+    }
+
     realm::realm() {
 
     }
@@ -152,7 +186,20 @@ namespace realm::internal::bridge {
         return *reinterpret_cast<const RealmConfig*>(m_config);
     }
     realm::realm(const config &v) {
-        m_realm = Realm::get_shared_realm(static_cast<RealmConfig>(v));
+        std::thread::id cache_key = cache_key_for_thread();
+        auto cached_realm = get_thread_local_cached_realm_for_path(v.path(), cache_key);
+        if (cached_realm == nullptr) {
+            m_realm = Realm::get_shared_realm(static_cast<RealmConfig>(v));
+            cache_realm(v.path(), cache_key, m_realm);
+        } else {
+            m_realm = cached_realm;
+        }
+    }
+
+    void realm::reset_realm_state() {
+        std::lock_guard<std::mutex> lock(s_realm_cache_mutex);
+        s_realms_per_path.clear();
+        _impl::RealmCoordinator::clear_cache();
     }
 
     bool operator!=(realm const& lhs, realm const& rhs) {

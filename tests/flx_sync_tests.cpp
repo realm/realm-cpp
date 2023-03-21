@@ -5,7 +5,7 @@
 
 using namespace realm;
 
-TEST_CASE("flx_sync", "[flx][sync]") {
+TEST_CASE("flx_sync", "[sync]") {
     SECTION("all") {
         auto app = realm::App(Admin::shared().create_app({"str_col", "_id"}), Admin::shared().base_url());
         auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
@@ -111,7 +111,7 @@ TEST_CASE("tsr") {
     p.get_future().get();
 }
 
-TEST_CASE("realm_is_populated_on_async_open") {
+TEST_CASE("realm_is_populated_on_async_open", "[sync]") {
     auto app = realm::App(Admin::shared().create_app({"str_col", "_id"}), Admin::shared().base_url());
     {
         auto user = app.login(realm::App::credentials::anonymous()).get_future().get();

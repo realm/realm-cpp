@@ -5,9 +5,9 @@
 
 using namespace realm;
 
-TEST_CASE("asymmetric object", "[asymmetric]") {
+TEST_CASE("asymmetric object", "[sync]") {
 realm_path path;
-SECTION("basic", "[asymmetric]") {
+SECTION("basic", "[sync]") {
     const std::string app_name = Admin::shared().create_app();
     auto app = realm::App(app_name, Admin::shared().base_url());
     auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
