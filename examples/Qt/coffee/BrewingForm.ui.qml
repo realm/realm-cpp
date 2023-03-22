@@ -61,13 +61,26 @@ Item {
             name: "milk"
             PropertyChanges {
                 target: cup
-                milkAmount: 6
-                coffeeAmount: 4
+                milkAmount: 4
+                coffeeAmount: 6
             }
 
             PropertyChanges {
                 target: brewLabel
                 text: root.coffeeName + qsTr(" Ready")
+            }
+        },
+        State {
+            name: "finished"
+            PropertyChanges {
+                target: cup
+                milkAmount: 0
+                coffeeAmount: 0
+            }
+
+            PropertyChanges {
+                target: brewLabel
+                text: qsTr("Making ") + root.coffeeName
             }
         }
     ]

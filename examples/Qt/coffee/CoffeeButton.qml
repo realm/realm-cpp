@@ -29,19 +29,6 @@ ColumnLayout {
                 animation2.start()
             }
         }
-    //! [0]
-
-//        Rectangle {
-//            id: glow
-//            visible: false
-
-//            width: 250
-//            height: 250
-//            color: "#00000000"
-//            radius: 125
-//            scale: 1.05
-//            border.color: "#ffffff"
-//        }
 
         PropertyAnimation {
             target: glow

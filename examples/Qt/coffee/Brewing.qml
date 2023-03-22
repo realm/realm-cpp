@@ -33,6 +33,11 @@ BrewingForm {
         PauseAnimation {
             duration: 1500
         }
+        PropertyAction {
+            target: root
+            property: "state"
+            value: "finished"
+        }
         ScriptAction {
             script: root.finished()
         }

@@ -5,18 +5,18 @@ CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
     : QObject{parent}
 {
     // assume this coffee machine has a preconfigured id.
-    auto app = realm::App("qt-coffee-mbkcp");
+    auto app = realm::App("qt-realm-coffee-dfvvc");
     mUser = app.login(realm::App::credentials::anonymous()).get_future().get();
-    auto realm = realm::open<CoffeeMachineModel, DrinkTemplate>(mUser.flexible_sync_configuration());
+    auto realm = realm::open<CoffeeMachine, DrinkTemplate>(mUser.flexible_sync_configuration());
     realm.subscriptions().update([](realm::mutable_sync_subscription_set& subs) {
         if (!subs.find("all")) {
-            subs.add<CoffeeMachineModel>("all");
+            subs.add<CoffeeMachine>("all");
             subs.add<DrinkTemplate>("all_drinks");
         }
     }).get_future().get();
     realm.get_sync_session()->wait_for_download_completion().get_future().get();
     realm.refresh();
-    auto coffeeMachines = realm.objects<CoffeeMachineModel>();
+    auto coffeeMachines = realm.objects<CoffeeMachine>();
     if (coffeeMachines.size() == 0) {
         realm.write([&]() {
             auto espresso = DrinkTemplate();
@@ -43,7 +43,7 @@ CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
             cappucino.espressoQty = 3;
             realm.add(cappucino);
 
-            auto machine = CoffeeMachineModel();
+            auto machine = CoffeeMachine();
             machine._id = realm::object_id::generate();
             machine.location = "1st floor kitchen";
             machine.ownerId = realm::object_id::generate();
@@ -51,7 +51,7 @@ CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
             machine.espressoQty = 100;
             machine.milkQty = 100;
             machine.sugarQty = 100;
-            machine.state = CoffeeMachineModel::State::OK;
+            machine.state = CoffeeMachine::State::OK;
             machine.availableDrinks.push_back(espresso);
             machine.availableDrinks.push_back(flatWhite);
             machine.availableDrinks.push_back(cappucino);
@@ -63,17 +63,17 @@ CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
 
     mCoffeeMachine = coffeeMachines[0];
 
-    mToken = mCoffeeMachine.observe([&](realm::ObjectChange<CoffeeMachineModel>&& change) {
+    mToken = mCoffeeMachine.observe([&](realm::ObjectChange<CoffeeMachine>&& change) {
         for (auto& change : change.property_changes) {
             if (change.name == "state") {
-                auto oldVal = std::get<CoffeeMachineModel::State>(change.old_value.value());
-                auto newVal = std::get<CoffeeMachineModel::State>(change.new_value.value());
+                auto oldVal = std::get<CoffeeMachine::State>(change.old_value.value());
+                auto newVal = std::get<CoffeeMachine::State>(change.new_value.value());
 
-                if (oldVal == CoffeeMachineModel::State::NEEDS_ATTENTION && newVal == CoffeeMachineModel::State::OK)
+                if (oldVal == CoffeeMachine::State::NEEDS_ATTENTION && newVal == CoffeeMachine::State::OK)
                 {
                     emit enableMachine();
                 }
-                else if (oldVal == CoffeeMachineModel::State::OK && newVal == CoffeeMachineModel::State::NEEDS_ATTENTION)
+                else if (oldVal == CoffeeMachine::State::OK && newVal == CoffeeMachine::State::NEEDS_ATTENTION)
                 {
                     emit disableMachine();
                 }
@@ -92,17 +92,15 @@ void CoffeeMachineManager::prepareForBrew(const QString &)
 
 void CoffeeMachineManager::startBrew(const QString &coffeeId, int64_t milkQty, int64_t espressoQty, int64_t sugarQty)
 {
-    auto realm = realm::open<CoffeeMachineModel, DrinkTemplate>(mUser.flexible_sync_configuration());
-    // TODO: fix bug here which doesn't allow setting property on `mCoffeeMachine`. m_obj goes out of scope
-    auto machine = mCoffeeMachine;//realm.objects<CoffeeMachineModel>()[0];
+    auto realm = realm::open<CoffeeMachine, DrinkTemplate>(mUser.flexible_sync_configuration());
     realm.write([&]() {
-        machine.espressoQty -= espressoQty;
-        machine.milkQty -= milkQty;
-        machine.sugarQty -= sugarQty;
+        mCoffeeMachine.espressoQty -= espressoQty;
+        mCoffeeMachine.milkQty -= milkQty;
+        mCoffeeMachine.sugarQty -= sugarQty;
     });
 }
 
-DrinkSelectionModel::DrinkSelectionModel(CoffeeMachineModel& machine) : mMachine(machine)
+DrinkSelectionModel::DrinkSelectionModel(CoffeeMachine& machine) : mMachine(machine)
 {
     mToken = mMachine.availableDrinks.observe([&](auto&&) {
         this->beginResetModel();

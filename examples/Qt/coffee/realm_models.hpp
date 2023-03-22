@@ -22,7 +22,7 @@ public:
     );
 };
 
-class CoffeeMachineModel : public realm::object<CoffeeMachineModel> {
+class CoffeeMachine : public realm::object<CoffeeMachine> {
 public:
     enum class State {
         OK,
@@ -38,16 +38,16 @@ public:
     realm::persisted<State> state;
     realm::persisted<std::vector<DrinkTemplate>> availableDrinks;
 
-    static constexpr auto schema = realm::schema("CoffeeMachineModel",
-        realm::property<&CoffeeMachineModel::_id, true>("_id"),
-        realm::property<&CoffeeMachineModel::location>("location"),
-        realm::property<&CoffeeMachineModel::ownerId>("ownerId"),
-        realm::property<&CoffeeMachineModel::milkQty>("milkQty"),
-        realm::property<&CoffeeMachineModel::espressoQty>("espressoQty"),
-        realm::property<&CoffeeMachineModel::chocolateQty>("chocolateQty"),
-        realm::property<&CoffeeMachineModel::sugarQty>("sugarQty"),
-        realm::property<&CoffeeMachineModel::state>("state"),
-        realm::property<&CoffeeMachineModel::availableDrinks>("availableDrinks")
+    static constexpr auto schema = realm::schema("CoffeeMachine",
+        realm::property<&CoffeeMachine::_id, true>("_id"),
+        realm::property<&CoffeeMachine::location>("location"),
+        realm::property<&CoffeeMachine::ownerId>("ownerId"),
+        realm::property<&CoffeeMachine::milkQty>("milkQty"),
+        realm::property<&CoffeeMachine::espressoQty>("espressoQty"),
+        realm::property<&CoffeeMachine::chocolateQty>("chocolateQty"),
+        realm::property<&CoffeeMachine::sugarQty>("sugarQty"),
+        realm::property<&CoffeeMachine::state>("state"),
+        realm::property<&CoffeeMachine::availableDrinks>("availableDrinks")
     );
 };
 

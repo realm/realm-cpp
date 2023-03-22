@@ -1,0 +1,8 @@
+{
+    "availableDrinks": {
+        "ref": "#/relationship/mongodb-atlas/Coffee/DrinkTemplate",
+        "source_key": "availableDrinks",
+        "foreign_key": "_id",
+        "is_list": true
+    }
+}

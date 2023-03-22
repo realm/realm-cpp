@@ -1,6 +1,6 @@
+
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
-
 import QtQuick 2.7
 import QtQuick.Controls 2.0
 import QtQuick.Layouts 1.3
@@ -15,9 +15,9 @@ Item {
     property bool showLabels: true
     property alias coffeeLabel: cappuccinoLabel.text
 
-    property real sugarAmount: 2
-    property real milkAmount: 4
-    property real coffeeAmount: 4
+    property real sugarAmount: 0
+    property real milkAmount: 0
+    property real coffeeAmount: 0
 
     Rectangle {
         id: rectangle

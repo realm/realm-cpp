@@ -46,43 +46,9 @@ ApplicationFlowForm {
 //! [1]
 
     brewing.onFinished: {
-        finalAnimation.start()
+        applicationFlow.state = "initial"
+
     }
-
-    SequentialAnimation {
-        id: finalAnimation
-
-        PropertyAction {
-            target: applicationFlow
-            property: "state"
-            value: "finished"
-        }
-
-        PauseAnimation {
-            duration: 1000
-        }
-
-        PropertyAction {
-            target: applicationFlow
-            property: "state"
-            value: "start"
-        }
-
-        PauseAnimation {
-            duration: applicationFlow.animationDuration
-        }
-
-        PauseAnimation {
-            duration: 400
-        }
-
-        PropertyAction {
-            target: applicationFlow
-            property: "state"
-            value: "initial"
-        }
-    }
-
 
     Behavior on choosingCoffee.x {
         PropertyAnimation {
@@ -90,7 +56,6 @@ ApplicationFlowForm {
             easing.type: Easing.InOutQuad
         }
     }
-
 
     Behavior on emptyCup.x {
         PropertyAnimation {

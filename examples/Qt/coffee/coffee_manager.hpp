@@ -21,13 +21,13 @@ class DrinkSelectionModel : public QAbstractTableModel
         MilkQty,
         EspressoQty
     };
-    DrinkSelectionModel(CoffeeMachineModel& machine);
+    DrinkSelectionModel(CoffeeMachine& machine);
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     Q_INVOKABLE QVariant data(const QModelIndex &index, int role) const override;
     QHash<int, QByteArray> roleNames() const override;
  private:
-   CoffeeMachineModel& mMachine;
+   CoffeeMachine& mMachine;
    realm::notification_token mToken;
 };
 
@@ -54,7 +54,7 @@ signals:
 
 private:
     realm::user mUser;
-    CoffeeMachineModel mCoffeeMachine;
+    CoffeeMachine mCoffeeMachine;
     QScopedPointer<DrinkSelectionModel> mDrinksTableModel;
     realm::notification_token mToken;
 };

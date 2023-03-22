@@ -1,0 +1,32 @@
+{
+    "bsonType": "object",
+    "properties": {
+        "_id": {
+            "bsonType": "objectId"
+        },
+        "chocolateQty": {
+            "bsonType": "long"
+        },
+        "espressoQty": {
+            "bsonType": "long"
+        },
+        "milkQty": {
+            "bsonType": "long"
+        },
+        "name": {
+            "bsonType": "string"
+        },
+        "sugarQty": {
+            "bsonType": "long"
+        }
+    },
+    "required": [
+        "_id",
+        "name",
+        "milkQty",
+        "espressoQty",
+        "chocolateQty",
+        "sugarQty"
+    ],
+    "title": "DrinkTemplate"
+}

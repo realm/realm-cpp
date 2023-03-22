@@ -34,6 +34,24 @@ Rectangle {
     states: [
         State {
             name: "initial"
+
+            PropertyChanges {
+                target: emptyCup
+                x: 0
+                visible: false
+            }
+
+            PropertyChanges {
+                target: brewing
+                x: Constants.width
+                y: 0
+            }
+
+            PropertyChanges {
+                target: choosingCoffee
+                x: 0
+                inSettings: false
+            }
         },
         State {
             name: "selection"

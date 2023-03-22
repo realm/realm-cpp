@@ -1,0 +1,8 @@
+{
+    "app_id": "qt-realm-coffee-dfvvc",
+    "config_version": 20210101,
+    "name": "Qt-Realm-Coffee",
+    "location": "IE",
+    "provider_region": "aws-eu-west-1",
+    "deployment_model": "LOCAL"
+}

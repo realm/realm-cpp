@@ -1,0 +1,46 @@
+{
+    "bsonType": "object",
+    "properties": {
+        "_id": {
+            "bsonType": "objectId"
+        },
+        "availableDrinks": {
+            "bsonType": "array",
+            "items": {
+                "bsonType": "objectId"
+            }
+        },
+        "chocolateQty": {
+            "bsonType": "long"
+        },
+        "espressoQty": {
+            "bsonType": "long"
+        },
+        "location": {
+            "bsonType": "string"
+        },
+        "milkQty": {
+            "bsonType": "long"
+        },
+        "ownerId": {
+            "bsonType": "objectId"
+        },
+        "state": {
+            "bsonType": "long"
+        },
+        "sugarQty": {
+            "bsonType": "long"
+        }
+    },
+    "required": [
+        "_id",
+        "location",
+        "ownerId",
+        "milkQty",
+        "espressoQty",
+        "chocolateQty",
+        "sugarQty",
+        "state"
+    ],
+    "title": "CoffeeMachine"
+}
