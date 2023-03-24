@@ -13,7 +13,7 @@ namespace realm::internal::bridge {
     void sync_session::wait_for_download_completion(std::function<void(std::error_code)> &&callback) {
         if (auto session = m_session.lock()) {
             session->wait_for_download_completion([cb = std::move(callback)](auto ec) {
-                cb(ec);
+                cb(ec.get_std_error_code());
             });
         } else {
             throw std::runtime_error("Realm: Error accessing sync_session which has been destroyed.");
@@ -23,7 +23,7 @@ namespace realm::internal::bridge {
     void sync_session::wait_for_upload_completion(std::function<void(std::error_code)> &&callback) {
         if (auto session = m_session.lock()) {
             session->wait_for_upload_completion([cb = std::move(callback)](auto ec) {
-                cb(ec);
+                cb(ec.get_std_error_code());
             });
         } else {
             throw std::runtime_error("Realm: Error accessing sync_session which has been destroyed.");

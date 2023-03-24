@@ -29,7 +29,6 @@ int main(int argc, char* argv[]) {
         config.showDurations = Catch::ShowDurations::Always; // this is to help debug hangs
         config.reporterSpecifications.push_back(Catch::ReporterSpec{"console", {}, {}, {}});
         config.reporterSpecifications.push_back(Catch::ReporterSpec{"junit", {"TestResults.xml"}, {}, {}});
-        
         config.testsOrTags.push_back("~[app]");
         config.testsOrTags.push_back("~[sync]");
     } else if (getenv("REALM_LOCAL_ENDPOINT") == nullptr) {

@@ -13,8 +13,8 @@ namespace test {
         auto session = sync_sessions[0];
 
         std::promise<void> p;
-        session->wait_for_upload_completion([&p](auto ec){
-            if (ec) p.set_exception(std::make_exception_ptr(ec));
+        session->wait_for_upload_completion([&p](realm::Status&& ec){
+            if (ec != realm::Status::OK()) p.set_exception(std::make_exception_ptr(ec));
             else p.set_value();
         });
 
@@ -25,8 +25,8 @@ namespace test {
         auto sync_sessions = user.m_user->sync_manager()->get_all_sessions();
         auto session = sync_sessions[0];
         std::promise<void> p;
-        session->wait_for_download_completion([&p](auto ec) {
-            if (ec) p.set_exception(std::make_exception_ptr(ec));
+        session->wait_for_download_completion([&p](realm::Status&& ec) {
+            if (ec != realm::Status::OK()) p.set_exception(std::make_exception_ptr(ec));
             else p.set_value();
         });
 

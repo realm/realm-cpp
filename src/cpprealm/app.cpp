@@ -11,27 +11,27 @@ namespace realm {
 #ifdef __i386__
     static_assert(internal::bridge::SizeCheck<8, sizeof(realm::app::AppCredentials)>{});
     static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppCredentials)>{});
-    static_assert(internal::bridge::SizeCheck<40, sizeof(realm::app::AppError)>{});
+    static_assert(internal::bridge::SizeCheck<28, sizeof(realm::app::AppError)>{});
     static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppError)>{});
 #elif __x86_64__
     static_assert(internal::bridge::SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppCredentials)>{});
     #if defined(__clang__)
-    static_assert(internal::bridge::SizeCheck<72, sizeof(realm::app::AppError)>{});
+    static_assert(internal::bridge::SizeCheck<48, sizeof(realm::app::AppError)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
     #elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(internal::bridge::SizeCheck<88, sizeof(realm::app::AppError)>{});
+    static_assert(internal::bridge::SizeCheck<56, sizeof(realm::app::AppError)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
     #endif
 #elif __arm__
     static_assert(internal::bridge::SizeCheck<8, sizeof(realm::app::AppCredentials)>{});
     static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppCredentials)>{});
-    static_assert(internal::bridge::SizeCheck<40, sizeof(realm::app::AppError)>{});
+    static_assert(internal::bridge::SizeCheck<28, sizeof(realm::app::AppError)>{});
     static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppError)>{});
 #elif __aarch64__
     static_assert(internal::bridge::SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppCredentials)>{});
-    static_assert(internal::bridge::SizeCheck<72, sizeof(realm::app::AppError)>{});
+    static_assert(internal::bridge::SizeCheck<48, sizeof(realm::app::AppError)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
 #endif
 
@@ -43,14 +43,9 @@ namespace realm {
         new (&m_error) app::AppError(std::move(error));
     }
 
-    std::error_code app_error::error_code() const
-    {
-        return reinterpret_cast<const app::AppError*>(m_error)->error_code;
-    }
-
     std::string_view app_error::mesage() const
     {
-        return reinterpret_cast<const app::AppError*>(m_error)->message;
+        return reinterpret_cast<const app::AppError*>(m_error)->reason();
     }
 
     std::string_view app_error::link_to_server_logs() const
@@ -60,27 +55,27 @@ namespace realm {
 
     bool app_error::is_json_error() const
     {
-        return error_code().category() == realm::app::json_error_category();
+        return reinterpret_cast<const app::AppError*>(m_error)->is_json_error();
     }
 
     bool app_error::is_service_error() const
     {
-        return error_code().category() == realm::app::service_error_category();
+        return reinterpret_cast<const app::AppError*>(m_error)->is_service_error();
     }
 
     bool app_error::is_http_error() const
     {
-        return error_code().category() == realm::app::http_error_category();
+        return reinterpret_cast<const app::AppError*>(m_error)->is_http_error();
     }
 
     bool app_error::is_custom_error() const
     {
-        return error_code().category() == realm::app::custom_error_category();
+        return reinterpret_cast<const app::AppError*>(m_error)->is_custom_error();
     }
 
     bool app_error::is_client_error() const
     {
-        return error_code().category() == realm::app::client_error_category();
+        return reinterpret_cast<const app::AppError*>(m_error)->is_client_error();
     }
 
     /**
@@ -264,7 +259,6 @@ namespace realm {
 #endif
         SyncClientConfig config;
         bool should_encrypt = !getenv("REALM_DISABLE_METADATA_ENCRYPTION");
-        config.logger_factory = defaultSyncLogger;
 #if REALM_DISABLE_METADATA_ENCRYPTION
         config.metadata_mode = SyncManager::MetadataMode::NoEncryption;
 #else
