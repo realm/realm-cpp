@@ -7,6 +7,6 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 Package.resolved
 # Qt demo apps
-examples/*.pro.user
+*.user
 docs/
 

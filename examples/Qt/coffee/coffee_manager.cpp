@@ -90,13 +90,14 @@ void CoffeeMachineManager::prepareForBrew(const QString &)
     // NOOP, but can be used for somthing useful like analytics.
 }
 
-void CoffeeMachineManager::startBrew(const QString &coffeeId, int64_t milkQty, int64_t espressoQty, int64_t sugarQty)
+void CoffeeMachineManager::startBrew(const QString&, int64_t milkQty, int64_t espressoQty, int64_t sugarQty)
 {
     auto realm = realm::open<CoffeeMachine, DrinkTemplate>(mUser.flexible_sync_configuration());
+    auto coffeeMachine = realm.objects<CoffeeMachine>()[0];
     realm.write([&]() {
-        mCoffeeMachine.espressoQty -= espressoQty;
-        mCoffeeMachine.milkQty -= milkQty;
-        mCoffeeMachine.sugarQty -= sugarQty;
+        coffeeMachine.espressoQty -= espressoQty;
+        coffeeMachine.milkQty -= milkQty;
+        coffeeMachine.sugarQty -= sugarQty;
     });
 }
 
