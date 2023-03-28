@@ -2,6 +2,9 @@
 #include "main.hpp"
 
 TEST_CASE("all_primary_key_types") {
+    realm_path path;
+    realm::db_config config;
+    config.set_path(path);
     SECTION("primary_keys") {
         std::tuple<int64_t, realm::object_id, std::string, realm::uuid, PrimaryKeyEnum> primary_keys
             = {123, realm::object_id::generate(), "primary_key", realm::uuid("68b696d7-320b-4402-a412-d9cee10fc6a3"), PrimaryKeyEnum::one};
@@ -11,7 +14,7 @@ TEST_CASE("all_primary_key_types") {
                 realm_path path;
                 using ObjectType = TestPrimaryKeyObject<std::remove_reference<decltype(std::get<0>(
                         primary_keys))>::type>;
-                auto realm = realm::open<ObjectType>({path});
+                auto realm = realm::open<ObjectType>(std::move(config));
                 auto obj = ObjectType();
                 obj._id = std::get<decltype(*obj._id)>(primary_keys);
                 realm.write([&realm, &obj] {
@@ -32,7 +35,7 @@ TEST_CASE("all_primary_key_types") {
                 realm_path path;
                 using ObjectType = TestPrimaryKeyObject<std::remove_reference<decltype(std::get<0>(
                         primary_keys))>::type>;
-                auto realm = realm::open<ObjectType>({path});
+                auto realm = realm::open<ObjectType>(std::move(config));
                 auto obj = ObjectType();
                 obj._id = std::get<decltype(*obj._id)>(primary_keys);
                 realm.write([&realm, &obj] {
@@ -52,7 +55,7 @@ TEST_CASE("all_primary_key_types") {
                 realm_path path;
                 using ObjectType = TestPrimaryKeyObject<std::remove_reference<decltype(std::get<0>(
                         primary_keys))>::type>;
-                auto realm = realm::open<ObjectType>({path});
+                auto realm = realm::open<ObjectType>(std::move(config));
                 auto obj = ObjectType();
                 obj._id = std::nullopt;
                 realm.write([&realm, &obj] {
@@ -67,6 +70,8 @@ TEST_CASE("all_primary_key_types") {
 
 TEST_CASE("object_initialization") {
     realm_path path;
+    realm::db_config config;
+    config.set_path(path);
     auto date = std::chrono::time_point<std::chrono::system_clock>();
     auto uuid = realm::uuid();
     auto o = AllTypesObjectLink();
@@ -132,7 +137,7 @@ TEST_CASE("object_initialization") {
         .map_embedded_col = std::map<std::string, std::optional<AllTypesObjectEmbedded>>({{"foo", embedded_obj}})
     };
 
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
     realm.write([&obj, &realm]() {
         realm.add(obj);
     });
@@ -172,7 +177,10 @@ TEST_CASE("object_initialization") {
     CHECK(!embedded_obj.is_managed());
 
     CHECK(*obj.opt_obj_col == o);
+    CHECK(*obj.opt_obj_col->str_col == "link object");
+
     CHECK(*obj.opt_embedded_obj_col == embedded_obj);
+    CHECK(*obj.opt_embedded_obj_col->str_col == "embedded obj");
 
     CHECK(obj.list_int_col[0] == 1);
     CHECK(obj.list_double_col[0] == 1.23);
@@ -183,7 +191,9 @@ TEST_CASE("object_initialization") {
     CHECK(obj.list_uuid_col[0] == uuid);
     CHECK(obj.list_mixed_col[0] == realm::mixed("mixed str"));
     CHECK(obj.list_obj_col[0] == o);
+    CHECK(obj.list_obj_col[0].str_col == "link object");
     CHECK(obj.list_embedded_obj_col[0] == embedded_obj);
+    CHECK(obj.list_embedded_obj_col[0].str_col == "embedded obj");
 
     CHECK(obj.map_int_col["foo"] == 1);
     CHECK(obj.map_double_col["foo"] == 1.23);
@@ -194,7 +204,9 @@ TEST_CASE("object_initialization") {
     CHECK(obj.map_uuid_col["foo"] == uuid);
     CHECK(obj.map_mixed_col["foo"] == realm::mixed("bar"));
     CHECK(obj.map_link_col["foo"] == o);
+    CHECK((*obj.map_link_col["foo"])->str_col == "link object");
     CHECK(obj.map_embedded_col["foo"] == embedded_obj);
+    CHECK((*obj.map_embedded_col["foo"])->str_col == "embedded obj");
 
     auto allTypeObjects = realm.objects<AllTypesObject>();
     auto results_obj = allTypeObjects[0];
@@ -221,7 +233,9 @@ TEST_CASE("object_initialization") {
     CHECK(*results_obj.opt_object_id_col == object_id);
 
     CHECK(*results_obj.opt_obj_col == o);
+    CHECK(*results_obj.opt_obj_col->str_col == "link object");
     CHECK(*results_obj.opt_embedded_obj_col == embedded_obj);
+    CHECK(*results_obj.opt_embedded_obj_col->str_col == "embedded obj");
 
     CHECK(results_obj.list_int_col[0] == 1);
     CHECK(results_obj.list_double_col[0] == 1.23);
@@ -232,7 +246,9 @@ TEST_CASE("object_initialization") {
     CHECK(results_obj.list_uuid_col[0] == uuid);
     CHECK(results_obj.list_mixed_col[0] == realm::mixed("mixed str"));
     CHECK(results_obj.list_obj_col[0] == o);
+    CHECK(results_obj.list_obj_col[0].str_col == "link object");
     CHECK(results_obj.list_embedded_obj_col[0] == embedded_obj);
+    CHECK(results_obj.list_embedded_obj_col[0].str_col == "embedded obj");
 
     CHECK(results_obj.map_int_col["foo"] == 1);
     CHECK(results_obj.map_double_col["foo"] == 1.23);
@@ -243,13 +259,17 @@ TEST_CASE("object_initialization") {
     CHECK(results_obj.map_uuid_col["foo"] == uuid);
     CHECK(results_obj.map_mixed_col["foo"] == realm::mixed("bar"));
     CHECK(results_obj.map_link_col["foo"] == o);
+    CHECK((*results_obj.map_link_col["foo"])->str_col == "link object");
     CHECK(results_obj.map_embedded_col["foo"] == embedded_obj);
+    CHECK((*results_obj.map_embedded_col["foo"])->str_col == "embedded obj");
 }
 
 TEST_CASE("object_notifications") {
     realm_path path;
+    realm::db_config config;
+    config.set_path(path);
     SECTION("observe") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
 
         auto date = std::chrono::time_point<std::chrono::system_clock>();
         auto uuid = realm::uuid();
@@ -402,7 +422,7 @@ TEST_CASE("object_notifications") {
     }
 
     SECTION("optional objects") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
 
         auto foo = AllTypesObject();
         auto o = AllTypesObjectLink();

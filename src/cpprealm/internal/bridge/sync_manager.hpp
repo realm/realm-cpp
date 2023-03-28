@@ -3,15 +3,16 @@
 
 #include <memory>
 #include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/logger.hpp>
 
 namespace realm {
     class SyncManager;
 
     namespace internal::bridge {
-
         struct sync_manager {
             sync_manager(const std::shared_ptr<SyncManager> &);
             [[nodiscard]] std::string path_for_realm(const realm::sync_config&) const;
+            void set_log_level(logger::level);
         private:
             std::shared_ptr<SyncManager> m_manager;
         };

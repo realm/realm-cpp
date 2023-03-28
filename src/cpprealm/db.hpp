@@ -22,19 +22,16 @@
 #include <filesystem>
 #include <iostream>
 
-#if !defined(REALM_DISABLE_ANALYTICS)
-#include <cpprealm/analytics.hpp>
-#endif
-
 #include <cpprealm/asymmetric_object.hpp>
-#include <cpprealm/results.hpp>
-#include <cpprealm/task.hpp>
 #include <cpprealm/flex_sync.hpp>
-#include <cpprealm/thread_safe_reference.hpp>
-#include <cpprealm/scheduler.hpp>
-#include <cpprealm/internal/bridge/schema.hpp>
 #include <cpprealm/internal/bridge/async_open_task.hpp>
+#include <cpprealm/internal/bridge/schema.hpp>
 #include <cpprealm/internal/bridge/sync_session.hpp>
+#include <cpprealm/logger.hpp>
+#include <cpprealm/results.hpp>
+#include <cpprealm/scheduler.hpp>
+#include <cpprealm/task.hpp>
+#include <cpprealm/thread_safe_reference.hpp>
 #include <utility>
 
 namespace realm {
@@ -51,11 +48,6 @@ struct db {
         (schema.push_back(Ts::schema.to_core_schema()), ...);
         config.set_schema(schema);
         m_realm = internal::bridge::realm(config);
-        static bool initialized;
-        if (!initialized) {
-            realm_analytics::send();
-            initialized = true;
-        }
     }
 
     sync_subscription_set subscriptions()
@@ -161,15 +153,7 @@ struct db {
 
 private:
     db(internal::bridge::realm realm) //NOLINT
-    : m_realm(std::move(realm))
-    {
-
-        static bool initialized;
-        if (!initialized) {
-            realm_analytics::send();
-            initialized = true;
-        }
-    }
+    : m_realm(std::move(realm)) { }
     template <typename>
     friend struct object;
     template <typename T, typename>
@@ -178,7 +162,7 @@ private:
 };
 
 template <typename ...Ts>
-static db<Ts...> open(db_config&& config = {})
+static db<Ts...> open(db_config&& config)
 {
     return db<Ts...>(std::move(config));
 }

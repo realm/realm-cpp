@@ -5,11 +5,13 @@ using namespace realm;
 
 TEST_CASE("mixed", "[mixed]") {
    realm_path path;
+   db_config config;
+   config.set_path(path);
    SECTION("unmanaged_managed_mixed_get_set", "[mixed]") {
        auto obj = AllTypesObject();
        obj.mixed_col = 42;
        CHECK(obj.mixed_col == static_cast<int64_t>(42));
-       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
        realm.write([&realm, &obj] {
            realm.add(obj);
        });

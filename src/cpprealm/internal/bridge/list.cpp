@@ -30,6 +30,32 @@ namespace realm::internal::bridge {
     list::list() {
         new (&m_list) List();
     }
+    
+    list::list(const list& other) {
+        new (&m_list) List(*reinterpret_cast<const List*>(&other.m_list));
+    }
+    
+    list& list::operator=(const list& other) {
+        if (this != &other) {
+            *reinterpret_cast<List*>(&m_list) = *reinterpret_cast<const List*>(&other.m_list);
+        }
+        return *this;
+    }
+
+    list::list(list&& other) {
+        new (&m_list) List(std::move(*reinterpret_cast<List*>(&other.m_list)));
+    }
+
+    list& list::operator=(list&& other) {
+        if (this != &other) {
+            *reinterpret_cast<List*>(&m_list) = std::move(*reinterpret_cast<List*>(&other.m_list));
+        }
+        return *this;
+    }
+
+    list::~list() {
+        reinterpret_cast<List*>(&m_list)->~List();
+    }
 
     list::list(const List &v) {
         new (&m_list) List(v);
@@ -42,99 +68,147 @@ namespace realm::internal::bridge {
     }
 
     list::operator List() const {
-        return *reinterpret_cast<const List*>(m_list);
+        return *reinterpret_cast<const List*>(&m_list);
     }
 
     table list::get_table() const {
-        return reinterpret_cast<const List *>(m_list)->get_table();
+        return reinterpret_cast<const List *>(&m_list)->get_table();
     }
     size_t list::size() const {
-        return reinterpret_cast<const List *>(m_list)->size();
+        return reinterpret_cast<const List *>(&m_list)->size();
     }
     void list::remove(size_t idx) {
-        reinterpret_cast<List *>(m_list)->remove(idx);
+        reinterpret_cast<List *>(&m_list)->remove(idx);
     }
     void list::remove_all() {
-        reinterpret_cast<List *>(m_list)->remove_all();
+        reinterpret_cast<List *>(&m_list)->remove_all();
     }
 
     realm list::get_realm() const {
-        return reinterpret_cast<const List *>(m_list)->get_realm();
+        return reinterpret_cast<const List *>(&m_list)->get_realm();
     }
 
     void list::add(const std::string &v) {
-        reinterpret_cast<List *>(m_list)->add(StringData(v));
+        reinterpret_cast<List *>(&m_list)->add(StringData(v));
     }
     void list::add(const int64_t &v) {
-        reinterpret_cast<List *>(m_list)->add(v);
+        reinterpret_cast<List *>(&m_list)->add(v);
     }
     void list::add(const double &v) {
-        reinterpret_cast<List *>(m_list)->add(v);
+        reinterpret_cast<List *>(&m_list)->add(v);
     }
     void list::add(const binary &v) {
-        reinterpret_cast<List *>(m_list)->add(static_cast<BinaryData>(v));
+        reinterpret_cast<List *>(&m_list)->add(static_cast<BinaryData>(v));
     }
     void list::add(const uuid &v) {
-        reinterpret_cast<List *>(m_list)->add(static_cast<UUID>(v));
+        reinterpret_cast<List *>(&m_list)->add(static_cast<UUID>(v));
     }
     void list::add(const object_id &v) {
-        reinterpret_cast<List *>(m_list)->add(static_cast<ObjectId>(v));
+        reinterpret_cast<List *>(&m_list)->add(static_cast<ObjectId>(v));
     }
     void list::add(const mixed &v) {
-        reinterpret_cast<List *>(m_list)->add(static_cast<Mixed>(v));
+        reinterpret_cast<List *>(&m_list)->add(static_cast<Mixed>(v));
     }
     void list::add(const obj_key &v) {
-        reinterpret_cast<List *>(m_list)->add(static_cast<ObjKey>(v));
+        reinterpret_cast<List *>(&m_list)->add(static_cast<ObjKey>(v));
     }
     void list::add(const timestamp &v) {
-        reinterpret_cast<List *>(m_list)->add(static_cast<Timestamp>(v));
+        reinterpret_cast<List *>(&m_list)->add(static_cast<Timestamp>(v));
     }
     void list::add(const bool &v) {
-        reinterpret_cast<List *>(m_list)->add(v);
+        reinterpret_cast<List *>(&m_list)->add(v);
     }
     obj list::add_embedded() {
-        return reinterpret_cast<List *>(m_list)->add_embedded();
+        return reinterpret_cast<List *>(&m_list)->add_embedded();
     }
 
     template <>
     std::string get(const list& lst, size_t idx) {
-        return reinterpret_cast<const List *>(lst.m_list)->get<StringData>(idx);
+        return reinterpret_cast<const List *>(&lst.m_list)->get<StringData>(idx);
     }
     template <>
     int64_t get(const list& lst, size_t idx) {
-        return reinterpret_cast<const List *>(lst.m_list)->get<Int>(idx);
+        return reinterpret_cast<const List *>(&lst.m_list)->get<Int>(idx);
     }
     template <>
     double get(const list& lst, size_t idx) {
-        return reinterpret_cast<const List *>(lst.m_list)->get<Double>(idx);
+        return reinterpret_cast<const List *>(&lst.m_list)->get<Double>(idx);
     }
     template <>
     binary get(const list& lst, size_t idx) {
-        return reinterpret_cast<const List *>(lst.m_list)->get<BinaryData>(idx);
+        return reinterpret_cast<const List *>(&lst.m_list)->get<BinaryData>(idx);
     }
     template <>
     uuid get(const list& lst, size_t idx) {
-        return reinterpret_cast<const List *>(lst.m_list)->get<UUID>(idx);
+        return reinterpret_cast<const List *>(&lst.m_list)->get<UUID>(idx);
     }
     template <>
     object_id get(const list& lst, size_t idx) {
-        return reinterpret_cast<const List *>(lst.m_list)->get<ObjectId>(idx);
+        return reinterpret_cast<const List *>(&lst.m_list)->get<ObjectId>(idx);
     }
     template <>
     mixed get(const list& lst, size_t idx) {
-        return reinterpret_cast<const List *>(lst.m_list)->get<Mixed>(idx);
+        return reinterpret_cast<const List *>(&lst.m_list)->get<Mixed>(idx);
     }
     template <>
     obj get(const list& lst, size_t idx) {
-        return reinterpret_cast<const List *>(lst.m_list)->get<Obj>(idx);
+        return reinterpret_cast<const List *>(&lst.m_list)->get<Obj>(idx);
     }
     template <>
     bool get(const list& lst, size_t idx) {
-        return reinterpret_cast<const List *>(lst.m_list)->get<Bool>(idx);
+        return reinterpret_cast<const List *>(&lst.m_list)->get<Bool>(idx);
     }
     template <>
     timestamp get(const list& lst, size_t idx) {
-        return reinterpret_cast<const List *>(lst.m_list)->get<Timestamp>(idx);
+        return reinterpret_cast<const List *>(&lst.m_list)->get<Timestamp>(idx);
+    }
+
+    template <>
+    std::optional<int64_t> get(const list& lst, size_t idx) {
+        return reinterpret_cast<const List *>(lst.m_list)->get<std::optional<Int>>(idx);
+    }
+    template <>
+    std::optional<double> get(const list& lst, size_t idx) {
+        return reinterpret_cast<const List *>(lst.m_list)->get<std::optional<Double>>(idx);
+    }
+    template <>
+    std::optional<bool> get(const list& lst, size_t idx) {
+        return reinterpret_cast<const List *>(lst.m_list)->get<std::optional<Bool>>(idx);
+    }
+    template <>
+    std::optional<uuid> get(const list& lst, size_t idx) {
+        return reinterpret_cast<const List *>(lst.m_list)->get<std::optional<UUID>>(idx);
+    }
+    template <>
+    std::optional<object_id> get(const list& lst, size_t idx) {
+        return reinterpret_cast<const List *>(lst.m_list)->get<std::optional<ObjectId>>(idx);
+    }
+    template <>
+    std::optional<timestamp> get(const list& lst, size_t idx) {
+        auto v = reinterpret_cast<const List *>(lst.m_list)->get<Timestamp>(idx);
+        if (v.is_null()) {
+            return std::nullopt;
+        } else {
+            return v;
+        }
+    }
+    template <>
+    std::optional<std::string> get(const list& lst, size_t idx) {
+        auto v = reinterpret_cast<const List *>(lst.m_list)->get<StringData>(idx);
+        if (v.is_null()) {
+            return std::nullopt;
+        } else {
+            return v;
+        }
+    }
+    template <>
+    std::optional<binary> get(const list& lst, size_t idx) {
+        auto v = reinterpret_cast<const List *>(lst.m_list)->get<BinaryData>(idx);
+        if (v.is_null()) {
+            return std::nullopt;
+        } else {
+            return v;
+        }
     }
 
     void list::set(size_t pos, const int64_t &v) { reinterpret_cast<List *>(m_list)->set(pos, v); }
@@ -147,21 +221,21 @@ namespace realm::internal::bridge {
     void list::set(size_t pos, const binary &v) { reinterpret_cast<List *>(m_list)->set(pos, static_cast<BinaryData>(v)); }
     void list::set(size_t pos, const timestamp &v) { reinterpret_cast<List *>(m_list)->set(pos, static_cast<Timestamp>(v)); }
 
-    size_t list::find(const int64_t &v) { return reinterpret_cast<List *>(m_list)->find(v); }
-    size_t list::find(const bool &v) { return reinterpret_cast<List *>(m_list)->find(v); }
-    size_t list::find(const double &v) { return reinterpret_cast<List *>(m_list)->find(v); }
-    size_t list::find(const std::string &v) { return reinterpret_cast<List *>(m_list)->find(StringData(v)); }
-    size_t list::find(const uuid &v) { return reinterpret_cast<List *>(m_list)->find(static_cast<UUID>(v)); }
-    size_t list::find(const object_id &v) { return reinterpret_cast<List *>(m_list)->find(static_cast<ObjectId>(v)); }
-    size_t list::find(const mixed &v) { return reinterpret_cast<List *>(m_list)->find(static_cast<Mixed>(v)); }
-    size_t list::find(const timestamp &v) { return reinterpret_cast<List *>(m_list)->find(static_cast<Timestamp>(v)); }
+    size_t list::find(const int64_t &v) { return reinterpret_cast<List *>(&m_list)->find(v); }
+    size_t list::find(const bool &v) { return reinterpret_cast<List *>(&m_list)->find(v); }
+    size_t list::find(const double &v) { return reinterpret_cast<List *>(&m_list)->find(v); }
+    size_t list::find(const std::string &v) { return reinterpret_cast<List *>(&m_list)->find(StringData(v)); }
+    size_t list::find(const uuid &v) { return reinterpret_cast<List *>(&m_list)->find(static_cast<UUID>(v)); }
+    size_t list::find(const object_id &v) { return reinterpret_cast<List *>(&m_list)->find(static_cast<ObjectId>(v)); }
+    size_t list::find(const mixed &v) { return reinterpret_cast<List *>(&m_list)->find(static_cast<Mixed>(v)); }
+    size_t list::find(const timestamp &v) { return reinterpret_cast<List *>(&m_list)->find(static_cast<Timestamp>(v)); }
     size_t list::find(const binary& v) {
         auto v_actual = v.operator BinaryData();
-        auto val_actual = reinterpret_cast<List *>(m_list)->get<BinaryData>(1);
-        auto val = reinterpret_cast<List *>(m_list)->find(static_cast<BinaryData>(v));
+        auto val_actual = reinterpret_cast<List *>(&m_list)->get<BinaryData>(1);
+        auto val = reinterpret_cast<List *>(&m_list)->find(static_cast<BinaryData>(v));
         return val;
     }
-    size_t list::find(const obj_key& v) { return reinterpret_cast<List *>(m_list)->find(static_cast<ObjKey>(v)); }
+    size_t list::find(const obj_key& v) { return reinterpret_cast<List *>(&m_list)->find(static_cast<ObjKey>(v)); }
 
     notification_token list::add_notification_callback(std::shared_ptr<collection_change_callback> cb) {
         struct wrapper : CollectionChangeCallback {
@@ -175,6 +249,6 @@ namespace realm::internal::bridge {
                 m_cb->after(v);
             }
         } ccb(std::move(cb));
-        return reinterpret_cast<List*>(m_list)->add_notification_callback(ccb);
+        return reinterpret_cast<List*>(&m_list)->add_notification_callback(ccb);
     }
 }

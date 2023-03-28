@@ -23,32 +23,32 @@ struct Person: realm::object<Person> {
 };
 
 int main() {
-    auto app = realm::App("YOUR_APP_ID");
+    auto app = realm::App("awaitsync-pzrjt");
     auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
     auto config = user.flexible_sync_configuration();
 
     auto realm = realm::open<Person>(std::move(config));
-    realm.subscriptions().update([](realm::mutable_sync_subscription_set& subs) {
-        if (!subs.find("all_people")) {
-            subs.add<Person>("all_people");
-        }
-    }).get_future().get();
+//    realm.subscriptions().update([](realm::mutable_sync_subscription_set& subs) {
+//        if (!subs.find("all_people")) {
+//            subs.add<Person>("all_people");
+//        }
+//    }).get_future().get();
 
-    auto results = realm.objects<Person>();
-    auto token = results.observe([](realm::results_change<Person> change) {
-        std::cout << "collection changed " << change.collection->size() << " objects in collection" << "\n";
-    });
-
-    std::cout << "Enter a name:" << "\n";
-    std::string name;
-    std::cin >> name;
-
-    realm.write([&]() {
-        Person p;
-        p._id = realm::object_id::generate();
-        p.name = name;
-        realm.add(p);
-    });
+//    auto results = realm.objects<Person>();
+//    auto token = results.observe([](realm::results_change<Person> change) {
+//        std::cout << "collection changed " << change.collection->size() << " objects in collection" << "\n";
+//    });
+//
+//    std::cout << "Enter a name:" << "\n";
+//    std::string name;
+//    std::cin >> name;
+//
+//    realm.write([&]() {
+//        Person p;
+//        p._id = realm::object_id::generate();
+//        p.name = name;
+//        realm.add(p);
+//    });
 
 #if REALM_HAVE_UV
     uv_run(uv_default_loop(), UV_RUN_DEFAULT);

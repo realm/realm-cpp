@@ -45,9 +45,13 @@ namespace realm {
 
 // Represents an error state from the server.
 struct app_error {
+    app_error() = delete;
+    app_error(const app_error& other) ;
+    app_error& operator=(const app_error& other) ;
+    app_error(app_error&& other);
+    app_error& operator=(app_error&& other);
+    ~app_error();
     app_error(realm::app::AppError&& error); //NOLINT(google-explicit-constructor)
-
-    [[nodiscard]] std::error_code error_code() const;
 
     [[nodiscard]] std::string_view mesage() const;
 
@@ -64,17 +68,21 @@ struct app_error {
     [[nodiscard]] bool is_client_error() const;
 private:
 #ifdef __i386__
-    std::aligned_storage<40, 4>::type m_error[1];
+    std::aligned_storage<28, 4>::type m_error[1];
 #elif __x86_64__
     #if defined(__clang__)
-std::aligned_storage<72, 8>::type m_error[1];
+std::aligned_storage<48, 8>::type m_error[1];
     #elif defined(__GNUC__) || defined(__GNUG__)
-std::aligned_storage<88, 8>::type m_error[1];
+std::aligned_storage<56, 8>::type m_error[1];
     #endif
 #elif __arm__
-    std::aligned_storage<40, 4>::type m_error[1];
+    std::aligned_storage<28, 4>::type m_error[1];
 #elif __aarch64__
-    std::aligned_storage<72, 8>::type m_error[1];
+#if defined(__clang__)
+    std::aligned_storage<48, 8>::type m_error[1];
+#elif defined(__GNUC__) || defined(__GNUG__)
+    std::aligned_storage<56, 8>::type m_error[1];
+#endif
 #endif
 };
 
@@ -203,27 +211,6 @@ struct user {
 
 
 class App {
-    static std::unique_ptr<util::Logger> defaultSyncLogger(util::Logger::Level level) {
-    struct SyncLogger : public util::Logger {
-            void do_log(Level level, const std::string& message) override {
-                std::string copy = message;
-                switch (level) {
-                    case Level::all:
-                    case Level::warn:
-                        std::cout<<"sync: "<<copy<<std::endl;
-                        break;
-                    case Level::error:
-                        std::cerr<<"sync: "<<copy<<std::endl;
-                        break;
-                    default:
-                        break;
-                }
-            }
-        };
-        auto logger = std::make_unique<SyncLogger>();
-        logger->set_level_threshold(level);
-        return std::move(logger);
-    }
 public:
     explicit App(const std::string& app_id, const std::optional<std::string>& base_url = {}, const std::optional<std::string>& path = {});
 
@@ -240,9 +227,12 @@ public:
         static credentials custom(const std::string& token);
         static credentials username_password(const std::string& username, const std::string& password);
         static credentials function(const bson::BsonDocument& payload);
-        credentials() = delete;
-        credentials(const credentials& credentials) = default;
-        credentials(credentials&&) = default;
+        credentials();
+        credentials(const credentials& other) ;
+        credentials& operator=(const credentials& other) ;
+        credentials(credentials&& other);
+        credentials& operator=(credentials&& other);
+        ~credentials();
     private:
         credentials(app::AppCredentials&& credentials) noexcept;
         operator app::AppCredentials() const;
@@ -262,6 +252,7 @@ public:
     std::promise<void> register_user(const std::string& username, const std::string& password);
     std::promise<user> login(const credentials& credentials);
     void login(const credentials& credentials, std::function<void(user, std::optional<app_error>)>&& callback);
+    [[nodiscard]] internal::bridge::sync_manager get_sync_manager() const;
 private:
     std::shared_ptr<app::App> m_app;
 };

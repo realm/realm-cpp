@@ -13,6 +13,11 @@ namespace realm::internal::bridge {
         obj_key(const ObjKey&);
         obj_key(int64_t);
         obj_key();
+        obj_key(const obj_key& other) ;
+        obj_key& operator=(const obj_key& other) ;
+        obj_key(obj_key&& other);
+        obj_key& operator=(obj_key&& other);
+        ~obj_key();
         operator ObjKey() const;
     private:
 #ifdef __i386__
@@ -35,6 +40,11 @@ namespace realm::internal::bridge {
     struct obj_link {
         obj_link(const ObjLink&);
         obj_link();
+        obj_link(const obj_link& other) ;
+        obj_link& operator=(const obj_link& other) ;
+        obj_link(obj_link&& other);
+        obj_link& operator=(obj_link&& other);
+        ~obj_link();
         operator ObjLink() const;
         obj_key get_obj_key();
     private:

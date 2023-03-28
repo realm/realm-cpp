@@ -12,6 +12,12 @@ namespace realm::internal::bridge {
     struct realm;
 
     struct thread_safe_reference {
+        thread_safe_reference();
+        thread_safe_reference(const thread_safe_reference& other) = delete;
+        thread_safe_reference& operator=(const thread_safe_reference& other) = delete;
+        thread_safe_reference(thread_safe_reference&& other);
+        thread_safe_reference& operator=(thread_safe_reference&& other);
+        ~thread_safe_reference();
         thread_safe_reference(const object&);
         thread_safe_reference(const dictionary&);
         thread_safe_reference(ThreadSafeReference&&);

@@ -18,9 +18,10 @@ void check_nulls(const T& obj) {
 }
 TEST_CASE("optional") {
     realm_path path;
-
+    db_config config;
+    config.set_path(path);
     SECTION("unmanaged_managed_optional_get_set") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
         {
             auto obj = AllTypesObject();
             check_nulls<0>(obj);

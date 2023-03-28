@@ -4,6 +4,7 @@
 #include <cpprealm/persisted.hpp>
 #include <cpprealm/object.hpp>
 #include <cpprealm/persisted_string.hpp>
+#include <cpprealm/internal/bridge/list.hpp>
 
 namespace realm {
     namespace internal {
@@ -94,10 +95,15 @@ namespace realm {
                 if (this->is_managed()) m_list.remove_all();
                 else this->unmanaged.clear();
             }
+
             persisted_list_base(const persisted_list_base& v) {
                 *this = v;
             }
             persisted_list_base& operator=(const persisted_list_base& v) {
+                if (this->m_object) {
+                    reinterpret_cast<bridge::list*>(&m_list)->~list();
+                }
+
                 if (v.is_managed()) {
                     this->m_object = v.m_object;
                     new (&m_list) bridge::list(v.m_list);
@@ -113,7 +119,7 @@ namespace realm {
                 if (this->m_object) {
                     this->m_list.~list();
                 } else {
-                    this->unmanaged.clear();
+                    this->unmanaged.~T();
                 }
             }
             virtual typename T::value_type operator[](size_t idx) const = 0;
@@ -138,6 +144,12 @@ namespace realm {
             }
             void assign_accessor(internal::bridge::object *object,
                                  internal::bridge::col_key &&col_key) final {
+                // We need to free what was previously stored.
+                if (this->m_object) {
+                    reinterpret_cast<bridge::list*>(&m_list)->~list();
+                } else {
+                    reinterpret_cast<T*>(&unmanaged)->~T();
+                }
                 this->m_object = *object;
                 new (&m_list) bridge::list(object->get_list(std::move(col_key)));
             }

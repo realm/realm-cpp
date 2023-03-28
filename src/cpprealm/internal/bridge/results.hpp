@@ -16,6 +16,13 @@ namespace realm::internal::bridge {
     struct collection_change_set;
 
     struct results {
+        results();
+        results(const results& other) ;
+        results& operator=(const results& other) ;
+        results(results&& other);
+        results& operator=(results&& other);
+        ~results();
+
         results(const Results&); //NOLINT(google-explicit-constructor)
         size_t size();
         [[nodiscard]] realm get_realm() const;
@@ -36,7 +43,11 @@ namespace realm::internal::bridge {
 #elif __arm__
         std::aligned_storage<568, 8>::type m_results[1];
 #elif __aarch64__
+#if defined(__clang__)
         std::aligned_storage<896, 8>::type m_results[1];
+#elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<912, 8>::type m_results[1];
+#endif
 #endif
     };
 

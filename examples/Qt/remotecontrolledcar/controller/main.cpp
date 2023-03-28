@@ -55,25 +55,28 @@
 void get_car(Controller& controller)
 {
     auto realm_app = realm::App("qt-car-demo-tdbmy");
+
     auto user = realm_app.login(realm::App::credentials::anonymous()).get_future().get();
-    auto realm = realm::db<Car>(user.flexible_sync_configuration());
-    realm.subscriptions().update([](realm::MutableSyncSubscriptionSet &subs) {
+    auto realm = realm::db<CarModel>(user.flexible_sync_configuration());
+    realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
         if (!subs.find("foo")) {
-            subs.add<Car>("foo");
+            subs.add<CarModel>("foo", [](auto& c) { return c._id == 0; });
         }
     }).get_future().get();
-
-    auto results = realm.objects<Car>();
+    realm.get_sync_session()->wait_for_download_completion().get_future().get();
+    realm.refresh();
+    auto results = realm.objects<CarModel>();
     if (results.size() > 0) {
         controller.car = results[0];
     } else {
-        auto car = std::make_unique<Car>();
+        CarModel car;
         realm.write([&realm, &car]() {
-            realm.add(*car);
+            realm.add(car);
         });
         controller.car = std::move(car);
     }
-    controller.realm = std::make_unique<realm::db<Car>>(std::move(realm));
+    realm.get_sync_session()->wait_for_upload_completion().get_future().get();
+    controller.realm = std::make_unique<realm::db<CarModel>>(std::move(realm));
 }
 
 int main(int argc, char *argv[])

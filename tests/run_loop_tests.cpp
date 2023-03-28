@@ -16,15 +16,15 @@
 
 class InvocationQueue {
 public:
-    void push(std::function<void()>&&);
+    void push(realm::Function<void()>&&);
     void invoke_all();
 
 private:
     std::mutex m_mutex;
-    std::vector<std::function<void()>> m_functions;
+    std::vector<realm::Function<void()>> m_functions;
 };
 
-void InvocationQueue::push(std::function<void()>&& fn)
+void InvocationQueue::push(realm::Function<void()>&& fn)
 {
     std::lock_guard lock(m_mutex);
     m_functions.push_back(std::move(fn));
@@ -32,7 +32,7 @@ void InvocationQueue::push(std::function<void()>&& fn)
 
 void InvocationQueue::invoke_all()
 {
-    std::vector<std::function<void()>> functions;
+    std::vector<realm::Function<void()>> functions;
     {
         std::lock_guard lock(m_mutex);
         functions.swap(m_functions);
@@ -54,7 +54,7 @@ public:
     RunLoopScheduler(CFRunLoopRef run_loop = nullptr);
     ~RunLoopScheduler();
 
-    void invoke(std::function<void()>&&) override;
+    void invoke(realm::Function<void()>&&) override;
 
     bool is_on_thread() const noexcept override;
     bool is_same_as(const scheduler* other) const noexcept override;
@@ -103,7 +103,7 @@ RunLoopScheduler::~RunLoopScheduler()
     CFRelease(m_runloop);
 }
 
-void RunLoopScheduler::invoke(std::function<void()>&& fn)
+void RunLoopScheduler::invoke(realm::Function<void()>&& fn)
 {
     m_queue.queue.push(std::move(fn));
 
@@ -182,7 +182,7 @@ public:
         return true;
     }
 
-    void invoke(std::function<void()> &&fn) override {
+    void invoke(realm::Function<void()> &&fn) override {
         auto &data = *static_cast<Data *>(m_handle->data);
         data.queue.push(std::move(fn));
         uv_async_send(m_handle.get());
@@ -494,116 +494,5 @@ TEST_CASE("run loops", "[run loops]") {
             return signal;
         });
     }
-/*
-    SECTION("server_with_scheduler") {
-        auto app = realm::App(Admin::shared().create_app({"str_col", "_id"}), Admin::shared().base_url());
-        auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
-        auto config = user.flexible_sync_configuration();
-
-        bool signal1;
-        std::mutex m1;
-        std::condition_variable v1;
-
-        bool signal2;
-        std::mutex m2;
-        std::condition_variable v2;
-
-        {
-            auto realm = realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(config)
-                                 .get_future()
-                                 .get()
-                                 .resolve();
-            realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                                subs.add<AllTypesObject>("AllTypesObject_flx");
-                                                subs.add<AllTypesObjectLink>("AllTypesObjectLink_flx");
-                                             }).get_future().get();
-            auto obj = AllTypesObject();
-            obj.opt_obj_col = AllTypesObjectLink();
-            realm.write([&]() {
-                realm.add(obj);
-            });
-        }
-
-        std::thread([&, config] {
-            realm::notification_token token1;
-            realm::notification_token token2;
-            bool complete = false;
-            size_t count = 0;
-            auto increase_count = [&]() {
-                count++;
-                if (count == 2) {
-                    token1.unregister();
-                    token2.unregister();
-                    complete = true;
-                }
-            };
-            auto loop = uv_loop_new();
-            auto realm = realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config))
-                                 .get_future()
-                                 .get()
-                                 .resolve(std::make_shared<UvScheduler>(loop));
-
-            realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                     subs.add<AllTypesObject>("AllTypesObject_flx");
-                                     subs.add<AllTypesObjectLink>("AllTypesObjectLink_flx");
-                                 })
-                    .get_future()
-                    .get();
-
-            auto objs = realm.objects<AllTypesObject>()[0];
-            token1 = objs.observe([&increase_count](auto change) {
-                increase_count();
-            });
-
-            /// Settings object observer
-            auto links = realm.objects<AllTypesObjectLink>();
-            token2 = links.observe([&increase_count](auto change) {
-                increase_count();
-            });
-
-            {
-                std::unique_lock<std::mutex> lock(m1);
-                signal1 = true;
-                v1.notify_one();
-            }
-
-            run_until(loop, [&](){
-                if (complete) {
-                    std::unique_lock<std::mutex> lock(m2);
-                    signal2 = true;
-                    v2.notify_one();
-                }
-                return complete;
-            });
-        }).detach();
-        // Wait for listeners to get setup.
-        std::unique_lock<std::mutex> lock(m1);
-        v1.wait(lock, [&] { return signal1; });
-
-        {
-            auto realm = realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(config)
-                                 .get_future()
-                                 .get()
-                                 .resolve();
-            realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                     subs.add<AllTypesObject>("AllTypesObject_flx");
-                                     subs.add<AllTypesObjectLink>("AllTypesObjectLink_flx");
-                                 })
-                    .get_future()
-                    .get();
-            auto obj = realm.objects<AllTypesObject>()[0];
-            realm.write([&]() {
-                obj.double_col = 1.23;
-            });
-
-            realm.write([&]() {
-                obj.opt_obj_col->str_col = "foo";
-            });
-
-            std::unique_lock<std::mutex> lock2(m2);
-            v2.wait(lock2, [&] { return signal2; });
-        }
-    }
-    */
 }
 #endif

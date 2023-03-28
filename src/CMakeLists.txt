@@ -2,6 +2,7 @@ set(SOURCES
     cpprealm/app.cpp
     cpprealm/sdk.cpp
     cpprealm/analytics.cpp
+    cpprealm/logger.cpp
     cpprealm/internal/bridge/obj.cpp
     cpprealm/persisted_string.cpp
     cpprealm/internal/bridge/col_key.cpp
@@ -34,13 +35,25 @@ set(SOURCES
     cpprealm/internal/bridge/async_open_task.cpp
     cpprealm/persisted_double.cpp
     cpprealm/internal/bridge/object_id.cpp
-    cpprealm/persisted_object_id.cpp) # REALM_SOURCES
+    cpprealm/persisted_object_id.cpp
+    cpprealm/experimental/managed_string.cpp
+    cpprealm/experimental/observation.cpp
+    cpprealm/experimental/managed_timestamp.cpp
+    cpprealm/experimental/managed_numeric.cpp
+    cpprealm/experimental/managed_uuid.cpp
+    cpprealm/experimental/managed_objectid.cpp
+    cpprealm/experimental/results.cpp
+    cpprealm/experimental/managed_binary.cpp
+    cpprealm/experimental/managed_list.cpp
+    cpprealm/experimental/managed_dictionary.cpp
+    cpprealm/experimental/managed_mixed.cpp) # REALM_SOURCES
 
 set(HEADERS
     cpprealm/sdk.hpp
     cpprealm/app.hpp
     cpprealm/results.hpp
     cpprealm/db.hpp
+    cpprealm/logger.hpp
     cpprealm/notifications.hpp
     cpprealm/object.hpp
     cpprealm/asymmetric_object.hpp
@@ -92,7 +105,24 @@ set(HEADERS
     cpprealm/internal/bridge/sync_manager.hpp
     cpprealm/internal/bridge/async_open_task.hpp
     cpprealm/internal/bridge/object_id.hpp
-    cpprealm/persisted_object_id.hpp) # REALM_INSTALL_HEADERS
+    cpprealm/persisted_object_id.hpp
+    cpprealm/experimental/db.hpp
+    cpprealm/experimental/link.hpp
+    cpprealm/experimental/macros.hpp
+    cpprealm/experimental/managed_string.hpp
+    cpprealm/experimental/observation.hpp
+    cpprealm/experimental/managed_numeric.hpp
+    cpprealm/experimental/managed_timestamp.hpp
+    cpprealm/experimental/managed_uuid.hpp
+    cpprealm/experimental/managed_objectid.hpp
+    cpprealm/experimental/results.hpp
+    cpprealm/experimental/managed_binary.hpp
+    cpprealm/experimental/managed_list.hpp
+    cpprealm/experimental/managed_dictionary.hpp
+    cpprealm/experimental/managed_mixed.hpp
+    cpprealm/experimental/accessors.hpp 
+    cpprealm/experimental/types.cpp 
+    cpprealm/experimental/types.hpp) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm STATIC ${SOURCES} ${HEADERS})
 include(GNUInstallDirs)

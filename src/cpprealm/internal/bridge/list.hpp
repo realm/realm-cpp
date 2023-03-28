@@ -31,6 +31,11 @@ namespace realm::internal::bridge {
 
     struct list {
         list();
+        list(const list& other) ;
+        list& operator=(const list& other) ;
+        list(list&& other);
+        list& operator=(list&& other);
+        ~list();
         list(const List&); //NOLINT(google-explicit-constructor)
         operator List() const; //NOLINT(google-explicit-constructor)
         list(const realm& realm, const obj& obj, const col_key&);
@@ -120,6 +125,23 @@ namespace realm::internal::bridge {
     [[nodiscard]] mixed get(const list&, size_t idx);
     template <>
     [[nodiscard]] obj get(const list&, size_t idx);
+
+    template <>
+    [[nodiscard]] std::optional<int64_t> get(const list& lst, size_t idx);
+    template <>
+    [[nodiscard]] std::optional<double> get(const list& lst, size_t idx);
+    template <>
+    [[nodiscard]] std::optional<bool> get(const list& lst, size_t idx);
+    template <>
+    [[nodiscard]] std::optional<uuid> get(const list& lst, size_t idx);
+    template <>
+    [[nodiscard]] std::optional<object_id> get(const list& lst, size_t idx);
+    template <>
+    [[nodiscard]] std::optional<std::string> get(const list& lst, size_t idx);
+    template <>
+    [[nodiscard]] std::optional<binary> get(const list& lst, size_t idx);
+    template <>
+    [[nodiscard]] std::optional<timestamp> get(const list& lst, size_t idx);
 }
 
 #endif //CPP_REALM_BRIDGE_LIST_HPP

@@ -15,6 +15,14 @@ namespace realm::internal::bridge {
         enum class object_type : uint8_t { TopLevel = 0, Embedded = 0x1, TopLevelAsymmetric = 0x2 };
 
         object_schema();
+
+        object_schema(const object_schema& other) ;
+        object_schema& operator=(const object_schema& other) ;
+        object_schema(object_schema&& other);
+        object_schema& operator=(object_schema&& other);
+        ~object_schema();
+
+
         object_schema(const std::string& name,
                       const std::vector<property>& properties,
                       const std::string& primary_key,
@@ -40,7 +48,11 @@ namespace realm::internal::bridge {
 #elif __arm__
         std::aligned_storage<68, 4>::type m_schema[1];
 #elif __aarch64__
+#if defined(__clang__)
         std::aligned_storage<128, 8>::type m_schema[1];
+#elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<152, 8>::type m_schema[1];
+#endif
 #endif
     };
 }

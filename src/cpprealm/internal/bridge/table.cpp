@@ -29,6 +29,35 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<16, sizeof(ConstTableRef)>{});
     static_assert(SizeCheck<8, alignof(ConstTableRef)>{});
 #endif
+    table::table() {
+        new (&m_table) TableRef();
+    }
+
+    table::table(const table& other) {
+        new (&m_table) TableRef(*reinterpret_cast<const TableRef*>(&other.m_table));
+    }
+
+    table& table::operator=(const table& other) {
+        if (this != &other) {
+            *reinterpret_cast<TableRef*>(&m_table) = *reinterpret_cast<const TableRef*>(&other.m_table);
+        }
+        return *this;
+    }
+
+    table::table(table&& other) {
+        new (&m_table) TableRef(std::move(*reinterpret_cast<TableRef*>(&other.m_table)));
+    }
+
+    table& table::operator=(table&& other) {
+        if (this != &other) {
+            *reinterpret_cast<TableRef*>(&m_table) = std::move(*reinterpret_cast<TableRef*>(&other.m_table));
+        }
+        return *this;
+    }
+
+    table::~table() {
+        reinterpret_cast<TableRef*>(&m_table)->~TableRef();
+    }
     table::table(const TableRef & ref)
     {
         new (&m_table) TableRef(ref);
@@ -39,15 +68,15 @@ namespace realm::internal::bridge {
     }
 
     table::operator TableRef() const {
-        return *reinterpret_cast<const TableRef*>(m_table);
+        return *reinterpret_cast<const TableRef*>(&m_table);
     }
 
     table::operator ConstTableRef() const {
-        return *reinterpret_cast<const ConstTableRef*>(m_table);
+        return *reinterpret_cast<const ConstTableRef*>(&m_table);
     }
 
     bool table::is_embedded() const {
-        return (*reinterpret_cast<const TableRef*>(m_table))->is_embedded();
+        return (*reinterpret_cast<const TableRef*>(&m_table))->is_embedded();
     }
 
     query table::query(const std::string& a,

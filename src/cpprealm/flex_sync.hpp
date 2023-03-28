@@ -52,9 +52,9 @@ namespace realm {
         // Returns the timestamp of the last time this subscription was updated by calling update_query.
         std::chrono::time_point<std::chrono::system_clock> updated_at;
         // Returns a stringified version of the query associated with this subscription.
-        std::string_view query_string;
+        std::string query_string;
         // Returns the name of the object class of the query for this subscription.
-        std::string_view object_class_name;
+        std::string object_class_name;
     private:
         sync_subscription(const sync::Subscription&);
 
@@ -68,6 +68,12 @@ namespace realm {
     private:
         void insert_or_assign(const std::string& name, const internal::bridge::query&);
     public:
+        mutable_sync_subscription_set() = delete;
+        mutable_sync_subscription_set(const mutable_sync_subscription_set& other) = delete;
+        mutable_sync_subscription_set& operator=(const mutable_sync_subscription_set& other) ;
+        mutable_sync_subscription_set(mutable_sync_subscription_set&& other) = delete;
+        mutable_sync_subscription_set& operator=(mutable_sync_subscription_set&& other);
+        ~mutable_sync_subscription_set();
         // Inserts a new subscription into the set if one does not exist already.
         // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
         // for the templated class type.
@@ -111,7 +117,6 @@ namespace realm {
         // Removes all subscriptions.
         void clear();
 
-
     private:
         mutable_sync_subscription_set(internal::bridge::realm&, const sync::MutableSubscriptionSet& subscription_set);
 #ifdef __i386__
@@ -123,9 +128,13 @@ namespace realm {
         std::aligned_storage<192, 8>::type m_subscription_set[1];
     #endif
 #elif __arm__
-    std::aligned_storage<136, 8>::type m_subscription_set[1];
+        std::aligned_storage<136, 8>::type m_subscription_set[1];
 #elif __aarch64__
-    std::aligned_storage<184, 8>::type m_subscription_set[1];
+#if defined(__clang__)
+        std::aligned_storage<184, 8>::type m_subscription_set[1];
+#elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<192, 8>::type m_subscription_set[1];
+#endif
 #endif
         std::reference_wrapper<internal::bridge::realm> m_realm;
         friend struct sync_subscription_set;
@@ -134,6 +143,13 @@ namespace realm {
 
     struct sync_subscription_set {
     public:
+        sync_subscription_set() = delete;
+        sync_subscription_set(const sync_subscription_set& other) = delete;
+        sync_subscription_set& operator=(const sync_subscription_set& other) ;
+        sync_subscription_set(sync_subscription_set&& other) = delete;
+        sync_subscription_set& operator=(sync_subscription_set&& other);
+        ~sync_subscription_set();
+
         /// The total number of subscriptions in the set.
         [[nodiscard]] size_t size() const;
 
@@ -158,7 +174,11 @@ namespace realm {
 #elif __arm__
         std::aligned_storage<64, 8>::type m_subscription_set[1];
 #elif __aarch64__
+#if defined(__clang__)
         std::aligned_storage<96, 8>::type m_subscription_set[1];
+#elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<104, 8>::type m_subscription_set[1];
+#endif
 #endif
         std::reference_wrapper<internal::bridge::realm> m_realm;
     };

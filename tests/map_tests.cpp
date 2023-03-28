@@ -5,8 +5,14 @@ using namespace realm;
 
 TEST_CASE("map", "[map]") {
     realm_path path;
+    db_config config;
+    config.set_path(path);
     SECTION("unmanaged_managed_map_get_set", "[mixed]") {
         auto obj = AllTypesObject();
+        auto link = AllTypesObjectLink();
+        link.str_col = "foo";
+        auto embedded = AllTypesObjectEmbedded();
+        embedded.str_col = "bar";
         obj.map_int_col = {
             {"a", 42}
         };
@@ -29,10 +35,10 @@ TEST_CASE("map", "[map]") {
                 {"a", std::chrono::system_clock::now()}
         };
         obj.map_link_col = {
-                {"a", AllTypesObjectLink()}
+                {"a", link}
         };
         obj.map_embedded_col = {
-                {"a", AllTypesObjectEmbedded()}
+                {"a", embedded}
         };
         CHECK(obj.map_int_col["a"] == 42);
         CHECK(obj.map_str_col["a"] == "foo");
@@ -42,7 +48,7 @@ TEST_CASE("map", "[map]") {
         CHECK(obj.map_binary_col["a"] == std::vector<uint8_t>{0, 1, 2});
         CHECK(obj.map_link_col["a"] == AllTypesObjectLink());
         CHECK(obj.map_embedded_col["a"] == AllTypesObjectEmbedded());
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
         realm.write([&realm, &obj] {
             realm.add(obj);
         });
@@ -52,18 +58,25 @@ TEST_CASE("map", "[map]") {
         CHECK(obj.map_enum_col["a"] == AllTypesObject::Enum::one);
         CHECK(obj.map_uuid_col["a"] == realm::uuid());
         CHECK(obj.map_binary_col["a"] == std::vector<uint8_t>{0, 1, 2});
-        CHECK(obj.map_link_col["a"] == AllTypesObjectLink());
-        CHECK(obj.map_embedded_col["a"] == AllTypesObjectEmbedded());
+        CHECK(obj.map_link_col["a"] == link);
+        CHECK(obj.map_embedded_col["a"] == embedded);
+        CHECK((*obj.map_link_col["a"])->str_col == "foo");
+        CHECK((*obj.map_embedded_col["a"])->str_col == "bar");
 
-        realm.write([&obj] {
+        auto link2 = AllTypesObjectLink();
+        link2.str_col = "foo";
+        auto embedded2 = AllTypesObjectEmbedded();
+        embedded2.str_col = "bar";
+
+        realm.write([&obj, &link2, &embedded2] {
             obj.map_int_col["b"] = 84;
             obj.map_str_col["b"] = "bar";
             obj.map_bool_col["b"] = true;
             obj.map_enum_col["b"] = AllTypesObject::Enum::two;
             obj.map_uuid_col["b"] = realm::uuid();
             obj.map_binary_col["b"] = std::vector<uint8_t>{3,4,5};
-            obj.map_link_col["b"] = AllTypesObjectLink();
-            obj.map_embedded_col["b"] = AllTypesObjectEmbedded();
+            obj.map_link_col["b"] = link2;
+            obj.map_embedded_col["b"] = embedded2;
         });
         CHECK(obj.map_int_col["a"] == 42);
         CHECK(obj.map_int_col["b"] == 84);
@@ -77,8 +90,12 @@ TEST_CASE("map", "[map]") {
         CHECK(obj.map_uuid_col["b"] == realm::uuid());
         CHECK(obj.map_binary_col["a"] == std::vector<uint8_t>{0, 1, 2});
         CHECK(obj.map_binary_col["b"] == std::vector<uint8_t>{3, 4, 5});
-        CHECK(obj.map_link_col["b"] == AllTypesObjectLink());
-        CHECK(obj.map_embedded_col["b"] == AllTypesObjectEmbedded());
+        CHECK(obj.map_link_col["a"] == link);
+        CHECK(obj.map_embedded_col["a"] == embedded);
+        CHECK(obj.map_link_col["b"] == link2);
+        CHECK(obj.map_embedded_col["b"] == embedded2);
+        CHECK((*obj.map_link_col["b"])->str_col == "foo");
+        CHECK((*obj.map_embedded_col["b"])->str_col == "bar");
 
         realm.write([&obj] {
             obj.map_link_col["b"] = std::nullopt;
@@ -100,7 +117,7 @@ TEST_CASE("map", "[map]") {
             if (k == "a") CHECK(v == "foo");
             else if (k == "b") CHECK(v == "bar");
         }
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
         realm.write([&realm, &obj] {
             realm.add(obj);
         });
@@ -117,7 +134,7 @@ TEST_CASE("map", "[map]") {
         obj.map_str_col = {
                 {"a", std::string("foo")}
         };
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
         realm.write([&realm, &obj] {
             realm.add(obj);
         });
@@ -160,7 +177,7 @@ TEST_CASE("map", "[map]") {
         obj.map_str_col.erase("foo");
         CHECK(obj.map_str_col.find("foo") == obj.map_str_col.end());
 
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
         realm.write([&realm, &obj] {
             obj.map_str_col["c"] = "boo";
             obj.map_str_col["d"] = "boop";

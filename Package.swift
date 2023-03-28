@@ -34,8 +34,8 @@ let applePlatforms: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS]
 let cppSdkTarget: Target = .target(
     name: "realm-cpp-sdk",
     dependencies: [
-        .product(name: "RealmCore", package: "RealmDatabase"),
-        .product(name: "RealmQueryParser", package: "RealmDatabase"),
+        .product(name: "RealmCore", package: "realm-core"),
+        .product(name: "RealmQueryParser", package: "realm-core"),
     ],
     path: "src/",
     exclude: [
@@ -65,7 +65,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(name: "RealmDatabase", url: "https://github.com/realm/realm-core.git", .exact(Version("13.4.0")))
+        .package(url: "https://github.com/realm/realm-core.git", revision: "b2ed3201a306b1b00f5fb1cc4d64d84e7e603c3f")
     ],
     targets: [
         cppSdkTarget,

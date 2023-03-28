@@ -49,7 +49,8 @@ namespace realm {
                         v.manage(realm.table_for_object_type(T::schema.name), realm);
                     }
                     this->m_property_object = v;
-                    this->m_object->get_obj().template set(col_key, this->m_property_object.value());
+                    abort();
+//                    this->m_object->get_obj().template set(col_key, this->m_property_object.value());
                 }
             } else {
                 m_property_object = v;
@@ -72,7 +73,8 @@ namespace realm {
                         v.manage(realm.table_for_object_type(T::schema.name), realm);
                     }
                     this->m_property_object = v;
-                    this->m_object->get_obj().template set(col_key, this->m_property_object.value());
+                    abort();
+//                    this->m_object->get_obj().template set(col_key, this->m_property_object.value());
                 }
             } else {
                 m_property_object = v;
@@ -87,6 +89,20 @@ namespace realm {
             return *this;
         }
         T* operator ->() {
+            if (this->is_managed() && this->m_object->is_valid() && !this->m_object->get_obj().is_null(col_key) && !m_property_object) {
+                // Because we lazily fetch the property values there will be a point where
+                // an object property will have a stored value but the persisted wrapper will have not
+                // set up m_property_object. This could be due to writing to the property on object A,
+                // but observing for a change on object B for the same property. Because of this we need to
+                // set up the m_property_object mvar and pass it back on first access. This breaks const rules
+                // when said scenario happens but shouldn't warrant this function losing its const signature.
+                auto* c_this = const_cast<persisted<std::optional<T>>*>(this);
+                c_this->m_property_object = T();
+                c_this->m_property_object->assign_accessors(
+                        internal::bridge::object(this->m_object->get_realm(),
+                                                 this->m_object->get_obj().get_linked_object(col_key)));
+                return &*m_property_object;
+            }
             return &*m_property_object;
         }
         std::optional<T> operator * () const
