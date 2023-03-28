@@ -69,8 +69,8 @@ static std::string create_jwt(const std::string& appId)
 }
 
 TEST_CASE("app", "[app]") {
+    auto app_id = Admin::shared().create_app();
     SECTION("auth_providers_promise") {
-        auto app_id = Admin::shared().create_app();
         auto app = realm::App(app_id, Admin::shared().base_url());
 
         auto run_login = [&app](realm::App::credentials&& credentials) {
@@ -85,7 +85,6 @@ TEST_CASE("app", "[app]") {
     }
 
     SECTION("auth_providers_completion_hander") {
-        auto app_id = Admin::shared().create_app();
         auto app = realm::App(app_id, Admin::shared().base_url());
 
         app.register_user("foo@mongodb.com", "foobar").get_future().get();
@@ -98,7 +97,6 @@ TEST_CASE("app", "[app]") {
     }
 
     SECTION("logout_anonymous") {
-        auto app_id = Admin::shared().create_app();
         auto app = realm::App(app_id, Admin::shared().base_url());
         auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
         CHECK(!user.access_token().empty());
@@ -109,7 +107,6 @@ TEST_CASE("app", "[app]") {
     }
 
     SECTION("logout") {
-        auto app_id = Admin::shared().create_app();
         auto app = realm::App(app_id, Admin::shared().base_url());
         app.register_user("foo@mongodb.com", "foobar").get_future().get();
         auto user = app.login(
@@ -122,7 +119,6 @@ TEST_CASE("app", "[app]") {
     }
 
     SECTION("logout_completion_handler") {
-        auto app_id = Admin::shared().create_app();
         auto app = realm::App(app_id, Admin::shared().base_url());
         auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
         CHECK(user.state() == realm::user::state::logged_in);
@@ -138,7 +134,6 @@ TEST_CASE("app", "[app]") {
     }
 
     SECTION("function_and_custom_user_data") {
-        auto app_id = Admin::shared().create_app();
         auto app = realm::App(app_id, Admin::shared().base_url());
         app.register_user("foo@mongodb.com", "foobar").get_future().get();
         auto user = app.login(
