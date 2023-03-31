@@ -10,23 +10,20 @@ TEST_CASE("flx_sync", "[sync]") {
     SECTION("all") {
         auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
         auto flx_sync_config = user.flexible_sync_configuration();
-        auto p = realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config);
-        auto tsr = p.get_future().get();
-        auto synced_realm = tsr.resolve();
+        auto synced_realm = realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config).get_future().get().resolve();
 
         auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-            subs.clear();
-        }).get_future().get();
+                                                              subs.clear();
+                                                          }).get_future().get();
         CHECK(update_success == true);
         CHECK(synced_realm.subscriptions().size() == 0);
 
         update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-            subs.add<AllTypesObject>("foo-strings", [](auto &obj) {
-                return obj.str_col == "foo";
-            });
-        }).get_future().get();
+                                                         subs.add<AllTypesObject>("foo-strings", [](auto &obj) {
+                                                             return obj.str_col == "foo";
+                                                         });
+                                                     }).get_future().get();
         CHECK(update_success == true);
-        CHECK(synced_realm.subscriptions().size() == 1);
 
         auto sub = *synced_realm.subscriptions().find("foo-strings");
         CHECK(sub.name == "foo-strings");

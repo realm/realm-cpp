@@ -75,6 +75,7 @@ struct Session {
 
     std::string create_app(bson::BsonArray queryable_fields = {}, std::string name = "test");
     [[nodiscard]] std::string cached_app_id() const;
+    void cache_app_id(const std::string& app_id);
 private:
     const std::string m_base_url;
     const std::string m_access_token;

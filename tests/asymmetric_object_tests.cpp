@@ -6,9 +6,9 @@
 using namespace realm;
 
 TEST_CASE("asymmetric object", "[sync]") {
-    realm_path path;
     SECTION("basic", "[sync]") {
-        auto app = realm::App(Admin::shared().cached_app_id(), Admin::shared().base_url());
+        auto asymmetric_app_id = Admin::shared().create_app();
+        auto app = realm::App(asymmetric_app_id, Admin::shared().base_url());
         auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
         auto p = realm::async_open<AllTypesAsymmetricObject, EmbeddedFoo>(user.flexible_sync_configuration());
         auto tsr = p.get_future().get();

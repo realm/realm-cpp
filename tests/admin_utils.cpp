@@ -577,9 +577,13 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
         {"collection_name", "UserData"},
         {"user_id_field", "user_id"},
     });
-    m_cached_app_id = static_cast<std::optional<std::string>>(info["client_app_id"]);
-    return *m_cached_app_id;
+    return *static_cast<std::optional<std::string>>(info["client_app_id"]);
 }
+
+void Admin::Session::cache_app_id(const std::string& app_id) {
+    m_cached_app_id = app_id;
+}
+
 
 [[nodiscard]] std::string Admin::Session::cached_app_id() const {
     REALM_ASSERT(m_cached_app_id);
