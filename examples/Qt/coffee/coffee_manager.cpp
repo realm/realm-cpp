@@ -4,8 +4,7 @@
 CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
     : QObject{parent}
 {
-    // assume this coffee machine has a preconfigured id.
-    auto app = realm::App("qt-realm-coffee-dfvvc");
+    auto app = realm::App("MY_APP_ID");
     mUser = app.login(realm::App::credentials::anonymous()).get_future().get();
     auto realm = realm::open<CoffeeMachine, DrinkTemplate>(mUser.flexible_sync_configuration());
     realm.subscriptions().update([](realm::mutable_sync_subscription_set& subs) {
