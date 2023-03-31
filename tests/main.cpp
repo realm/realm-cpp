@@ -21,16 +21,15 @@
 #include <catch2/catch_all.hpp>
 #include <realm/util/features.h>
 #include <filesystem>
+#include "admin_utils.hpp"
 
 int main(int argc, char* argv[]) {
     Catch::ConfigData config;
-
     if (getenv("REALM_CI")) {
         config.showDurations = Catch::ShowDurations::Always; // this is to help debug hangs
         config.reporterSpecifications.push_back(Catch::ReporterSpec{"console", {}, {}, {}});
         config.reporterSpecifications.push_back(Catch::ReporterSpec{"junit", {"TestResults.xml"}, {}, {}});
-//        config.testsOrTags.push_back("~[app]");
-//        config.testsOrTags.push_back("~[sync]");
+        Admin::shared().create_app({"str_col", "_id"});
     } else if (getenv("REALM_LOCAL_ENDPOINT") == nullptr) {
 #if REALM_MOBILE || REALM_WINDOWS
         // skip app and sync tests on Mobile and Windows platforms if we're not running on CI or have an explicit BAAS endpoint set
@@ -39,6 +38,7 @@ int main(int argc, char* argv[]) {
 #else
         config.showDurations = Catch::ShowDurations::Always; // this is to help debug hangs
 //        config.testsOrTags.emplace_back("~[performance]");
+        Admin::shared().create_app({"str_col", "_id"});
 #endif
     }
 

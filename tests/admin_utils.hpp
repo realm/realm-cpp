@@ -73,16 +73,18 @@ struct Session {
 
     const std::string& base_url() const { return m_base_url; }
 
-    [[nodiscard]] std::string create_app(bson::BsonArray queryable_fields = {}, std::string name = "test") const;
+    std::string create_app(bson::BsonArray queryable_fields = {}, std::string name = "test");
+    [[nodiscard]] std::string cached_app_id() const;
 private:
     const std::string m_base_url;
     const std::string m_access_token;
     const std::optional<std::string> m_cluster_name;
+    std::optional<std::string> m_cached_app_id;
 
     Session(const std::string& baas_url, const std::string& access_token, const std::string& group_id, std::optional<std::string> cluster_name = std::nullopt);
 };
 
-const Session& shared();
+Session& shared();
 
 } // namespace Admin
 

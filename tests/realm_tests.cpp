@@ -3,35 +3,6 @@
 #include <realm/object-store/shared_realm.hpp>
 
 TEST_CASE("cached realm") {
-    SECTION("check realm is statically cached") {
-        {
-            realm_path path;
-            auto realm = realm::internal::bridge::realm(realm::db_config(path));
-            auto realm2 = realm::internal::bridge::realm(realm::db_config(path));
-            realm::SharedRealm shared_realm = realm;
-            realm::SharedRealm shared_realm2 = realm2;
-            CHECK(shared_realm == shared_realm2);
-            realm::internal::bridge::realm::reset_realm_state();
-            auto realm3 = realm::internal::bridge::realm(realm::db_config(path));
-            realm::SharedRealm shared_realm3 = realm3;
-            CHECK(shared_realm != shared_realm3);
-        }
-
-        std::thread t1 = std::thread([]() {
-            realm_path path;
-            auto realm = realm::internal::bridge::realm(realm::db_config(path));
-            auto realm2 = realm::internal::bridge::realm(realm::db_config(path));
-            realm::SharedRealm shared_realm = realm;
-            realm::SharedRealm shared_realm2 = realm2;
-            CHECK(shared_realm == shared_realm2);
-            realm::internal::bridge::realm::reset_realm_state();
-            auto realm3 = realm::internal::bridge::realm(realm::db_config(path));
-            realm::SharedRealm shared_realm3 = realm3;
-            CHECK(shared_realm != shared_realm3);
-        });
-        t1.join();
-    }
-
     SECTION("cached realm transactions") {
         realm_path path;
         auto o = AllTypesObject();
@@ -52,4 +23,28 @@ TEST_CASE("cached realm") {
         }
         CHECK(*o.str_col == "foo");
     }
+}
+
+TEST_CASE("tsr") {
+    realm_path path;
+    auto realm = realm::open<Person, Dog>({path});
+
+    auto person = Person { .name = "John", .age = 17 };
+    person.dog = Dog {.name = "Fido"};
+
+    realm.write([&realm, &person] {
+        realm.add(person);
+    });
+
+    auto tsr = realm::thread_safe_reference<Person>(person);
+    std::promise<void> p;
+    auto t = std::thread([&tsr, &p, &path]() {
+        auto realm = realm::open<Person, Dog>({path});
+        auto person = realm.resolve(std::move(tsr));
+        CHECK(*person.age == 17);
+        realm.write([&] { realm.remove(person); });
+        p.set_value();
+    });
+    t.join();
+    p.get_future().get();
 }

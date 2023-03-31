@@ -104,8 +104,6 @@ namespace realm::internal::bridge {
         static async_open_task get_synchronized_realm(const config&);
         bool refresh();
         [[nodiscard]] std::optional<sync_session> get_sync_session() const;
-        // Clears all cached realms.
-        static void reset_realm_state();
     private:
         std::shared_ptr<Realm> m_realm;
         friend struct group;

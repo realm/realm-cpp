@@ -308,7 +308,7 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
 
 }
 
-[[nodiscard]] std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::string app_name) const {
+std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::string app_name) {
     auto info = static_cast<bson::BsonDocument>(apps.post({{"name", app_name}}));
     app_name = static_cast<std::string>(info["client_app_id"]);
     if (m_cluster_name) {
@@ -577,7 +577,13 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
         {"collection_name", "UserData"},
         {"user_id_field", "user_id"},
     });
-    return static_cast<std::string>(info["client_app_id"]);
+    m_cached_app_id = static_cast<std::optional<std::string>>(info["client_app_id"]);
+    return *m_cached_app_id;
+}
+
+[[nodiscard]] std::string Admin::Session::cached_app_id() const {
+    REALM_ASSERT(m_cached_app_id);
+    return *m_cached_app_id;
 }
 
 Admin::Session Admin::Session::local(std::optional<std::string> baas_url)
@@ -646,7 +652,7 @@ static Admin::Session make_default_session() {
     }
 }
 
-const Admin::Session& Admin::shared() {
+Admin::Session& Admin::shared() {
     static Admin::Session session(make_default_session());
     return session;
 }

@@ -319,4 +319,9 @@ namespace realm {
                     cb(user{std::move(u)}, error ? std::optional<app_error>{app_error(std::move(*error))} : std::nullopt);
                 });
     }
+
+    internal::bridge::sync_manager App::get_sync_manager() const {
+        return m_app->sync_manager();
+    }
+
 }

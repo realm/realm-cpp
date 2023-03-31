@@ -29,7 +29,6 @@ static std::string HMAC_SHA256(std::string_view key, std::string_view data)
 #endif
 }
 
-
 static std::string create_jwt(const std::string& appId)
 {
     nlohmann::json header = {{"alg", "HS256"}, {"typ", "JWT"}};
@@ -69,27 +68,24 @@ static std::string create_jwt(const std::string& appId)
 }
 
 TEST_CASE("app", "[app]") {
-    auto app_id = Admin::shared().create_app();
-    SECTION("auth_providers_promise") {
-        auto app = realm::App(app_id, Admin::shared().base_url());
+    auto app = realm::App(Admin::shared().cached_app_id(), Admin::shared().base_url());
 
+    SECTION("auth_providers_promise") {
         auto run_login = [&app](realm::App::credentials&& credentials) {
             auto user = app.login(std::move(credentials)).get_future().get();
             CHECK(!user.access_token().empty());
         };
 
-        app.register_user("foo@mongodb.com", "foobar").get_future().get();
-        run_login(realm::App::credentials::username_password("foo@mongodb.com", "foobar"));
+        app.register_user("auth_providers_promise@mongodb.com", "foobar").get_future().get();
+        run_login(realm::App::credentials::username_password("auth_providers_promise@mongodb.com", "foobar"));
         run_login(realm::App::credentials::anonymous());
-        run_login(realm::App::credentials::custom(create_jwt(app_id)));
+        run_login(realm::App::credentials::custom(create_jwt(Admin::shared().cached_app_id())));
     }
 
     SECTION("auth_providers_completion_hander") {
-        auto app = realm::App(app_id, Admin::shared().base_url());
-
-        app.register_user("foo@mongodb.com", "foobar").get_future().get();
+        app.register_user("auth_providers_completion_hander@mongodb.com", "foobar").get_future().get();
         std::promise<realm::user> p;
-        app.login(realm::App::credentials::username_password("foo@mongodb.com", "foobar"), [&](auto user, auto err){
+        app.login(realm::App::credentials::username_password("auth_providers_completion_hander@mongodb.com", "foobar"), [&](auto user, auto err){
             p.set_value(user);
         });
         auto user = p.get_future().get();
@@ -97,7 +93,6 @@ TEST_CASE("app", "[app]") {
     }
 
     SECTION("logout_anonymous") {
-        auto app = realm::App(app_id, Admin::shared().base_url());
         auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
         CHECK(!user.access_token().empty());
         CHECK(user.state() == realm::user::state::logged_in);
@@ -107,10 +102,9 @@ TEST_CASE("app", "[app]") {
     }
 
     SECTION("logout") {
-        auto app = realm::App(app_id, Admin::shared().base_url());
-        app.register_user("foo@mongodb.com", "foobar").get_future().get();
+        app.register_user("logout@mongodb.com", "foobar").get_future().get();
         auto user = app.login(
-                           realm::App::credentials::username_password("foo@mongodb.com", "foobar")).get_future().get();
+                           realm::App::credentials::username_password("logout@mongodb.com", "foobar")).get_future().get();
         CHECK(!user.access_token().empty());
         CHECK(user.state() == realm::user::state::logged_in);
 
@@ -119,7 +113,6 @@ TEST_CASE("app", "[app]") {
     }
 
     SECTION("logout_completion_handler") {
-        auto app = realm::App(app_id, Admin::shared().base_url());
         auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
         CHECK(user.state() == realm::user::state::logged_in);
 
@@ -134,10 +127,9 @@ TEST_CASE("app", "[app]") {
     }
 
     SECTION("function_and_custom_user_data") {
-        auto app = realm::App(app_id, Admin::shared().base_url());
-        app.register_user("foo@mongodb.com", "foobar").get_future().get();
+        app.register_user("function_and_custom_user_data@mongodb.com", "foobar").get_future().get();
         auto user = app.login(
-                           realm::App::credentials::username_password("foo@mongodb.com", "foobar")).get_future().get();
+                           realm::App::credentials::username_password("function_and_custom_user_data@mongodb.com", "foobar")).get_future().get();
         auto result = user.call_function("updateUserData", {realm::bson::BsonDocument({{"name", "john"}})}).get_future().get();
         CHECK(result);
 
