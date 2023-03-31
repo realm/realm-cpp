@@ -79,7 +79,10 @@ namespace realm::internal::bridge {
             return m_scheduler->is_on_thread();
         }
         bool is_same_as(const util::Scheduler *other) const noexcept override {
-            return m_thread_id == reinterpret_cast<const internal_scheduler *>(other)->m_thread_id;
+            if (auto o = dynamic_cast<const internal_scheduler *>(other)) {
+                return m_thread_id == o->m_thread_id;
+            }
+            return false;
         }
 
         bool can_invoke() const noexcept override {
