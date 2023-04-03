@@ -65,7 +65,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(name: "RealmDatabase", url: "https://github.com/realm/realm-core.git", .exact(Version("13.4.0")))
+        .package(name: "RealmDatabase", url: "https://github.com/realm/realm-core.git", .exact(Version("13.7.1")))
     ],
     targets: [
         cppSdkTarget,

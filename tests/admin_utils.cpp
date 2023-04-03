@@ -205,15 +205,31 @@ struct RealmServer {
     }
 
     static inline void wait_for_server_to_start() {
-        auto response = do_http_request({
-                                                .url="http://localhost:9090/api/admin/v3.0/groups/groupId/apps/appId"
-                                        });
-        while (response.body.empty()) {
+        std::string baas_url = "http://localhost:9090";
+        bson::BsonDocument credentials {
+                {"username", "unique_user@domain.com"},
+                {"password", "password"}
+        };
+        std::stringstream body;
+        body << credentials;
+
+        auto do_request = [&]() {
+            return do_http_request({
+                    .method = realm::app::HttpMethod::post,
+                    .url = util::format("%1/api/admin/v3.0/auth/providers/%2/login", baas_url, "local-userpass"),
+                    .headers = {
+                            {"Content-Type", "application/json;charset=utf-8"},
+                            {"Accept",       "application/json"}
+                    },
+                    .body = body.str()
+            });
+        };
+
+        auto response = do_request();
+        while (response.http_status_code != 200) {
             std::cout << "Server not up" << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-            response = do_http_request({
-                                               .url="http://localhost:9090/api/admin/v3.0/groups/groupId/apps/appId"
-                                       });
+             response = do_request();
         }
         std::cout << "Server started!" << std::endl;
     }
@@ -244,12 +260,8 @@ struct RealmServer {
     RealmServer() = default;
 public:
     static void setup() {
-        for (const auto& dirEntry : recursive_directory_iterator(current_path())) {
-            if (dirEntry.path().string().find("setup_baas.rb") != std::string::npos) {
-                if (system(dirEntry.path().string().c_str()) == -1) {
-                    REALM_TERMINATE("Failed to run setup_baas.rb");
-                }
-            }
+        if (system("./evergreen/install_baas.sh -w baas -b master") == -1) {
+            REALM_TERMINATE("Failed to run setup_baas.rb");
         }
     }
 
@@ -296,7 +308,7 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
 
 }
 
-[[nodiscard]] std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::string app_name) const {
+std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::string app_name) {
     auto info = static_cast<bson::BsonDocument>(apps.post({{"name", app_name}}));
     app_name = static_cast<std::string>(info["client_app_id"]);
     if (m_cluster_name) {
@@ -526,7 +538,13 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
                                          {"apply_when", {}},
                                          {"insert", true},
                                          {"delete", true},
-                                         {"additional_fields", {}}},
+                                         {"additional_fields", {}},
+                                         {"document_filters", bson::BsonDocument({{"read", true}, {"write", true}})},
+                                         {"read", true},
+                                         {"write", true},
+                                         {"insert", true},
+                                         {"delete", true}
+                              }
                   }
         }
     };
@@ -535,11 +553,16 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
             {"database", app_name},
             {"collection", "AllTypesAsymmetricObject"},
             {"roles", bson::BsonArray {
-                    bson::BsonDocument {{"name", "default"},
-                                        {"apply_when", {}},
-                                        {"insert", true},
-                                        {"delete", true},
-                                        {"additional_fields", {}}},
+                    bson::BsonDocument{{"name", "default"},
+                                                 {"apply_when", {}},
+                                                 {"insert", true},
+                                                 {"delete", true},
+                                                 {"additional_fields", {}},
+                                                 {"document_filters", bson::BsonDocument({{"read", true}, {"write", true}})},
+                                                 {"read", true},
+                                                 {"write", true},
+                                                 {"insert", true},
+                                                 {"delete", true}}
             }
             }
     };
@@ -554,7 +577,17 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
         {"collection_name", "UserData"},
         {"user_id_field", "user_id"},
     });
-    return static_cast<std::string>(info["client_app_id"]);
+    return *static_cast<std::optional<std::string>>(info["client_app_id"]);
+}
+
+void Admin::Session::cache_app_id(const std::string& app_id) {
+    m_cached_app_id = app_id;
+}
+
+
+[[nodiscard]] std::string Admin::Session::cached_app_id() const {
+    REALM_ASSERT(m_cached_app_id);
+    return *m_cached_app_id;
 }
 
 Admin::Session Admin::Session::local(std::optional<std::string> baas_url)
@@ -611,33 +644,11 @@ static Admin::Session make_default_session() {
     } else {
 #if !REALM_WINDOWS && !REALM_MOBILE
         using namespace local;
-        RealmServer::setup();
+        std::thread([] {
+            RealmServer::setup();
+        }).detach();
 
-        if (fork()) {
-            if (fork()) {
-                if (fork()) {
-                    // parent
-                } else {
-                    // third child
-                    write_to_devnull();
-                    RealmServer::launch_add_user_process();
-                    exit(0);
-                }
-            } else {
-                // second child
-                write_to_devnull();
-                RealmServer::launch_server_process();
-                exit(0);
-            }
-        } else {
-            // first child
-            write_to_devnull();
-            RealmServer::launch_mongo_process();
-            exit(0);
-        }
         RealmServer::wait_for_server_to_start();
-        RealmServer::launch_add_user_process();
-
         return Admin::Session::local();
 #else
         REALM_TERMINATE("Automatic local tests are unsupported on this platform. Set the REALM_LOCAL_ENDPOINT environment variable to the base URL of a running BAAS server.");
@@ -645,7 +656,7 @@ static Admin::Session make_default_session() {
     }
 }
 
-const Admin::Session& Admin::shared() {
+Admin::Session& Admin::shared() {
     static Admin::Session session(make_default_session());
     return session;
 }

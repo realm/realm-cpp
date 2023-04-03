@@ -16,9 +16,10 @@
 #include <realm/object-store/shared_realm.hpp>
 #include <realm/object-store/thread_safe_reference.hpp>
 #include <realm/object-store/dictionary.hpp>
+#include <realm/object-store/impl/realm_coordinator.hpp>
 #include <realm/object-store/sync/sync_user.hpp>
-#include <realm/sync/config.hpp>
 #include <realm/object-store/util/scheduler.hpp>
+#include <realm/sync/config.hpp>
 
 #include <filesystem>
 
@@ -63,7 +64,7 @@ namespace realm::internal::bridge {
 
     struct internal_scheduler : util::Scheduler {
         internal_scheduler(const std::shared_ptr<scheduler>& s)
-        : m_scheduler(s)
+        : m_scheduler(s), m_thread_id(std::this_thread::get_id())
         {
         }
 
@@ -78,13 +79,18 @@ namespace realm::internal::bridge {
             return m_scheduler->is_on_thread();
         }
         bool is_same_as(const util::Scheduler *other) const noexcept override {
-            return this == other;
+            if (auto o = dynamic_cast<const internal_scheduler *>(other)) {
+                return m_thread_id == o->m_thread_id;
+            }
+            return false;
         }
 
         bool can_invoke() const noexcept override {
             return m_scheduler->can_invoke();
         }
+    private:
         std::shared_ptr<scheduler> m_scheduler;
+        std::thread::id m_thread_id;
     };
 
     realm::realm(thread_safe_reference&& tsr, const std::optional<std::shared_ptr<struct scheduler>>& s) {
@@ -101,6 +107,7 @@ namespace realm::internal::bridge {
     realm::config::config(const std::optional<std::string>& path,
                           const std::optional<std::shared_ptr<struct scheduler>>& scheduler) {
         RealmConfig config;
+        config.cache = true;
         if (path) {
             config.path = *path;
         } else {
@@ -116,7 +123,6 @@ namespace realm::internal::bridge {
         config.schema_version = 0;
         new (&m_config) RealmConfig(config);
     }
-
 
     realm::sync_config::sync_config(const std::shared_ptr<SyncConfig> &v) {
         m_config = v;
@@ -145,6 +151,7 @@ namespace realm::internal::bridge {
     table realm::table_for_object_type(const std::string &object_type) {
         return read_group().get_table(object_type);
     }
+
     realm::realm() {
 
     }
