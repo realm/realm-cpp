@@ -55,39 +55,48 @@
 #include <QBrush>
 #include <cpprealm/sdk.hpp>
 
-class Car : public QGraphicsObject, public realm::object<Car>
+class CarModel : public realm::object<CarModel>
+{
+public:
+    realm::persisted<int64_t> _id;
+    realm::persisted<qreal> wheelsAngle; // used when applying rotation
+    realm::persisted<qreal> speed; // delta movement along the body axis
+    realm::persisted<Qt::GlobalColor> color;
+
+    void accelerate();
+    void decelerate();
+    void turnLeft();
+    void turnRight();
+    void setColor(Qt::GlobalColor color);
+
+    static constexpr auto schema = realm::schema("CarModel",
+            realm::property<&CarModel::_id, true>("_id"),
+            realm::property<&CarModel::wheelsAngle>("wheelsAngle"),
+            realm::property<&CarModel::speed>("speed"),
+            realm::property<&CarModel::color>("color"));
+};
+
+class Car : public QGraphicsObject
 {
     Q_OBJECT
 public:
     Car();
     QRectF boundingRect() const;
 
-    void on_change();
+    void on_change(const CarModel&);
 
-    realm::persisted<int> _id;
-    realm::persisted<qreal> wheelsAngle; // used when applying rotation
-    realm::persisted<qreal> speed; // delta movement along the body axis
-    realm::persisted<Qt::GlobalColor> color;
-public Q_SLOTS:
-    void accelerate();
-    void decelerate();
-    void turnLeft();
-    void turnRight();
-    void setColor(Qt::GlobalColor color);
+    int64_t _id;
+    qreal wheelsAngle; // used when applying rotation
+    qreal speed; // delta movement along the body axis
+    Qt::GlobalColor color;
+
 Q_SIGNALS:
     void crashed();
 
 protected:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = nullptr);
     void timerEvent(QTimerEvent *event);
-private:
-
-public:
-    static constexpr auto schema = realm::schema("Car",
-            realm::property<&Car::_id, true>("_id"),
-            realm::property<&Car::wheelsAngle>("wheelsAngle"),
-            realm::property<&Car::speed>("speed"),
-            realm::property<&Car::color>("color"));
 };
+
 
 #endif // CAR_H
