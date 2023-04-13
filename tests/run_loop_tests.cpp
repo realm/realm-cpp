@@ -182,7 +182,7 @@ public:
         return true;
     }
 
-    void invoke(std::function<void()> &&fn) override {
+    void invoke(realm::Function<void()> &&fn) override {
         auto &data = *static_cast<Data *>(m_handle->data);
         data.queue.push(std::move(fn));
         uv_async_send(m_handle.get());
