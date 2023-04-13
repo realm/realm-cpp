@@ -181,21 +181,12 @@ namespace realm {
                     handler({&collection, {}, {}, {}});
                 } else if (!changes.collection_root_was_deleted() || !changes.deletions().empty()) {
                     handler({&collection,
-                             to_vector(changes.deletions()),
-                             to_vector(changes.insertions()),
-                             to_vector(changes.modifications()),
+                             changes.deletions(),
+                             changes.insertions(),
+                             changes.modifications(),
                             });
                 }
             }
-
-        private:
-            std::vector<uint64_t> to_vector(const internal::bridge::index_set &index_set) {
-                auto vector = std::vector<uint64_t>();
-                for (auto index: index_set.as_indexes()) {
-                    vector.push_back(index);
-                }
-                return vector;
-            };
         };
 
         notification_token observe(std::function<void(results_change)> &&handler) {

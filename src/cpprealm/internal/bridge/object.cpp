@@ -119,39 +119,41 @@ namespace realm::internal::bridge {
         } ccb(std::move(cb));
         return reinterpret_cast<Object*>(m_object)->add_notification_callback(ccb);
     }
-
-    bool index_set::empty() const {
-        return reinterpret_cast<const IndexSet*>(m_idx_set)->empty();
-    }
-    index_set::index_set() {
-        new (&m_idx_set) IndexSet();
-    }
-    index_set::index_set(const IndexSet& v) {
-        new (&m_idx_set) IndexSet(v);
-    }
     bool collection_change_set::empty() const {
-        return reinterpret_cast<const CollectionChangeSet *>(m_change_set)->empty();
+        return m_change_set->empty();
     }
 
     collection_change_set::operator CollectionChangeSet() const {
-        return *reinterpret_cast<const CollectionChangeSet *>(m_change_set);
+        return *m_change_set;
+    }
+
+    static std::vector<uint64_t> to_vector(const IndexSet& index_set) {
+        auto vector = std::vector<uint64_t>();
+        for (auto index : index_set.as_indexes()) {
+            vector.push_back(index);
+        }
+        return vector;
+    };
+
+    index_set collection_change_set::insertions() const {
+        return to_vector(m_change_set->insertions);
     }
 
     index_set collection_change_set::modifications() const {
-        return reinterpret_cast<const CollectionChangeSet *>(m_change_set)->modifications;
+        return to_vector(m_change_set->modifications);
     }
 
     std::unordered_map<int64_t, index_set> collection_change_set::columns() const {
-        auto& columns = reinterpret_cast<const CollectionChangeSet *>(m_change_set)->columns;
+        auto& columns = m_change_set->columns;
         std::unordered_map<int64_t, index_set> map;
         for (const auto &[k, v]: columns) {
-            map[k] = v;
+            map[k] = to_vector(v);
         }
         return map;
     }
 
     index_set collection_change_set::deletions() const {
-        return reinterpret_cast<const CollectionChangeSet *>(m_change_set)->deletions;
+        return to_vector(m_change_set->deletions);
     }
 
     notification_token::notification_token() {
@@ -166,53 +168,9 @@ namespace realm::internal::bridge {
     }
 
     collection_change_set::collection_change_set(const CollectionChangeSet &v) {
-        new (&m_change_set) CollectionChangeSet(v);
+        m_change_set = std::make_unique<CollectionChangeSet>(v);
     }
-
-    size_t index_set::index_iterator::operator*() const noexcept {
-        return reinterpret_cast<const IndexSet::IndexIterator*>(m_iterator)->operator*();
-    }
-
-    bool index_set::index_iterator::operator==(const index_set::index_iterator &it) const noexcept {
-        return reinterpret_cast<const IndexSet::IndexIterator*>(m_iterator)->operator==(
-                *reinterpret_cast<const IndexSet::IndexIterator*>(it.m_iterator));
-    }
-
-    index_set::index_iterator &index_set::index_iterator::operator++() noexcept {
-        new (&m_iterator) IndexSet::IndexIterator(reinterpret_cast<IndexSet::IndexIterator*>(m_iterator)->operator++());
-        return *this;
-    }
-
-    index_set collection_change_set::insertions() const {
-        return reinterpret_cast<const CollectionChangeSet*>(m_change_set)->insertions;
-    }
-
     bool collection_change_set::collection_root_was_deleted() const {
-        return reinterpret_cast<const CollectionChangeSet*>(m_change_set)->collection_root_was_deleted;
-    }
-
-    bool index_set::index_iterator::operator!=(const index_set::index_iterator &it) const noexcept {
-        return reinterpret_cast<const IndexSet::IndexIterator*>(m_iterator)->operator!=(
-                *reinterpret_cast<const IndexSet::IndexIterator*>(it.m_iterator));
-    }
-
-    index_set::index_iterator index_set::index_iterable_adaptor::begin() const noexcept {
-        index_iterator iter;
-        new (&iter.m_iterator) IndexSet::IndexIterator(
-                reinterpret_cast<const IndexSet::IndexIteratableAdaptor*>(index_iterable_adaptor)->begin());
-        return iter;
-    }
-    index_set::index_iterator index_set::index_iterable_adaptor::end() const noexcept {
-        index_iterator iter;
-        new (&iter.m_iterator) IndexSet::IndexIterator(
-                reinterpret_cast<const IndexSet::IndexIteratableAdaptor*>(index_iterable_adaptor)->end());
-        return iter;
-    }
-
-    index_set::index_iterable_adaptor index_set::as_indexes() const {
-        index_iterable_adaptor iter;
-        new (&iter.index_iterable_adaptor) IndexSet::IndexIteratableAdaptor(
-                reinterpret_cast<const IndexSet*>(m_idx_set)->as_indexes());
-        return iter;
+        return m_change_set->collection_root_was_deleted;
     }
 }

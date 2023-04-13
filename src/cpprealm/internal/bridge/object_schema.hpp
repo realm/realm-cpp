@@ -29,19 +29,7 @@ namespace realm::internal::bridge {
         void set_object_type(object_type);
         property property_for_name(const std::string&);
     private:
-#ifdef __i386__
-        std::aligned_storage<68, 4>::type m_schema[1];
-#elif __x86_64__
-    #if defined(__clang__)
-        std::aligned_storage<128, 8>::type m_schema[1];
-    #elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<152, 8>::type m_schema[1];
-    #endif
-#elif __arm__
-        std::aligned_storage<68, 4>::type m_schema[1];
-#elif __aarch64__
-        std::aligned_storage<128, 8>::type m_schema[1];
-#endif
+        std::unique_ptr<ObjectSchema> m_schema;
     };
 }
 

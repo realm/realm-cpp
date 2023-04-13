@@ -16,15 +16,7 @@ namespace realm::internal::bridge {
         operator Schema() const; //NOLINT(google-explicit-constructor)
         object_schema find(const std::string &name);
     private:
-#ifdef __i386__
-        std::aligned_storage<12, 4>::type m_schema[1];
-#elif __x86_64__
-        std::aligned_storage<24, 8>::type m_schema[1];
-#elif __arm__
-        std::aligned_storage<12, 4>::type m_schema[1];
-#elif __aarch64__
-        std::aligned_storage<24, 8>::type m_schema[1];
-#endif
+        std::unique_ptr<Schema> m_schema;
     };
 }
 

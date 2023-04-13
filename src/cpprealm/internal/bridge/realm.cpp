@@ -69,10 +69,8 @@ namespace realm::internal::bridge {
         }
 
         ~internal_scheduler() override = default;
-        void invoke(util::UniqueFunction<void ()> &&fn) override {
-            m_scheduler->invoke([fn = fn.release()]() {
-                fn->call();
-            });
+        void invoke(util::UniqueFunction<void()>&& fn) override {
+            m_scheduler->invoke(std::move(fn));
         }
 
         bool is_on_thread() const noexcept override {
@@ -102,7 +100,7 @@ namespace realm::internal::bridge {
     }
 
     realm::config::config(const RealmConfig &v) {
-        new (&m_config) RealmConfig(v);
+        m_config = std::make_unique<RealmConfig>(v);
     }
     realm::config::config(const std::optional<std::string>& path,
                           const std::optional<std::shared_ptr<struct scheduler>>& scheduler) {
@@ -121,7 +119,7 @@ namespace realm::internal::bridge {
         }
 
         config.schema_version = 0;
-        new (&m_config) RealmConfig(config);
+        m_config = std::make_unique<RealmConfig>(RealmConfig(config));
     }
 
     realm::sync_config::sync_config(const std::shared_ptr<SyncConfig> &v) {
@@ -131,7 +129,7 @@ namespace realm::internal::bridge {
         return m_config;
     }
     std::string realm::config::path() const {
-        return reinterpret_cast<const RealmConfig*>(m_config)->path;
+        return m_config->path;
     }
     realm::config realm::get_config() const {
         return m_realm->config();
@@ -141,8 +139,8 @@ namespace realm::internal::bridge {
         for (auto& os : v) {
             v2.push_back(os);
         }
-        reinterpret_cast<RealmConfig*>(m_config)->schema_version = 0;
-        reinterpret_cast<RealmConfig*>(m_config)->schema = v2;
+        m_config->schema_version = 0;
+        m_config->schema = v2;
     }
     schema realm::schema() const {
         return m_realm->schema();
@@ -156,7 +154,7 @@ namespace realm::internal::bridge {
 
     }
     realm::config::operator RealmConfig() const {
-        return *reinterpret_cast<const RealmConfig*>(m_config);
+        return *m_config;
     }
     realm::realm(const config &v) {
         m_realm = Realm::get_shared_realm(static_cast<RealmConfig>(v));
@@ -174,25 +172,25 @@ namespace realm::internal::bridge {
         return reinterpret_cast<ThreadSafeReference*>(tsr.m_thread_safe_reference)->resolve<Object>(r);
     }
     void realm::config::set_scheduler(const std::shared_ptr<struct scheduler> &s) {
-        reinterpret_cast<RealmConfig*>(m_config)->scheduler = std::make_shared<internal_scheduler>(s);
+        m_config->scheduler = std::make_shared<internal_scheduler>(s);
     }
     void realm::config::set_sync_config(const std::optional<struct sync_config> &s) {
         if (s)
-            reinterpret_cast<RealmConfig*>(m_config)->sync_config = static_cast<std::shared_ptr<SyncConfig>>(*s);
+            m_config->sync_config = static_cast<std::shared_ptr<SyncConfig>>(*s);
         else
-            reinterpret_cast<RealmConfig*>(m_config)->sync_config = nullptr;
+            m_config->sync_config = nullptr;
     }
 
     realm::sync_config realm::config::sync_config() const {
-        return reinterpret_cast<const RealmConfig*>(m_config)->sync_config;
+        return m_config->sync_config;
     }
 
     struct external_scheduler final : public scheduler {
         // Invoke the given function on the scheduler's thread.
         //
         // This function can be called from any thread.
-        void invoke(std::function<void()> &&fn) final {
-            s->invoke(fn);
+        void invoke(util::UniqueFunction<void()> &&fn) final {
+            s->invoke(std::move(fn));
         }
 
         // Check if the caller is currently running on the scheduler's thread.
@@ -251,7 +249,7 @@ namespace realm::internal::bridge {
     }
 
     void realm::config::set_path(const std::string &path) {
-        reinterpret_cast<RealmConfig*>(m_config)->path = path;
+        m_config->path = path;
     }
 
     bool realm::refresh() {

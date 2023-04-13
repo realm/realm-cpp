@@ -71,23 +71,7 @@ namespace realm::internal::bridge {
             void set_scheduler(const std::shared_ptr<struct scheduler>&);
             void set_sync_config(const std::optional<struct sync_config>&);
         private:
-#ifdef __i386__
-            std::aligned_storage<192, 8>::type m_config[1];
-#elif __x86_64__
-    #if defined(__clang__)
-            std::aligned_storage<368, 16>::type m_config[1];
-    #elif defined(__GNUC__) || defined(__GNUG__)
-            std::aligned_storage<368, 8>::type m_config[1];
-    #endif
-#elif __arm__
-            std::aligned_storage<192, 8>::type m_config[1];
-#elif __aarch64__
-    #if __ANDROID__
-            std::aligned_storage<368, 16>::type m_config[1];
-    #else
-            std::aligned_storage<312, 8>::type m_config[1];
-    #endif
-#endif
+            std::unique_ptr<RealmConfig> m_config;
         };
         realm();
         realm(const config&); //NOLINT(google-explicit-constructor)

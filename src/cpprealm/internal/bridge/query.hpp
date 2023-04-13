@@ -107,20 +107,7 @@ namespace realm::internal::bridge {
         query& not_equal(col_key column_key, bool value);
         using underlying = Query;
     private:
-#ifdef __i386__
-        std::aligned_storage<68, 4>::type m_query[1];
-#elif __x86_64__
-    #if defined(__clang__)
-        std::aligned_storage<128, 8>::type m_query[1];
-    #elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<136, 8>::type m_query[1];
-    #endif
-#elif __arm__
-        std::aligned_storage<80, 8>::type m_query[1];
-#elif __aarch64__
-        std::aligned_storage<128, 8>::type m_query[1];
-#endif
-
+        std::shared_ptr<Query> m_query;
     };
 
     template <typename T>
