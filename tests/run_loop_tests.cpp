@@ -16,15 +16,15 @@
 
 class InvocationQueue {
 public:
-    void push(realm::util::UniqueFunction<void()>&&);
+    void push(realm::Function<void()>&&);
     void invoke_all();
 
 private:
     std::mutex m_mutex;
-    std::vector<realm::util::UniqueFunction<void()>> m_functions;
+    std::vector<realm::Function<void()>> m_functions;
 };
 
-void InvocationQueue::push(realm::util::UniqueFunction<void()>&& fn)
+void InvocationQueue::push(realm::Function<void()>&& fn)
 {
     std::lock_guard lock(m_mutex);
     m_functions.push_back(std::move(fn));
@@ -32,7 +32,7 @@ void InvocationQueue::push(realm::util::UniqueFunction<void()>&& fn)
 
 void InvocationQueue::invoke_all()
 {
-    std::vector<realm::util::UniqueFunction<void()>> functions;
+    std::vector<realm::Function<void()>> functions;
     {
         std::lock_guard lock(m_mutex);
         functions.swap(m_functions);
@@ -54,7 +54,7 @@ public:
     RunLoopScheduler(CFRunLoopRef run_loop = nullptr);
     ~RunLoopScheduler();
 
-    void invoke(realm::util::UniqueFunction<void()>&&) override;
+    void invoke(realm::Function<void()>&&) override;
 
     bool is_on_thread() const noexcept override;
     bool is_same_as(const scheduler* other) const noexcept override;
@@ -103,7 +103,7 @@ RunLoopScheduler::~RunLoopScheduler()
     CFRelease(m_runloop);
 }
 
-void RunLoopScheduler::invoke(realm::util::UniqueFunction<void()>&& fn)
+void RunLoopScheduler::invoke(realm::Function<void()>&& fn)
 {
     m_queue.queue.push(std::move(fn));
 
