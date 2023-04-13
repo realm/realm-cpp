@@ -100,7 +100,7 @@ namespace realm::internal::bridge {
     }
 
     realm::config::config(const RealmConfig &v) {
-        m_config = std::make_unique<RealmConfig>(v);
+        new (&m_config) RealmConfig(v);
     }
     realm::config::config(const std::optional<std::string>& path,
                           const std::optional<std::shared_ptr<struct scheduler>>& scheduler) {
@@ -119,7 +119,7 @@ namespace realm::internal::bridge {
         }
 
         config.schema_version = 0;
-        m_config = std::make_unique<RealmConfig>(RealmConfig(config));
+        new (&m_config) RealmConfig(config);
     }
 
     realm::sync_config::sync_config(const std::shared_ptr<SyncConfig> &v) {
@@ -129,7 +129,7 @@ namespace realm::internal::bridge {
         return m_config;
     }
     std::string realm::config::path() const {
-        return m_config->path;
+        return reinterpret_cast<const RealmConfig*>(m_config)->path;
     }
     realm::config realm::get_config() const {
         return m_realm->config();
@@ -139,8 +139,8 @@ namespace realm::internal::bridge {
         for (auto& os : v) {
             v2.push_back(os);
         }
-        m_config->schema_version = 0;
-        m_config->schema = v2;
+        reinterpret_cast<RealmConfig*>(m_config)->schema_version = 0;
+        reinterpret_cast<RealmConfig*>(m_config)->schema = v2;
     }
     schema realm::schema() const {
         return m_realm->schema();
@@ -154,7 +154,7 @@ namespace realm::internal::bridge {
 
     }
     realm::config::operator RealmConfig() const {
-        return *m_config;
+        return *reinterpret_cast<const RealmConfig*>(m_config);
     }
     realm::realm(const config &v) {
         m_realm = Realm::get_shared_realm(static_cast<RealmConfig>(v));
@@ -172,17 +172,17 @@ namespace realm::internal::bridge {
         return reinterpret_cast<ThreadSafeReference*>(tsr.m_thread_safe_reference)->resolve<Object>(r);
     }
     void realm::config::set_scheduler(const std::shared_ptr<struct scheduler> &s) {
-        m_config->scheduler = std::make_shared<internal_scheduler>(s);
+        reinterpret_cast<RealmConfig*>(m_config)->scheduler = std::make_shared<internal_scheduler>(s);
     }
     void realm::config::set_sync_config(const std::optional<struct sync_config> &s) {
         if (s)
-            m_config->sync_config = static_cast<std::shared_ptr<SyncConfig>>(*s);
+            reinterpret_cast<RealmConfig*>(m_config)->sync_config = static_cast<std::shared_ptr<SyncConfig>>(*s);
         else
-            m_config->sync_config = nullptr;
+            reinterpret_cast<RealmConfig*>(m_config)->sync_config = nullptr;
     }
 
     realm::sync_config realm::config::sync_config() const {
-        return m_config->sync_config;
+        return reinterpret_cast<const RealmConfig*>(m_config)->sync_config;
     }
 
     struct external_scheduler final : public scheduler {
@@ -249,7 +249,7 @@ namespace realm::internal::bridge {
     }
 
     void realm::config::set_path(const std::string &path) {
-        m_config->path = path;
+        reinterpret_cast<RealmConfig*>(m_config)->path = path;
     }
 
     bool realm::refresh() {

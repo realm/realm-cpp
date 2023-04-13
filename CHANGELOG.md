@@ -1,19 +1,16 @@
 # NEXT RELEASE
 
 ### Enhancements
-* Add support for Embedded Objects. Users can implement their own embedded objects by inheriting from `realm::embedded_object`. 
-* Add support for notifications on `results` collections by calling `results::observe`.
-* Add support for calling a Device Sync function by calling `user::call_function(realm::bson::Bson)`.
-* Add support for accessing custom user data via `user::custom_user_data()` and `user::refresh_custom_user_data()`.
 
 ### Fixed
-* None
+* Address memory leaks reported by instruments caused by some classes requiring dynamic memory allocation which
+  overflowed their buffer set by `std::aligned_storage` ([#67](https://github.com/realm/realm-cpp/pull/67)), since v0.1.0).
 
 ### Breaking changes
 * None.
 
 ### Compatibility
-* Fileformat: Generates files with format v22. Reads and automatically upgrade from fileformat v5.
+* Fileformat: Generates files with format v22.
 
 -----------
 
