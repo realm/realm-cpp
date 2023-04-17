@@ -208,7 +208,7 @@ namespace realm {
     }
 
     App::credentials::credentials(app::AppCredentials &&v) noexcept {
-        m_credentials = std::make_unique<app::AppCredentials>(app::AppCredentials(std::move(v)));
+        m_credentials = std::make_shared<app::AppCredentials>(app::AppCredentials(std::move(v)));
     }
     App::credentials::operator app::AppCredentials() const {
         return *m_credentials;

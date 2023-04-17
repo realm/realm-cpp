@@ -245,7 +245,7 @@ public:
         credentials(app::AppCredentials&& credentials) noexcept;
         operator app::AppCredentials() const;
         friend class App;
-        std::unique_ptr<app::AppCredentials> m_credentials;
+        std::shared_ptr<app::AppCredentials> m_credentials;
     };
 
     std::promise<void> register_user(const std::string& username, const std::string& password);
