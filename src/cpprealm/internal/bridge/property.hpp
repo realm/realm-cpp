@@ -50,19 +50,7 @@ namespace realm::internal::bridge {
         void set_type(type);
         [[nodiscard]] col_key column_key() const;
     private:
-#ifdef __i386__
-        std::aligned_storage<64, 4>::type m_property[1];
-#elif __x86_64__
-    #if defined(__clang__)
-        std::aligned_storage<120, 8>::type m_property[1];
-    #elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<152, 8>::type m_property[1];
-    #endif
-#elif __arm__
-        std::aligned_storage<64, 8>::type m_property[1];
-#elif __aarch64__
-        std::aligned_storage<120, 8>::type m_property[1];
-#endif
+        std::shared_ptr<Property> m_property;
     };
 
     namespace {

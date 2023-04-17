@@ -208,10 +208,10 @@ namespace realm {
     }
 
     App::credentials::credentials(app::AppCredentials &&v) noexcept {
-        new (&m_credentials) app::AppCredentials(std::move(v));
+        m_credentials = std::make_unique<app::AppCredentials>(app::AppCredentials(std::move(v)));
     }
     App::credentials::operator app::AppCredentials() const {
-        return *reinterpret_cast<const app::AppCredentials*>(m_credentials);
+        return *m_credentials;
     }
 
     App::credentials App::credentials::anonymous()

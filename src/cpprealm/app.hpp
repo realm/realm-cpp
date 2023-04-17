@@ -245,16 +245,7 @@ public:
         credentials(app::AppCredentials&& credentials) noexcept;
         operator app::AppCredentials() const;
         friend class App;
-
-#ifdef __i386__
-    std::aligned_storage<8, 4>::type m_credentials[1];
-#elif __x86_64__
-    std::aligned_storage<16, 8>::type m_credentials[1];
-#elif __arm__
-    std::aligned_storage<8, 4>::type m_credentials[1];
-#elif __aarch64__
-    std::aligned_storage<16, 8>::type m_credentials[1];
-#endif
+        std::unique_ptr<app::AppCredentials> m_credentials;
     };
 
     std::promise<void> register_user(const std::string& username, const std::string& password);
