@@ -8,15 +8,15 @@
 namespace realm::internal::bridge {
 
     object_schema::object_schema() {
-        m_schema = std::make_unique<ObjectSchema>();
+        m_schema = std::make_shared<ObjectSchema>();
     }
     object_schema::object_schema(const realm::ObjectSchema &v) {
-        m_schema = std::make_unique<ObjectSchema>(v);
+        m_schema = std::make_shared<ObjectSchema>(v);
     }
     object_schema::object_schema(const std::string &name, const std::vector<property> &properties,
                                  const std::string &primary_key,
                                  realm::internal::bridge::object_schema::object_type type) {
-        m_schema = std::make_unique<ObjectSchema>();
+        m_schema = std::make_shared<ObjectSchema>();
         m_schema->name = name;
         std::transform(properties.begin(),
                        properties.end(),

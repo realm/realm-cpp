@@ -25,19 +25,7 @@ namespace realm::internal::bridge {
     private:
         template <typename T>
         friend T get(results&, size_t);
-#ifdef __i386__
-        std::aligned_storage<496, 4>::type m_results[1];
-#elif __x86_64__
-    #if defined(__clang__)
-        std::aligned_storage<896, 8>::type m_results[1];
-    #elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<912, 8>::type m_results[1];
-    #endif
-#elif __arm__
-        std::aligned_storage<568, 8>::type m_results[1];
-#elif __aarch64__
-        std::aligned_storage<896, 8>::type m_results[1];
-#endif
+        std::shared_ptr<Results> m_results;
     };
 
     template <typename T>

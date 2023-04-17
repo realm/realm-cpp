@@ -24,29 +24,6 @@
 #include <filesystem>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
-    static_assert(SizeCheck<192, sizeof(Realm::Config)>{});
-    static_assert(SizeCheck<8, alignof(Realm::Config)>{});
-#elif __x86_64__
-    #if defined(__clang__)
-    static_assert(SizeCheck<368, sizeof(Realm::Config)>{});
-    static_assert(SizeCheck<16, alignof(Realm::Config)>{});
-    #elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(SizeCheck<328, sizeof(Realm::Config)>{});
-    static_assert(SizeCheck<8, alignof(Realm::Config)>{});
-    #endif
-#elif __arm__
-    static_assert(SizeCheck<192, sizeof(Realm::Config)>{});
-    static_assert(SizeCheck<8, alignof(Realm::Config)>{});
-#elif __aarch64__
-    #if __ANDROID__
-    static_assert(SizeCheck<368, sizeof(Realm::Config)>{});
-    static_assert(SizeCheck<16, alignof(Realm::Config)>{});
-    #else
-    static_assert(SizeCheck<312, sizeof(Realm::Config)>{});
-    static_assert(SizeCheck<8, alignof(Realm::Config)>{});
-    #endif
-#endif
 
     realm::realm(std::shared_ptr<Realm> v)
     : m_realm(std::move(v)){}
@@ -99,7 +76,7 @@ namespace realm::internal::bridge {
     }
 
     realm::config::config(const RealmConfig &v) {
-        new (&m_config) RealmConfig(v);
+        m_config = std::make_shared<RealmConfig>(v);
     }
     realm::config::config(const std::optional<std::string>& path,
                           const std::optional<std::shared_ptr<struct scheduler>>& scheduler) {
@@ -118,7 +95,7 @@ namespace realm::internal::bridge {
         }
 
         config.schema_version = 0;
-        new (&m_config) RealmConfig(config);
+        m_config = std::make_shared<RealmConfig>(RealmConfig(config));
     }
 
     realm::sync_config::sync_config(const std::shared_ptr<SyncConfig> &v) {
@@ -128,7 +105,7 @@ namespace realm::internal::bridge {
         return m_config;
     }
     std::string realm::config::path() const {
-        return reinterpret_cast<const RealmConfig*>(m_config)->path;
+        return m_config->path;
     }
     realm::config realm::get_config() const {
         return m_realm->config();
@@ -138,8 +115,8 @@ namespace realm::internal::bridge {
         for (auto& os : v) {
             v2.push_back(os);
         }
-        reinterpret_cast<RealmConfig*>(m_config)->schema_version = 0;
-        reinterpret_cast<RealmConfig*>(m_config)->schema = v2;
+        m_config->schema_version = 0;
+        m_config->schema = v2;
     }
     schema realm::schema() const {
         return m_realm->schema();
@@ -153,7 +130,7 @@ namespace realm::internal::bridge {
 
     }
     realm::config::operator RealmConfig() const {
-        return *reinterpret_cast<const RealmConfig*>(m_config);
+        return *m_config;
     }
     realm::realm(const config &v) {
         m_realm = Realm::get_shared_realm(static_cast<RealmConfig>(v));
@@ -171,17 +148,17 @@ namespace realm::internal::bridge {
         return reinterpret_cast<ThreadSafeReference*>(tsr.m_thread_safe_reference)->resolve<Object>(r);
     }
     void realm::config::set_scheduler(const std::shared_ptr<struct scheduler> &s) {
-        reinterpret_cast<RealmConfig*>(m_config)->scheduler = std::make_shared<internal_scheduler>(s);
+        m_config->scheduler = std::make_shared<internal_scheduler>(s);
     }
     void realm::config::set_sync_config(const std::optional<struct sync_config> &s) {
         if (s)
-            reinterpret_cast<RealmConfig*>(m_config)->sync_config = static_cast<std::shared_ptr<SyncConfig>>(*s);
+            m_config->sync_config = static_cast<std::shared_ptr<SyncConfig>>(*s);
         else
-            reinterpret_cast<RealmConfig*>(m_config)->sync_config = nullptr;
+            m_config->sync_config = nullptr;
     }
 
     realm::sync_config realm::config::sync_config() const {
-        return reinterpret_cast<const RealmConfig*>(m_config)->sync_config;
+        return m_config->sync_config;
     }
 
     struct external_scheduler final : public scheduler {
@@ -251,7 +228,7 @@ namespace realm::internal::bridge {
     }
 
     void realm::config::set_path(const std::string &path) {
-        reinterpret_cast<RealmConfig*>(m_config)->path = path;
+        m_config->path = path;
     }
 
     bool realm::refresh() {

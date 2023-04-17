@@ -6,47 +6,29 @@
 #include <realm/object-store/results.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
-    static_assert(SizeCheck<496, sizeof(Results)>{});
-    static_assert(SizeCheck<4, alignof(Results)>{});
-#elif __x86_64__
-    #if defined(__clang__)
-    static_assert(SizeCheck<896, sizeof(Results)>{});
-    #elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(SizeCheck<912, sizeof(Results)>{});
-    #endif
-    static_assert(SizeCheck<8, alignof(Results)>{});
-#elif __arm__
-    static_assert(SizeCheck<568, sizeof(Results)>{});
-    static_assert(SizeCheck<8, alignof(Results)>{});
-#elif __aarch64__
-    static_assert(SizeCheck<896, sizeof(Results)>{});
-    static_assert(SizeCheck<8, alignof(Results)>{});
-#endif
-
     results::results(const realm &realm, const query &query) {
-        new (&m_results) Results(realm, query);
+        m_results = std::make_shared<Results>(Results(realm, query));
     }
 
     results::results(const Results &v) {
-        new (&m_results) Results(v);
+        m_results = std::make_shared<Results>(v);
     }
 
     size_t results::size() {
-        return reinterpret_cast<Results*>(m_results)->size();
+        return m_results->size();
     }
 
     realm results::get_realm() const {
-        return reinterpret_cast<const Results*>(m_results)->get_realm();
+        return m_results->get_realm();
     }
 
     table results::get_table() const {
-        return reinterpret_cast<const Results*>(m_results)->get_table();
+        return m_results->get_table();
     }
 
     template <>
     obj get(results& res, size_t v) {
-        return reinterpret_cast<Results*>(res.m_results)-> template get(v);
+        return res.m_results-> template get(v);
     }
 
     notification_token results::add_notification_callback(std::shared_ptr<collection_change_callback> &&cb) {
@@ -61,6 +43,6 @@ namespace realm::internal::bridge {
                 m_cb->after(v);
             }
         } ccb(std::move(cb));
-        return reinterpret_cast<Results*>(m_results)->add_notification_callback(ccb);
+        return m_results->add_notification_callback(ccb);
     }
 }

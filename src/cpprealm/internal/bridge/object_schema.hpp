@@ -30,7 +30,7 @@ namespace realm::internal::bridge {
         void set_object_type(object_type);
         property property_for_name(const std::string&);
     private:
-        std::unique_ptr<ObjectSchema> m_schema;
+        std::shared_ptr<ObjectSchema> m_schema;
     };
 }
 

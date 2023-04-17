@@ -5,6 +5,7 @@
 
 #include <string_view>
 #include <optional>
+#include <memory>
 
 namespace realm {
     struct object_id;
