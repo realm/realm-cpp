@@ -64,7 +64,7 @@ namespace realm::internal::bridge {
 
     struct internal_scheduler : util::Scheduler {
         internal_scheduler(const std::shared_ptr<scheduler>& s)
-        : m_scheduler(s), m_thread_id(std::this_thread::get_id())
+        : m_scheduler(s)
         {
         }
 
@@ -78,7 +78,7 @@ namespace realm::internal::bridge {
         }
         bool is_same_as(const util::Scheduler *other) const noexcept override {
             if (auto o = dynamic_cast<const internal_scheduler *>(other)) {
-                return m_thread_id == o->m_thread_id;
+                return m_scheduler->is_same_as(o->m_scheduler.get());
             }
             return false;
         }
@@ -88,7 +88,6 @@ namespace realm::internal::bridge {
         }
     private:
         std::shared_ptr<scheduler> m_scheduler;
-        std::thread::id m_thread_id;
     };
 
     realm::realm(thread_safe_reference&& tsr, const std::optional<std::shared_ptr<struct scheduler>>& s) {
@@ -204,7 +203,10 @@ namespace realm::internal::bridge {
         // This is up to the platforms to define, but if this method returns true,
         // caching may occur.
         bool is_same_as(const scheduler *other) const noexcept final {
-            return this == other;
+            if (auto o = dynamic_cast<const util::Scheduler *>(other)) {
+                return s->is_same_as(o);
+            }
+            return false;
         }
 
         // Check if this scheduler actually can support invoke(). Invoking may be

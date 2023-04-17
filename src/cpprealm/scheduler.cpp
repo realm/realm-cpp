@@ -60,7 +60,10 @@ namespace realm {
             return m_scheduler->is_on_thread();
         }
         bool is_same_as(const realm::scheduler *other) const noexcept override {
-            return this == other;
+            if (auto o = dynamic_cast<const platform_default_scheduler *>(other)) {
+                return m_scheduler->is_same_as(o->m_scheduler.get());
+            }
+            return false;
         }
         [[nodiscard]] bool can_invoke() const noexcept override {
             return m_scheduler->can_invoke();

@@ -21,6 +21,15 @@ TEST_CASE("cached realm") {
                 o.str_col = "foo";
             });
         }
+
+        for (size_t i = 0; i < 5; ++i) {
+            std::thread([path] {
+                auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+                auto p = realm.objects<AllTypesObject>();
+                CHECK(p.size() == 1);
+                CHECK(p[0].str_col == "foo");
+            }).join();
+        }
         CHECK(*o.str_col == "foo");
     }
 }
