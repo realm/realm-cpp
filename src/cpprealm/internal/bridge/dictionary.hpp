@@ -39,15 +39,7 @@ namespace realm::internal::bridge {
     private:
         template <typename T>
         friend T get(dictionary&, const std::string&);
-#ifdef __i386__
-        std::aligned_storage<40, 4>::type m_dictionary[1];
-#elif __x86_64__
-        std::aligned_storage<80, 8>::type m_dictionary[1];
-#elif __arm__
-        std::aligned_storage<40, 4>::type m_dictionary[1];
-#elif __aarch64__
-        std::aligned_storage<80, 8>::type m_dictionary[1];
-#endif
+        std::shared_ptr<Dictionary> m_dictionary;
     };
 
     template <typename T>
