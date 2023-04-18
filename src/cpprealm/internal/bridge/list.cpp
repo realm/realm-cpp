@@ -24,7 +24,7 @@ namespace realm::internal::bridge {
     list::list(const realm &realm,
                const obj &obj,
                const col_key& col_key) {
-        new (&m_list) List(realm, obj, col_key);
+        m_list = std::make_shared<List>(List(realm, obj, col_key));
     }
 
     list::operator List() const {

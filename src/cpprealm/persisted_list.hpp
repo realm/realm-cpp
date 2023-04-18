@@ -65,13 +65,13 @@ namespace realm {
             };
             [[nodiscard]] bool empty() const
             {
-                if (this->is_managed()) return m_list.size() == 0;
-                else return this->unmanaged.empty();
+                if (this->is_managed()) return m_list->size() == 0;
+                else return this->unmanaged->empty();
             }
             [[nodiscard]] size_t size() const noexcept
             {
-                if (this->is_managed()) return m_list.size();
-                else return this->unmanaged.size();
+                if (this->is_managed()) return m_list->size();
+                else return this->unmanaged->size();
             }
             iterator begin()
             {
@@ -83,16 +83,16 @@ namespace realm {
                 return iterator(size(), this);
             }
             void pop_back() {
-                if (this->is_managed()) m_list.remove(size() - 1);
-                else this->unmanaged.pop_back();
+                if (this->is_managed()) m_list->remove(size() - 1);
+                else this->unmanaged->pop_back();
             }
             void erase(size_t idx) {
-                if (this->is_managed()) m_list.remove(idx);
-                else this->unmanaged.erase(this->unmanaged.begin() + idx);
+                if (this->is_managed()) m_list->remove(idx);
+                else this->unmanaged->erase(this->unmanaged->begin() + idx);
             }
             void clear() {
-                if (this->is_managed()) m_list.remove_all();
-                else this->unmanaged.clear();
+                if (this->is_managed()) m_list->remove_all();
+                else this->unmanaged->clear();
             }
             persisted_list_base(const persisted_list_base& v) {
                 *this = v;
@@ -100,46 +100,37 @@ namespace realm {
             persisted_list_base& operator=(const persisted_list_base& v) {
                 if (v.is_managed()) {
                     this->m_object = v.m_object;
-                    new (&m_list) bridge::list(v.m_list);
+                    m_list = v.m_list;
                 } else {
-                    new (&unmanaged) T(v.unmanaged);
+                    unmanaged = v.unmanaged;
                 }
                 return *this;
             }
             persisted_list_base() {
-                new (&unmanaged) std::vector<T>();
-            }
-            ~persisted_list_base() {
-                if (this->m_object) {
-                    this->m_list.~list();
-                } else {
-                    this->unmanaged.clear();
-                }
+                unmanaged = T();
             }
             virtual typename T::value_type operator[](size_t idx) const = 0;
             virtual typename std::vector<typename T::value_type> operator*() const = 0;
 
             notification_token observe(std::function<void(collection_change<T>)>&& fn) {
-                return this->m_list.add_notification_callback(
+                return this->m_list->add_notification_callback(
                         std::make_shared<collection_callback_wrapper<T>>(
                                 std::move(fn),
                                 *static_cast<persisted<T>*>(this),
                                 false));
             }
         protected:
-            union {
-                T unmanaged;
-                internal::bridge::list m_list;
-            };
+            std::optional<T> unmanaged;
+            std::optional<internal::bridge::list> m_list;
             void manage(internal::bridge::object *object,
                         internal::bridge::col_key &&col_key) override {
-                object->get_obj().set_list_values(col_key, unmanaged);
+                object->get_obj().set_list_values(col_key, *unmanaged);
                 assign_accessor(object, std::move(col_key));
             }
             void assign_accessor(internal::bridge::object *object,
                                  internal::bridge::col_key &&col_key) final {
                 this->m_object = *object;
-                new (&m_list) bridge::list(object->get_list(std::move(col_key)));
+                m_list = std::optional<internal::bridge::list>(bridge::list(object->get_list(std::move(col_key))));
             }
 
             __cpp_realm_friends
@@ -159,15 +150,15 @@ namespace realm {
         }
         void push_back(const T& value)
         {
-            if (this->is_managed()) this->m_list.template add(value);
-            else this->unmanaged.push_back(value);
+            if (this->is_managed()) this->m_list->template add(value);
+            else this->unmanaged->push_back(value);
         }
         T operator[](size_t idx) const override
         {
             if (this->is_managed())
-                return persisted<T>::deserialize(internal::bridge::get<typename internal::type_info::type_info<T>::internal_type>(this->m_list, idx));
+                return persisted<T>::deserialize(internal::bridge::get<typename internal::type_info::type_info<T>::internal_type>(this->m_list.value(), idx));
             else
-                return this->unmanaged[idx];
+                return this->unmanaged.value()[idx];
         }
         std::vector<T> operator*() const override
         {
@@ -175,12 +166,12 @@ namespace realm {
         }
         size_t find(const T& a) {
             if (this->is_managed()) {
-                return this->m_list.find(a);
+                return this->m_list->find(a);
             } else {
                 // unmanaged objects in vectors aren't equatable.
-                auto it = std::find(this->unmanaged.begin(), this->unmanaged.end(), a);
-                if (it != this->unmanaged.end()) {
-                    return it - this->unmanaged.begin();
+                auto it = std::find(this->unmanaged->begin(), this->unmanaged->end(), a);
+                if (it != this->unmanaged->end()) {
+                    return it - this->unmanaged->begin();
                 } else {
                     return cpprealm::npos;
                 }
@@ -188,9 +179,9 @@ namespace realm {
         }
         void set(size_t pos, const T& a) {
             if (this->is_managed()) {
-                this->m_list.set(pos, a);
+                this->m_list->set(pos, a);
             } else {
-                this->unmanaged[pos] = a;
+                this->unmanaged.value()[pos] = a;
             }
         }
     protected:
@@ -211,23 +202,23 @@ namespace realm {
         void push_back(T& a) {
             if (this->m_object) {
                 if (!a.m_object) {
-                    a.manage(this->m_list.get_table(),
-                             this->m_list.get_realm());
+                    a.manage(this->m_list->get_table(),
+                             this->m_list->get_realm());
                 }
-                this->m_list.add(a.m_object->get_obj().get_key());
+                this->m_list->add(a.m_object->get_obj().get_key());
             } else {
-                this->unmanaged.push_back(a);
+                this->unmanaged->push_back(a);
             }
         }
         void push_back(T&& a) {
             if (this->is_managed()) {
                 if (!a.m_object) {
-                    a.manage(this->m_list.get_table(),
-                             this->m_list.get_realm());
+                    a.manage(this->m_list->get_table(),
+                             this->m_list->get_realm());
                 }
-                this->m_list.add(a.m_object->get_obj().get_key());
+                this->m_list->add(a.m_object->get_obj().get_key());
             } else {
-                this->unmanaged.push_back(a);
+                this->unmanaged->push_back(a);
             }
         }
         void set(size_t pos, T& a) {
@@ -237,7 +228,7 @@ namespace realm {
                 }
                 this->m_backing_list.set(pos, a.m_obj->get_key());
             } else {
-                this->unmanaged[pos] = a;
+                this->unmanaged.value()[pos] = a;
             }
         }
 
@@ -245,13 +236,13 @@ namespace realm {
             if (this->m_obj) {
                 set(pos, a);
             } else {
-                this->unmanaged[pos] = std::move(a);
+                this->unmanaged.value()[pos] = std::move(a);
             }
         }
 
         size_t find(const T& a) {
             if (this->m_object && this->m_object->is_valid() && a.m_object && a.m_object->is_valid()) {
-                return this->m_list.find(a.m_object->get_obj().get_key());
+                return this->m_list->find(a.m_object->get_obj().get_key());
             } else {
                 // unmanaged objects in vectors aren't equatable.
                 return cpprealm::npos;
@@ -261,10 +252,10 @@ namespace realm {
         T operator[](size_t idx) const override {
             if (this->m_object) {
                 T cls;
-                cls.assign_accessors(internal::bridge::object(this->m_list.get_realm(), internal::bridge::get<internal::bridge::obj>(this->m_list, idx)));
+                cls.assign_accessors(internal::bridge::object(this->m_list->get_realm(), internal::bridge::get<internal::bridge::obj>(this->m_list.value(), idx)));
                 return cls;
             } else {
-                return this->unmanaged[idx];
+                return this->unmanaged.value()[idx];
             }
         }
         std::vector<T> operator*() const override
@@ -276,7 +267,7 @@ namespace realm {
         void manage(internal::bridge::object *object,
                     internal::bridge::col_key &&col_key) override {
             std::vector<internal::bridge::obj_key> keys;
-            for (auto& obj : this->unmanaged) {
+            for (auto& obj : *this->unmanaged) {
                 if (obj.is_managed()) {
                     keys.push_back(persisted<T>::serialize(obj));
                 } else {
@@ -304,21 +295,21 @@ namespace realm {
         void push_back(T& a) {
             if (this->m_object) {
                 if (!a.m_object) {
-                    a.manage(internal::bridge::object(this->m_list.get_realm(),
-                                                      this->m_list.add_embedded()));
+                    a.manage(internal::bridge::object(this->m_list->get_realm(),
+                                                      this->m_list->add_embedded()));
                 }
             } else {
-                this->unmanaged.push_back(a);
+                this->unmanaged->push_back(a);
             }
         }
         void push_back(T&& a) {
             if (this->m_object) {
                 if (!a.m_object) {
-                    a.manage(internal::bridge::object(this->m_list.get_realm(),
-                                                      this->m_list.add_embedded()));
+                    a.manage(internal::bridge::object(this->m_list->get_realm(),
+                                                      this->m_list->add_embedded()));
                 }
             } else {
-                this->unmanaged.push_back(a);
+                this->unmanaged->push_back(a);
             }
         }
         void set(size_t pos, T& a) {
@@ -328,7 +319,7 @@ namespace realm {
                 }
                 this->m_backing_list.set(pos, a.m_obj->get_key());
             } else {
-                this->unmanaged[pos] = a;
+                this->unmanaged.value()[pos] = a;
             }
         }
 
@@ -336,13 +327,13 @@ namespace realm {
             if (this->m_obj) {
                 set(pos, a);
             } else {
-                this->unmanaged[pos] = std::move(a);
+                this->unmanaged.value()[pos] = std::move(a);
             }
         }
 
         size_t find(const T& a) {
             if (this->m_object && this->m_object->is_valid() && a.m_object && a.m_object->is_valid()) {
-                return this->m_list.find(a.m_object->get_obj().get_key());
+                return this->m_list->find(a.m_object->get_obj().get_key());
             } else {
                 // unmanaged objects in vectors aren't equatable.
                 return cpprealm::npos;
@@ -352,10 +343,10 @@ namespace realm {
         T operator[](size_t idx) const override {
             if (this->m_object) {
                 T cls;
-                cls.assign_accessors(internal::bridge::object(this->m_list.get_realm(), internal::bridge::get<internal::bridge::obj>(this->m_list, idx)));
+                cls.assign_accessors(internal::bridge::object(this->m_list->get_realm(), internal::bridge::get<internal::bridge::obj>(this->m_list.value(), idx)));
                 return cls;
             } else {
-                return this->unmanaged[idx];
+                return this->unmanaged.value()[idx];
             }
         }
         std::vector<T> operator*() const override
@@ -365,7 +356,7 @@ namespace realm {
     protected:
         void manage(internal::bridge::object *object,
                     internal::bridge::col_key &&col_key) override {
-            for (auto& obj : this->unmanaged) {
+            for (auto& obj : *this->unmanaged) {
                 if (obj.is_managed()) {
                     object->get_list(col_key).add(persisted<T>::serialize(obj));
                 } else {
