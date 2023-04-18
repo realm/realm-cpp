@@ -37,7 +37,7 @@ namespace realm {
         operator=(const T o) {
             if (this->is_managed()) {
                 this->m_object->get_obj().template set<bool>(
-                        this->managed,
+                        this->managed.value(),
                         static_cast<bool>(o));
             } else {
                 new (&this->unmanaged) T(o);

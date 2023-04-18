@@ -48,14 +48,14 @@ namespace realm {
                 REALM_TERMINATE("Object must be managed to check `data_type`.");
             }
             internal::bridge::mixed val = this->m_object->get_obj().template get<typename internal::type_info::type_info<T>::internal_type>(
-                    this->managed);
+                    *this->managed);
             return val.type();
         }
 
         template<typename Object, typename = std::enable_if_t<std::is_base_of_v<object_base<Object>, Object>>>
         Object get_object_value() {
             internal::bridge::mixed val = this->m_object->get_obj().template get<typename internal::type_info::type_info<T>::internal_type>(
-                    this->managed);
+                    *this->managed);
             Object o;
             o.assign_accessors(
                     internal::bridge::object(this->m_object->get_realm(), val.operator internal::bridge::obj_link()));
@@ -109,7 +109,7 @@ namespace realm {
     { \
         if (a.should_detect_usage_for_queries) { \
             auto query = internal::bridge::query(a.query->get_table()); \
-            query.equal(a.managed, internal::bridge::mixed(persisted<std::decay_t<V>>::serialize(b))); \
+            query.equal(*a.managed, internal::bridge::mixed(persisted<std::decay_t<V>>::serialize(b))); \
             return query; \
         } \
         return std::visit([&b](auto&& arg) { \
@@ -131,7 +131,7 @@ namespace realm {
     {
         if (a.should_detect_usage_for_queries) {
             auto query = internal::bridge::query(a.query->get_table());
-            query.equal(a.managed, b);
+            query.equal(*a.managed, b);
             return query;
         }
         REALM_TERMINATE("Mixed property must be managed for queries.");
@@ -143,7 +143,7 @@ namespace realm {
     {
         if (a.should_detect_usage_for_queries) {
             auto query = internal::bridge::query(a.query->get_table());
-            query.not_equal(a.managed, b);
+            query.not_equal(*a.managed, b);
             return query;
         }
         REALM_TERMINATE("Mixed property must be managed for queries.");

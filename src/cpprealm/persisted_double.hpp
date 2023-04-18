@@ -34,7 +34,7 @@ namespace realm {
         operator=(const T &o) {
             if (this->is_managed()) {
                 this->m_object->get_obj().template set<double>(
-                        this->managed,
+                        this->managed.value(),
                         static_cast<double>(o));
             } else {
                 new(&this->unmanaged) T(o);
@@ -46,9 +46,9 @@ namespace realm {
         std::enable_if_t<std::is_floating_point_v<T>>
         operator+=(const T &o) {
             if (this->is_managed()) {
-                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed));
+                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed.value()));
                 this->m_object->get_obj().template set<double>(
-                        this->managed,
+                        this->managed.value(),
                         static_cast<double>(old_val + o));
             } else {
                 this->unmanaged += T(o);
@@ -56,46 +56,46 @@ namespace realm {
         }
         void operator++() {
             if (this->is_managed()) {
-                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed));
+                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed.value()));
                 this->m_object->get_obj().template set<double>(
-                        this->managed,
+                        this->managed.value(),
                         static_cast<double>(++old_val));
             } else {
-                ++this->unmanaged;
+                ++this->unmanaged.value();
             }
         }
         template<typename T>
         std::enable_if_t<std::is_floating_point_v<T>>
         operator-=(const T &o) {
             if (this->is_managed()) {
-                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed));
+                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed.value()));
                 this->m_object->get_obj().template set<double>(
-                        this->managed,
+                        this->managed.value(),
                         static_cast<double>(old_val - o));
             } else {
-                this->unmanaged -= T(o);
+                this->unmanaged.value() -= T(o);
             }
         }
         void operator--() {
             if (this->is_managed()) {
-                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed));
+                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed.value()));
                 this->m_object->get_obj().template set<double>(
-                        this->managed,
+                        this->managed.value(),
                         static_cast<double>(--old_val));
             } else {
-                --this->unmanaged;
+                --*this->unmanaged;
             }
         }
         template<typename T>
         std::enable_if_t<std::is_floating_point_v<T>>
         operator*=(const T &o) {
             if (this->is_managed()) {
-                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed));
+                auto old_val = deserialize(this->m_object->get_obj().get<double>(this->managed.value()));
                 this->m_object->get_obj().template set<int64_t>(
-                        this->managed,
+                        this->managed.value(),
                         static_cast<double>(old_val * o));
             } else {
-                this->unmanaged *= T(o);
+                this->unmanaged.value() *= T(o);
             }
         }
 

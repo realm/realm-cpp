@@ -131,6 +131,7 @@ namespace realm {
                                  internal::bridge::col_key &&col_key) final {
                 this->m_object = *object;
                 m_list = std::optional<internal::bridge::list>(bridge::list(object->get_list(std::move(col_key))));
+                unmanaged = std::nullopt;
             }
 
             __cpp_realm_friends

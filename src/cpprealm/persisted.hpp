@@ -154,7 +154,7 @@
         if (a.should_detect_usage_for_queries) { \
             auto query = internal::bridge::query(a.query->get_table()); \
             auto serialized = persisted<type>::serialize(b);     \
-            query.name(a.managed, serialized);    \
+            query.name(a.managed.value(), serialized);    \
             return query; \
         } \
         return *a op b; \
@@ -226,44 +226,37 @@ protected:
     struct persisted_primitive_base : public persisted_base<T> {
         using persisted_base<T>::persisted_base;
         persisted_primitive_base() {
-            new (&unmanaged) T();
+            unmanaged = T();
         }
         persisted_primitive_base(const persisted_primitive_base& v) {
             if (v.is_managed()) {
                 this->m_object = v.m_object;
-                new (&managed) internal::bridge::col_key(v.managed);
+                managed = v.managed;
             } else {
-                new (&unmanaged) T(v.unmanaged);
+                unmanaged = v.unmanaged;
             }
         }
         persisted_primitive_base(const T& value) {
-            new (&unmanaged) T(value);
+            unmanaged = value;
         }
         persisted_primitive_base(T&& value) {
-            new (&unmanaged) T(std::move(value));
-        }
-        ~persisted_primitive_base() {
-            if (this->is_managed()) {
-                managed.~col_key();
-            } else {
-                unmanaged.~T();
-            }
+            unmanaged = std::move(value);
         }
 
         persisted_primitive_base& operator=(const T& o) noexcept {
             if (this->is_managed()) {
                 this->m_object->get_obj().template set(managed, persisted<T>::serialize(o));
             } else {
-                new (&unmanaged) T(o);
+                unmanaged = o;
             }
             return *this;
         }
 
         persisted_primitive_base& operator=(T&& o) noexcept {
             if (this->is_managed()) {
-                this->m_object->get_obj().set(managed, o);
+                this->m_object->get_obj().set(*managed, o);
             } else {
-                new (&unmanaged) T(std::move(o));
+                unmanaged = std::move(o);
             }
             return *this;
         }
@@ -271,12 +264,12 @@ protected:
         persisted_primitive_base& operator=(const persisted_primitive_base& o) noexcept {
             if (o.m_object) {
                 this->m_object = o.m_object;
-                new (&managed) internal::bridge::col_key(o.managed);
+                managed = o.managed;
             } else {
                 if (this->is_managed()) {
-                    this->m_object->get_obj().set(managed, o.unmanaged);
+                    this->m_object->get_obj().set(*managed, *o.unmanaged);
                 } else {
-                    new (&unmanaged) T(o.unmanaged);
+                    unmanaged = o.unmanaged;
                 }
             }
             return *this;
@@ -286,12 +279,12 @@ protected:
         persisted_primitive_base& operator=(persisted_primitive_base&& o) noexcept {
             if (o.m_object) {
                 this->m_object = o.m_object;
-                new (&managed) internal::bridge::col_key(std::move(o.managed));
+                managed = std::move(o.managed);
             } else {
                 if (this->is_managed()) {
-                    this->m_object->get_obj().set(managed, std::move(o.unmanaged));
+                    this->m_object->get_obj().set(*managed, std::move(*o.unmanaged));
                 } else {
-                    new (&unmanaged) T(std::move(o.unmanaged));
+                    unmanaged = std::move(o.unmanaged);
                 }
             }
             return *this;
@@ -300,26 +293,25 @@ protected:
         T operator *() const {
             if (this->is_managed()) {
                 return persisted<T>::deserialize(this->m_object->get_obj()
-                        .template get<typename internal::type_info::type_info<T>::internal_type>(this->managed));
+                        .template get<typename internal::type_info::type_info<T>::internal_type>(*this->managed));
             } else {
-                return this->unmanaged;
+                return *this->unmanaged;
             }
         }
     protected:
-        union {
-            T unmanaged;
-            internal::bridge::col_key managed;
-        };
+        std::optional<T> unmanaged;
+        std::optional<internal::bridge::col_key> managed;
 
         void manage(internal::bridge::object* object,
                     internal::bridge::col_key&& col_key) final {
-            object->get_obj().set(col_key, persisted<T>::serialize(unmanaged, object->get_realm()));
+            object->get_obj().set(col_key, persisted<T>::serialize(*unmanaged, object->get_realm()));
             assign_accessor(object, std::move(col_key));
         }
         void assign_accessor(internal::bridge::object* object,
                              internal::bridge::col_key&& col_key) final {
             this->m_object = *object;
-            new (&this->managed) internal::bridge::col_key(col_key);
+            this->managed = internal::bridge::col_key(col_key);
+            this->unmanaged = std::nullopt;
         }
     };
 

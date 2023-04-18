@@ -28,9 +28,9 @@ namespace realm {
         if (a.should_detect_usage_for_queries) { \
             auto query = internal::bridge::query(a.query->get_table()); \
             if constexpr (std::string_view(#op) == std::string_view("=="))                                   \
-                query.equal(a.managed, persisted<std::string>::serialize(b));     \
+                query.equal(a.managed.value(), persisted<std::string>::serialize(b));     \
             else if constexpr (std::string_view(#op) == std::string_view("!="))                                   \
-                query.not_equal(a.managed, persisted<std::string>::serialize(b));   \
+                query.not_equal(a.managed.value(), persisted<std::string>::serialize(b));   \
             return query; \
         } \
         return *a op b; \

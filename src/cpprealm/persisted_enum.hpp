@@ -43,7 +43,7 @@ namespace realm {
     std::enable_if_t<std::is_enum_v<T>, rbool> operator op(const persisted<T>& a, const V& b) { \
         if (a.should_detect_usage_for_queries) { \
             auto query = internal::bridge::query(a.query->get_table()); \
-            query.name(a.managed, persisted<V>::serialize(b)); \
+            query.name(*a.managed, persisted<V>::serialize(b)); \
             return query; \
         } \
         return *a op b; \

@@ -61,19 +61,7 @@ struct app_error {
 
     [[nodiscard]] bool is_client_error() const;
 private:
-#ifdef __i386__
-    std::aligned_storage<28, 4>::type m_error[1];
-#elif __x86_64__
-    #if defined(__clang__)
-std::aligned_storage<48, 8>::type m_error[1];
-    #elif defined(__GNUC__) || defined(__GNUG__)
-std::aligned_storage<56, 8>::type m_error[1];
-    #endif
-#elif __arm__
-    std::aligned_storage<28, 4>::type m_error[1];
-#elif __aarch64__
-    std::aligned_storage<48, 8>::type m_error[1];
-#endif
+    std::shared_ptr<realm::app::AppError> m_error;
 };
 
 /**

@@ -8,66 +8,47 @@
 #include <utility>
 
 namespace realm {
-#ifdef __i386__
-    static_assert(internal::bridge::SizeCheck<28, sizeof(realm::app::AppError)>{});
-    static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppError)>{});
-#elif __x86_64__
-    #if defined(__clang__)
-    static_assert(internal::bridge::SizeCheck<48, sizeof(realm::app::AppError)>{});
-    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
-    #elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(internal::bridge::SizeCheck<56, sizeof(realm::app::AppError)>{});
-    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
-    #endif
-#elif __arm__
-    static_assert(internal::bridge::SizeCheck<28, sizeof(realm::app::AppError)>{});
-    static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppError)>{});
-#elif __aarch64__
-    static_assert(internal::bridge::SizeCheck<48, sizeof(realm::app::AppError)>{});
-    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
-#endif
-
     static_assert((int)user::state::logged_in == (int)SyncUser::State::LoggedIn);
     static_assert((int)user::state::logged_out == (int)SyncUser::State::LoggedOut);
     static_assert((int)user::state::removed == (int)SyncUser::State::Removed);
 
     app_error::app_error(realm::app::AppError&& error) {
-        new (&m_error) app::AppError(std::move(error));
+        m_error = std::make_shared<realm::app::AppError>(app::AppError(std::move(error)));
     }
 
     std::string_view app_error::mesage() const
     {
-        return reinterpret_cast<const app::AppError*>(m_error)->reason();
+        return m_error->reason();
     }
 
     std::string_view app_error::link_to_server_logs() const
     {
-        return reinterpret_cast<const app::AppError*>(m_error)->link_to_server_logs;
+        return m_error->link_to_server_logs;
     }
 
     bool app_error::is_json_error() const
     {
-        return reinterpret_cast<const app::AppError*>(m_error)->is_json_error();
+        return m_error->is_json_error();
     }
 
     bool app_error::is_service_error() const
     {
-        return reinterpret_cast<const app::AppError*>(m_error)->is_service_error();
+        return m_error->is_service_error();
     }
 
     bool app_error::is_http_error() const
     {
-        return reinterpret_cast<const app::AppError*>(m_error)->is_http_error();
+        return m_error->is_http_error();
     }
 
     bool app_error::is_custom_error() const
     {
-        return reinterpret_cast<const app::AppError*>(m_error)->is_custom_error();
+        return m_error->is_custom_error();
     }
 
     bool app_error::is_client_error() const
     {
-        return reinterpret_cast<const app::AppError*>(m_error)->is_client_error();
+        return m_error->is_client_error();
     }
 
     /**

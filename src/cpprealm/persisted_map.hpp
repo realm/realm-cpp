@@ -443,6 +443,7 @@ namespace realm {
         void assign_accessor(internal::bridge::object *object, internal::bridge::col_key &&col_key) override {
             this->m_object = *object;
             this->managed = internal::bridge::dictionary(object->get_dictionary(col_key));
+            this->unmanaged = std::nullopt;
         }
         __cpp_realm_friends
     };

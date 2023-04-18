@@ -33,7 +33,7 @@ namespace realm {
         operator=(const T& o) {
             if (this->is_managed()) {
                 this->m_object->get_obj().template set<int64_t>(
-                        this->managed,
+                        this->managed.value(),
                         static_cast<int64_t>(o));
             } else {
                 new (&this->unmanaged) T(o);
@@ -44,9 +44,9 @@ namespace realm {
         std::enable_if_t<std::is_integral_v<T>>
         operator+=(const T& o) {
             if (this->is_managed()) {
-                auto old_val = deserialize(this->m_object->get_obj().get<int64_t>(this->managed));
+                auto old_val = deserialize(this->m_object->get_obj().get<int64_t>(this->managed.value()));
                 this->m_object->get_obj().template set<int64_t>(
-                        this->managed,
+                        this->managed.value(),
                         static_cast<int64_t>(old_val + o));
             } else {
                 this->unmanaged += T(o);
@@ -54,46 +54,46 @@ namespace realm {
         }
         void operator++() {
             if (this->is_managed()) {
-                auto old_val = deserialize(this->m_object->get_obj().get<int64_t>(this->managed));
+                auto old_val = deserialize(this->m_object->get_obj().get<int64_t>(this->managed.value()));
                 this->m_object->get_obj().template set<int64_t>(
-                        this->managed,
+                        this->managed.value(),
                         static_cast<int64_t>(++old_val));
             } else {
-                ++this->unmanaged;
+                ++this->unmanaged.value();
             }
         }
         template<typename T>
         std::enable_if_t<std::is_integral_v<T>>
         operator-=(const T& o) {
             if (this->is_managed()) {
-                auto old_val = deserialize(this->m_object->get_obj().get<int64_t>(this->managed));
+                auto old_val = deserialize(this->m_object->get_obj().get<int64_t>(this->managed.value()));
                 this->m_object->get_obj().template set<int64_t>(
-                        this->managed,
+                        this->managed.value(),
                         static_cast<int64_t>(old_val - o));
             } else {
-                this->unmanaged -= T(o);
+                this->unmanaged.value() -= T(o);
             }
         }
         void operator--() {
             if (this->is_managed()) {
-                auto old_val = deserialize(this->m_object->get_obj().get<int64_t>(this->managed));
+                auto old_val = deserialize(this->m_object->get_obj().get<int64_t>(this->managed.value()));
                 this->m_object->get_obj().template set<int64_t>(
-                        this->managed,
+                        this->managed.value(),
                         static_cast<int64_t>(--old_val));
             } else {
-                --this->unmanaged;
+                --this->unmanaged.value();
             }
         }
         template<typename T>
         std::enable_if_t<std::is_integral_v<T>>
         operator*=(const T& o) {
             if (this->is_managed()) {
-                auto old_val = deserialize(this->m_object->get_obj().get<int64_t>(this->managed));
+                auto old_val = deserialize(this->m_object->get_obj().get<int64_t>(this->managed.value()));
                 this->m_object->get_obj().template set<int64_t>(
-                        this->managed,
+                        this->managed.value(),
                         static_cast<int64_t>(old_val * o));
             } else {
-                this->unmanaged *= T(o);
+                this->unmanaged.value() *= T(o);
             }
         }
             protected:
