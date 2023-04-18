@@ -55,7 +55,7 @@ namespace realm {
             reference operator*() noexcept
             {
                 if (m_parent->m_object) {
-                    auto pair = (*m_parent).managed.get_pair(m_i);
+                    auto pair = (*m_parent).managed->get_pair(m_i);
                     return { pair.first, persisted<mapped_type>::deserialize(pair.second) };
                 } else {
                     return *m_idx;
@@ -104,40 +104,33 @@ namespace realm {
 
 
         persisted_map_base() {
-            new (&this->unmanaged) std::map<std::string, mapped_type>();
+            this->unmanaged = std::map<std::string, mapped_type>();
         }
         persisted_map_base(const persisted_map_base& v) {
             if (v.is_managed()) {
-                new (&this->managed) internal::bridge::dictionary(v.managed);
+                this->managed = v.managed;
             } else {
-                new (&this->unmanaged) std::map<std::string, mapped_type>(v.unmanaged);
-            }
-        }
-        ~persisted_map_base() {
-            if (this->is_managed()) {
-                this->managed.~dictionary();
-            } else {
-                this->unmanaged.~map();
+                this->unmanaged = v.unmanaged;
             }
         }
         persisted_map_base(const std::map<std::string, mapped_type>& v) {
-            new (&this->unmanaged) std::map<std::string, mapped_type>(v);
+            this->unmanaged = std::map<std::string, mapped_type>(v);
         }
         persisted_map_base(std::map<std::string, mapped_type>&& v) {
-            new (&this->unmanaged) std::map<std::string, mapped_type>(std::move(v));
+            this->unmanaged = std::map<std::string, mapped_type>(std::move(v));
         }
         persisted_map_base& operator=(const std::map<std::string, mapped_type>& o) {
             if (this->is_managed()) {
-                this->managed.clear();
+                this->managed->clear();
                 for (auto& [k, v] : o) {
                     if constexpr (internal::type_info::is_optional<mapped_type>::value) {
-                        this->managed.insert(k, internal::bridge::mixed(persisted<mapped_type>::serialize(*v)));
+                        this->managed->insert(k, internal::bridge::mixed(persisted<mapped_type>::serialize(*v)));
                     } else {
-                        this->managed.insert(k, internal::bridge::mixed(persisted<mapped_type>::serialize(v)));
+                        this->managed->insert(k, internal::bridge::mixed(persisted<mapped_type>::serialize(v)));
                     }
                 }
             } else {
-                new (&this->unmanaged) std::map<std::string, typename T::mapped_type>(o);
+                this->unmanaged = std::map<std::string, typename T::mapped_type>(o);
             }
             return *this;
         }
@@ -146,7 +139,7 @@ namespace realm {
             if (this->m_object) {
                 return iterator(0, this);
             } else {
-                return iterator(this->unmanaged.begin(), this);
+                return iterator(this->unmanaged->begin(), this);
             }
         }
 
@@ -155,40 +148,40 @@ namespace realm {
             if (this->m_object) {
                 return iterator(size(), this);
             } else {
-                return iterator(this->unmanaged.end(), this);
+                return iterator(this->unmanaged->end(), this);
             }
         }
 
         size_t size()
         {
             if (this->m_object) {
-                return managed.size();
+                return managed->size();
             } else {
-                return this->unmanaged.size();
+                return this->unmanaged->size();
             }
         }
 
         iterator find(const typename T::key_type& key) {
             if (this->m_object) {
                 // Dictionary's `find` searches for the index of the value and not the key.
-                auto i = managed.get_key_index(key);
+                auto i = managed->get_key_index(key);
                 if (i == size_t(-1)) {
                     return iterator(size(), this);
                 } else {
-                    return iterator(managed.get_key_index(key), this);
+                    return iterator(managed->get_key_index(key), this);
                 }
             } else {
-                return iterator(this->unmanaged.find(key), this);
+                return iterator(this->unmanaged->find(key), this);
             }
         }
 
         void erase(const typename T::key_type& key) {
             if (this->m_object) {
-                managed.remove(key);
+                managed->remove(key);
             } else {
-                auto it = this->unmanaged.find(key);
-                if (it != this->unmanaged.end())
-                    this->unmanaged.erase(it);
+                auto it = this->unmanaged->find(key);
+                if (it != this->unmanaged->end())
+                    this->unmanaged->erase(it);
             }
         }
         void clear();
@@ -211,10 +204,8 @@ namespace realm {
         }
 
     protected:
-        union {
-            std::map<std::string, typename T::mapped_type> unmanaged;
-            internal::bridge::dictionary managed;
-        };
+        std::optional<std::map<std::string, typename T::mapped_type>> unmanaged;
+        std::optional<internal::bridge::dictionary> managed;
     };
 
     template <typename T>
@@ -233,9 +224,9 @@ namespace realm {
     template <typename T>
     void persisted_map_base<T>::clear() {
         if (this->m_object) {
-            managed.remove_all();
+            managed->remove_all();
         } else {
-            this->unmanaged.clear();
+            this->unmanaged->clear();
         }
     }
 
@@ -252,13 +243,13 @@ namespace realm {
 
         notification_token token;
         token.m_realm = this->m_object->get_realm();
-        token.m_token = managed.add_notification_callback(
+        token.m_token = managed->add_notification_callback(
                 std::make_shared<collection_callback_wrapper<T>>(
                         std::move(handler),
                         *static_cast<persisted<T>*>(this),
                         false)
         );
-        token.m_dictionary = managed;
+        token.m_dictionary = *managed;
         return token;
     }
 
@@ -424,15 +415,15 @@ namespace realm {
 
         box<mapped_type> operator[](const std::string& a) {
             if (this->m_object) {
-                return box<mapped_type>(this->managed, a, &*this->m_object);
+                return box<mapped_type>(this->managed.value(), a, &*this->m_object);
             } else {
-                return box<mapped_type>(this->unmanaged[a]);
+                return box<mapped_type>(this->unmanaged.value()[a]);
             }
         }
     protected:
         void manage(internal::bridge::object *object, internal::bridge::col_key &&col_key) override {
             auto managed = object->get_dictionary(col_key);
-            for (auto& [k, v] : this->unmanaged) {
+            for (auto& [k, v] : this->unmanaged.value()) {
                 if constexpr (internal::type_info::is_optional<T>::value) {
                     if constexpr (std::is_base_of_v<realm::object<typename T::value_type>, typename T::value_type>) {
                         (*v).manage(object->get_obj().get_target_table(col_key),
@@ -445,13 +436,13 @@ namespace realm {
                     managed.insert(k, internal::bridge::mixed(persisted < T > ::serialize(v)));
                 }
             }
-            this->unmanaged.clear();
+            this->unmanaged->clear();
             assign_accessor(object, std::move(col_key));
         }
 
         void assign_accessor(internal::bridge::object *object, internal::bridge::col_key &&col_key) override {
             this->m_object = *object;
-            new (&this->managed) internal::bridge::dictionary(object->get_dictionary(col_key));
+            this->managed = internal::bridge::dictionary(object->get_dictionary(col_key));
         }
         __cpp_realm_friends
     };
