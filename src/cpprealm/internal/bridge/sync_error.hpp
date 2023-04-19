@@ -1,6 +1,7 @@
 #ifndef CPP_REALM_BRIDGE_SYNC_ERROR_HPP
 #define CPP_REALM_BRIDGE_SYNC_ERROR_HPP
 
+#include <memory>
 #include <system_error>
 
 namespace realm {
@@ -27,19 +28,7 @@ namespace realm::internal::bridge {
         /// The error indicates a client reset situation.
         [[nodiscard]] bool is_client_reset_requested() const;
     private:
-#ifdef __i386__
-        std::aligned_storage<68, 4>::type m_error[1];
-#elif __x86_64__
-    #if defined(__clang__)
-        std::aligned_storage<128, 8>::type m_error[1];
-    #elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<144, 8>::type m_error[1];
-    #endif
-#elif __arm__
-        std::aligned_storage<80, 4>::type m_error[1];
-#elif __aarch64__
-        std::aligned_storage<128, 8>::type m_error[1];
-#endif
+        std::unique_ptr<SyncError> m_error;
     };
 }
 
