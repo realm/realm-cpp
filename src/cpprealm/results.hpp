@@ -37,7 +37,7 @@ namespace realm {
         void set_managed(V &prop, const internal::bridge::col_key &column_key) {
             if constexpr (internal::type_info::is_primitive<typename V::Result>::value ||
                           std::is_same_v<std::vector<uint8_t>, typename V::Result>) {
-                new(&prop.managed) internal::bridge::col_key(column_key);
+                prop.managed = internal::bridge::col_key(column_key);
             }
         }
 
