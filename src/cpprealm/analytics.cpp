@@ -110,7 +110,7 @@ namespace realm {
             return "unknown";
         }
 
-        return std::string(static_cast<const char*>(buffer.release()), buffer_size - 1);
+        return std::string(static_cast<const char*>(buffer.get()), buffer_size - 1);
     }
 
     bool debugger_attached()

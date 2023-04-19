@@ -27,6 +27,37 @@ namespace realm::internal::bridge {
     object_schema::object_schema() {
         new (&m_schema) ObjectSchema();
     }
+
+    object_schema::object_schema(const object_schema& other) {
+        new (&m_schema) ObjectSchema(*reinterpret_cast<const ObjectSchema*>(&other.m_schema));
+    }
+
+    object_schema& object_schema::operator=(const object_schema& other) {
+        if (this != &other) {
+            *reinterpret_cast<ObjectSchema*>(&m_schema) = *reinterpret_cast<const ObjectSchema*>(&other.m_schema);
+        }
+        return *this;
+    }
+
+    object_schema::object_schema(object_schema&& other) {
+        new (&m_schema) ObjectSchema(std::move(*reinterpret_cast<ObjectSchema*>(&other.m_schema)));
+    }
+
+    object_schema& object_schema::operator=(object_schema&& other) {
+        if (this != &other) {
+            *reinterpret_cast<ObjectSchema*>(&m_schema) = std::move(*reinterpret_cast<ObjectSchema*>(&other.m_schema));
+        }
+        return *this;
+    }
+
+    object_schema::~object_schema() {
+        reinterpret_cast<ObjectSchema*>(&m_schema)->~ObjectSchema();
+    }
+
+
+
+
+
     object_schema::object_schema(const realm::ObjectSchema &v) {
         new (&m_schema) ObjectSchema(v);
     }

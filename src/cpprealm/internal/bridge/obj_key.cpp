@@ -22,6 +22,35 @@ namespace realm::internal::bridge {
         new (&m_obj_key) ObjKey();
     }
 
+    obj_key::obj_key(const obj_key& other) {
+        new (&m_obj_key) ObjKey(*reinterpret_cast<const ObjKey*>(&other.m_obj_key));
+    }
+
+    obj_key& obj_key::operator=(const obj_key& other) {
+        if (this != &other) {
+            *reinterpret_cast<ObjKey*>(&m_obj_key) = *reinterpret_cast<const ObjKey*>(&other.m_obj_key);
+        }
+        return *this;
+    }
+
+    obj_key::obj_key(obj_key&& other) {
+        new (&m_obj_key) ObjKey(std::move(*reinterpret_cast<ObjKey*>(&other.m_obj_key)));
+    }
+
+    obj_key& obj_key::operator=(obj_key&& other) {
+        if (this != &other) {
+            *reinterpret_cast<ObjKey*>(&m_obj_key) = std::move(*reinterpret_cast<ObjKey*>(&other.m_obj_key));
+        }
+        return *this;
+    }
+
+    obj_key::~obj_key() {
+        reinterpret_cast<ObjKey*>(&m_obj_key)->~ObjKey();
+    }
+    obj_key::obj_key() {
+        new (&m_obj_key) ObjKey();
+    }
+
     obj_key::obj_key(int64_t v) {
         new (&m_obj_key) ObjKey(v);
     }

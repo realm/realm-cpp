@@ -24,6 +24,27 @@ namespace realm::internal::bridge {
     binary::binary() {
         new (&m_data) OwnedBinaryData();
     }
+    binary::binary(const binary& other) {
+        new (&m_data) OwnedBinaryData(*reinterpret_cast<const OwnedBinaryData*>(&other.m_data));
+    }
+    binary& binary::operator=(const binary& other) {
+        if (this != &other) {
+            *reinterpret_cast<OwnedBinaryData*>(&m_data) = *reinterpret_cast<const OwnedBinaryData*>(&other.m_data);
+        }
+        return *this;
+    }
+    binary::binary(binary&& other) {
+        new (&m_data) OwnedBinaryData(std::move(*reinterpret_cast<OwnedBinaryData*>(&other.m_data)));
+    }
+    binary& binary::operator=(binary&& other) {
+        if (this != &other) {
+            *reinterpret_cast<OwnedBinaryData*>(&m_data) = std::move(*reinterpret_cast<OwnedBinaryData*>(&other.m_data));
+        }
+        return *this;
+    }
+    binary::~binary() {
+        reinterpret_cast<OwnedBinaryData*>(&m_data)->~OwnedBinaryData();
+    }
     binary::binary(const realm::BinaryData &v) {
         new (&m_data) OwnedBinaryData(v);
     }

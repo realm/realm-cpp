@@ -30,6 +30,32 @@ namespace realm::internal::bridge {
     list::list() {
         new (&m_list) List();
     }
+    
+    list::list(const list& other) {
+        new (&m_list) List(*reinterpret_cast<const List*>(&other.m_list));
+    }
+    
+    list& list::operator=(const list& other) {
+        if (this != &other) {
+            *reinterpret_cast<List*>(&m_list) = *reinterpret_cast<const List*>(&other.m_list);
+        }
+        return *this;
+    }
+
+    list::list(list&& other) {
+        new (&m_list) List(std::move(*reinterpret_cast<List*>(&other.m_list)));
+    }
+
+    list& list::operator=(list&& other) {
+        if (this != &other) {
+            *reinterpret_cast<List*>(&m_list) = std::move(*reinterpret_cast<List*>(&other.m_list));
+        }
+        return *this;
+    }
+
+    list::~list() {
+        reinterpret_cast<List*>(&m_list)->~List();
+    }
 
     list::list(const List &v) {
         new (&m_list) List(v);

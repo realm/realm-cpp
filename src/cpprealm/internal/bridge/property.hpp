@@ -38,6 +38,13 @@ namespace realm::internal::bridge {
             Collection = Array | Set | Dictionary,
             Flags = Nullable | Collection
         };
+
+        property();
+        property(const property& other) ;
+        property& operator=(const property& other) ;
+        property(property&& other);
+        property& operator=(property&& other);
+        ~property();
         property(const Property&); //NOLINT(google-explicit-constructor)
         property(const std::string& name,
                  type type,

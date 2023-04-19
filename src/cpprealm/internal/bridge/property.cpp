@@ -23,6 +23,37 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(Property)>{});
 #endif
 
+
+    property::property() {
+        new (&m_property) Property();
+    }
+
+    property::property(const property& other) {
+        new (&m_property) Property(*reinterpret_cast<const Property*>(&other.m_property));
+    }
+
+    property& property::operator=(const property& other) {
+        if (this != &other) {
+            *reinterpret_cast<Property*>(&m_property) = *reinterpret_cast<const Property*>(&other.m_property);
+        }
+        return *this;
+    }
+
+    property::property(property&& other) {
+        new (&m_property) Property(std::move(*reinterpret_cast<Property*>(&other.m_property)));
+    }
+
+    property& property::operator=(property&& other) {
+        if (this != &other) {
+            *reinterpret_cast<Property*>(&m_property) = std::move(*reinterpret_cast<Property*>(&other.m_property));
+        }
+        return *this;
+    }
+
+    property::~property() {
+        reinterpret_cast<Property*>(&m_property)->~Property();
+    }
+
     property::property(const realm::Property &v) {
         new (m_property) Property(v);
     }

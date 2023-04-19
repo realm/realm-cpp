@@ -15,6 +15,14 @@ namespace realm::internal::bridge {
         enum class object_type : uint8_t { TopLevel = 0, Embedded = 0x1, TopLevelAsymmetric = 0x2 };
 
         object_schema();
+
+        object_schema(const object_schema& other) ;
+        object_schema& operator=(const object_schema& other) ;
+        object_schema(object_schema&& other);
+        object_schema& operator=(object_schema&& other);
+        ~object_schema();
+
+
         object_schema(const std::string& name,
                       const std::vector<property>& properties,
                       const std::string& primary_key,

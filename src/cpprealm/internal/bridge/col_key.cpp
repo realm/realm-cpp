@@ -20,6 +20,27 @@ namespace realm::internal::bridge {
     col_key::col_key() noexcept {
         new (&m_col_key) ColKey();
     }
+    col_key::col_key(const col_key& other) {
+        new (&m_col_key) ColKey(*reinterpret_cast<const ColKey*>(&other.m_col_key));
+    }
+    col_key& col_key::operator=(const col_key& other) {
+        if (this != &other) {
+            *reinterpret_cast<ColKey*>(&m_col_key) = *reinterpret_cast<const ColKey*>(&other.m_col_key);
+        }
+        return *this;
+    }
+    col_key::col_key(col_key&& other) {
+        new (&m_col_key) ColKey(std::move(*reinterpret_cast<ColKey*>(&other.m_col_key)));
+    }
+    col_key& col_key::operator=(col_key&& other) {
+        if (this != &other) {
+            *reinterpret_cast<ColKey*>(&m_col_key) = std::move(*reinterpret_cast<ColKey*>(&other.m_col_key));
+        }
+        return *this;
+    }
+    col_key::~col_key() {
+        reinterpret_cast<ColKey*>(&m_col_key)->~ColKey();
+    }
     col_key::col_key(int64_t v) {
         new (&m_col_key) ColKey(v);
     }

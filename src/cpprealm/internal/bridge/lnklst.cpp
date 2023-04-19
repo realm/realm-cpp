@@ -19,6 +19,36 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<160, sizeof(LnkLst)>{});
     static_assert(SizeCheck<8, alignof(LnkLst)>{});
 #endif
+    
+    lnklst::lnklst() {
+        new (&m_lnk_lst) LnkLst();
+    }
+    
+    lnklst::lnklst(const lnklst& other) {
+        new (&m_lnk_lst) LnkLst(*reinterpret_cast<const LnkLst*>(&other.m_lnk_lst));
+    }
+
+    lnklst& lnklst::operator=(const lnklst& other) {
+        if (this != &other) {
+            *reinterpret_cast<LnkLst*>(&m_lnk_lst) = *reinterpret_cast<const LnkLst*>(&other.m_lnk_lst);
+        }
+        return *this;
+    }
+
+    lnklst::lnklst(lnklst&& other) {
+        new (&m_lnk_lst) LnkLst(std::move(*reinterpret_cast<LnkLst*>(&other.m_lnk_lst)));
+    }
+
+    lnklst& lnklst::operator=(lnklst&& other) {
+        if (this != &other) {
+            *reinterpret_cast<LnkLst*>(&m_lnk_lst) = std::move(*reinterpret_cast<LnkLst*>(&other.m_lnk_lst));
+        }
+        return *this;
+    }
+
+    lnklst::~lnklst() {
+        reinterpret_cast<LnkLst*>(&m_lnk_lst)->~LnkLst();
+    }
 
     lnklst::lnklst(const LnkLst &v) {
         new (&m_lnk_lst) LnkLst(v);

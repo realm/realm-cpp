@@ -12,6 +12,12 @@ namespace realm::internal::bridge {
     struct obj_key;
 
     struct lnklst {
+        lnklst() ;
+        lnklst(const lnklst& other) ;
+        lnklst& operator=(const lnklst& other) ;
+        lnklst(lnklst&& other);
+        lnklst& operator=(lnklst&& other);
+        ~lnklst();
         lnklst(const LnkLst&); // NOLINT
         operator LnkLst() const; //NOLINT
         obj create_and_insert_linked_object(size_t idx);
