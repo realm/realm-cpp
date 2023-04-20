@@ -62,7 +62,11 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(Object)>{});
     static_assert(SizeCheck<24, sizeof(IndexSet)>{});
     static_assert(SizeCheck<8, alignof(IndexSet)>{});
+#if defined(__clang__)
     static_assert(SizeCheck<168, sizeof(CollectionChangeSet)>{});
+#elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(SizeCheck<184, sizeof(CollectionChangeSet)>{});
+#endif
     static_assert(SizeCheck<8, alignof(CollectionChangeSet)>{});
     static_assert(SizeCheck<32, sizeof(IndexSet::IndexIterator)>{});
     static_assert(SizeCheck<8, alignof(IndexSet::IndexIterator)>{});
