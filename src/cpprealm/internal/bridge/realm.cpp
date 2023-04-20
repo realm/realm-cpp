@@ -43,7 +43,11 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<368, sizeof(Realm::Config)>{});
     static_assert(SizeCheck<16, alignof(Realm::Config)>{});
     #else
+#if defined(__clang__)
     static_assert(SizeCheck<312, sizeof(Realm::Config)>{});
+#elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(SizeCheck<328, sizeof(Realm::Config)>{});
+#endif
     static_assert(SizeCheck<8, alignof(Realm::Config)>{});
     #endif
 #endif
@@ -99,6 +103,36 @@ namespace realm::internal::bridge {
         } else {
             m_realm = Realm::get_shared_realm(std::move(tsr));
         }
+    }
+
+    realm::config::config() {
+        new (&m_config) RealmConfig();
+    }
+
+    realm::config::config(const config& other) {
+        new (&m_config) RealmConfig(*reinterpret_cast<const RealmConfig*>(other.m_config));
+    }
+
+    realm::config& realm::config::operator=(const config& other) {
+        if (this != &other) {
+            *reinterpret_cast<RealmConfig*>(m_config) = *reinterpret_cast<const RealmConfig*>(other.m_config);
+        }
+        return *this;
+    }
+
+    realm::config::config(config&& other) {
+        new (&m_config) RealmConfig(std::move(*reinterpret_cast<RealmConfig*>(other.m_config)));
+    }
+
+    realm::config& realm::config::operator=(config&& other) {
+        if (this != &other) {
+            *reinterpret_cast<RealmConfig*>(m_config) = std::move(*reinterpret_cast<RealmConfig*>(other.m_config));
+        }
+        return *this;
+    }
+
+    realm::config::~config() {
+        reinterpret_cast<RealmConfig*>(&m_config)->~RealmConfig();
     }
 
     realm::config::config(const RealmConfig &v) {

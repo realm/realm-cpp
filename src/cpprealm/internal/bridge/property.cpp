@@ -19,7 +19,11 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<64, sizeof(Property)>{});
     static_assert(SizeCheck<8, alignof(Property)>{});
 #elif __aarch64__
+#if defined(__clang__)
     static_assert(SizeCheck<120, sizeof(Property)>{});
+#elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(SizeCheck<152, sizeof(Property)>{});
+#endif
     static_assert(SizeCheck<8, alignof(Property)>{});
 #endif
 

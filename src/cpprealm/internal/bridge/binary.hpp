@@ -9,12 +9,12 @@ namespace realm {
 }
 namespace realm::internal::bridge {
     struct binary {
-        binary();
-        binary(const binary& other) ;
-        binary& operator=(const binary& other) ;
-        binary(binary&& other);
-        binary& operator=(binary&& other);
-        ~binary();
+//        binary();
+//        binary(const binary& other) ;
+//        binary& operator=(const binary& other) ;
+//        binary(binary&& other);
+//        binary& operator=(binary&& other);
+//        ~binary();
         binary(const BinaryData&); //NOLINT(google-explicit-constructor)
         binary(const std::vector<uint8_t>&); //NOLINT(google-explicit-constructor)
         [[nodiscard]] const char* data() const;

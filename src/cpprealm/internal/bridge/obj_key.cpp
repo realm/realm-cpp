@@ -47,9 +47,6 @@ namespace realm::internal::bridge {
     obj_key::~obj_key() {
         reinterpret_cast<ObjKey*>(&m_obj_key)->~ObjKey();
     }
-    obj_key::obj_key() {
-        new (&m_obj_key) ObjKey();
-    }
 
     obj_key::obj_key(int64_t v) {
         new (&m_obj_key) ObjKey(v);
@@ -84,7 +81,33 @@ namespace realm::internal::bridge {
     obj_link::obj_link() {
         new (&m_obj_link) ObjLink();
     }
+    
+    obj_link::obj_link(const obj_link& other) {
+        new (&m_obj_link) ObjLink(*reinterpret_cast<const ObjLink*>(other.m_obj_link));
+    }
 
+    obj_link& obj_link::operator=(const obj_link& other) {
+        if (this != &other) {
+            *reinterpret_cast<ObjLink*>(m_obj_link) = *reinterpret_cast<const ObjLink*>(other.m_obj_link);
+        }
+        return *this;
+    }
+
+    obj_link::obj_link(obj_link&& other) {
+        new (&m_obj_link) ObjLink(std::move(*reinterpret_cast<ObjLink*>(other.m_obj_link)));
+    }
+
+    obj_link& obj_link::operator=(obj_link&& other) {
+        if (this != &other) {
+            *reinterpret_cast<ObjLink*>(m_obj_link) = std::move(*reinterpret_cast<ObjLink*>(other.m_obj_link));
+        }
+        return *this;
+    }
+
+    obj_link::~obj_link() {
+        reinterpret_cast<ObjLink*>(m_obj_link)->~ObjLink();
+    }
+    
     obj_link::obj_link(const ObjLink& v) {
         new (&m_obj_link) ObjLink(v);
     }

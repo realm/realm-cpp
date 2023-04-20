@@ -31,29 +31,29 @@ namespace realm::internal::bridge {
     }
     
     obj::obj(const obj& other) {
-        new (&m_obj) Obj(*reinterpret_cast<const Obj*>(&other.m_obj));
+        new (&m_obj) Obj(*reinterpret_cast<const Obj*>(other.m_obj));
     }
 
     obj& obj::operator=(const obj& other) {
         if (this != &other) {
-            *reinterpret_cast<Obj*>(&m_obj) = *reinterpret_cast<const Obj*>(&other.m_obj);
+            *reinterpret_cast<Obj*>(m_obj) = *reinterpret_cast<const Obj*>(other.m_obj);
         }
         return *this;
     }
 
     obj::obj(obj&& other) {
-        new (&m_obj) Obj(std::move(*reinterpret_cast<Obj*>(&other.m_obj)));
+        new (&m_obj) Obj(std::move(*reinterpret_cast<Obj*>(other.m_obj)));
     }
 
     obj& obj::operator=(obj&& other) {
         if (this != &other) {
-            *reinterpret_cast<Obj*>(&m_obj) = std::move(*reinterpret_cast<Obj*>(&other.m_obj));
+            *reinterpret_cast<Obj*>(m_obj) = std::move(*reinterpret_cast<Obj*>(other.m_obj));
         }
         return *this;
     }
 
     obj::~obj() {
-        reinterpret_cast<Obj*>(&m_obj)->~Obj();
+        reinterpret_cast<Obj*>(m_obj)->~Obj();
     }
 
     group::group(realm& val)

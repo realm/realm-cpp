@@ -85,8 +85,9 @@ namespace realm {
                 case internal::bridge::data_type::Int: return value.operator int64_t();
                 case internal::bridge::data_type::Bool: return value.operator bool();
                 case internal::bridge::data_type::String: return static_cast<std::string>(value);
-                case internal::bridge::data_type::Binary:
+                case internal::bridge::data_type::Binary: {
                     return static_cast<std::vector<uint8_t>>(static_cast<internal::bridge::binary>(value));
+                }
                 case internal::bridge::data_type::Timestamp: return static_cast<internal::bridge::timestamp>(value);
                 case internal::bridge::data_type::Float:
                 case internal::bridge::data_type::Double: return static_cast<double>(value);

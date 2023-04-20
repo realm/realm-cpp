@@ -22,6 +22,35 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, sizeof(ThreadSafeReference)>{});
     static_assert(SizeCheck<8, alignof(ThreadSafeReference)>{});
 #endif
+    thread_safe_reference::thread_safe_reference() {
+        new (&m_thread_safe_reference) ThreadSafeReference();
+    }
+
+//    thread_safe_reference::thread_safe_reference(const thread_safe_reference& other) {
+//        new (&m_thread_safe_reference) ThreadSafeReference(*reinterpret_cast<const ThreadSafeReference*>(other.m_thread_safe_reference));
+//    }
+//
+//    thread_safe_reference& thread_safe_reference::operator=(const thread_safe_reference& other) {
+//        if (this != &other) {
+//            *reinterpret_cast<ThreadSafeReference*>(m_thread_safe_reference) = *reinterpret_cast<const ThreadSafeReference*>(other.m_thread_safe_reference);
+//        }
+//        return *this;
+//    }
+
+    thread_safe_reference::thread_safe_reference(thread_safe_reference&& other) {
+        new (&m_thread_safe_reference) ThreadSafeReference(std::move(*reinterpret_cast<ThreadSafeReference*>(other.m_thread_safe_reference)));
+    }
+
+    thread_safe_reference& thread_safe_reference::operator=(thread_safe_reference&& other) {
+        if (this != &other) {
+            *reinterpret_cast<ThreadSafeReference*>(m_thread_safe_reference) = std::move(*reinterpret_cast<ThreadSafeReference*>(other.m_thread_safe_reference));
+        }
+        return *this;
+    }
+
+    thread_safe_reference::~thread_safe_reference() {
+        reinterpret_cast<ThreadSafeReference*>(m_thread_safe_reference)->~ThreadSafeReference();
+    }
     thread_safe_reference::thread_safe_reference(const object &o) {
         new (&m_thread_safe_reference) ThreadSafeReference(static_cast<Object>(o));
     }

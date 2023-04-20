@@ -23,36 +23,36 @@ namespace realm::internal::bridge {
 #endif
 
     dictionary::dictionary() {
-        new (m_dictionary) Dictionary();
+        new (&m_dictionary) Dictionary();
     }
     dictionary::dictionary(const dictionary& other) {
-        new (&m_dictionary) Dictionary(*reinterpret_cast<const Dictionary*>(&other.m_dictionary));
+        new (&m_dictionary) Dictionary(*reinterpret_cast<const Dictionary*>(other.m_dictionary));
     }
-    
+
     dictionary& dictionary::operator=(const dictionary& other) {
         if (this != &other) {
-            *reinterpret_cast<Dictionary*>(&m_dictionary) = *reinterpret_cast<const Dictionary*>(&other.m_dictionary);
+            *reinterpret_cast<Dictionary*>(&m_dictionary) = *reinterpret_cast<const Dictionary*>(other.m_dictionary);
         }
         return *this;
     }
 
     dictionary::dictionary(dictionary&& other) {
-        new (&m_dictionary) Dictionary(std::move(*reinterpret_cast<Dictionary*>(&other.m_dictionary)));
+        new (&m_dictionary) Dictionary(std::move(*reinterpret_cast<Dictionary*>(other.m_dictionary)));
     }
 
     dictionary& dictionary::operator=(dictionary&& other) {
         if (this != &other) {
-            *reinterpret_cast<Dictionary*>(&m_dictionary) = std::move(*reinterpret_cast<Dictionary*>(&other.m_dictionary));
+            *reinterpret_cast<Dictionary*>(m_dictionary) = std::move(*reinterpret_cast<Dictionary*>(other.m_dictionary));
         }
         return *this;
     }
 
     dictionary::~dictionary() {
-        reinterpret_cast<Dictionary*>(&m_dictionary)->~Dictionary();
+        reinterpret_cast<Dictionary*>(m_dictionary)->~Dictionary();
     }
     
     dictionary::dictionary(const Dictionary &v) {
-        new (m_dictionary) Dictionary(v);
+        new (&m_dictionary) Dictionary(v);
     }
 
     dictionary::operator Dictionary() const {

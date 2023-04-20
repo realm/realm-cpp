@@ -11,6 +11,11 @@ namespace realm {
 namespace realm::internal::bridge {
     struct object_id : core_binding<ObjectId> {
         object_id();
+        object_id(const object_id& other) ;
+        object_id& operator=(const object_id& other) ;
+        object_id(object_id&& other);
+        object_id& operator=(object_id&& other);
+        ~object_id();
         object_id(const ObjectId&); //NOLINT(google-explicit-constructor);
         explicit object_id(const std::string&);
         object_id(const struct ::realm::object_id&); //NOLINT(google-explicit-constructor);

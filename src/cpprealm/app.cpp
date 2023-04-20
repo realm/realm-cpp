@@ -31,13 +31,43 @@ namespace realm {
 #elif __aarch64__
     static_assert(internal::bridge::SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppCredentials)>{});
+#if defined(__clang__)
     static_assert(internal::bridge::SizeCheck<48, sizeof(realm::app::AppError)>{});
+#elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(internal::bridge::SizeCheck<56, sizeof(realm::app::AppError)>{});
+#endif
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
 #endif
 
     static_assert((int)user::state::logged_in == (int)SyncUser::State::LoggedIn);
     static_assert((int)user::state::logged_out == (int)SyncUser::State::LoggedOut);
     static_assert((int)user::state::removed == (int)SyncUser::State::Removed);
+
+    app_error::app_error(const app_error& other) {
+        new (&m_error) app::AppError(*reinterpret_cast<const app::AppError*>(other.m_error));
+    }
+
+    app_error& app_error::operator=(const app_error& other) {
+        if (this != &other) {
+            *reinterpret_cast<app::AppError*>(m_error) = *reinterpret_cast<const app::AppError*>(other.m_error);
+        }
+        return *this;
+    }
+
+    app_error::app_error(app_error&& other) {
+        new (&m_error) app::AppError(std::move(*reinterpret_cast<app::AppError*>(other.m_error)));
+    }
+
+    app_error& app_error::operator=(app_error&& other) {
+        if (this != &other) {
+            *reinterpret_cast<app::AppError*>(m_error) = std::move(*reinterpret_cast<app::AppError*>(other.m_error));
+        }
+        return *this;
+    }
+
+    app_error::~app_error() {
+        reinterpret_cast<app::AppError*>(m_error)->~AppError();
+    }
 
     app_error::app_error(realm::app::AppError&& error) {
         new (&m_error) app::AppError(std::move(error));
@@ -205,6 +235,36 @@ namespace realm {
 
     internal::bridge::sync_manager user::sync_manager() const {
         return m_user->sync_manager();
+    }
+
+    App::credentials::credentials() {
+        new (&m_credentials) app::AppCredentials();
+    }
+
+    App::credentials::credentials(const credentials& other) {
+        new (&m_credentials) app::AppCredentials(*reinterpret_cast<const app::AppCredentials*>(other.m_credentials));
+    }
+
+    App::credentials& App::credentials::operator=(const credentials& other) {
+        if (this != &other) {
+            *reinterpret_cast<app::AppCredentials*>(m_credentials) = *reinterpret_cast<const app::AppCredentials*>(other.m_credentials);
+        }
+        return *this;
+    }
+
+    App::credentials::credentials(credentials&& other) {
+        new (&m_credentials) app::AppCredentials(std::move(*reinterpret_cast<app::AppCredentials*>(other.m_credentials)));
+    }
+
+    App::credentials& App::credentials::operator=(App::credentials&& other) {
+        if (this != &other) {
+            *reinterpret_cast<app::AppCredentials*>(m_credentials) = std::move(*reinterpret_cast<app::AppCredentials*>(other.m_credentials));
+        }
+        return *this;
+    }
+
+    App::credentials::~credentials() {
+        reinterpret_cast<app::AppCredentials*>(m_credentials)->~AppCredentials();
     }
 
     App::credentials::credentials(app::AppCredentials &&v) noexcept {

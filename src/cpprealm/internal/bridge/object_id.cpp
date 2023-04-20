@@ -20,6 +20,31 @@ namespace realm::internal::bridge {
     object_id::object_id() {
         new(&m_object_id) ObjectId();
     }
+    object_id::object_id(const object_id& other) {
+        new (&m_object_id) ObjectId(*reinterpret_cast<const ObjectId*>(other.m_object_id));
+    }
+
+    object_id& object_id::operator=(const object_id& other) {
+        if (this != &other) {
+            *reinterpret_cast<ObjectId*>(m_object_id) = *reinterpret_cast<const ObjectId*>(other.m_object_id);
+        }
+        return *this;
+    }
+
+    object_id::object_id(object_id&& other) {
+        new (&m_object_id) ObjectId(std::move(*reinterpret_cast<ObjectId*>(other.m_object_id)));
+    }
+
+    object_id& object_id::operator=(object_id&& other) {
+        if (this != &other) {
+            *reinterpret_cast<ObjectId*>(m_object_id) = std::move(*reinterpret_cast<ObjectId*>(other.m_object_id));
+        }
+        return *this;
+    }
+
+    object_id::~object_id() {
+        reinterpret_cast<ObjectId*>(m_object_id)->~ObjectId();
+    }
 
     object_id::object_id(const std::string &v) {
         new(&m_object_id) ObjectId(v);

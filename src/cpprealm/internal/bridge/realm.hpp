@@ -59,6 +59,12 @@ namespace realm::internal::bridge {
         };
 
         struct config {
+            config();
+            config(const config& other) ;
+            config& operator=(const config& other) ;
+            config(config&& other);
+            config& operator=(config&& other);
+            ~config();
             config(const RealmConfig&); //NOLINT(google-explicit-constructor)
             config(const std::optional<std::string>& path = std::nullopt,
                    const std::optional<std::shared_ptr<scheduler>>& scheduler = std::nullopt);
@@ -83,9 +89,11 @@ namespace realm::internal::bridge {
             std::aligned_storage<192, 8>::type m_config[1];
 #elif __aarch64__
     #if __ANDROID__
-            std::aligned_storage<368, 16>::type m_config[1];
-    #else
-            std::aligned_storage<312, 8>::type m_config[1];
+        std::aligned_storage<368, 16>::type m_config[1];
+    #elif defined(__clang__)
+        std::aligned_storage<312, 8>::type m_config[1];
+    #elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<328, 8>::type m_config[1];
     #endif
 #endif
         };

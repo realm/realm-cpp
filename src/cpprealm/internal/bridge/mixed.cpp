@@ -26,36 +26,36 @@ namespace realm::internal::bridge {
         } else { \
             new (&m_mixed) Mixed(realm::none); \
         } \
-    } \
-    
+    }                                 \
+
     mixed::mixed() {
         new (&m_mixed) Mixed();
     }
-    
+
     mixed::mixed(const mixed& other) {
-        new (&m_mixed) Mixed(*reinterpret_cast<const Mixed*>(&other.m_mixed));
+        new (&m_mixed) Mixed(*reinterpret_cast<const Mixed*>(other.m_mixed));
     }
 
     mixed& mixed::operator=(const mixed& other) {
         if (this != &other) {
-            *reinterpret_cast<Mixed*>(&m_mixed) = *reinterpret_cast<const Mixed*>(&other.m_mixed);
+            *reinterpret_cast<Mixed*>(m_mixed) = *reinterpret_cast<const Mixed*>(other.m_mixed);
         }
         return *this;
     }
 
     mixed::mixed(mixed&& other) {
-        new (&m_mixed) Mixed(std::move(*reinterpret_cast<Mixed*>(&other.m_mixed)));
+        new (&m_mixed) Mixed(std::move(*reinterpret_cast<Mixed*>(other.m_mixed)));
     }
 
     mixed& mixed::operator=(mixed&& other) {
         if (this != &other) {
-            *reinterpret_cast<Mixed*>(&m_mixed) = std::move(*reinterpret_cast<Mixed*>(&other.m_mixed));
+            *reinterpret_cast<Mixed*>(m_mixed) = std::move(*reinterpret_cast<Mixed*>(&other.m_mixed));
         }
         return *this;
     }
 
     mixed::~mixed() {
-        reinterpret_cast<Mixed*>(&m_mixed)->~Mixed();
+        reinterpret_cast<Mixed*>(m_mixed)->~Mixed();
     }
 
     mixed::mixed(const std::monostate&) {

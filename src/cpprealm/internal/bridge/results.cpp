@@ -20,9 +20,43 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<568, sizeof(Results)>{});
     static_assert(SizeCheck<8, alignof(Results)>{});
 #elif __aarch64__
+#if defined(__clang__)
     static_assert(SizeCheck<896, sizeof(Results)>{});
+#elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(SizeCheck<912, sizeof(Results)>{});
+#endif
     static_assert(SizeCheck<8, alignof(Results)>{});
 #endif
+
+    results::results() {
+        new (&m_results) Results();
+    }
+
+    results::results(const results& other) {
+        new (&m_results) Results(*reinterpret_cast<const Results*>(other.m_results));
+    }
+
+    results& results::operator=(const results& other) {
+        if (this != &other) {
+            *reinterpret_cast<Results*>(m_results) = *reinterpret_cast<const Results*>(other.m_results);
+        }
+        return *this;
+    }
+
+    results::results(results&& other) {
+        new (&m_results) Results(std::move(*reinterpret_cast<Results*>(other.m_results)));
+    }
+
+    results& results::operator=(results&& other) {
+        if (this != &other) {
+            *reinterpret_cast<Results*>(m_results) = std::move(*reinterpret_cast<Results*>(other.m_results));
+        }
+        return *this;
+    }
+
+    results::~results() {
+        reinterpret_cast<Results*>(m_results)->~Results();
+    }
 
     results::results(const realm &realm, const query &query) {
         new (&m_results) Results(realm, query);

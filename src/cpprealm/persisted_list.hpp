@@ -94,6 +94,13 @@ namespace realm {
                 if (this->is_managed()) m_list.remove_all();
                 else this->unmanaged.clear();
             }
+            persisted_list_base(persisted_list_base&& v) {
+                abort();
+            }
+            persisted_list_base& operator=(persisted_list_base&& v) {
+                abort();
+            }
+
             persisted_list_base(const persisted_list_base& v) {
                 *this = v;
             }
@@ -113,7 +120,7 @@ namespace realm {
                 if (this->m_object) {
                     this->m_list.~list();
                 } else {
-                    this->unmanaged.clear();
+                    this->unmanaged.~T();
                 }
             }
             virtual typename T::value_type operator[](size_t idx) const = 0;
@@ -138,7 +145,13 @@ namespace realm {
             }
             void assign_accessor(internal::bridge::object *object,
                                  internal::bridge::col_key &&col_key) final {
+                if (this->m_object) {
+                    reinterpret_cast<bridge::list*>(&m_list)->~list();
+                } else {
+                    reinterpret_cast<T*>(&unmanaged)->~T();
+                }
                 this->m_object = *object;
+
                 new (&m_list) bridge::list(object->get_list(std::move(col_key)));
             }
 

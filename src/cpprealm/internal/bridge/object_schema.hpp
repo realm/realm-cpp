@@ -48,7 +48,11 @@ namespace realm::internal::bridge {
 #elif __arm__
         std::aligned_storage<68, 4>::type m_schema[1];
 #elif __aarch64__
+#if defined(__clang__)
         std::aligned_storage<128, 8>::type m_schema[1];
+#elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<152, 8>::type m_schema[1];
+#endif
 #endif
     };
 }

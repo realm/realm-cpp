@@ -20,6 +20,36 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(Schema)>{});
 #endif
 
+    schema::schema() {
+        new (&m_schema) Schema();
+    }
+
+    schema::schema(const schema& other) {
+        new (&m_schema) Schema(*reinterpret_cast<const Schema*>(other.m_schema));
+    }
+
+    schema& schema::operator=(const schema& other) {
+        if (this != &other) {
+            *reinterpret_cast<Schema*>(m_schema) = *reinterpret_cast<const Schema*>(other.m_schema);
+        }
+        return *this;
+    }
+
+    schema::schema(schema&& other) {
+        new (&m_schema) Schema(std::move(*reinterpret_cast<Schema*>(other.m_schema)));
+    }
+
+    schema& schema::operator=(schema&& other) {
+        if (this != &other) {
+            *reinterpret_cast<Schema*>(m_schema) = std::move(*reinterpret_cast<Schema*>(other.m_schema));
+        }
+        return *this;
+    }
+
+    schema::~schema() {
+        reinterpret_cast<Schema*>(m_schema)->~Schema();
+    }
+
     object_schema schema::find(const std::string &name) {
         return *reinterpret_cast<Schema*>(m_schema)->find(name);
     }

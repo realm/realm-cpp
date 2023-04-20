@@ -62,7 +62,11 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(Object)>{});
     static_assert(SizeCheck<24, sizeof(IndexSet)>{});
     static_assert(SizeCheck<8, alignof(IndexSet)>{});
+#if defined(__clang__)
     static_assert(SizeCheck<168, sizeof(CollectionChangeSet)>{});
+#elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(SizeCheck<184, sizeof(CollectionChangeSet)>{});
+#endif
     static_assert(SizeCheck<8, alignof(CollectionChangeSet)>{});
     static_assert(SizeCheck<32, sizeof(IndexSet::IndexIterator)>{});
     static_assert(SizeCheck<8, alignof(IndexSet::IndexIterator)>{});
@@ -75,6 +79,33 @@ namespace realm::internal::bridge {
     object::object() {
         new (&m_object) Object();
     }
+
+    object::object(const object& other) {
+        new (&m_object) Object(* reinterpret_cast<const Object*>(other.m_object));
+    }
+
+    object& object::operator=(const object& other) {
+        if (this != &other) {
+            *reinterpret_cast<Object*>(m_object) = *reinterpret_cast<const Object*>(other.m_object);
+        }
+        return *this;
+    }
+
+    object::object(object&& other) {
+        new (&m_object) Object(std::move(*reinterpret_cast<Object*>(other.m_object)));
+    }
+
+    object& object::operator=(object&& other) {
+        if (this != &other) {
+            *reinterpret_cast<Object*>(m_object) = std::move(*reinterpret_cast<Object*>(other.m_object));
+        }
+        return *this;
+    }
+
+    object::~object() {
+        reinterpret_cast<Object*>(m_object)->~Object();
+    }
+
     object::object(const Object &v) {
         new (&m_object) Object(v);
     }

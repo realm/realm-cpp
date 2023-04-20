@@ -20,6 +20,31 @@ namespace realm::internal::bridge {
     uuid::uuid() {
         new (&m_uuid) UUID();
     }
+    uuid::uuid(const uuid& other) {
+        new (&m_uuid) UUID(*reinterpret_cast<const UUID*>(other.m_uuid));
+    }
+
+    uuid& uuid::operator=(const uuid& other) {
+        if (this != &other) {
+            *reinterpret_cast<UUID*>(m_uuid) = *reinterpret_cast<const UUID*>(other.m_uuid);
+        }
+        return *this;
+    }
+
+    uuid::uuid(uuid&& other) {
+        new (&m_uuid) UUID(std::move(*reinterpret_cast<UUID*>(other.m_uuid)));
+    }
+
+    uuid& uuid::operator=(uuid&& other) {
+        if (this != &other) {
+            *reinterpret_cast<UUID*>(m_uuid) = std::move(*reinterpret_cast<UUID*>(other.m_uuid));
+        }
+        return *this;
+    }
+
+    uuid::~uuid() {
+        reinterpret_cast<UUID*>(m_uuid)->~UUID();
+    }
     uuid::uuid(const std::string &v) {
         new (&m_uuid) UUID(v);
     }

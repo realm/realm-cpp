@@ -118,19 +118,27 @@ namespace realm::internal::bridge {
 #elif __arm__
         std::aligned_storage<84, 4>::type m_change_set[1];
 #elif __aarch64__
+#if defined(__clang__)
         std::aligned_storage<168, 8>::type m_change_set[1];
+#elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<184, 8>::type m_change_set[1];
+#endif
 #else
         std::aligned_storage<84, 4>::type m_change_set[1];
 #endif
     };
     struct collection_change_callback {
-//        operator CollectionChangeCallback() const;
         virtual void before(collection_change_set const& c) = 0;
         virtual void after(collection_change_set const& c) = 0;
     };
 
     struct object {
         object(); //NOLINT(google-explicit-constructor)
+        object(const object& other) ;
+        object& operator=(const object& other);
+        object(object&& other);
+        object& operator=(object&& other);
+        ~object();
         object(const Object&); //NOLINT(google-explicit-constructor)
         object(const realm &realm, const obj &obj); //NOLINT(google-explicit-constructor)
         object(const realm &realm, const obj_link& link);

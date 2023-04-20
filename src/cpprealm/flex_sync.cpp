@@ -24,9 +24,14 @@ namespace realm {
     static_assert(internal::bridge::SizeCheck<136, sizeof(sync::MutableSubscriptionSet)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
 #elif __aarch64__
+#if defined(__clang__)
     static_assert(internal::bridge::SizeCheck<96, sizeof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<8, alignof(sync::SubscriptionSet)>{});
     static_assert(internal::bridge::SizeCheck<184, sizeof(sync::MutableSubscriptionSet)>{});
+#elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(internal::bridge::SizeCheck<104, sizeof(sync::SubscriptionSet)>{});
+    static_assert(internal::bridge::SizeCheck<192, sizeof(sync::MutableSubscriptionSet)>{});
+#endif
+    static_assert(internal::bridge::SizeCheck<8, alignof(sync::SubscriptionSet)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
 #endif
     sync_subscription::sync_subscription(const sync::Subscription &v)
@@ -37,6 +42,23 @@ namespace realm {
         updated_at = v.updated_at.get_time_point();
         query_string = v.query_string;
         object_class_name = v.object_class_name;
+    }
+    mutable_sync_subscription_set& mutable_sync_subscription_set::operator=(const mutable_sync_subscription_set& other) {
+        if (this != &other) {
+            *reinterpret_cast<sync::MutableSubscriptionSet*>(m_subscription_set) = *reinterpret_cast<const sync::MutableSubscriptionSet*>(other.m_subscription_set);
+        }
+        return *this;
+    }
+
+    mutable_sync_subscription_set& mutable_sync_subscription_set::operator=(mutable_sync_subscription_set&& other) {
+        if (this != &other) {
+            *reinterpret_cast<sync::MutableSubscriptionSet*>(m_subscription_set) = std::move(*reinterpret_cast<sync::MutableSubscriptionSet*>(other.m_subscription_set));
+        }
+        return *this;
+    }
+
+    mutable_sync_subscription_set::~mutable_sync_subscription_set() {
+        reinterpret_cast<sync::MutableSubscriptionSet*>(m_subscription_set)->~MutableSubscriptionSet();
     }
     mutable_sync_subscription_set::mutable_sync_subscription_set(internal::bridge::realm& realm,
                                                                  const sync::MutableSubscriptionSet &subscription_set)
@@ -74,6 +96,24 @@ namespace realm {
             return sync_subscription(*it);
         }
         return std::nullopt;
+    }
+
+    sync_subscription_set& sync_subscription_set::operator=(const sync_subscription_set& other) {
+        if (this != &other) {
+            *reinterpret_cast<sync::SubscriptionSet*>(m_subscription_set) = *reinterpret_cast<const sync::SubscriptionSet*>(other.m_subscription_set);
+        }
+        return *this;
+    }
+
+    sync_subscription_set& sync_subscription_set::operator=(sync_subscription_set&& other) {
+        if (this != &other) {
+            *reinterpret_cast<sync::SubscriptionSet*>(m_subscription_set) = std::move(*reinterpret_cast<sync::SubscriptionSet*>(other.m_subscription_set));
+        }
+        return *this;
+    }
+
+    sync_subscription_set::~sync_subscription_set() {
+        reinterpret_cast<sync::SubscriptionSet*>(m_subscription_set)->~SubscriptionSet();
     }
 
     size_t sync_subscription_set::size() const {

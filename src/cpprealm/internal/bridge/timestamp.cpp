@@ -17,6 +17,36 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(Timestamp)>{});
 #endif
 
+    timestamp::timestamp() {
+        new (&m_timestamp) Timestamp();
+    }
+
+    timestamp::timestamp(const timestamp& other) {
+        new (&m_timestamp) Timestamp(*reinterpret_cast<const Timestamp*>(other.m_timestamp));
+    }
+
+    timestamp& timestamp::operator=(const timestamp& other) {
+        if (this != &other) {
+            *reinterpret_cast<Timestamp*>(m_timestamp) = *reinterpret_cast<const Timestamp*>(other.m_timestamp);
+        }
+        return *this;
+    }
+
+    timestamp::timestamp(timestamp&& other) {
+        new (&m_timestamp) Timestamp(std::move(*reinterpret_cast<Timestamp*>(other.m_timestamp)));
+    }
+
+    timestamp& timestamp::operator=(timestamp&& other) {
+        if (this != &other) {
+            *reinterpret_cast<Timestamp*>(m_timestamp) = std::move(*reinterpret_cast<Timestamp*>(other.m_timestamp));
+        }
+        return *this;
+    }
+
+    timestamp::~timestamp() {
+        reinterpret_cast<Timestamp*>(m_timestamp)->~Timestamp();
+    }
+
     timestamp::timestamp(const realm::Timestamp &v) {
         new (&m_timestamp) Timestamp(v);
     }
@@ -37,10 +67,6 @@ namespace realm::internal::bridge {
 
     int32_t timestamp::get_nanoseconds() const noexcept {
         return reinterpret_cast<const Timestamp*>(m_timestamp)->get_nanoseconds();
-    }
-
-    timestamp::timestamp() {
-        new (&m_timestamp) Timestamp();
     }
 
     timestamp::operator Timestamp() const {

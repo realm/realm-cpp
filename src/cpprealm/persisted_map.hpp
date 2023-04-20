@@ -114,6 +114,8 @@ namespace realm {
             }
         }
         ~persisted_map_base() {
+            if (this->should_detect_usage_for_queries)
+                return;
             if (this->is_managed()) {
                 this->managed.~dictionary();
             } else {

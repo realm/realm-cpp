@@ -45,6 +45,12 @@ namespace realm {
 
 // Represents an error state from the server.
 struct app_error {
+    app_error() = delete;
+    app_error(const app_error& other) ;
+    app_error& operator=(const app_error& other) ;
+    app_error(app_error&& other);
+    app_error& operator=(app_error&& other);
+    ~app_error();
     app_error(realm::app::AppError&& error); //NOLINT(google-explicit-constructor)
 
     [[nodiscard]] std::string_view mesage() const;
@@ -72,7 +78,11 @@ std::aligned_storage<56, 8>::type m_error[1];
 #elif __arm__
     std::aligned_storage<28, 4>::type m_error[1];
 #elif __aarch64__
+#if defined(__clang__)
     std::aligned_storage<48, 8>::type m_error[1];
+#elif defined(__GNUC__) || defined(__GNUG__)
+    std::aligned_storage<56, 8>::type m_error[1];
+#endif
 #endif
 };
 
@@ -136,7 +146,7 @@ struct user {
 
     [[nodiscard]] db_config flexible_sync_configuration() const
     {
-        db_config config;
+        db_config config = {std::nullopt, std::nullopt};
         config.set_sync_config(sync_config(m_user));
         config.sync_config().set_error_handler([](const sync_session& session, const sync_error& error) {
             std::cerr<<"sync error: "<<error.message()<<std::endl;
@@ -238,9 +248,12 @@ public:
         static credentials custom(const std::string& token);
         static credentials username_password(const std::string& username, const std::string& password);
         static credentials function(const bson::BsonDocument& payload);
-        credentials() = delete;
-        credentials(const credentials& credentials) = default;
-        credentials(credentials&&) = default;
+        credentials();
+        credentials(const credentials& other) ;
+        credentials& operator=(const credentials& other) ;
+        credentials(credentials&& other);
+        credentials& operator=(credentials&& other);
+        ~credentials();
     private:
         credentials(app::AppCredentials&& credentials) noexcept;
         operator app::AppCredentials() const;

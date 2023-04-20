@@ -20,7 +20,11 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<68, sizeof(ObjectSchema)>{});
     static_assert(SizeCheck<4, alignof(ObjectSchema)>{});
 #elif __aarch64__
+#if defined(__clang__)
     static_assert(SizeCheck<128, sizeof(ObjectSchema)>{});
+#elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(SizeCheck<152, sizeof(ObjectSchema)>{});
+#endif
     static_assert(SizeCheck<8, alignof(ObjectSchema)>{});
 #endif
 

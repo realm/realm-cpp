@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 #else
         config.showDurations = Catch::ShowDurations::Always; // this is to help debug hangs
 //        config.testsOrTags.emplace_back("~[performance]");
-        Admin::shared().cache_app_id(Admin::shared().create_app({"str_col", "_id"}));
+//        Admin::shared().cache_app_id(Admin::shared().create_app({"str_col", "_id"}));
 #endif
     }
 

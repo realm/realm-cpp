@@ -17,6 +17,12 @@ namespace realm {
         struct query;
 
         struct table {
+            table();
+            table(const table& other) ;
+            table& operator=(const table& other) ;
+            table(table&& other);
+            table& operator=(table&& other);
+            ~table();
             table(const TableRef &);
             table(const ConstTableRef &);
             operator TableRef() const;
