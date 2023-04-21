@@ -45,20 +45,20 @@ namespace realm {
     }
     mutable_sync_subscription_set& mutable_sync_subscription_set::operator=(const mutable_sync_subscription_set& other) {
         if (this != &other) {
-            *reinterpret_cast<sync::MutableSubscriptionSet*>(m_subscription_set) = *reinterpret_cast<const sync::MutableSubscriptionSet*>(other.m_subscription_set);
+            *reinterpret_cast<sync::MutableSubscriptionSet*>(&m_subscription_set) = *reinterpret_cast<const sync::MutableSubscriptionSet*>(&other.m_subscription_set);
         }
         return *this;
     }
 
     mutable_sync_subscription_set& mutable_sync_subscription_set::operator=(mutable_sync_subscription_set&& other) {
         if (this != &other) {
-            *reinterpret_cast<sync::MutableSubscriptionSet*>(m_subscription_set) = std::move(*reinterpret_cast<sync::MutableSubscriptionSet*>(other.m_subscription_set));
+            *reinterpret_cast<sync::MutableSubscriptionSet*>(&m_subscription_set) = std::move(*reinterpret_cast<sync::MutableSubscriptionSet*>(&other.m_subscription_set));
         }
         return *this;
     }
 
     mutable_sync_subscription_set::~mutable_sync_subscription_set() {
-        reinterpret_cast<sync::MutableSubscriptionSet*>(m_subscription_set)->~MutableSubscriptionSet();
+        reinterpret_cast<sync::MutableSubscriptionSet*>(&m_subscription_set)->~MutableSubscriptionSet();
     }
     mutable_sync_subscription_set::mutable_sync_subscription_set(internal::bridge::realm& realm,
                                                                  const sync::MutableSubscriptionSet &subscription_set)
@@ -67,22 +67,22 @@ namespace realm {
         new (m_subscription_set) sync::MutableSubscriptionSet(subscription_set);
     }
     void mutable_sync_subscription_set::insert_or_assign(const std::string &name, const internal::bridge::query &query) {
-        reinterpret_cast<sync::MutableSubscriptionSet *>(m_subscription_set)->insert_or_assign(name, query);
+        reinterpret_cast<sync::MutableSubscriptionSet *>(&m_subscription_set)->insert_or_assign(name, query);
     }
 
     // Removes all subscriptions.
     void mutable_sync_subscription_set::clear() {
-        reinterpret_cast<sync::MutableSubscriptionSet *>(m_subscription_set)->clear();
+        reinterpret_cast<sync::MutableSubscriptionSet *>(&m_subscription_set)->clear();
     }
 
     sync::MutableSubscriptionSet mutable_sync_subscription_set::get_subscription_set() {
-        return *reinterpret_cast<sync::MutableSubscriptionSet *>(m_subscription_set);
+        return *reinterpret_cast<sync::MutableSubscriptionSet *>(&m_subscription_set);
     }
 
     // Removes a subscription for a given name. Will throw if subscription does
     // not exist.
     void mutable_sync_subscription_set::remove(const std::string& name) {
-        auto* set = reinterpret_cast<sync::MutableSubscriptionSet *>(m_subscription_set);
+        auto* set = reinterpret_cast<sync::MutableSubscriptionSet *>(&m_subscription_set);
         if (set->erase(name))
             return;
         throw std::logic_error("Subscription cannot be found");
@@ -91,7 +91,7 @@ namespace realm {
     // Finds a subscription for a given name. Will return `std::nullopt` is subscription does
     // not exist.
     std::optional<sync_subscription> mutable_sync_subscription_set::find(const std::string& name) {
-        auto* set = reinterpret_cast<sync::MutableSubscriptionSet *>(m_subscription_set);
+        auto* set = reinterpret_cast<sync::MutableSubscriptionSet *>(&m_subscription_set);
         if (auto it = set->find(name)) {
             return sync_subscription(*it);
         }
@@ -100,28 +100,28 @@ namespace realm {
 
     sync_subscription_set& sync_subscription_set::operator=(const sync_subscription_set& other) {
         if (this != &other) {
-            *reinterpret_cast<sync::SubscriptionSet*>(m_subscription_set) = *reinterpret_cast<const sync::SubscriptionSet*>(other.m_subscription_set);
+            *reinterpret_cast<sync::SubscriptionSet*>(&m_subscription_set) = *reinterpret_cast<const sync::SubscriptionSet*>(&other.m_subscription_set);
         }
         return *this;
     }
 
     sync_subscription_set& sync_subscription_set::operator=(sync_subscription_set&& other) {
         if (this != &other) {
-            *reinterpret_cast<sync::SubscriptionSet*>(m_subscription_set) = std::move(*reinterpret_cast<sync::SubscriptionSet*>(other.m_subscription_set));
+            *reinterpret_cast<sync::SubscriptionSet*>(&m_subscription_set) = std::move(*reinterpret_cast<sync::SubscriptionSet*>(&other.m_subscription_set));
         }
         return *this;
     }
 
     sync_subscription_set::~sync_subscription_set() {
-        reinterpret_cast<sync::SubscriptionSet*>(m_subscription_set)->~SubscriptionSet();
+        reinterpret_cast<sync::SubscriptionSet*>(&m_subscription_set)->~SubscriptionSet();
     }
 
     size_t sync_subscription_set::size() const {
-        return reinterpret_cast<const sync::SubscriptionSet *>(m_subscription_set)->size();
+        return reinterpret_cast<const sync::SubscriptionSet *>(&m_subscription_set)->size();
     }
 
     std::optional<sync_subscription> sync_subscription_set::find(const std::string& name) {
-        auto* set = reinterpret_cast<sync::SubscriptionSet *>(m_subscription_set);
+        auto* set = reinterpret_cast<sync::SubscriptionSet *>(&m_subscription_set);
         if (auto it = set->find(name)) {
             return sync_subscription(*it);
         }
@@ -129,12 +129,13 @@ namespace realm {
     }
 
     std::promise<bool> sync_subscription_set::update(std::function<void(mutable_sync_subscription_set&)>&& fn) {
-        auto* set = reinterpret_cast<sync::SubscriptionSet *>(m_subscription_set);
+        auto* set = reinterpret_cast<sync::SubscriptionSet *>(&m_subscription_set);
         auto mutable_set = mutable_sync_subscription_set(m_realm, set->make_mutable_copy());
         fn(mutable_set);
+        reinterpret_cast<sync::SubscriptionSet*>(&m_subscription_set)->~SubscriptionSet();
         new (&m_subscription_set) sync::SubscriptionSet(mutable_set.get_subscription_set().commit());
         std::promise<bool> p;
-        reinterpret_cast<sync::SubscriptionSet *>(m_subscription_set)->get_state_change_notification(realm::sync::SubscriptionSet::State::Complete)
+        reinterpret_cast<sync::SubscriptionSet *>(&m_subscription_set)->get_state_change_notification(realm::sync::SubscriptionSet::State::Complete)
                 .get_async([&p](const realm::StatusWith<realm::sync::SubscriptionSet::State>& state) mutable noexcept {
                     p.set_value(state == sync::SubscriptionSet::State::Complete);
                 });

@@ -52,9 +52,9 @@ namespace realm {
         // Returns the timestamp of the last time this subscription was updated by calling update_query.
         std::chrono::time_point<std::chrono::system_clock> updated_at;
         // Returns a stringified version of the query associated with this subscription.
-        std::string_view query_string;
+        std::string query_string;
         // Returns the name of the object class of the query for this subscription.
-        std::string_view object_class_name;
+        std::string object_class_name;
     private:
         sync_subscription(const sync::Subscription&);
 

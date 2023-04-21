@@ -63,7 +63,7 @@ namespace realm {
         }
     protected:
         static internal::bridge::mixed serialize(const T& value, const std::optional<internal::bridge::realm>& realm = std::nullopt) {
-            return std::visit([&realm](auto& arg) {
+            return std::visit([&realm](auto&& arg) {
                 using M = std::decay_t<decltype(arg)>;
                 if constexpr (std::is_base_of<object_base<M>, M>::value) {
                     internal::bridge::realm r = *realm;
@@ -73,7 +73,7 @@ namespace realm {
                     const_cast<M&>(arg).manage(table, r);
                     return internal::bridge::mixed(const_cast<M&>(arg).m_object->get_obj().get_link());
                 } else {
-                    return internal::bridge::mixed(static_cast<M>(arg));
+                    return internal::bridge::mixed(static_cast<M>(std::move(arg)));
                 }
             }, value);
         }

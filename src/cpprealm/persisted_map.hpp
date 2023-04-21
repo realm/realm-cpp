@@ -289,12 +289,17 @@ namespace realm {
             }
             return *this;
         }
+
         box_base& operator=(mapped_type&& o) {
             if (is_managed) {
                 if constexpr (internal::type_info::is_optional<mapped_type>::value) {
                     if (o) {
-                        m_backing_map.get().insert(m_key,
-                                                   persisted<mapped_type>::serialize(std::move(*o)));
+                        if constexpr (std::is_base_of_v<realm::object<typename mapped_type::value_type>, typename mapped_type::value_type>) {
+                            (*o).manage(m_object.get_obj().get_table(), m_object.get_realm());
+                            m_backing_map.get().insert(m_key, internal::bridge::mixed(persisted<mapped_type>::serialize(*o)));
+                        } else if constexpr (std::is_base_of_v<embedded_object<typename mapped_type::value_type>, typename mapped_type::value_type>) {
+                            (*o).manage(internal::bridge::object(m_object.get_realm(), m_backing_map.get().insert_embedded(m_key)));
+                        }
                     } else {
                         m_backing_map.get().insert(m_key, internal::bridge::mixed(std::nullopt));
                     }
@@ -441,19 +446,24 @@ namespace realm {
                                  object->get_realm());
                         managed.insert(k, internal::bridge::mixed(persisted<T>::serialize(*v)));
                     } else if constexpr (std::is_base_of_v<embedded_object<typename T::value_type>, typename T::value_type>) {
-                        managed.insert_embedded(k);
+                        (*v).manage(internal::bridge::object(object->get_realm(), managed.insert_embedded(k)));
                     }
                 } else {
                     managed.insert(k, internal::bridge::mixed(persisted < T > ::serialize(v)));
                 }
             }
-            this->unmanaged.clear();
             assign_accessor(object, std::move(col_key));
         }
 
         void assign_accessor(internal::bridge::object *object, internal::bridge::col_key &&col_key) override {
+            // We need to free what was previously stored.
+            if (this->m_object) {
+                reinterpret_cast<internal::bridge::dictionary*>(&this->managed)->~dictionary();
+            } else {
+                this->unmanaged.clear();
+            }
             this->m_object = *object;
-            new (&this->managed) internal::bridge::dictionary(object->get_dictionary(col_key));
+            new (&this->managed) internal::bridge::dictionary(object->get_dictionary(std::move(col_key)));
         }
         __cpp_realm_friends
     };

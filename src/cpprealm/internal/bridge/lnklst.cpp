@@ -25,29 +25,29 @@ namespace realm::internal::bridge {
     }
     
     lnklst::lnklst(const lnklst& other) {
-        new (&m_lnk_lst) LnkLst(*reinterpret_cast<const LnkLst*>(other.m_lnk_lst));
+        new (&m_lnk_lst) LnkLst(*reinterpret_cast<const LnkLst*>(&other.m_lnk_lst));
     }
 
     lnklst& lnklst::operator=(const lnklst& other) {
         if (this != &other) {
-            *reinterpret_cast<LnkLst*>(&m_lnk_lst) = *reinterpret_cast<const LnkLst*>(other.m_lnk_lst);
+            *reinterpret_cast<LnkLst*>(&m_lnk_lst) = *reinterpret_cast<const LnkLst*>(&other.m_lnk_lst);
         }
         return *this;
     }
 
     lnklst::lnklst(lnklst&& other) {
-        new (&m_lnk_lst) LnkLst(std::move(*reinterpret_cast<LnkLst*>(other.m_lnk_lst)));
+        new (&m_lnk_lst) LnkLst(std::move(*reinterpret_cast<LnkLst*>(&other.m_lnk_lst)));
     }
 
     lnklst& lnklst::operator=(lnklst&& other) {
         if (this != &other) {
-            *reinterpret_cast<LnkLst*>(m_lnk_lst) = std::move(*reinterpret_cast<LnkLst*>(other.m_lnk_lst));
+            *reinterpret_cast<LnkLst*>(&m_lnk_lst) = std::move(*reinterpret_cast<LnkLst*>(&other.m_lnk_lst));
         }
         return *this;
     }
 
     lnklst::~lnklst() {
-        reinterpret_cast<LnkLst*>(m_lnk_lst)->~LnkLst();
+        reinterpret_cast<LnkLst*>(&m_lnk_lst)->~LnkLst();
     }
 
     lnklst::lnklst(const LnkLst &v) {
@@ -55,14 +55,14 @@ namespace realm::internal::bridge {
     }
 
     obj lnklst::create_and_insert_linked_object(size_t idx) {
-        return reinterpret_cast<LnkLst*>(m_lnk_lst)->create_and_insert_linked_object(idx);
+        return reinterpret_cast<LnkLst*>(&m_lnk_lst)->create_and_insert_linked_object(idx);
     }
 
     void lnklst::add(const obj_key &v) {
-        return reinterpret_cast<LnkLst*>(m_lnk_lst)->add(v);
+        return reinterpret_cast<LnkLst*>(&m_lnk_lst)->add(v);
     }
 
     lnklst::operator LnkLst() const {
-        return *reinterpret_cast<const LnkLst*>(m_lnk_lst);
+        return *reinterpret_cast<const LnkLst*>(&m_lnk_lst);
     }
 }

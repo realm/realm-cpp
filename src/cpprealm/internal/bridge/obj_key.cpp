@@ -57,7 +57,7 @@ namespace realm::internal::bridge {
     }
 
     obj_key::operator ObjKey() const {
-        return *reinterpret_cast<const ObjKey*>(m_obj_key);
+        return *reinterpret_cast<const ObjKey*>(&m_obj_key);
     }
 
     bool operator==(obj_key const& lhs, obj_key const& rhs) {
@@ -83,29 +83,29 @@ namespace realm::internal::bridge {
     }
     
     obj_link::obj_link(const obj_link& other) {
-        new (&m_obj_link) ObjLink(*reinterpret_cast<const ObjLink*>(other.m_obj_link));
+        new (&m_obj_link) ObjLink(*reinterpret_cast<const ObjLink*>(&other.m_obj_link));
     }
 
     obj_link& obj_link::operator=(const obj_link& other) {
         if (this != &other) {
-            *reinterpret_cast<ObjLink*>(m_obj_link) = *reinterpret_cast<const ObjLink*>(other.m_obj_link);
+            *reinterpret_cast<ObjLink*>(&m_obj_link) = *reinterpret_cast<const ObjLink*>(&other.m_obj_link);
         }
         return *this;
     }
 
     obj_link::obj_link(obj_link&& other) {
-        new (&m_obj_link) ObjLink(std::move(*reinterpret_cast<ObjLink*>(other.m_obj_link)));
+        new (&m_obj_link) ObjLink(std::move(*reinterpret_cast<ObjLink*>(&other.m_obj_link)));
     }
 
     obj_link& obj_link::operator=(obj_link&& other) {
         if (this != &other) {
-            *reinterpret_cast<ObjLink*>(m_obj_link) = std::move(*reinterpret_cast<ObjLink*>(other.m_obj_link));
+            *reinterpret_cast<ObjLink*>(&m_obj_link) = std::move(*reinterpret_cast<ObjLink*>(&other.m_obj_link));
         }
         return *this;
     }
 
     obj_link::~obj_link() {
-        reinterpret_cast<ObjLink*>(m_obj_link)->~ObjLink();
+        reinterpret_cast<ObjLink*>(&m_obj_link)->~ObjLink();
     }
     
     obj_link::obj_link(const ObjLink& v) {
@@ -113,11 +113,11 @@ namespace realm::internal::bridge {
     }
 
     obj_link::operator ObjLink() const {
-        return *reinterpret_cast<const ObjLink*>(m_obj_link);
+        return *reinterpret_cast<const ObjLink*>(&m_obj_link);
     }
 
     obj_key obj_link::get_obj_key() {
-        return reinterpret_cast<const ObjLink*>(m_obj_link)->get_obj_key();
+        return reinterpret_cast<const ObjLink*>(&m_obj_link)->get_obj_key();
     }
 
     bool operator==(obj_link const& lhs, obj_link const& rhs) {

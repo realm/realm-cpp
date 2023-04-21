@@ -27,7 +27,7 @@ namespace realm {
             return QThread::currentThread()->eventDispatcher();
         }
 
-        void set_notify_callback(std::function<void()> fn) override
+        void set_notify_callback(Function<void()> fn) override
         {
             m_callback = std::move(fn);
         }
@@ -37,11 +37,11 @@ namespace realm {
             schedule(m_callback);
         }
 
-        void schedule(std::function<void()> fn) {
+        void schedule(Function<void()> fn) {
             QMetaObject::invokeMethod(this, fn);
         }
     private:
-        std::function<void()> m_callback;
+        Function<void()> m_callback;
         std::thread::id m_id = std::this_thread::get_id();
     };
     static std::shared_ptr<realm::util::Scheduler> make_qt()
@@ -53,14 +53,17 @@ namespace realm {
     struct platform_default_scheduler final : public scheduler {
         platform_default_scheduler() = default;
         ~platform_default_scheduler() final = default;
-        void invoke(std::function<void ()> &&fn) override {
+        void invoke(Function<void ()> &&fn) override {
             m_scheduler->invoke(std::move(fn));
         }
         [[nodiscard]] bool is_on_thread() const noexcept override {
             return m_scheduler->is_on_thread();
         }
         bool is_same_as(const realm::scheduler *other) const noexcept override {
-            return this == other;
+            if (auto o = dynamic_cast<const platform_default_scheduler *>(other)) {
+                return m_scheduler->is_same_as(o->m_scheduler.get());
+            }
+            return false;
         }
         [[nodiscard]] bool can_invoke() const noexcept override {
             return m_scheduler->can_invoke();

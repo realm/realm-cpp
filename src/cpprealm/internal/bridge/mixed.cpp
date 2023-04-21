@@ -33,29 +33,41 @@ namespace realm::internal::bridge {
     }
 
     mixed::mixed(const mixed& other) {
-        new (&m_mixed) Mixed(*reinterpret_cast<const Mixed*>(other.m_mixed));
+        if (other.type() == data_type::String) {
+            m_owned_string = other.m_owned_string;
+        }
+        new (&m_mixed) Mixed(*reinterpret_cast<const Mixed*>(&other.m_mixed));
     }
 
     mixed& mixed::operator=(const mixed& other) {
         if (this != &other) {
-            *reinterpret_cast<Mixed*>(m_mixed) = *reinterpret_cast<const Mixed*>(other.m_mixed);
+            if (other.type() == data_type::String) {
+                m_owned_string = other.m_owned_string;
+            }
+            *reinterpret_cast<Mixed*>(&m_mixed) = *reinterpret_cast<const Mixed*>(&other.m_mixed);
         }
         return *this;
     }
 
     mixed::mixed(mixed&& other) {
-        new (&m_mixed) Mixed(std::move(*reinterpret_cast<Mixed*>(other.m_mixed)));
+        if (other.type() == data_type::String) {
+            m_owned_string = std::move(other.m_owned_string);
+        }
+        new (&m_mixed) Mixed(std::move(*reinterpret_cast<Mixed*>(&other.m_mixed)));
     }
 
     mixed& mixed::operator=(mixed&& other) {
         if (this != &other) {
-            *reinterpret_cast<Mixed*>(m_mixed) = std::move(*reinterpret_cast<Mixed*>(&other.m_mixed));
+            if (other.type() == data_type::String) {
+                m_owned_string = std::move(other.m_owned_string);
+            }
+            *reinterpret_cast<Mixed*>(&m_mixed) = std::move(*reinterpret_cast<Mixed*>(&other.m_mixed));
         }
         return *this;
     }
 
     mixed::~mixed() {
-        reinterpret_cast<Mixed*>(m_mixed)->~Mixed();
+        reinterpret_cast<Mixed*>(&m_mixed)->~Mixed();
     }
 
     mixed::mixed(const std::monostate&) {
@@ -130,37 +142,37 @@ namespace realm::internal::bridge {
         return m_owned_string;
     }
     mixed::operator bridge::binary() const {
-        return reinterpret_cast<const Mixed*>(m_mixed)->get_binary();
+        return reinterpret_cast<const Mixed*>(&m_mixed)->get_binary();
     }
     mixed::operator bridge::timestamp() const {
-        return reinterpret_cast<const Mixed*>(m_mixed)->get_timestamp();
+        return reinterpret_cast<const Mixed*>(&m_mixed)->get_timestamp();
     }
     mixed::operator bridge::obj_link() const {
-        return reinterpret_cast<const Mixed*>(m_mixed)->get<ObjLink>();
+        return reinterpret_cast<const Mixed*>(&m_mixed)->get<ObjLink>();
     }
     mixed::operator bridge::obj_key() const {
-        return reinterpret_cast<const Mixed*>(m_mixed)->get<ObjKey>();
+        return reinterpret_cast<const Mixed*>(&m_mixed)->get<ObjKey>();
     }
     mixed::operator bridge::uuid() const {
-        return static_cast<const uuid &>(reinterpret_cast<const Mixed *>(m_mixed)->get_uuid());
+        return static_cast<const uuid &>(reinterpret_cast<const Mixed *>(&m_mixed)->get_uuid());
     }
     mixed::operator bridge::object_id() const {
-        return static_cast<const object_id &>(reinterpret_cast<const Mixed *>(m_mixed)->get_object_id());
+        return static_cast<const object_id &>(reinterpret_cast<const Mixed *>(&m_mixed)->get_object_id());
     }
     mixed::operator int64_t() const {
-        return static_cast<const int64_t &>(reinterpret_cast<const Mixed *>(m_mixed)->get_int());
+        return static_cast<const int64_t &>(reinterpret_cast<const Mixed *>(&m_mixed)->get_int());
     }
     mixed::operator double() const {
-        return static_cast<const double &>(reinterpret_cast<const Mixed *>(m_mixed)->get_double());
+        return static_cast<const double &>(reinterpret_cast<const Mixed *>(&m_mixed)->get_double());
     }
     mixed::operator bool() const {
-        return static_cast<const bool &>(reinterpret_cast<const Mixed *>(m_mixed)->get_bool());
+        return static_cast<const bool &>(reinterpret_cast<const Mixed *>(&m_mixed)->get_bool());
     }
     data_type mixed::type() const noexcept {
-        return data_type(static_cast<int>(reinterpret_cast<const Mixed *>(m_mixed)->get_type()));
+        return data_type(static_cast<int>(reinterpret_cast<const Mixed *>(&m_mixed)->get_type()));
     }
     bool mixed::is_null() const noexcept {
-        return reinterpret_cast<const Mixed *>(m_mixed)->is_null();
+        return reinterpret_cast<const Mixed *>(&m_mixed)->is_null();
     }
 #define __cpp_realm_gen_mixed_op(op) \
     bool operator op(const mixed& a, const mixed& b) { \

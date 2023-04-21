@@ -81,29 +81,29 @@ namespace realm::internal::bridge {
     }
 
     object::object(const object& other) {
-        new (&m_object) Object(* reinterpret_cast<const Object*>(other.m_object));
+        new (&m_object) Object(* reinterpret_cast<const Object*>(&other.m_object));
     }
 
     object& object::operator=(const object& other) {
         if (this != &other) {
-            *reinterpret_cast<Object*>(m_object) = *reinterpret_cast<const Object*>(other.m_object);
+            *reinterpret_cast<Object*>(&m_object) = *reinterpret_cast<const Object*>(&other.m_object);
         }
         return *this;
     }
 
     object::object(object&& other) {
-        new (&m_object) Object(std::move(*reinterpret_cast<Object*>(other.m_object)));
+        new (&m_object) Object(std::move(*reinterpret_cast<Object*>(&other.m_object)));
     }
 
     object& object::operator=(object&& other) {
         if (this != &other) {
-            *reinterpret_cast<Object*>(m_object) = std::move(*reinterpret_cast<Object*>(other.m_object));
+            *reinterpret_cast<Object*>(&m_object) = std::move(*reinterpret_cast<Object*>(&other.m_object));
         }
         return *this;
     }
 
     object::~object() {
-        reinterpret_cast<Object*>(m_object)->~Object();
+        reinterpret_cast<Object*>(&m_object)->~Object();
     }
 
     object::object(const Object &v) {
@@ -116,7 +116,7 @@ namespace realm::internal::bridge {
         new (&m_object) Object(realm, link);
     }
     obj object::get_obj() const {
-        return reinterpret_cast<const Object*>(m_object)->obj();
+        return reinterpret_cast<const Object*>(&m_object)->obj();
     }
     list object::get_list(const col_key& col_key) const {
         return List(get_realm(), get_obj(), col_key);
@@ -125,16 +125,16 @@ namespace realm::internal::bridge {
         return Dictionary(get_realm(), get_obj(), v);
     }
     bool object::is_valid() const {
-        return reinterpret_cast<const Object*>(m_object)->is_valid();
+        return reinterpret_cast<const Object*>(&m_object)->is_valid();
     }
     realm object::get_realm() const {
-        return reinterpret_cast<const Object*>(m_object)->get_realm();
+        return reinterpret_cast<const Object*>(&m_object)->get_realm();
     }
     object_schema object::get_object_schema() const {
-        return reinterpret_cast<const Object*>(m_object)->get_object_schema();
+        return reinterpret_cast<const Object*>(&m_object)->get_object_schema();
     }
     object::operator Object() const {
-        return *reinterpret_cast<const Object*>(m_object);
+        return *reinterpret_cast<const Object*>(&m_object);
     }
     notification_token object::add_notification_callback(std::shared_ptr<collection_change_callback>&& cb) {
         struct wrapper : CollectionChangeCallback {
@@ -148,32 +148,57 @@ namespace realm::internal::bridge {
                 m_cb->after(v);
             }
         } ccb(std::move(cb));
-        return reinterpret_cast<Object*>(m_object)->add_notification_callback(ccb);
+        return reinterpret_cast<Object*>(&m_object)->add_notification_callback(ccb);
     }
 
     bool index_set::empty() const {
-        return reinterpret_cast<const IndexSet*>(m_idx_set)->empty();
+        return reinterpret_cast<const IndexSet*>(&m_idx_set)->empty();
     }
     index_set::index_set() {
         new (&m_idx_set) IndexSet();
+    }
+    index_set::index_set(const index_set& other) {
+        new (&m_idx_set) IndexSet(*reinterpret_cast<const IndexSet*>(&other.m_idx_set));
+    }
+
+    index_set& index_set::operator=(const index_set& other) {
+        if (this != &other) {
+            *reinterpret_cast<IndexSet*>(&m_idx_set) = *reinterpret_cast<const IndexSet*>(&other.m_idx_set);
+        }
+        return *this;
+    }
+
+    index_set::index_set(index_set&& other) {
+        new (&m_idx_set) IndexSet(std::move(*reinterpret_cast<IndexSet*>(&other.m_idx_set)));
+    }
+
+    index_set& index_set::operator=(index_set&& other) {
+        if (this != &other) {
+            *reinterpret_cast<IndexSet*>(&m_idx_set) = std::move(*reinterpret_cast<IndexSet*>(&other.m_idx_set));
+        }
+        return *this;
+    }
+
+    index_set::~index_set() {
+        reinterpret_cast<IndexSet*>(&m_idx_set)->~IndexSet();
     }
     index_set::index_set(const IndexSet& v) {
         new (&m_idx_set) IndexSet(v);
     }
     bool collection_change_set::empty() const {
-        return reinterpret_cast<const CollectionChangeSet *>(m_change_set)->empty();
+        return reinterpret_cast<const CollectionChangeSet *>(&m_change_set)->empty();
     }
 
     collection_change_set::operator CollectionChangeSet() const {
-        return *reinterpret_cast<const CollectionChangeSet *>(m_change_set);
+        return *reinterpret_cast<const CollectionChangeSet *>(&m_change_set);
     }
 
     index_set collection_change_set::modifications() const {
-        return reinterpret_cast<const CollectionChangeSet *>(m_change_set)->modifications;
+        return reinterpret_cast<const CollectionChangeSet *>(&m_change_set)->modifications;
     }
 
     std::unordered_map<int64_t, index_set> collection_change_set::columns() const {
-        auto& columns = reinterpret_cast<const CollectionChangeSet *>(m_change_set)->columns;
+        auto& columns = reinterpret_cast<const CollectionChangeSet *>(&m_change_set)->columns;
         std::unordered_map<int64_t, index_set> map;
         for (const auto &[k, v]: columns) {
             map[k] = v;
@@ -182,7 +207,7 @@ namespace realm::internal::bridge {
     }
 
     index_set collection_change_set::deletions() const {
-        return reinterpret_cast<const CollectionChangeSet *>(m_change_set)->deletions;
+        return reinterpret_cast<const CollectionChangeSet *>(&m_change_set)->deletions;
     }
 
     notification_token::notification_token() {
@@ -193,57 +218,139 @@ namespace realm::internal::bridge {
         new (&m_token) NotificationToken(std::move(v));
     }
     void notification_token::unregister() {
-        reinterpret_cast<NotificationToken *>(m_token)->unregister();
+        reinterpret_cast<NotificationToken *>(&m_token)->unregister();
+    }
+
+    collection_change_set::collection_change_set() {
+        new (&m_change_set) CollectionChangeSet();
+    }
+
+    collection_change_set::collection_change_set(const collection_change_set& other) {
+        new (&m_change_set) CollectionChangeSet(* reinterpret_cast<const CollectionChangeSet*>(&other.m_change_set));
+    }
+
+    collection_change_set& collection_change_set::operator=(const collection_change_set& other) {
+        if (this != &other) {
+            *reinterpret_cast<CollectionChangeSet*>(&m_change_set) = *reinterpret_cast<const CollectionChangeSet*>(&other.m_change_set);
+        }
+        return *this;
+    }
+
+    collection_change_set::collection_change_set(collection_change_set&& other) {
+        new (&m_change_set) CollectionChangeSet(std::move(*reinterpret_cast<CollectionChangeSet*>(&other.m_change_set)));
+    }
+
+    collection_change_set& collection_change_set::operator=(collection_change_set&& other) {
+        if (this != &other) {
+            *reinterpret_cast<CollectionChangeSet*>(&m_change_set) = std::move(*reinterpret_cast<CollectionChangeSet*>(&other.m_change_set));
+        }
+        return *this;
+    }
+
+    collection_change_set::~collection_change_set() {
+        reinterpret_cast<CollectionChangeSet*>(&m_change_set)->~CollectionChangeSet();
     }
 
     collection_change_set::collection_change_set(const CollectionChangeSet &v) {
         new (&m_change_set) CollectionChangeSet(v);
     }
 
+    index_set::index_iterator::index_iterator(const index_set::index_iterator& other) {
+        new (&m_iterator) IndexSet::IndexIterator(*reinterpret_cast<const IndexSet::IndexIterator*>(&other.m_iterator));
+    }
+
+    index_set::index_iterator& index_set::index_iterator::operator=(const index_set::index_iterator& other) {
+        if (this != &other) {
+            *reinterpret_cast<IndexSet::IndexIterator*>(&m_iterator) = *reinterpret_cast<const IndexSet::IndexIterator*>(&other.m_iterator);
+        }
+        return *this;
+    }
+
+    index_set::index_iterator::index_iterator(index_set::index_iterator&& other) {
+        new (&m_iterator) IndexSet::IndexIterator(std::move(*reinterpret_cast<IndexSet::IndexIterator*>(&other.m_iterator)));
+    }
+
+    index_set::index_iterator& index_set::index_iterator::operator=(index_set::index_iterator&& other) {
+        if (this != &other) {
+            *reinterpret_cast<IndexSet::IndexIterator*>(&m_iterator) = std::move(*reinterpret_cast<IndexSet::IndexIterator*>(&other.m_iterator));
+        }
+        return *this;
+    }
+
+    index_set::index_iterator::~index_iterator() {
+        reinterpret_cast<IndexSet::IndexIterator*>(&m_iterator)->~IndexIterator();
+    }
+
     size_t index_set::index_iterator::operator*() const noexcept {
-        return reinterpret_cast<const IndexSet::IndexIterator*>(m_iterator)->operator*();
+        return reinterpret_cast<const IndexSet::IndexIterator*>(&m_iterator)->operator*();
     }
 
     bool index_set::index_iterator::operator==(const index_set::index_iterator &it) const noexcept {
-        return reinterpret_cast<const IndexSet::IndexIterator*>(m_iterator)->operator==(
+        return reinterpret_cast<const IndexSet::IndexIterator*>(&m_iterator)->operator==(
                 *reinterpret_cast<const IndexSet::IndexIterator*>(it.m_iterator));
     }
 
     index_set::index_iterator &index_set::index_iterator::operator++() noexcept {
-        new (&m_iterator) IndexSet::IndexIterator(reinterpret_cast<IndexSet::IndexIterator*>(m_iterator)->operator++());
+        new (&m_iterator) IndexSet::IndexIterator(reinterpret_cast<IndexSet::IndexIterator*>(&m_iterator)->operator++());
         return *this;
     }
 
     index_set collection_change_set::insertions() const {
-        return reinterpret_cast<const CollectionChangeSet*>(m_change_set)->insertions;
+        return reinterpret_cast<const CollectionChangeSet*>(&m_change_set)->insertions;
     }
 
     bool collection_change_set::collection_root_was_deleted() const {
-        return reinterpret_cast<const CollectionChangeSet*>(m_change_set)->collection_root_was_deleted;
+        return reinterpret_cast<const CollectionChangeSet*>(&m_change_set)->collection_root_was_deleted;
     }
 
     bool index_set::index_iterator::operator!=(const index_set::index_iterator &it) const noexcept {
-        return reinterpret_cast<const IndexSet::IndexIterator*>(m_iterator)->operator!=(
+        return reinterpret_cast<const IndexSet::IndexIterator*>(&m_iterator)->operator!=(
                 *reinterpret_cast<const IndexSet::IndexIterator*>(it.m_iterator));
+    }
+
+    index_set::index_iterable_adaptor::index_iterable_adaptor(const index_set::index_iterable_adaptor& other) {
+        new (&m_index_iterable_adaptor) IndexSet::IndexIterator(*reinterpret_cast<const IndexSet::IndexIterator*>(&other.m_index_iterable_adaptor));
+    }
+
+    index_set::index_iterable_adaptor& index_set::index_iterable_adaptor::operator=(const index_set::index_iterable_adaptor& other) {
+        if (this != &other) {
+            *reinterpret_cast<IndexSet::IndexIterator*>(&m_index_iterable_adaptor) = *reinterpret_cast<const IndexSet::IndexIterator*>(&other.m_index_iterable_adaptor);
+        }
+        return *this;
+    }
+
+    index_set::index_iterable_adaptor::index_iterable_adaptor(index_set::index_iterable_adaptor&& other) {
+        new (&m_index_iterable_adaptor) IndexSet::IndexIterator(std::move(*reinterpret_cast<IndexSet::IndexIterator*>(&other.m_index_iterable_adaptor)));
+    }
+
+    index_set::index_iterable_adaptor& index_set::index_iterable_adaptor::operator=(index_set::index_iterable_adaptor&& other) {
+        if (this != &other) {
+            *reinterpret_cast<IndexSet::IndexIterator*>(&m_index_iterable_adaptor) = std::move(*reinterpret_cast<IndexSet::IndexIterator*>(&other.m_index_iterable_adaptor));
+        }
+        return *this;
+    }
+
+    index_set::index_iterable_adaptor::~index_iterable_adaptor() {
+        reinterpret_cast<IndexSet::IndexIterator*>(&m_index_iterable_adaptor)->~IndexIterator();
     }
 
     index_set::index_iterator index_set::index_iterable_adaptor::begin() const noexcept {
         index_iterator iter;
         new (&iter.m_iterator) IndexSet::IndexIterator(
-                reinterpret_cast<const IndexSet::IndexIteratableAdaptor*>(index_iterable_adaptor)->begin());
+                reinterpret_cast<const IndexSet::IndexIteratableAdaptor*>(&m_index_iterable_adaptor)->begin());
         return iter;
     }
     index_set::index_iterator index_set::index_iterable_adaptor::end() const noexcept {
         index_iterator iter;
         new (&iter.m_iterator) IndexSet::IndexIterator(
-                reinterpret_cast<const IndexSet::IndexIteratableAdaptor*>(index_iterable_adaptor)->end());
+                reinterpret_cast<const IndexSet::IndexIteratableAdaptor*>(&m_index_iterable_adaptor)->end());
         return iter;
     }
 
     index_set::index_iterable_adaptor index_set::as_indexes() const {
         index_iterable_adaptor iter;
-        new (&iter.index_iterable_adaptor) IndexSet::IndexIteratableAdaptor(
-                reinterpret_cast<const IndexSet*>(m_idx_set)->as_indexes());
+        new (&iter.m_index_iterable_adaptor) IndexSet::IndexIteratableAdaptor(
+                reinterpret_cast<const IndexSet*>(&m_idx_set)->as_indexes());
         return iter;
     }
 }

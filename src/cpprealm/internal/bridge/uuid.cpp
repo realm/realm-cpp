@@ -21,29 +21,29 @@ namespace realm::internal::bridge {
         new (&m_uuid) UUID();
     }
     uuid::uuid(const uuid& other) {
-        new (&m_uuid) UUID(*reinterpret_cast<const UUID*>(other.m_uuid));
+        new (&m_uuid) UUID(*reinterpret_cast<const UUID*>(&other.m_uuid));
     }
 
     uuid& uuid::operator=(const uuid& other) {
         if (this != &other) {
-            *reinterpret_cast<UUID*>(m_uuid) = *reinterpret_cast<const UUID*>(other.m_uuid);
+            *reinterpret_cast<UUID*>(&m_uuid) = *reinterpret_cast<const UUID*>(&other.m_uuid);
         }
         return *this;
     }
 
     uuid::uuid(uuid&& other) {
-        new (&m_uuid) UUID(std::move(*reinterpret_cast<UUID*>(other.m_uuid)));
+        new (&m_uuid) UUID(std::move(*reinterpret_cast<UUID*>(&other.m_uuid)));
     }
 
     uuid& uuid::operator=(uuid&& other) {
         if (this != &other) {
-            *reinterpret_cast<UUID*>(m_uuid) = std::move(*reinterpret_cast<UUID*>(other.m_uuid));
+            *reinterpret_cast<UUID*>(&m_uuid) = std::move(*reinterpret_cast<UUID*>(&other.m_uuid));
         }
         return *this;
     }
 
     uuid::~uuid() {
-        reinterpret_cast<UUID*>(m_uuid)->~UUID();
+        reinterpret_cast<UUID*>(&m_uuid)->~UUID();
     }
     uuid::uuid(const std::string &v) {
         new (&m_uuid) UUID(v);
@@ -57,7 +57,7 @@ namespace realm::internal::bridge {
     }
 
     std::string uuid::to_string() const {
-        return reinterpret_cast<const UUID*>(m_uuid)->to_string();
+        return reinterpret_cast<const UUID*>(&m_uuid)->to_string();
     }
 
     uuid::operator ::realm::uuid() const {
@@ -65,15 +65,15 @@ namespace realm::internal::bridge {
     }
 
     uuid::operator UUID() const {
-        return *reinterpret_cast<const UUID*>(m_uuid);
+        return *reinterpret_cast<const UUID*>(&m_uuid);
     }
 
     std::string uuid::to_base64() const {
-        return reinterpret_cast<const UUID*>(m_uuid)->to_base64();
+        return reinterpret_cast<const UUID*>(&m_uuid)->to_base64();
     }
 
     std::array<uint8_t, 16> uuid::to_bytes() const {
-        return reinterpret_cast<const UUID*>(m_uuid)->to_bytes();
+        return reinterpret_cast<const UUID*>(&m_uuid)->to_bytes();
     }
 
 #define __cpp_realm_gen_uuid_op(op) \

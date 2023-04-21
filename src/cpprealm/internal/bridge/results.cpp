@@ -33,29 +33,29 @@ namespace realm::internal::bridge {
     }
 
     results::results(const results& other) {
-        new (&m_results) Results(*reinterpret_cast<const Results*>(other.m_results));
+        new (&m_results) Results(*reinterpret_cast<const Results*>(&other.m_results));
     }
 
     results& results::operator=(const results& other) {
         if (this != &other) {
-            *reinterpret_cast<Results*>(m_results) = *reinterpret_cast<const Results*>(other.m_results);
+            *reinterpret_cast<Results*>(&m_results) = *reinterpret_cast<const Results*>(&other.m_results);
         }
         return *this;
     }
 
     results::results(results&& other) {
-        new (&m_results) Results(std::move(*reinterpret_cast<Results*>(other.m_results)));
+        new (&m_results) Results(std::move(*reinterpret_cast<Results*>(&other.m_results)));
     }
 
     results& results::operator=(results&& other) {
         if (this != &other) {
-            *reinterpret_cast<Results*>(m_results) = std::move(*reinterpret_cast<Results*>(other.m_results));
+            *reinterpret_cast<Results*>(&m_results) = std::move(*reinterpret_cast<Results*>(&other.m_results));
         }
         return *this;
     }
 
     results::~results() {
-        reinterpret_cast<Results*>(m_results)->~Results();
+        reinterpret_cast<Results*>(&m_results)->~Results();
     }
 
     results::results(const realm &realm, const query &query) {
@@ -67,20 +67,20 @@ namespace realm::internal::bridge {
     }
 
     size_t results::size() {
-        return reinterpret_cast<Results*>(m_results)->size();
+        return reinterpret_cast<Results*>(&m_results)->size();
     }
 
     realm results::get_realm() const {
-        return reinterpret_cast<const Results*>(m_results)->get_realm();
+        return reinterpret_cast<const Results*>(&m_results)->get_realm();
     }
 
     table results::get_table() const {
-        return reinterpret_cast<const Results*>(m_results)->get_table();
+        return reinterpret_cast<const Results*>(&m_results)->get_table();
     }
 
     template <>
     obj get(results& res, size_t v) {
-        return reinterpret_cast<Results*>(res.m_results)-> template get(v);
+        return reinterpret_cast<Results*>(&res.m_results)-> template get(v);
     }
 
     notification_token results::add_notification_callback(std::shared_ptr<collection_change_callback> &&cb) {
@@ -95,6 +95,6 @@ namespace realm::internal::bridge {
                 m_cb->after(v);
             }
         } ccb(std::move(cb));
-        return reinterpret_cast<Results*>(m_results)->add_notification_callback(ccb);
+        return reinterpret_cast<Results*>(&m_results)->add_notification_callback(ccb);
     }
 }

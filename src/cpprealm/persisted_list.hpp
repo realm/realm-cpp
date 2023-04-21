@@ -145,13 +145,13 @@ namespace realm {
             }
             void assign_accessor(internal::bridge::object *object,
                                  internal::bridge::col_key &&col_key) final {
+                // We need to free what was previously stored.
                 if (this->m_object) {
                     reinterpret_cast<bridge::list*>(&m_list)->~list();
                 } else {
                     reinterpret_cast<T*>(&unmanaged)->~T();
                 }
                 this->m_object = *object;
-
                 new (&m_list) bridge::list(object->get_list(std::move(col_key)));
             }
 

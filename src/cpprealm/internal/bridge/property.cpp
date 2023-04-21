@@ -70,17 +70,17 @@ namespace realm::internal::bridge {
         new (&m_property) Property(name, static_cast<PropertyType>(type), is_primary_key);
     }
     void property::set_object_link(const std::string & v) {
-        reinterpret_cast<Property*>(m_property)->object_type = v;
+        reinterpret_cast<Property*>(&m_property)->object_type = v;
     }
     col_key property::column_key() const {
-        return reinterpret_cast<const Property*>(m_property)->column_key;
+        return reinterpret_cast<const Property*>(&m_property)->column_key;
     }
 
     property::operator Property() const {
-        return *reinterpret_cast<const Property*>(m_property);
+        return *reinterpret_cast<const Property*>(&m_property);
     }
 
     void property::set_type(realm::internal::bridge::property::type t) {
-        reinterpret_cast<Property*>(m_property)->type = static_cast<PropertyType>(t);
+        reinterpret_cast<Property*>(&m_property)->type = static_cast<PropertyType>(t);
     }
 }

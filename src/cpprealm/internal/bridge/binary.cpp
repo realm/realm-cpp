@@ -19,35 +19,32 @@ namespace realm::internal::bridge {
 #endif
 
     char binary::operator[](size_t i) const noexcept {
-        return reinterpret_cast<const BinaryData*>(m_data)->operator[](i);
+        return reinterpret_cast<const BinaryData*>(&m_data)->operator[](i);
     }
-//    binary::binary() {
-//        new (&m_data) OwnedBinaryData();
-//    }
-//    binary::binary(const binary& other) {
-//        new (&m_data) OwnedBinaryData(*reinterpret_cast<const OwnedBinaryData*>(other.m_data));
-//    }
-//    binary& binary::operator=(const binary& other) {
-//        if (this != &other) {
-//            *reinterpret_cast<OwnedBinaryData*>(m_data) = *reinterpret_cast<const OwnedBinaryData*>(other.m_data);
-//        }
-//        return *this;
-//    }
-//    binary::binary(binary&& other) {
-//        new (&m_data) OwnedBinaryData(std::move(*reinterpret_cast<OwnedBinaryData*>(other.m_data)));
-//    }
-//    binary& binary::operator=(binary&& other) {
-//        if (this != &other) {
-//            *reinterpret_cast<OwnedBinaryData*>(m_data) = std::move(*reinterpret_cast<OwnedBinaryData*>(other.m_data));
-//        }
-//        return *this;
-//    }
-//    binary::~binary() {
-//        reinterpret_cast<OwnedBinaryData*>(m_data)->~OwnedBinaryData();
-//    }
+    binary::binary() {
+        new (&m_data) BinaryData();
+    }
+    binary::binary(const binary& other) {
+        new (&m_data) BinaryData(*reinterpret_cast<const BinaryData*>(&other.m_data));
+    }
+    binary& binary::operator=(const binary& other) {
+        *reinterpret_cast<BinaryData*>(&m_data) = *reinterpret_cast<const BinaryData*>(&other.m_data);
+        return *this;
+    }
+    binary::binary(binary&& other) {
+        new (&m_data) BinaryData(std::move(*reinterpret_cast<BinaryData*>(&other.m_data)));
+    }
+    binary& binary::operator=(binary&& other) {
+        *reinterpret_cast<BinaryData*>(&m_data) = std::move(*reinterpret_cast<BinaryData*>(&other.m_data));
+        return *this;
+    }
+    binary::~binary() {
+        reinterpret_cast<BinaryData*>(&m_data)->~BinaryData();
+    }
     binary::binary(const realm::BinaryData &v) {
         new (&m_data) OwnedBinaryData(v);
     }
+
     binary::binary(const std::vector<uint8_t> &v) {
         if (v.empty()) {
             new (&m_data) OwnedBinaryData("", 0);
@@ -57,13 +54,13 @@ namespace realm::internal::bridge {
     }
 
     binary::operator BinaryData() const {
-        return *reinterpret_cast<const BinaryData*>(m_data);
+        return *reinterpret_cast<const BinaryData*>(&m_data);
     }
     size_t binary::size() const {
-        return reinterpret_cast<const BinaryData*>(m_data)->size();
+        return reinterpret_cast<const BinaryData*>(&m_data)->size();
     }
     const char *binary::data() const {
-        return reinterpret_cast<const BinaryData*>(m_data)->data();
+        return reinterpret_cast<const BinaryData*>(&m_data)->data();
     }
     bool operator ==(binary const& lhs, binary const& rhs) {
         return static_cast<BinaryData>(lhs) == static_cast<BinaryData>(rhs);
