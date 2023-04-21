@@ -8,6 +8,7 @@ This repository holds the source code for the C++ SDK Prototype.
 * **Intuitive to Developers:** Realm’s object-oriented data model is simple to learn, doesn’t need an ORM, and lets you write less code.
 * **Designed for Offline Use:** Realm’s local database persists data on-disk, so apps work as well offline as they do online.
 * **Built for Mobile:** Realm is fully-featured, lightweight, and efficiently uses memory, disk space, and battery life.
+* **[Device Sync](https://www.mongodb.com/atlas/app-services/device-sync)**: Makes it simple to keep data in sync across users, devices, and your backend in real-time. [Get started for free](https://www.mongodb.com/docs/realm/sdk/cpp/sync/) and [create the cloud backend](http://mongodb.com/realm/register?utm_medium=github_atlas_CTA&utm_source=realm_cpp_github).
 
 ## Object-Oriented: Streamline Your Code
 
@@ -89,7 +90,7 @@ realm.write([&dog] {
 ```
 
 ## Data Sync
-The [MongoDB Realm Sync](https://www.mongodb.com/realm/mobile/sync) service makes it simple to keep data in sync across users, devices, and your backend in real-time.
+The [Atlas Device Sync](https://www.mongodb.com/atlas/app-services/device-sync) makes it simple to keep data in sync across users, devices, and your backend in real-time.
 ```cpp
 auto app = realm::App("<app-id>");
 auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
@@ -103,6 +104,12 @@ realm.write([&cars](){
     }
 });
 ```
+
+## Getting Started
+
+See the detailed instructions in our [docs](https://www.mongodb.com/docs/realm/sdk/cpp/).
+
+The API reference is located [here](https://www.mongodb.com/docs/realm-sdks/cpp/latest/).
 
 ## Building Realm
 
