@@ -94,12 +94,6 @@ namespace realm {
                 if (this->is_managed()) m_list.remove_all();
                 else this->unmanaged.clear();
             }
-            persisted_list_base(persisted_list_base&& v) {
-                abort();
-            }
-            persisted_list_base& operator=(persisted_list_base&& v) {
-                abort();
-            }
 
             persisted_list_base(const persisted_list_base& v) {
                 *this = v;
