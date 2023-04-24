@@ -103,6 +103,7 @@ endif()
 
 if (NOT REALM_CPP_NO_TESTS)
 Include(FetchContent)
+Include(CTest)
 FetchContent_Declare(
         Catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
