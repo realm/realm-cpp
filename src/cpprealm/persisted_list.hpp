@@ -99,6 +99,10 @@ namespace realm {
                 *this = v;
             }
             persisted_list_base& operator=(const persisted_list_base& v) {
+                if (this->m_object) {
+                    reinterpret_cast<bridge::list*>(&m_list)->~list();
+                }
+
                 if (v.is_managed()) {
                     this->m_object = v.m_object;
                     new (&m_list) bridge::list(v.m_list);
