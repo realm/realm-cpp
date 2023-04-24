@@ -31,6 +31,11 @@ namespace realm::internal::bridge {
 
     struct list {
         list();
+        list(const list& other) ;
+        list& operator=(const list& other) ;
+        list(list&& other);
+        list& operator=(list&& other);
+        ~list();
         list(const List&); //NOLINT(google-explicit-constructor)
         operator List() const; //NOLINT(google-explicit-constructor)
         list(const realm& realm, const obj& obj, const col_key&);

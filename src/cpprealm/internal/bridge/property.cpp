@@ -19,9 +19,44 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<64, sizeof(Property)>{});
     static_assert(SizeCheck<8, alignof(Property)>{});
 #elif __aarch64__
+#if defined(__clang__)
     static_assert(SizeCheck<120, sizeof(Property)>{});
+#elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(SizeCheck<152, sizeof(Property)>{});
+#endif
     static_assert(SizeCheck<8, alignof(Property)>{});
 #endif
+
+
+    property::property() {
+        new (&m_property) Property();
+    }
+
+    property::property(const property& other) {
+        new (&m_property) Property(*reinterpret_cast<const Property*>(&other.m_property));
+    }
+
+    property& property::operator=(const property& other) {
+        if (this != &other) {
+            *reinterpret_cast<Property*>(&m_property) = *reinterpret_cast<const Property*>(&other.m_property);
+        }
+        return *this;
+    }
+
+    property::property(property&& other) {
+        new (&m_property) Property(std::move(*reinterpret_cast<Property*>(&other.m_property)));
+    }
+
+    property& property::operator=(property&& other) {
+        if (this != &other) {
+            *reinterpret_cast<Property*>(&m_property) = std::move(*reinterpret_cast<Property*>(&other.m_property));
+        }
+        return *this;
+    }
+
+    property::~property() {
+        reinterpret_cast<Property*>(&m_property)->~Property();
+    }
 
     property::property(const realm::Property &v) {
         new (m_property) Property(v);
@@ -35,17 +70,17 @@ namespace realm::internal::bridge {
         new (&m_property) Property(name, static_cast<PropertyType>(type), is_primary_key);
     }
     void property::set_object_link(const std::string & v) {
-        reinterpret_cast<Property*>(m_property)->object_type = v;
+        reinterpret_cast<Property*>(&m_property)->object_type = v;
     }
     col_key property::column_key() const {
-        return reinterpret_cast<const Property*>(m_property)->column_key;
+        return reinterpret_cast<const Property*>(&m_property)->column_key;
     }
 
     property::operator Property() const {
-        return *reinterpret_cast<const Property*>(m_property);
+        return *reinterpret_cast<const Property*>(&m_property);
     }
 
     void property::set_type(realm::internal::bridge::property::type t) {
-        reinterpret_cast<Property*>(m_property)->type = static_cast<PropertyType>(t);
+        reinterpret_cast<Property*>(&m_property)->type = static_cast<PropertyType>(t);
     }
 }

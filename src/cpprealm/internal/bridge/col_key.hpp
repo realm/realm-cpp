@@ -10,6 +10,11 @@ namespace realm {
 namespace realm::internal::bridge {
     struct col_key {
         col_key() noexcept;
+        col_key(const col_key& other) ;
+        col_key& operator=(const col_key& other) ;
+        col_key(col_key&& other);
+        col_key& operator=(col_key&& other);
+        ~col_key();
         col_key(int64_t); //NOLINT(google-explicit-constructor)
         col_key(const ColKey&); //NOLINT(google-explicit-constructor)
         operator ColKey() const; //NOLINT(google-explicit-constructor)

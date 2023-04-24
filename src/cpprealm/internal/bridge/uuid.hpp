@@ -12,6 +12,11 @@ namespace realm {
 namespace realm::internal::bridge {
     struct uuid : core_binding<UUID> {
         uuid();
+        uuid(const uuid& other) ;
+        uuid& operator=(const uuid& other) ;
+        uuid(uuid&& other);
+        uuid& operator=(uuid&& other);
+        ~uuid();
         uuid(const UUID&); //NOLINT(google-explicit-constructor);
         explicit uuid(const std::string&);
         uuid(const struct ::realm::uuid&); //NOLINT(google-explicit-constructor);

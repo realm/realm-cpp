@@ -11,19 +11,19 @@
 
 #define __generate_query_operator(op, type) \
     query &query::op(col_key column_key, type value) { \
-        *reinterpret_cast<Query *>(m_query) = reinterpret_cast<Query *>(m_query)->op(column_key, value); \
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->op(column_key, value); \
         return *this; \
     }
 
 #define __generate_query_operator_case_sensitive(op, type) \
     query &query::op(col_key column_key, type value, bool) { \
-        *reinterpret_cast<Query *>(m_query) = reinterpret_cast<Query *>(m_query)->op(column_key, value); \
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->op(column_key, value); \
         return *this; \
     }
 
 #define __generate_query_operator_mixed(op) \
     query &query::op(col_key column_key, mixed value, bool) { \
-        *reinterpret_cast<Query *>(m_query) = reinterpret_cast<Query *>(m_query)->op(column_key, static_cast<Mixed>(value)); \
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->op(column_key, static_cast<Mixed>(value)); \
         return *this; \
     }
 namespace realm::internal::bridge {
@@ -41,9 +41,43 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<80, sizeof(Query)>{});
     static_assert(SizeCheck<8, alignof(Query)>{});
 #elif __aarch64__
+#if defined(__clang__)
     static_assert(SizeCheck<128, sizeof(Query)>{});
+#elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(SizeCheck<136, sizeof(Query)>{});
+#endif
     static_assert(SizeCheck<8, alignof(Query)>{});
 #endif
+
+    query::query() {
+        new (&m_query) Query();
+    }
+
+    query::query(const query& other) {
+        new (&m_query) Query(*reinterpret_cast<const Query*>(&other.m_query));
+    }
+
+    query& query::operator=(const query& other) {
+        if (this != &other) {
+            *reinterpret_cast<Query*>(&m_query) = *reinterpret_cast<const Query*>(&other.m_query);
+        }
+        return *this;
+    }
+
+    query::query(query&& other) {
+        new (&m_query) Query(std::move(*reinterpret_cast<Query*>(&other.m_query)));
+    }
+
+    query& query::operator=(query&& other) {
+        if (this != &other) {
+            *reinterpret_cast<Query*>(&m_query) = std::move(*reinterpret_cast<Query*>(&other.m_query));
+        }
+        return *this;
+    }
+
+    query::~query() {
+        reinterpret_cast<Query*>(&m_query)->~Query();
+    }
 
     query::query(const table &table) {
         new (&m_query) Query(static_cast<ConstTableRef>(table));
@@ -54,13 +88,13 @@ namespace realm::internal::bridge {
     }
 
     query::operator Query() const {
-        return *reinterpret_cast<const Query*>(m_query);
+        return *reinterpret_cast<const Query*>(&m_query);
     }
     table query::get_table() {
-        return reinterpret_cast<Query*>(m_query)->get_table();
+        return reinterpret_cast<Query*>(&m_query)->get_table();
     }
     query query::and_query(const query &v) {
-        return reinterpret_cast<Query*>(m_query)->and_query(v);
+        return reinterpret_cast<Query*>(&m_query)->and_query(v);
     }
 
     __generate_query_operator(greater, int64_t)
@@ -102,11 +136,11 @@ namespace realm::internal::bridge {
     __generate_query_operator(not_equal, bool)
 
     query& query::equal(col_key column_key, std::nullopt_t) {
-        *reinterpret_cast<Query *>(m_query) = reinterpret_cast<Query *>(m_query)->equal(column_key, realm::null{});
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->equal(column_key, realm::null{});
         return *this;
     }
     query& query::not_equal(col_key column_key, std::nullopt_t) {
-        *reinterpret_cast<Query *>(m_query) = reinterpret_cast<Query *>(m_query)->not_equal(column_key, realm::null{});
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->not_equal(column_key, realm::null{});
         return *this;
     }
 

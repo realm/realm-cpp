@@ -9,6 +9,11 @@ namespace realm {
 
 namespace realm::internal::bridge {
     struct sync_error {
+        sync_error(const sync_error& other) ;
+        sync_error& operator=(const sync_error& other) ;
+        sync_error(sync_error&& other);
+        sync_error& operator=(sync_error&& other);
+        ~sync_error();
         sync_error(SyncError&&);
 
         [[nodiscard]] bool is_fatal() const;
@@ -38,7 +43,11 @@ namespace realm::internal::bridge {
 #elif __arm__
         std::aligned_storage<80, 4>::type m_error[1];
 #elif __aarch64__
+#if defined(__clang__)
         std::aligned_storage<128, 8>::type m_error[1];
+#elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<144, 8>::type m_error[1];
+#endif
 #endif
     };
 }

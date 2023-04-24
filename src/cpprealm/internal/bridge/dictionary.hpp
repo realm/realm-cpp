@@ -23,6 +23,11 @@ namespace realm::internal::bridge {
 
     struct dictionary {
         dictionary();
+        dictionary(const dictionary& other) ;
+        dictionary& operator=(const dictionary& other) ;
+        dictionary(dictionary&& other);
+        dictionary& operator=(dictionary&& other);
+        ~dictionary();
         dictionary(const Dictionary& v); //NOLINT(google-explicit-constructor)
         operator Dictionary() const; //NOLINT(google-explicit-constructor)
         void insert(const std::string& key, const mixed& value);

@@ -38,6 +38,13 @@ namespace realm::internal::bridge {
             Collection = Array | Set | Dictionary,
             Flags = Nullable | Collection
         };
+
+        property();
+        property(const property& other) ;
+        property& operator=(const property& other) ;
+        property(property&& other);
+        property& operator=(property&& other);
+        ~property();
         property(const Property&); //NOLINT(google-explicit-constructor)
         property(const std::string& name,
                  type type,
@@ -61,7 +68,11 @@ namespace realm::internal::bridge {
 #elif __arm__
         std::aligned_storage<64, 8>::type m_property[1];
 #elif __aarch64__
+#if defined(__clang__)
         std::aligned_storage<120, 8>::type m_property[1];
+#elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<152, 8>::type m_property[1];
+#endif
 #endif
     };
 

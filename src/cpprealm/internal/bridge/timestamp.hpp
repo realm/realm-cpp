@@ -10,6 +10,11 @@ namespace realm {
 namespace realm::internal::bridge {
     struct timestamp : core_binding<Timestamp> {
         timestamp();
+        timestamp(const timestamp& other) ;
+        timestamp& operator=(const timestamp& other) ;
+        timestamp(timestamp&& other);
+        timestamp& operator=(timestamp&& other);
+        ~timestamp();
         timestamp(const Timestamp&); //NOLINT(google-explicit-constructor)
         operator Timestamp() const final; //NOLINT(google-explicit-constructor)
         operator std::chrono::time_point<std::chrono::system_clock>() const; //NOLINT(google-explicit-constructor)

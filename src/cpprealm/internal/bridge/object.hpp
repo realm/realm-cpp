@@ -40,13 +40,24 @@ namespace realm::internal::bridge {
     };
 
     struct index_set {
-        index_set();
+        index_set(); //NOLINT(google-explicit-constructor)
+        index_set(const index_set& other) ;
+        index_set& operator=(const index_set& other);
+        index_set(index_set&& other);
+        index_set& operator=(index_set&& other);
+        ~index_set();
         index_set(const IndexSet&); //NOLINT(google-explicit-constructor)
         [[nodiscard]] bool empty() const;
         struct index_iterable_adaptor;
         // An iterator over the individual indices in the set rather than the ranges
         class index_iterator {
         public:
+            index_iterator() = default;
+            index_iterator(const index_iterator& other) ;
+            index_iterator& operator=(const index_iterator& other);
+            index_iterator(index_iterator&& other);
+            index_iterator& operator=(index_iterator&& other);
+            ~index_iterator();
             size_t operator*() const noexcept;
             bool operator==(index_iterator const& it) const noexcept;
             bool operator!=(index_iterator const& it) const noexcept;
@@ -69,6 +80,12 @@ namespace realm::internal::bridge {
         };
 
         struct index_iterable_adaptor {
+            index_iterable_adaptor() = default;
+            index_iterable_adaptor(const index_iterable_adaptor& other) ;
+            index_iterable_adaptor& operator=(const index_iterable_adaptor& other);
+            index_iterable_adaptor(index_iterable_adaptor&& other);
+            index_iterable_adaptor& operator=(index_iterable_adaptor&& other);
+            ~index_iterable_adaptor();
             using const_iterator = index_iterator;
 
             const_iterator begin() const noexcept;
@@ -76,13 +93,13 @@ namespace realm::internal::bridge {
         private:
             friend struct index_set;
 #ifdef __i386__
-            std::aligned_storage<4, 4>::type index_iterable_adaptor[1];
+            std::aligned_storage<4, 4>::type m_index_iterable_adaptor[1];
 #elif __x86_64__
-            std::aligned_storage<8, 8>::type index_iterable_adaptor[1];
+            std::aligned_storage<8, 8>::type m_index_iterable_adaptor[1];
 #elif __arm__
-            std::aligned_storage<4, 4>::type index_iterable_adaptor[1];
+            std::aligned_storage<4, 4>::type m_index_iterable_adaptor[1];
 #elif __aarch64__
-            std::aligned_storage<8, 8>::type index_iterable_adaptor[1];
+            std::aligned_storage<8, 8>::type m_index_iterable_adaptor[1];
 #endif
         };
         index_iterable_adaptor as_indexes() const;
@@ -98,6 +115,12 @@ namespace realm::internal::bridge {
 #endif
     };
     struct collection_change_set {
+        collection_change_set(); //NOLINT(google-explicit-constructor)
+        collection_change_set(const collection_change_set& other) ;
+        collection_change_set& operator=(const collection_change_set& other);
+        collection_change_set(collection_change_set&& other);
+        collection_change_set& operator=(collection_change_set&& other);
+        ~collection_change_set();
         collection_change_set(const CollectionChangeSet&);
         operator CollectionChangeSet() const;
         [[nodiscard]] index_set deletions() const;
@@ -118,19 +141,27 @@ namespace realm::internal::bridge {
 #elif __arm__
         std::aligned_storage<84, 4>::type m_change_set[1];
 #elif __aarch64__
+#if defined(__clang__)
         std::aligned_storage<168, 8>::type m_change_set[1];
+#elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<184, 8>::type m_change_set[1];
+#endif
 #else
         std::aligned_storage<84, 4>::type m_change_set[1];
 #endif
     };
     struct collection_change_callback {
-//        operator CollectionChangeCallback() const;
         virtual void before(collection_change_set const& c) = 0;
         virtual void after(collection_change_set const& c) = 0;
     };
 
     struct object {
         object(); //NOLINT(google-explicit-constructor)
+        object(const object& other) ;
+        object& operator=(const object& other);
+        object(object&& other);
+        object& operator=(object&& other);
+        ~object();
         object(const Object&); //NOLINT(google-explicit-constructor)
         object(const realm &realm, const obj &obj); //NOLINT(google-explicit-constructor)
         object(const realm &realm, const obj_link& link);

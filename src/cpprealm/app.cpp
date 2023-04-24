@@ -31,7 +31,11 @@ namespace realm {
 #elif __aarch64__
     static_assert(internal::bridge::SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppCredentials)>{});
+#if defined(__clang__)
     static_assert(internal::bridge::SizeCheck<48, sizeof(realm::app::AppError)>{});
+#elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(internal::bridge::SizeCheck<56, sizeof(realm::app::AppError)>{});
+#endif
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
 #endif
 
@@ -39,43 +43,69 @@ namespace realm {
     static_assert((int)user::state::logged_out == (int)SyncUser::State::LoggedOut);
     static_assert((int)user::state::removed == (int)SyncUser::State::Removed);
 
+    app_error::app_error(const app_error& other) {
+        new (&m_error) app::AppError(*reinterpret_cast<const app::AppError*>(&other.m_error));
+    }
+
+    app_error& app_error::operator=(const app_error& other) {
+        if (this != &other) {
+            *reinterpret_cast<app::AppError*>(&m_error) = *reinterpret_cast<const app::AppError*>(&other.m_error);
+        }
+        return *this;
+    }
+
+    app_error::app_error(app_error&& other) {
+        new (&m_error) app::AppError(std::move(*reinterpret_cast<app::AppError*>(&other.m_error)));
+    }
+
+    app_error& app_error::operator=(app_error&& other) {
+        if (this != &other) {
+            *reinterpret_cast<app::AppError*>(&m_error) = std::move(*reinterpret_cast<app::AppError*>(&other.m_error));
+        }
+        return *this;
+    }
+
+    app_error::~app_error() {
+        reinterpret_cast<app::AppError*>(&m_error)->~AppError();
+    }
+
     app_error::app_error(realm::app::AppError&& error) {
         new (&m_error) app::AppError(std::move(error));
     }
 
     std::string_view app_error::mesage() const
     {
-        return reinterpret_cast<const app::AppError*>(m_error)->reason();
+        return reinterpret_cast<const app::AppError*>(&m_error)->reason();
     }
 
     std::string_view app_error::link_to_server_logs() const
     {
-        return reinterpret_cast<const app::AppError*>(m_error)->link_to_server_logs;
+        return reinterpret_cast<const app::AppError*>(&m_error)->link_to_server_logs;
     }
 
     bool app_error::is_json_error() const
     {
-        return reinterpret_cast<const app::AppError*>(m_error)->is_json_error();
+        return reinterpret_cast<const app::AppError*>(&m_error)->is_json_error();
     }
 
     bool app_error::is_service_error() const
     {
-        return reinterpret_cast<const app::AppError*>(m_error)->is_service_error();
+        return reinterpret_cast<const app::AppError*>(&m_error)->is_service_error();
     }
 
     bool app_error::is_http_error() const
     {
-        return reinterpret_cast<const app::AppError*>(m_error)->is_http_error();
+        return reinterpret_cast<const app::AppError*>(&m_error)->is_http_error();
     }
 
     bool app_error::is_custom_error() const
     {
-        return reinterpret_cast<const app::AppError*>(m_error)->is_custom_error();
+        return reinterpret_cast<const app::AppError*>(&m_error)->is_custom_error();
     }
 
     bool app_error::is_client_error() const
     {
-        return reinterpret_cast<const app::AppError*>(m_error)->is_client_error();
+        return reinterpret_cast<const app::AppError*>(&m_error)->is_client_error();
     }
 
     /**
@@ -207,11 +237,41 @@ namespace realm {
         return m_user->sync_manager();
     }
 
+    App::credentials::credentials() {
+        new (&m_credentials) app::AppCredentials();
+    }
+
+    App::credentials::credentials(const credentials& other) {
+        new (&m_credentials) app::AppCredentials(*reinterpret_cast<const app::AppCredentials*>(&other.m_credentials));
+    }
+
+    App::credentials& App::credentials::operator=(const credentials& other) {
+        if (this != &other) {
+            *reinterpret_cast<app::AppCredentials*>(&m_credentials) = *reinterpret_cast<const app::AppCredentials*>(&other.m_credentials);
+        }
+        return *this;
+    }
+
+    App::credentials::credentials(credentials&& other) {
+        new (&m_credentials) app::AppCredentials(std::move(*reinterpret_cast<app::AppCredentials*>(&other.m_credentials)));
+    }
+
+    App::credentials& App::credentials::operator=(App::credentials&& other) {
+        if (this != &other) {
+            *reinterpret_cast<app::AppCredentials*>(&m_credentials) = std::move(*reinterpret_cast<app::AppCredentials*>(&other.m_credentials));
+        }
+        return *this;
+    }
+
+    App::credentials::~credentials() {
+        reinterpret_cast<app::AppCredentials*>(&m_credentials)->~AppCredentials();
+    }
+
     App::credentials::credentials(app::AppCredentials &&v) noexcept {
         new (&m_credentials) app::AppCredentials(std::move(v));
     }
     App::credentials::operator app::AppCredentials() const {
-        return *reinterpret_cast<const app::AppCredentials*>(m_credentials);
+        return *reinterpret_cast<const app::AppCredentials*>(&m_credentials);
     }
 
     App::credentials App::credentials::anonymous()

@@ -93,6 +93,12 @@ namespace realm::internal::bridge {
     [[nodiscard]] mixed get(const obj&, const col_key& col_key);
 
     struct obj {
+        obj();
+        obj(const obj& other) ;
+        obj& operator=(const obj& other) ;
+        obj(obj&& other);
+        obj& operator=(obj&& other);
+        ~obj();
         obj(const Obj&); //NOLINT google-explicit-constructor
         operator Obj() const; //NOLINT google-explicit-constructor
         [[nodiscard]] table get_table() const noexcept;

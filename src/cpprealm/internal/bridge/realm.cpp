@@ -43,7 +43,11 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<368, sizeof(Realm::Config)>{});
     static_assert(SizeCheck<16, alignof(Realm::Config)>{});
     #else
+#if defined(__clang__)
     static_assert(SizeCheck<312, sizeof(Realm::Config)>{});
+#elif defined(__GNUC__) || defined(__GNUG__)
+    static_assert(SizeCheck<328, sizeof(Realm::Config)>{});
+#endif
     static_assert(SizeCheck<8, alignof(Realm::Config)>{});
     #endif
 #endif
@@ -64,15 +68,13 @@ namespace realm::internal::bridge {
 
     struct internal_scheduler : util::Scheduler {
         internal_scheduler(const std::shared_ptr<scheduler>& s)
-        : m_scheduler(s), m_thread_id(std::this_thread::get_id())
+        : m_scheduler(s)
         {
         }
 
         ~internal_scheduler() override = default;
         void invoke(util::UniqueFunction<void ()> &&fn) override {
-            m_scheduler->invoke([fn = fn.release()]() {
-                fn->call();
-            });
+            m_scheduler->invoke(std::move(fn));
         }
 
         bool is_on_thread() const noexcept override {
@@ -80,7 +82,7 @@ namespace realm::internal::bridge {
         }
         bool is_same_as(const util::Scheduler *other) const noexcept override {
             if (auto o = dynamic_cast<const internal_scheduler *>(other)) {
-                return m_thread_id == o->m_thread_id;
+                return m_scheduler->is_same_as(o->m_scheduler.get());
             }
             return false;
         }
@@ -90,7 +92,6 @@ namespace realm::internal::bridge {
         }
     private:
         std::shared_ptr<scheduler> m_scheduler;
-        std::thread::id m_thread_id;
     };
 
     realm::realm(thread_safe_reference&& tsr, const std::optional<std::shared_ptr<struct scheduler>>& s) {
@@ -99,6 +100,36 @@ namespace realm::internal::bridge {
         } else {
             m_realm = Realm::get_shared_realm(std::move(tsr));
         }
+    }
+
+    realm::config::config() {
+        new (&m_config) RealmConfig();
+    }
+
+    realm::config::config(const config& other) {
+        new (&m_config) RealmConfig(*reinterpret_cast<const RealmConfig*>(&other.m_config));
+    }
+
+    realm::config& realm::config::operator=(const config& other) {
+        if (this != &other) {
+            *reinterpret_cast<RealmConfig*>(&m_config) = *reinterpret_cast<const RealmConfig*>(&other.m_config);
+        }
+        return *this;
+    }
+
+    realm::config::config(config&& other) {
+        new (&m_config) RealmConfig(std::move(*reinterpret_cast<RealmConfig*>(&other.m_config)));
+    }
+
+    realm::config& realm::config::operator=(config&& other) {
+        if (this != &other) {
+            *reinterpret_cast<RealmConfig*>(&m_config) = std::move(*reinterpret_cast<RealmConfig*>(&other.m_config));
+        }
+        return *this;
+    }
+
+    realm::config::~config() {
+        reinterpret_cast<RealmConfig*>(&m_config)->~RealmConfig();
     }
 
     realm::config::config(const RealmConfig &v) {
@@ -131,7 +162,7 @@ namespace realm::internal::bridge {
         return m_config;
     }
     std::string realm::config::path() const {
-        return reinterpret_cast<const RealmConfig*>(m_config)->path;
+        return reinterpret_cast<const RealmConfig*>(&m_config)->path;
     }
     realm::config realm::get_config() const {
         return m_realm->config();
@@ -141,8 +172,8 @@ namespace realm::internal::bridge {
         for (auto& os : v) {
             v2.push_back(os);
         }
-        reinterpret_cast<RealmConfig*>(m_config)->schema_version = 0;
-        reinterpret_cast<RealmConfig*>(m_config)->schema = v2;
+        reinterpret_cast<RealmConfig*>(&m_config)->schema_version = 0;
+        reinterpret_cast<RealmConfig*>(&m_config)->schema = v2;
     }
     schema realm::schema() const {
         return m_realm->schema();
@@ -156,7 +187,7 @@ namespace realm::internal::bridge {
 
     }
     realm::config::operator RealmConfig() const {
-        return *reinterpret_cast<const RealmConfig*>(m_config);
+        return *reinterpret_cast<const RealmConfig*>(&m_config);
     }
     realm::realm(const config &v) {
         m_realm = Realm::get_shared_realm(static_cast<RealmConfig>(v));
@@ -174,25 +205,25 @@ namespace realm::internal::bridge {
         return reinterpret_cast<ThreadSafeReference*>(tsr.m_thread_safe_reference)->resolve<Object>(r);
     }
     void realm::config::set_scheduler(const std::shared_ptr<struct scheduler> &s) {
-        reinterpret_cast<RealmConfig*>(m_config)->scheduler = std::make_shared<internal_scheduler>(s);
+        reinterpret_cast<RealmConfig*>(&m_config)->scheduler = std::make_shared<internal_scheduler>(s);
     }
     void realm::config::set_sync_config(const std::optional<struct sync_config> &s) {
         if (s)
-            reinterpret_cast<RealmConfig*>(m_config)->sync_config = static_cast<std::shared_ptr<SyncConfig>>(*s);
+            reinterpret_cast<RealmConfig*>(&m_config)->sync_config = static_cast<std::shared_ptr<SyncConfig>>(*s);
         else
-            reinterpret_cast<RealmConfig*>(m_config)->sync_config = nullptr;
+            reinterpret_cast<RealmConfig*>(&m_config)->sync_config = nullptr;
     }
 
     realm::sync_config realm::config::sync_config() const {
-        return reinterpret_cast<const RealmConfig*>(m_config)->sync_config;
+        return reinterpret_cast<const RealmConfig*>(&m_config)->sync_config;
     }
 
     struct external_scheduler final : public scheduler {
         // Invoke the given function on the scheduler's thread.
         //
         // This function can be called from any thread.
-        void invoke(std::function<void()> &&fn) final {
-            s->invoke(fn);
+        void invoke(Function<void()> &&fn) final {
+            s->invoke(std::move(fn));
         }
 
         // Check if the caller is currently running on the scheduler's thread.
@@ -251,7 +282,7 @@ namespace realm::internal::bridge {
     }
 
     void realm::config::set_path(const std::string &path) {
-        reinterpret_cast<RealmConfig*>(m_config)->path = path;
+        reinterpret_cast<RealmConfig*>(&m_config)->path = path;
     }
 
     bool realm::refresh() {

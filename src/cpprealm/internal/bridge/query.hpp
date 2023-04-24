@@ -22,6 +22,12 @@ namespace realm::internal::bridge {
 
 
     struct query {
+        query();
+        query(const query& other) ;
+        query& operator=(const query& other) ;
+        query(query&& other);
+        query& operator=(query&& other);
+        ~query();
         query(const table& table); //NOLINT(google-explicit-constructor)
         table get_table();
         query and_query(const query&);
@@ -118,7 +124,11 @@ namespace realm::internal::bridge {
 #elif __arm__
         std::aligned_storage<80, 8>::type m_query[1];
 #elif __aarch64__
+#if defined(__clang__)
         std::aligned_storage<128, 8>::type m_query[1];
+#elif defined(__GNUC__) || defined(__GNUG__)
+        std::aligned_storage<136, 8>::type m_query[1];
+#endif
 #endif
 
     };

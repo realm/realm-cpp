@@ -178,7 +178,7 @@ private:
 };
 
 template <typename ...Ts>
-static db<Ts...> open(db_config&& config = {})
+static db<Ts...> open(db_config&& config = {std::nullopt, std::nullopt})
 {
     return db<Ts...>(std::move(config));
 }
