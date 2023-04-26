@@ -1,6 +1,7 @@
 #ifndef REALM_LOGGER_HPP
 #define REALM_LOGGER_HPP
 
+#include <memory>
 #include <string>
 
 namespace realm {
