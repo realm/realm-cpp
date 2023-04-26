@@ -34,7 +34,8 @@ set(SOURCES
     cpprealm/internal/bridge/async_open_task.cpp
     cpprealm/persisted_double.cpp
     cpprealm/internal/bridge/object_id.cpp
-    cpprealm/persisted_object_id.cpp) # REALM_SOURCES
+    cpprealm/persisted_object_id.cpp
+    cpprealm/logger.cpp) # REALM_SOURCES
 
 set(HEADERS
     cpprealm/sdk.hpp
@@ -92,7 +93,8 @@ set(HEADERS
     cpprealm/internal/bridge/sync_manager.hpp
     cpprealm/internal/bridge/async_open_task.hpp
     cpprealm/internal/bridge/object_id.hpp
-    cpprealm/persisted_object_id.hpp) # REALM_INSTALL_HEADERS
+    cpprealm/persisted_object_id.hpp
+    cpprealm/logger.hpp) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm STATIC ${SOURCES} ${HEADERS})
 include(GNUInstallDirs)

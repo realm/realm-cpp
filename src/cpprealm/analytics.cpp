@@ -16,7 +16,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#include "db.hpp"
+#include <cpprealm/analytics.hpp>
 #include <external/json/json.hpp>
 
 #if __APPLE__ || __MACH__
