@@ -172,7 +172,10 @@ TEST_CASE("object_initialization") {
     CHECK(!embedded_obj.is_managed());
 
     CHECK(*obj.opt_obj_col == o);
+    CHECK(*obj.opt_obj_col->str_col == "link object");
+
     CHECK(*obj.opt_embedded_obj_col == embedded_obj);
+    CHECK(*obj.opt_embedded_obj_col->str_col == "embedded obj");
 
     CHECK(obj.list_int_col[0] == 1);
     CHECK(obj.list_double_col[0] == 1.23);
@@ -183,7 +186,9 @@ TEST_CASE("object_initialization") {
     CHECK(obj.list_uuid_col[0] == uuid);
     CHECK(obj.list_mixed_col[0] == realm::mixed("mixed str"));
     CHECK(obj.list_obj_col[0] == o);
+    CHECK(obj.list_obj_col[0].str_col == "link object");
     CHECK(obj.list_embedded_obj_col[0] == embedded_obj);
+    CHECK(obj.list_embedded_obj_col[0].str_col == "embedded obj");
 
     CHECK(obj.map_int_col["foo"] == 1);
     CHECK(obj.map_double_col["foo"] == 1.23);
@@ -194,7 +199,9 @@ TEST_CASE("object_initialization") {
     CHECK(obj.map_uuid_col["foo"] == uuid);
     CHECK(obj.map_mixed_col["foo"] == realm::mixed("bar"));
     CHECK(obj.map_link_col["foo"] == o);
+    CHECK((*obj.map_link_col["foo"])->str_col == "link object");
     CHECK(obj.map_embedded_col["foo"] == embedded_obj);
+    CHECK((*obj.map_embedded_col["foo"])->str_col == "embedded obj");
 
     auto allTypeObjects = realm.objects<AllTypesObject>();
     auto results_obj = allTypeObjects[0];
@@ -221,7 +228,9 @@ TEST_CASE("object_initialization") {
     CHECK(*results_obj.opt_object_id_col == object_id);
 
     CHECK(*results_obj.opt_obj_col == o);
+    CHECK(*results_obj.opt_obj_col->str_col == "link object");
     CHECK(*results_obj.opt_embedded_obj_col == embedded_obj);
+    CHECK(*results_obj.opt_embedded_obj_col->str_col == "embedded obj");
 
     CHECK(results_obj.list_int_col[0] == 1);
     CHECK(results_obj.list_double_col[0] == 1.23);
@@ -232,7 +241,9 @@ TEST_CASE("object_initialization") {
     CHECK(results_obj.list_uuid_col[0] == uuid);
     CHECK(results_obj.list_mixed_col[0] == realm::mixed("mixed str"));
     CHECK(results_obj.list_obj_col[0] == o);
+    CHECK(results_obj.list_obj_col[0].str_col == "link object");
     CHECK(results_obj.list_embedded_obj_col[0] == embedded_obj);
+    CHECK(results_obj.list_embedded_obj_col[0].str_col == "embedded obj");
 
     CHECK(results_obj.map_int_col["foo"] == 1);
     CHECK(results_obj.map_double_col["foo"] == 1.23);
@@ -243,7 +254,9 @@ TEST_CASE("object_initialization") {
     CHECK(results_obj.map_uuid_col["foo"] == uuid);
     CHECK(results_obj.map_mixed_col["foo"] == realm::mixed("bar"));
     CHECK(results_obj.map_link_col["foo"] == o);
+    CHECK((*results_obj.map_link_col["foo"])->str_col == "link object");
     CHECK(results_obj.map_embedded_col["foo"] == embedded_obj);
+    CHECK((*results_obj.map_embedded_col["foo"])->str_col == "embedded obj");
 }
 
 TEST_CASE("object_notifications") {
