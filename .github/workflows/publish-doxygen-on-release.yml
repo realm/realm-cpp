@@ -1,0 +1,14 @@
+name: Publish Doxygen Docs on Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/publish-doxygen
+        with:
+          version: Version ${{github.ref_name}}
+          destination: ${{github.ref_name}}
