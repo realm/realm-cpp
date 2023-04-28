@@ -13,3 +13,6 @@ jobs:
         with:
           version: Version ${{github.ref_name}}
           destination: ${{github.ref_name}}
+          AWS_S3_BUCKET: ${{ secrets.DOCS_AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.DOCS_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.DOCS_AWS_SECRET_ACCESS_KEY }}

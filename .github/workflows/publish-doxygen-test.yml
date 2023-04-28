@@ -1,4 +1,4 @@
-name: Publish Doxygen Docs Latest
+name: Publish Doxygen Docs Test
 
 on:
   push:
@@ -14,3 +14,6 @@ jobs:
         with:
           version: Test ${{ github.ref_name }}@${{ github.sha }}
           destination: test
+          AWS_S3_BUCKET: ${{ secrets.DOCS_AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.DOCS_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.DOCS_AWS_SECRET_ACCESS_KEY }}

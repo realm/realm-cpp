@@ -7,6 +7,15 @@ inputs:
   destination:
     description: "The destination directory on the S3 bucket."
     required: true
+  AWS_S3_BUCKET:
+    description: "The AWS S3 bucket name."
+    required: true
+  AWS_ACCESS_KEY_ID:
+    description: "The AWS public key."
+    required: true
+  AWS_SECRET_ACCESS_KEY:
+    description: "The AWS private key."
+    required: true
 runs:
   using: "composite"
   steps:
@@ -19,8 +28,8 @@ runs:
       with:
         args: --acl public-read --delete
       env:
-        AWS_S3_BUCKET: ${{ secrets.DOCS_AWS_S3_BUCKET }}
-        AWS_ACCESS_KEY_ID: ${{ secrets.DOCS_AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.DOCS_AWS_SECRET_ACCESS_KEY }}
+        AWS_S3_BUCKET: ${{ inputs.AWS_S3_BUCKET }}
+        AWS_ACCESS_KEY_ID: ${{ inputs.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
         SOURCE_DIR: docs/html
         DEST_DIR: docs/realm-sdks/cpp/${{ inputs.destination }}
