@@ -5,6 +5,7 @@
 ### Fixed
 * Address memory leaks reported by instruments caused by some classes not implementing rule of 5 when using
   `std::aligned_storage` ([#69](https://github.com/realm/realm-cpp/pull/69)), since v0.1.0).
+* Dereferencing a property on an object link or embedded object would not return any value ([#71](https://github.com/realm/realm-cpp/pull/71)), since v0.1.0). 
 
 ### Breaking changes
 * `scheduler::invoke(std::function<void()>)` has been change to `scheduler::invoke(realm::Function<void()>)`.
