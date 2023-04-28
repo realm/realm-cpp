@@ -1,4 +1,6 @@
+#include <cpprealm/analytics.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/logger.hpp>
 #include <cpprealm/scheduler.hpp>
 #include <cpprealm/internal/bridge/object_schema.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
@@ -51,6 +53,12 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(Realm::Config)>{});
     #endif
 #endif
+
+    class null_logger : public logger {
+    public:
+        null_logger() = default;
+        void do_log(logger::level, const std::string&) override {}
+    };
 
     realm::realm(std::shared_ptr<Realm> v)
     : m_realm(std::move(v)){}
@@ -190,6 +198,13 @@ namespace realm::internal::bridge {
         return *reinterpret_cast<const RealmConfig*>(&m_config);
     }
     realm::realm(const config &v) {
+        static bool initialized;
+        if (!initialized) {
+            set_default_level_threshold(logger::level::off);
+            set_default_logger(std::make_shared<null_logger>());
+            realm_analytics::send();
+            initialized = true;
+        }
         m_realm = Realm::get_shared_realm(static_cast<RealmConfig>(v));
     }
 

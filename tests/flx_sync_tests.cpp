@@ -8,6 +8,7 @@ using namespace realm;
 TEST_CASE("flx_sync", "[sync]") {
     auto app = realm::App(Admin::shared().cached_app_id(), Admin::shared().base_url());
     SECTION("all") {
+        app.get_sync_manager().set_log_level(logger::level::off);
         auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
         auto flx_sync_config = user.flexible_sync_configuration();
         auto synced_realm = realm::async_open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(flx_sync_config).get_future().get().resolve();
