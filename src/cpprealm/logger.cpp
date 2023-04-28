@@ -74,7 +74,7 @@ namespace realm {
     void set_default_logger(std::shared_ptr<struct logger>&& l) {
         util::Logger::set_default_logger(std::make_shared<internal_logger>(std::move(l)));
     }
-    void set_default_level_threshold(const logger::level& l) {
+    void set_default_level_threshold(logger::level l) {
         util::Logger::set_default_level_threshold(log_level_for_level(l));
     }
 }

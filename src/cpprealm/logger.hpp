@@ -31,7 +31,7 @@ namespace realm {
         virtual void do_log(level, const std::string &) = 0;
     };
     void set_default_logger(std::shared_ptr<struct logger>&&);
-    void set_default_level_threshold(const logger::level&);
+    void set_default_level_threshold(logger::level);
 }
 
 #endif//REALM_LOGGER_HPP
