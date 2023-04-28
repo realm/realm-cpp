@@ -10,7 +10,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@master
     - name: Build docs
       uses: mattnotmitt/doxygen-action@1.9.4
       env:
