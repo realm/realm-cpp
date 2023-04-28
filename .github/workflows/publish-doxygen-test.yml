@@ -1,0 +1,15 @@
+name: Publish Doxygen Docs Latest
+
+on:
+  push:
+    branches:
+      - actions-publish # this PR branch
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/publish-doxygen
+        with:
+          version: Test ${{ github.ref_name }}@${{ github.sha }}
+          destination: test
