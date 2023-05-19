@@ -146,7 +146,7 @@ struct user {
 
     [[nodiscard]] db_config flexible_sync_configuration() const
     {
-        db_config config = {std::nullopt, std::nullopt};
+        db_config config;
         config.set_sync_config(sync_config(m_user));
         config.sync_config().set_error_handler([](const sync_session& session, const sync_error& error) {
             std::cerr<<"sync error: "<<error.message()<<std::endl;

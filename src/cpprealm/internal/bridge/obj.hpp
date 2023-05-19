@@ -6,11 +6,13 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <cpprealm/internal/bridge/col_key.hpp>
-#include <cpprealm/internal/bridge/object.hpp>
 #include <cpprealm/internal/bridge/binary.hpp>
+#include <cpprealm/internal/bridge/col_key.hpp>
+#include <cpprealm/internal/bridge/dictionary.hpp>
+#include <cpprealm/internal/bridge/object.hpp>
 #include <cpprealm/internal/bridge/object_id.hpp>
 #include <cpprealm/scheduler.hpp>
+//#include <cpprealm/experimental/types.hpp>
 
 namespace realm {
     class Group;
@@ -91,6 +93,8 @@ namespace realm::internal::bridge {
     [[nodiscard]] bool get(const obj&, const col_key& col_key);
     template <>
     [[nodiscard]] mixed get(const obj&, const col_key& col_key);
+    template <>
+    [[nodiscard]] core_dictionary get(const obj&, const col_key& col_key);
 
     struct obj {
         obj();
@@ -120,24 +124,40 @@ namespace realm::internal::bridge {
             }
         }
 
-#define __cpp_realm_generate_obj_set(type) \
-        void set(const col_key& col_key, const type& value);
-
-        __cpp_realm_generate_obj_set(int64_t)
-        __cpp_realm_generate_obj_set(double)
-        __cpp_realm_generate_obj_set(std::string)
-        __cpp_realm_generate_obj_set(mixed)
-        __cpp_realm_generate_obj_set(bool)
-        __cpp_realm_generate_obj_set(timestamp)
-        __cpp_realm_generate_obj_set(binary)
-        __cpp_realm_generate_obj_set(uuid)
-        __cpp_realm_generate_obj_set(object_id)
-        __cpp_realm_generate_obj_set(obj_key)
-
         template <typename T>
-        void set(const col_key& col_key, const T& value) {
-            set(col_key, persisted<T, void>::serialize(value));
+        std::optional<T> get_optional(const col_key& col_key) const {
+            if (is_null(col_key)) {
+                return std::nullopt;
+            }
+            return internal::bridge::get<T>(*this, col_key);
         }
+
+        void set(const col_key& col_key, const int64_t& value);
+        void set(const col_key& col_key, const double& value);
+        void set(const col_key& col_key, const std::string& value);
+        void set(const col_key& col_key, const mixed& value);
+        void set(const col_key& col_key, const bool& value);
+        void set(const col_key& col_key, const timestamp& value);
+        void set(const col_key& col_key, const binary& value);
+        void set(const col_key& col_key, const uuid& value);
+        void set(const col_key& col_key, const object_id& value);
+        void set(const col_key& col_key, const obj_key& value);
+        void set(const col_key& col_key, const std::chrono::time_point<std::chrono::system_clock>& value);
+        template<typename T>
+        void set(const col_key& col_key, const std::optional<T>& value) {
+            if (value) {
+                set(col_key, *value);
+            } else {
+                set_null(col_key);
+            }
+        }
+
+//        template <typename T>
+//        void set(const col_key& col_key, const T& value) {
+//            ::realm::experimental::serialize(value);
+//            abort();
+////            set(col_key, persisted<T, void>::serialize(value));
+//        }
         void set_list_values(const col_key& col_key, const std::vector<obj_key>& values);
         void set_list_values(const col_key& col_key, const std::vector<std::string>& values);
         void set_list_values(const col_key& col_key, const std::vector<bool>& values);
@@ -148,6 +168,17 @@ namespace realm::internal::bridge {
         void set_list_values(const col_key& col_key, const std::vector<binary>& values);
         void set_list_values(const col_key& col_key, const std::vector<mixed>& values);
         void set_list_values(const col_key& col_key, const std::vector<timestamp>& values);
+
+        void set_list_values(const col_key& col_key, const std::vector<std::optional<int64_t>>& values);
+        void set_list_values(const col_key& col_key, const std::vector<std::optional<bool>>& values);
+        void set_list_values(const col_key& col_key, const std::vector<std::optional<double>>& values);
+        void set_list_values(const col_key& col_key, const std::vector<std::optional<std::string>>& values);
+        void set_list_values(const col_key& col_key, const std::vector<std::optional<obj_key>>& values);
+        void set_list_values(const col_key& col_key, const std::vector<std::optional<internal::bridge::uuid>>& values);
+        void set_list_values(const col_key& col_key, const std::vector<std::optional<internal::bridge::object_id>>& values);
+        void set_list_values(const col_key& col_key, const std::vector<std::optional<binary>>& values);
+        void set_list_values(const col_key& col_key, const std::vector<std::optional<timestamp>>& values);
+
         template <typename ValueType>
         void set_list_values(const col_key& col_key, const std::vector<ValueType>& values) {
             std::vector<typename internal::type_info::type_info<ValueType, void>::internal_type> v2;
@@ -160,6 +191,7 @@ namespace realm::internal::bridge {
         [[nodiscard]] obj_key get_key() const;
         [[nodiscard]] obj_link get_link() const;
         lnklst get_linklist(const col_key& col_key);
+        core_dictionary get_dictionary(const col_key& col_key);
         void set_null(const col_key&);
         obj create_and_set_linked_object(const col_key&);
     private:

@@ -4,6 +4,7 @@
 #include <cpprealm/persisted.hpp>
 #include <cpprealm/object.hpp>
 #include <cpprealm/persisted_string.hpp>
+#include <cpprealm/internal/bridge/list.hpp>
 
 namespace realm {
     namespace internal {

@@ -2,29 +2,12 @@
 #define CPP_REALM_UUID_HPP
 
 #include <string>
+#include <cpprealm/internal/bridge/uuid.hpp>
 #include <cpprealm/persisted.hpp>
+#include <string>
+#include <cpprealm/experimental/types.hpp>
 
 namespace realm {
-    struct uuid {
-        explicit uuid(const std::string &);
-        uuid() = default;
-        [[nodiscard]] std::string to_string() const;
-        [[nodiscard]] std::string to_base64() const;
-        [[nodiscard]] std::array<uint8_t, 16> to_bytes() const;
-    private:
-        uuid(const internal::bridge::uuid&); //NOLINT(google-explicit-constructor)
-        internal::bridge::uuid m_uuid;
-        friend struct internal::bridge::uuid;
-        template <typename mapped_type>
-        friend struct box_base;
-        friend inline bool operator ==(const uuid& lhs, const uuid& rhs);
-        friend inline bool operator !=(const uuid& lhs, const uuid& rhs);
-        friend inline bool operator <(const uuid& lhs, const uuid& rhs);
-        friend inline bool operator >(const uuid& lhs, const uuid& rhs);
-        friend inline bool operator <=(const uuid& lhs, const uuid& rhs);
-        friend inline bool operator >=(const uuid& lhs, const uuid& rhs);
-        __cpp_realm_friends
-    };
 
     inline std::ostream& operator<< (std::ostream& stream, const uuid& value)
     {

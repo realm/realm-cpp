@@ -49,7 +49,8 @@ namespace realm {
                         v.manage(realm.table_for_object_type(T::schema.name), realm);
                     }
                     this->m_property_object = v;
-                    this->m_object->get_obj().template set(col_key, this->m_property_object.value());
+                    abort();
+//                    this->m_object->get_obj().template set(col_key, this->m_property_object.value());
                 }
             } else {
                 m_property_object = v;
@@ -72,7 +73,8 @@ namespace realm {
                         v.manage(realm.table_for_object_type(T::schema.name), realm);
                     }
                     this->m_property_object = v;
-                    this->m_object->get_obj().template set(col_key, this->m_property_object.value());
+                    abort();
+//                    this->m_object->get_obj().template set(col_key, this->m_property_object.value());
                 }
             } else {
                 m_property_object = v;

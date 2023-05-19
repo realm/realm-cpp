@@ -57,8 +57,10 @@ void test_list(Col& list, std::vector<Value> values, Realm& realm, Object& obj) 
 
 TEST_CASE("list", "[list]") {
    realm_path path;
+   db_config config;
+   config.set_path(path);
    SECTION("list_tests") {
-       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(realm::db_config(path));
+       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
        auto obj = AllTypesObject{};
        obj.list_int_col.push_back(42);
        CHECK(obj.list_int_col[0] == 42);
@@ -122,7 +124,7 @@ TEST_CASE("list", "[list]") {
        CHECK(obj.list_int_col.find(4) == 1);
        CHECK(obj.list_int_col[1] == 4);
 
-       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
+       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
        realm.write([&realm, &obj] {
            realm.add(obj);
        });
@@ -197,7 +199,7 @@ TEST_CASE("list", "[list]") {
        CHECK(obj.list_obj_col.find(o4) == realm::npos);
        CHECK(obj.list_obj_col[3].str_col == o4.str_col);
 
-       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
+       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
        realm.write([&realm, &obj] {
            realm.add(obj);
        });
@@ -270,7 +272,7 @@ TEST_CASE("list", "[list]") {
        CHECK(obj.list_embedded_obj_col.find(o4) == realm::npos);
        CHECK(obj.list_embedded_obj_col[3].str_col == o4.str_col);
 
-       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
+       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
        realm.write([&realm, &obj] {
            realm.add(obj);
        });
@@ -311,7 +313,7 @@ TEST_CASE("list", "[list]") {
    SECTION("notifications_insertions", "[list]") {
        auto obj = AllTypesObject();
 
-       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
+       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
        realm.write([&realm, &obj] {
            realm.add(obj);
        });
@@ -353,7 +355,7 @@ TEST_CASE("list", "[list]") {
    SECTION("notifications_deletions") {
        auto obj = AllTypesObject();
 
-       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
+       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
        realm.write([&realm, &obj] {
            realm.add(obj);
            obj.list_int_col.push_back(456);
@@ -383,7 +385,7 @@ TEST_CASE("list", "[list]") {
    SECTION("notifications_modifications", "[list]") {
        auto obj = AllTypesObject();
 
-       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
+       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
        realm.write([&realm, &obj] {
            realm.add(obj);
            obj.list_int_col.push_back(123);
@@ -414,7 +416,7 @@ TEST_CASE("list", "[list]") {
    }
 
    SECTION("list_all_primitive_types") {
-       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
+       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
 
        auto int_list_obj = AllTypesObject();
        test_list(int_list_obj.list_int_col, std::vector<int>({1, 2}), realm, int_list_obj);
@@ -439,7 +441,7 @@ TEST_CASE("list", "[list]") {
    }
 
    SECTION("list_mixed") {
-       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>({path});
+       auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
 
        auto obj = AllTypesObject();
        obj.list_mixed_col.push_back(42);

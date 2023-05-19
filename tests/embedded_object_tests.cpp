@@ -4,8 +4,10 @@
 
 TEST_CASE("embedded_objects") {
     realm_path path;
+    realm::db_config config;
+    config.set_path(path);
     SECTION("observe") {
-        auto realm = realm::open<Foo, EmbeddedFoo>({path});
+        auto realm = realm::open<Foo, EmbeddedFoo>(std::move(config));
 
         auto foo = Foo();
         foo.foo = EmbeddedFoo{.bar=42};

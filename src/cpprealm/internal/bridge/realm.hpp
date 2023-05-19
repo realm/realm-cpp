@@ -66,8 +66,8 @@ namespace realm::internal::bridge {
             config& operator=(config&& other);
             ~config();
             config(const RealmConfig&); //NOLINT(google-explicit-constructor)
-            config(const std::optional<std::string>& path = std::nullopt,
-                   const std::optional<std::shared_ptr<scheduler>>& scheduler = std::nullopt);
+            config(const std::string& path,
+                   const std::shared_ptr<scheduler>& scheduler);
             [[nodiscard]] std::string path() const;
             [[nodiscard]] struct sync_config sync_config() const;
             [[nodiscard]] std::shared_ptr<struct scheduler> scheduler();

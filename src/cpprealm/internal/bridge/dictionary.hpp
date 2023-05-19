@@ -8,8 +8,14 @@ namespace realm::object_store {
     class Dictionary;
 }
 
+namespace realm {
+    class Dictionary;
+    using CoreDictionary = Dictionary;
+}
+
 namespace realm::internal::bridge {
     using Dictionary = object_store::Dictionary;
+    using CoreDictionary = CoreDictionary;
 
     struct mixed;
     struct binary;
@@ -20,6 +26,28 @@ namespace realm::internal::bridge {
     struct notification_token;
     struct collection_change_callback;
     struct obj;
+
+    struct core_dictionary {
+        core_dictionary();
+        core_dictionary(const CoreDictionary& v); //NOLINT(google-explicit-constructor)
+        operator CoreDictionary () const; //NOLINT(google-explicit-constructor)
+        void insert(const std::string& key, const mixed& value);
+        void insert(const std::string& key, const std::string& value);
+        obj create_and_insert_linked_object(const std::string& key);
+        mixed get(const std::string& key) const;
+        obj get_object(const std::string& key);
+    private:
+#ifdef __i386__
+        std::aligned_storage<40, 4>::type m_dictionary[1];
+#elif __x86_64__
+        std::aligned_storage<80, 8>::type m_dictionary[1];
+#elif __arm__
+        std::aligned_storage<40, 4>::type m_dictionary[1];
+#elif __aarch64__
+        std::aligned_storage<144, 8>::type m_dictionary[1];
+#endif
+    };
+
 
     struct dictionary {
         dictionary();

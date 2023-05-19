@@ -22,6 +22,51 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(Dictionary)>{});
 #endif
 
+#ifdef __i386__
+    static_assert(SizeCheck<40, sizeof(CoreDictionary)>{});
+    static_assert(SizeCheck<4, alignof(CoreDictionary)>{});
+#elif __x86_64__
+    static_assert(SizeCheck<144, sizeof(CoreDictionary)>{});
+    static_assert(SizeCheck<8, alignof(CoreDictionary)>{});
+#elif __arm__
+    static_assert(SizeCheck<40, sizeof(CoreDictionary)>{});
+    static_assert(SizeCheck<4, alignof(CoreDictionary)>{});
+#elif __aarch64__
+    static_assert(SizeCheck<144, sizeof(CoreDictionary)>{});
+    static_assert(SizeCheck<8, alignof(CoreDictionary)>{});
+#endif
+
+    core_dictionary::core_dictionary() {
+        new (m_dictionary) CoreDictionary();
+
+    }
+    core_dictionary::core_dictionary(const CoreDictionary& v) {
+        new (m_dictionary) CoreDictionary(v);
+    }
+    core_dictionary::operator CoreDictionary() const {
+        return *reinterpret_cast<const CoreDictionary*>(m_dictionary);
+    }
+
+    void core_dictionary::insert(const std::string& key, const mixed& value) {
+        reinterpret_cast<CoreDictionary*>(m_dictionary)->insert(key, value.operator Mixed());
+    }
+
+    void core_dictionary::insert(const std::string& key, const std::string& value) {
+        reinterpret_cast<CoreDictionary*>(m_dictionary)->insert(key, value);
+    }
+
+    obj core_dictionary::create_and_insert_linked_object(const std::string& key) {
+        return reinterpret_cast<CoreDictionary*>(m_dictionary)->create_and_insert_linked_object(key);
+    }
+
+    mixed core_dictionary::get(const std::string& key) const {
+        return reinterpret_cast<const CoreDictionary*>(m_dictionary)->get(key);
+    }
+
+    obj core_dictionary::get_object(const std::string& key) {
+        return reinterpret_cast<CoreDictionary*>(m_dictionary)->get_object(key);
+    }
+
     dictionary::dictionary() {
         new (&m_dictionary) Dictionary();
     }

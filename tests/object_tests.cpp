@@ -2,6 +2,9 @@
 #include "main.hpp"
 
 TEST_CASE("all_primary_key_types") {
+    realm_path path;
+    realm::db_config config;
+    config.set_path(path);
     SECTION("primary_keys") {
         std::tuple<int64_t, realm::object_id, std::string, realm::uuid, PrimaryKeyEnum> primary_keys
             = {123, realm::object_id::generate(), "primary_key", realm::uuid("68b696d7-320b-4402-a412-d9cee10fc6a3"), PrimaryKeyEnum::one};
@@ -11,7 +14,7 @@ TEST_CASE("all_primary_key_types") {
                 realm_path path;
                 using ObjectType = TestPrimaryKeyObject<std::remove_reference<decltype(std::get<0>(
                         primary_keys))>::type>;
-                auto realm = realm::open<ObjectType>({path});
+                auto realm = realm::open<ObjectType>(std::move(config));
                 auto obj = ObjectType();
                 obj._id = std::get<decltype(*obj._id)>(primary_keys);
                 realm.write([&realm, &obj] {
@@ -32,7 +35,7 @@ TEST_CASE("all_primary_key_types") {
                 realm_path path;
                 using ObjectType = TestPrimaryKeyObject<std::remove_reference<decltype(std::get<0>(
                         primary_keys))>::type>;
-                auto realm = realm::open<ObjectType>({path});
+                auto realm = realm::open<ObjectType>(std::move(config));
                 auto obj = ObjectType();
                 obj._id = std::get<decltype(*obj._id)>(primary_keys);
                 realm.write([&realm, &obj] {
@@ -52,7 +55,7 @@ TEST_CASE("all_primary_key_types") {
                 realm_path path;
                 using ObjectType = TestPrimaryKeyObject<std::remove_reference<decltype(std::get<0>(
                         primary_keys))>::type>;
-                auto realm = realm::open<ObjectType>({path});
+                auto realm = realm::open<ObjectType>(std::move(config));
                 auto obj = ObjectType();
                 obj._id = std::nullopt;
                 realm.write([&realm, &obj] {
@@ -67,6 +70,8 @@ TEST_CASE("all_primary_key_types") {
 
 TEST_CASE("object_initialization") {
     realm_path path;
+    realm::db_config config;
+    config.set_path(path);
     auto date = std::chrono::time_point<std::chrono::system_clock>();
     auto uuid = realm::uuid();
     auto o = AllTypesObjectLink();
@@ -132,7 +137,7 @@ TEST_CASE("object_initialization") {
         .map_embedded_col = std::map<std::string, std::optional<AllTypesObjectEmbedded>>({{"foo", embedded_obj}})
     };
 
-    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+    auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
     realm.write([&obj, &realm]() {
         realm.add(obj);
     });
@@ -261,8 +266,10 @@ TEST_CASE("object_initialization") {
 
 TEST_CASE("object_notifications") {
     realm_path path;
+    realm::db_config config;
+    config.set_path(path);
     SECTION("observe") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
 
         auto date = std::chrono::time_point<std::chrono::system_clock>();
         auto uuid = realm::uuid();
@@ -415,7 +422,7 @@ TEST_CASE("object_notifications") {
     }
 
     SECTION("optional objects") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
 
         auto foo = AllTypesObject();
         auto o = AllTypesObjectLink();

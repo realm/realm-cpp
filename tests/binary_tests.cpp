@@ -3,8 +3,10 @@
 
 TEST_CASE("binary", "[binary]") {
     realm_path path;
+    realm::db_config config;
+    config.set_path(path);
     SECTION("push_back") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
         auto obj = AllTypesObject();
         obj.binary_col.push_back(1);
         obj.binary_col.push_back(2);
@@ -23,7 +25,7 @@ TEST_CASE("binary", "[binary]") {
     }
 
     SECTION("list_binary") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
         auto obj = AllTypesObject();
         obj.list_binary_col.push_back({0});
         obj.list_binary_col.push_back({1});

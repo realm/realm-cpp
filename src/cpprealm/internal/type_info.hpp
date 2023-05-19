@@ -8,12 +8,17 @@
 #include <cpprealm/internal/bridge/mixed.hpp>
 #include <cpprealm/internal/bridge/obj_key.hpp>
 #include <cpprealm/internal/bridge/list.hpp>
+#include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/object_id.hpp>
 #include <realm/obj.hpp>
 
 #include <vector>
 
+namespace realm::experimental {
+    template <typename>
+    struct link;
+}
 namespace realm::internal::type_info {
     template <typename T, typename = void>
     struct is_optional : std::false_type {
@@ -21,7 +26,7 @@ namespace realm::internal::type_info {
     };
     template <template <typename> typename Optional, typename T>
     struct is_optional<Optional<T>,
-            std::enable_if_t<std::is_same_v<std::optional<T>, Optional<T>>>> : std::true_type {
+                       std::enable_if_t<std::is_same_v<std::optional<T>, Optional<T>>>> : std::true_type {
         using underlying = T;
     };
     template <typename T, typename = void>
@@ -59,13 +64,13 @@ namespace realm::internal::type_info {
                 std::is_same<typename type_info<T>::internal_type, bridge::obj_key>,
                 std::is_same<typename type_info<T>::internal_type, bridge::list>,
                 std::is_same<typename type_info<T>::internal_type, bridge::dictionary>
-        >>;
+                >>;
 
         template <typename T, typename = void>
         struct is_variant_t : std::false_type {};
         template <template <typename ...> typename Variant, typename ...Ts>
         struct is_variant_t<Variant<Ts...>, std::enable_if_t<std::is_same_v<std::variant<Ts...>, Variant<Ts...>>>>
-                : std::true_type {
+            : std::true_type {
         };
 
         template<size_t N, typename Variant>
@@ -90,16 +95,16 @@ namespace realm::internal::type_info {
         template<typename T>
         using MixedPersistableConcept =
                 std::conjunction<is_variant_t<T>,
-                        std::conditional_t<check_variant_types<0, T>(), std::true_type, std::false_type>
-                >;
+                                 std::conditional_t<check_variant_types<0, T>(), std::true_type, std::false_type>
+                                 >;
 
         namespace {
             static_assert(std::conjunction<
-                    std::is_convertible<int, int64_t>,
-                    std::is_constructible<int, int64_t>>::value);
+                          std::is_convertible<int, int64_t>,
+                          std::is_constructible<int, int64_t>>::value);
             static_assert(std::conjunction<
-                    std::is_convertible<const char*, std::string>,
-                    std::is_constructible<std::string, const char*>>::value);
+                          std::is_convertible<const char*, std::string>,
+                          std::is_constructible<std::string, const char*>>::value);
 
             template <class Custom, class Underlying>
             using is_persistable = std::conjunction<
@@ -133,52 +138,82 @@ namespace realm::internal::type_info {
             using is_binary_persistable = is_persistable<Custom, std::vector<uint8_t>>;
             template <class Custom, typename C = std::chrono::system_clock, typename D = typename C::duration>
             using is_time_point_persistable = is_persistable<Custom, std::chrono::time_point<C, D>>;
+            template <class Custom>
+            using is_null_persistable = is_persistable<Custom, std::monostate>;
 
             template <typename Custom, typename = void>
             struct is_custom_persistable : std::false_type {};
             template <typename Custom>
             struct is_custom_persistable<Custom, std::enable_if_t<is_string_persistable<Custom>::value>> :
-                    std::true_type {
+                std::true_type {
                 using underlying = std::string;
             };
             template <typename Custom>
             struct is_custom_persistable<Custom, std::enable_if_t<is_int_persistable<Custom>::value>> :
-                    std::true_type {
+                std::true_type {
                 using underlying = int64_t;
             };
             template <typename Custom>
             struct is_custom_persistable<Custom, std::enable_if_t<is_double_persistable<Custom>::value>> :
-                    std::true_type {
+                std::true_type {
                 using underlying = double;
             };
             template <typename Custom>
             struct is_custom_persistable<Custom, std::enable_if_t<is_bool_persistable<Custom>::value>> :
-                    std::true_type {
+                std::true_type {
                 using underlying = bool;
             };
             template <typename Custom>
             struct is_custom_persistable<Custom, std::enable_if_t<is_uuid_persistable<Custom>::value>> :
-                    std::true_type {
+                std::true_type {
                 using underlying = uuid;
             };
             template <typename Custom>
             struct is_custom_persistable<Custom, std::enable_if_t<is_object_id_persistable<Custom>::value>> :
-                    std::true_type {
+                std::true_type {
                 using underlying = object_id;
             };
             template <typename Custom>
             struct is_custom_persistable<Custom, std::enable_if_t<is_binary_persistable<Custom>::value>> :
-                    std::true_type {
+                std::true_type {
                 using underlying = std::vector<uint8_t>;
             };
             template <typename Custom>
             struct is_custom_persistable<Custom, std::enable_if_t<is_time_point_persistable<Custom>::value>> :
-                    std::true_type {
+                std::true_type {
                 using underlying = std::chrono::time_point<std::chrono::system_clock, std::chrono::system_clock::duration>;
+            };
+            template <typename Custom>
+            struct is_custom_persistable<Custom, std::enable_if_t<is_null_persistable<Custom>::value>> :
+                std::true_type {
+                using underlying = std::monostate;
             };
         }
     }
 
+    template <typename T>
+    struct type_info<experimental::link<T>> {
+        using internal_type = bridge::obj_key;
+        static constexpr bridge::property::type type() {
+            return bridge::property::type::Object;
+        }
+    };
+    template <typename T>
+    struct is_link : std::false_type {
+        static constexpr auto value = false;
+    };
+    template <typename T>
+    struct is_link<experimental::link<T>> : std::true_type {
+        static constexpr auto value = true;
+    };
+
+    template <>
+    struct type_info<std::monostate> {
+        using internal_type = std::monostate;
+        static constexpr bridge::property::type type() {
+            return bridge::property::type::Mixed;
+        }
+    };
     template <>
     struct type_info<std::string> {
         using internal_type = std::string;
@@ -195,6 +230,13 @@ namespace realm::internal::type_info {
     };
     template <>
     struct type_info<int64_t> {
+        using internal_type = int64_t;
+        static constexpr bridge::property::type type() {
+            return bridge::property::type::Int;
+        }
+    };
+    template <>
+    struct type_info<int> {
         using internal_type = int64_t;
         static constexpr bridge::property::type type() {
             return bridge::property::type::Int;
@@ -287,7 +329,7 @@ namespace realm::internal::type_info {
     };
     template <typename T>
     struct type_info<T, std::enable_if_t<is_custom_persistable<T>::value>> :
-            public type_info<typename is_custom_persistable<T>::underlying> {
+        public type_info<typename is_custom_persistable<T>::underlying> {
     };
 }
 #endif //REALM_TYPE_INFO_HPP

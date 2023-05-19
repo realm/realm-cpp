@@ -5,8 +5,10 @@ using namespace realm;
 
 TEST_CASE("object_id", "[object_id]") {
     realm_path path;
+    db_config config;
+    config.set_path(path);
     SECTION("unmanaged_managed_object_id", "[object_id]") {
-        auto realm = open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>({path});
+        auto realm = open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
         auto object_id1 = realm::object_id::generate();
         auto object_id2 = realm::object_id::generate();
         auto object_id3 = realm::object_id::generate();

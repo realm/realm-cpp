@@ -3,6 +3,7 @@
 #include "realm/obj.hpp"
 #include <realm/object-store/object_store.hpp>
 #include <realm/list.hpp>
+#include "realm/dictionary.hpp"
 
 #include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
@@ -130,6 +131,11 @@ namespace realm::internal::bridge {
     timestamp get(const obj& o, const col_key& col_key) {
         return reinterpret_cast<const Obj*>(&o.m_obj)->get<Timestamp>(col_key);
     }
+    template <>
+    core_dictionary get(const obj& o, const col_key& col_key) {
+        return reinterpret_cast<const Obj*>(o.m_obj)->get_dictionary(col_key);
+    }
+
     void obj::set(const col_key &col_key, const std::string &value) {
         reinterpret_cast<Obj*>(&m_obj)->set<StringData>(col_key, value);
     }
@@ -168,8 +174,14 @@ namespace realm::internal::bridge {
     void obj::set(const col_key &col_key, const timestamp &value) {
         reinterpret_cast<Obj*>(&m_obj)->set<Timestamp>(col_key, value);
     }
+    void obj::set(const col_key& col_key, const std::chrono::time_point<std::chrono::system_clock>& value) {
+        reinterpret_cast<Obj*>(m_obj)->set<Timestamp>(col_key, value);
+    }
     lnklst obj::get_linklist(const col_key &col_key) {
         return reinterpret_cast<Obj*>(&m_obj)->get_linklist(col_key);
+    }
+    core_dictionary obj::get_dictionary(const col_key& col_key) {
+        return reinterpret_cast<Obj*>(m_obj)->get_dictionary(col_key);
     }
 
     void obj::set_list_values(const col_key &col_key, const std::vector<obj_key> &values) {
@@ -224,11 +236,87 @@ namespace realm::internal::bridge {
         reinterpret_cast<Obj*>(&m_obj)->set_list_values(col_key, v);
     }
     void obj::set_list_values(const col_key &col_key, const std::vector<mixed> &values) {
-        std::vector<Mixed> v;
-        for (auto& v2 : values) {
-            v.emplace_back(v2);
+        auto list = reinterpret_cast<Obj*>(m_obj)->get_list<Mixed>(col_key);
+        auto size = values.size();
+        for (size_t i = 0; i < size; ++i) {
+            list.insert(i, values[i].operator Mixed());
         }
-        reinterpret_cast<Obj*>(&m_obj)->set_list_values(col_key, v);
+    }
+
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<int64_t>> &values) {
+        reinterpret_cast<Obj*>(m_obj)->set_list_values(col_key, values);
+    }
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<bool>> &values) {
+        reinterpret_cast<Obj*>(m_obj)->set_list_values(col_key, values);
+    }
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<double>> &values) {
+        reinterpret_cast<Obj*>(m_obj)->set_list_values(col_key, values);
+    }
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<std::string>> &values) {
+        auto list = reinterpret_cast<Obj*>(m_obj)->get_list<StringData>(col_key);
+        auto size = values.size();
+        for (size_t i = 0; i < size; ++i) {
+            if (values[i]) {
+                list.insert(i, *values[i]);
+            } else {
+                list.insert_null(i);
+            }
+        }
+    }
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<obj_key>> &values) {
+        auto list = reinterpret_cast<Obj*>(m_obj)->get_list<ObjKey>(col_key);
+        auto size = values.size();
+        for (size_t i = 0; i < size; ++i) {
+            if (values[i]) {
+                list.insert(i, *values[i]);
+            } else {
+                list.insert_null(i);
+            }
+        }
+    }
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<internal::bridge::uuid>> &values) {
+        auto list = reinterpret_cast<Obj*>(m_obj)->get_list<std::optional<UUID>>(col_key);
+        auto size = values.size();
+        for (size_t i = 0; i < size; ++i) {
+            if (values[i]) {
+                list.insert(i, *values[i]);
+            } else {
+                list.insert_null(i);
+            }
+        }
+    }
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<internal::bridge::object_id>> &values) {
+        auto list = reinterpret_cast<Obj*>(m_obj)->get_list<std::optional<ObjectId>>(col_key);
+        auto size = values.size();
+        for (size_t i = 0; i < size; ++i) {
+            if (values[i]) {
+                list.insert(i, *values[i]);
+            } else {
+                list.insert_null(i);
+            }
+        }
+    }
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<internal::bridge::binary>> &values) {
+        auto list = reinterpret_cast<Obj*>(m_obj)->get_list<Binary>(col_key);
+        auto size = values.size();
+        for (size_t i = 0; i < size; ++i) {
+            if (values[i]) {
+                list.insert(i, *values[i]);
+            } else {
+                list.insert_null(i);
+            }
+        }
+    }
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<timestamp>> &values) {
+        auto list = reinterpret_cast<Obj*>(m_obj)->get_list<Timestamp>(col_key);
+        auto size = values.size();
+        for (size_t i = 0; i < size; ++i) {
+            if (values[i]) {
+                list.insert(i, *values[i]);
+            } else {
+                list.insert_null(i);
+            }
+        }
     }
 
     void obj::set_null(const col_key &v) {

@@ -4,6 +4,7 @@
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/query.hpp>
 #include <realm/object-store/results.hpp>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm::internal::bridge {
 #ifdef __i386__

@@ -21,9 +21,14 @@
 
 #include <cpprealm/internal/type_info.hpp>
 #include <cpprealm/internal/bridge/query.hpp>
-
+#include <cpprealm/internal/bridge/object.hpp>
+#include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/schema.hpp>
 
+namespace realm::experimental {
+    template<typename>
+    struct box_base;
+}
 #define __friend_rbool_operators__(type, op) \
         friend rbool operator op(const persisted<type>& a, const type& b); \
 
@@ -53,6 +58,8 @@
     friend std::enable_if_t<std::is_enum_v<TT>, rbool> operator op(const persisted<TT>& a, const VV& b);
 
 #define __cpp_realm_friends \
+        template <typename> \
+        friend struct realm::experimental::box_base; \
         template <typename ...> \
         friend struct db;                    \
         template <typename, typename ...> \
@@ -147,7 +154,7 @@
     template <typename TT> \
     friend inline typename std::enable_if<std::is_base_of<realm::object_base<TT>, TT>::value, std::ostream>::type& \
     operator<< (std::ostream& stream, const TT& object); \
-    template <typename, typename> friend struct thead_safe_reference;
+    template <typename, typename> friend struct thead_safe_reference;                      \
 
 #define __cpp_realm_generate_operator(type, op, name) \
     inline rbool operator op(const persisted<type>& a, const type& b) { \
@@ -261,7 +268,11 @@ protected:
 
         persisted_primitive_base& operator=(T&& o) noexcept {
             if (this->is_managed()) {
-                this->m_object->get_obj().set(managed, o);
+                if constexpr (realm::internal::type_info::MixedPersistableConcept<T>::value) {
+                    abort();
+                } else {
+                    this->m_object->get_obj().set(managed, o);
+                }
             } else {
                 new (&unmanaged) T(std::move(o));
             }
@@ -392,9 +403,9 @@ operator<< (std::ostream& stream, const T& object)
     }
 
     std::apply([&stream, &object](auto&&... props) {
-        stream << "{\n";
-        ((stream << "\t" << props.name << ": " << *(object.*props.ptr) << "\n"), ...);
-        stream << "}";
+        stream << std::string("{\n");
+        ((stream << std::string("\t") << props.name << ": " << *(object.*props.ptr) << "\n"), ...);
+        stream << std::string("}");
     }, T::schema.ps);
 
     return stream;

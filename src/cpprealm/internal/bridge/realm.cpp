@@ -143,22 +143,12 @@ namespace realm::internal::bridge {
     realm::config::config(const RealmConfig &v) {
         new (&m_config) RealmConfig(v);
     }
-    realm::config::config(const std::optional<std::string>& path,
-                          const std::optional<std::shared_ptr<struct scheduler>>& scheduler) {
+    realm::config::config(const std::string& path,
+                          const std::shared_ptr<struct scheduler>& scheduler) {
         RealmConfig config;
         config.cache = true;
-        if (path) {
-            config.path = *path;
-        } else {
-            config.path = std::filesystem::current_path().append("default.realm");
-        }
-
-        if (scheduler) {
-            config.scheduler = std::make_shared<internal_scheduler>(*scheduler);
-        } else {
-            config.scheduler = std::make_shared<internal_scheduler>(scheduler::make_default());
-        }
-
+        config.path = path;
+        config.scheduler = std::make_shared<internal_scheduler>(scheduler);
         config.schema_version = 0;
         new (&m_config) RealmConfig(config);
     }

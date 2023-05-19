@@ -21,6 +21,7 @@
 #define REALM_PERSISTED_BINARY_HPP
 
 #include <cpprealm/persisted.hpp>
+#include <sstream>
 
 namespace realm {
     namespace internal::bridge {
@@ -55,12 +56,12 @@ namespace realm {
 
     inline std::ostream& operator<< (std::ostream& stream, const persisted<std::vector<uint8_t>>& value)
     {
-        stream << "{ ";
+        stream << std::string("{ ");
         for (auto& c : *value) {
-            stream << c << ", ";
+            stream << c << std::string(", ");
         }
         stream.seekp(-2);
-        stream << " }";
+        stream << std::string(" }");
         return stream;
     }
 }

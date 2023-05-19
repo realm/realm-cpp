@@ -22,6 +22,7 @@
 #include <cpprealm/persisted.hpp>
 #include <cpprealm/notifications.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
+#include <cpprealm/internal/bridge/mixed.hpp>
 
 #include <string>
 #include <utility>

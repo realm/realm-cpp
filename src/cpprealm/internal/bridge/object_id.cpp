@@ -1,4 +1,5 @@
 #include <realm/object_id.hpp>
+#include <realm/string_data.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/persisted_object_id.hpp>
 
