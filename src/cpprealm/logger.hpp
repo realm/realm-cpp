@@ -1,5 +1,6 @@
-#ifndef REALM_LOGGER_HPP
-#define REALM_LOGGER_HPP
+/*
+#ifndef CPP_REALM_LOGGER_HPP
+#define CPP_REALM_LOGGER_HPP
 
 #include <memory>
 #include <string>
@@ -34,4 +35,5 @@ namespace realm {
     void set_default_level_threshold(logger::level);
 }
 
-#endif//REALM_LOGGER_HPP
+#endif//CPP_REALM_LOGGER_HPP
+*/

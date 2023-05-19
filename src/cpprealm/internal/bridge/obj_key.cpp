@@ -1,7 +1,7 @@
 #include <cpprealm/internal/bridge/obj_key.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 
-#include <realm/obj.hpp>
+#include <realm/keys.hpp>
 
 namespace realm::internal::bridge {
 #ifdef __i386__
@@ -64,6 +64,10 @@ namespace realm::internal::bridge {
         return static_cast<ObjKey>(lhs) == static_cast<ObjKey>(rhs);
     }
 
+    bool operator!=(obj_key const &lhs, obj_key const &rhs) {
+        return static_cast<ObjKey>(lhs) == static_cast<ObjKey>(rhs);
+    }
+
 #ifdef __i386__
     static_assert(SizeCheck<12, sizeof(ObjLink)>{});
     static_assert(SizeCheck<4, alignof(ObjLink)>{});
@@ -122,5 +126,9 @@ namespace realm::internal::bridge {
 
     bool operator==(obj_link const& lhs, obj_link const& rhs) {
         return static_cast<ObjLink>(lhs) == static_cast<ObjLink>(rhs);
+    }
+
+        bool operator!=(obj_link const &lhs, obj_link const &rhs) {
+        return static_cast<ObjLink>(lhs) != static_cast<ObjLink>(rhs);
     }
 }

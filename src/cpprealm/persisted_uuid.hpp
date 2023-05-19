@@ -4,7 +4,6 @@
 #include <string>
 #include <cpprealm/internal/bridge/uuid.hpp>
 #include <cpprealm/persisted.hpp>
-#include <string>
 #include <cpprealm/experimental/types.hpp>
 
 namespace realm {

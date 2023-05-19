@@ -2,8 +2,9 @@
 #define CPP_REALM_BRIDGE_SYNC_MANAGER_HPP
 
 #include <memory>
+#include <string>
+//#include <cpprealm/logger.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
-#include <cpprealm/logger.hpp>
 
 namespace realm {
     class SyncManager;
@@ -12,7 +13,7 @@ namespace realm {
         struct sync_manager {
             sync_manager(const std::shared_ptr<SyncManager> &);
             [[nodiscard]] std::string path_for_realm(const realm::sync_config&) const;
-            void set_log_level(logger::level);
+            //void set_log_level(logger::level);
         private:
             std::shared_ptr<SyncManager> m_manager;
         };

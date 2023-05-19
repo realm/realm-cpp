@@ -35,6 +35,8 @@ namespace realm::internal::bridge {
         std::aligned_storage<4, 4>::type m_thread_safe_reference[1];
 #elif __aarch64__
         std::aligned_storage<8, 8>::type m_thread_safe_reference[1];
+#elif _WIN32
+        std::aligned_storage<1, 1>::type m_thread_safe_reference[1];
 #endif
     };
 

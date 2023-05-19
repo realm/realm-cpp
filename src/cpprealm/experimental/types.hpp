@@ -3,18 +3,18 @@
 
 #include <cstdint>
 #include <optional>
-#include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/type_info.hpp>
+#include <array>
 
 namespace realm {
     struct uuid {
-        explicit uuid(const std::string &);
+        explicit uuid(const std::string &) { }
         uuid() = default;
-        [[nodiscard]] std::string to_string() const;
-        [[nodiscard]] std::string to_base64() const;
-        [[nodiscard]] std::array<uint8_t, 16> to_bytes() const;
-        uuid(const internal::bridge::uuid&); //NOLINT(google-explicit-constructor)
+        [[nodiscard]] std::string to_string() const { return ""; }
+        [[nodiscard]] std::string to_base64() const { return ""; }
+        [[nodiscard]] std::array<uint8_t, 16> to_bytes() const { return std::array<uint8_t, 16>(); }
+        uuid(const internal::bridge::uuid &) { }
         internal::bridge::uuid m_uuid;
         friend struct internal::bridge::uuid;
         template <typename mapped_type>
@@ -22,13 +22,12 @@ namespace realm {
     };
 
     struct object_id {
-        explicit object_id(const std::string &);
+        explicit object_id(const std::string &) { }
         object_id() = default;
-        [[nodiscard]] static object_id generate();
-        [[nodiscard]] std::string to_string() const;
-        object_id(const internal::bridge::object_id&); //NOLINT(google-explicit-constructor)
+        [[nodiscard]] static object_id generate() { abort(); }
+        [[nodiscard]] std::string to_string() const { return ""; }
+        object_id(const internal::bridge::object_id &) { }
         internal::bridge::object_id m_object_id;
-        friend object_id generate();
         friend struct internal::bridge::object_id;
         template <typename mapped_type>
         friend struct box_base;

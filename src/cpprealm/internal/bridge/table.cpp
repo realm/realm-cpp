@@ -111,4 +111,7 @@ namespace realm::internal::bridge {
     bool operator ==(table const& lhs, table const& rhs) {
         return static_cast<TableRef>(lhs) == static_cast<TableRef>(rhs);
     }
+    bool operator!=(table const &lhs, table const &rhs) {
+        return static_cast<TableRef>(lhs) != static_cast<TableRef>(rhs);
+    }
 }

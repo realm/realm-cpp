@@ -155,7 +155,7 @@ namespace realm::experimental {
         Query query;
         ColKey col_key;
         inline auto operator>=(const char* rhs) noexcept {
-            query.greater_equal(col_key, StringData(rhs));
+            //query.greater_equal(col_key, StringData(rhs));
         }
     };
 }

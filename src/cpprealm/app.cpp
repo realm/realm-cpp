@@ -1,13 +1,30 @@
+
 #include <cpprealm/app.hpp>
-#include <cpprealm/internal/bridge/utils.hpp>
+#include <cpprealm/internal/generic_network_transport.hpp>
+
 
 #include <realm/object-store/sync/app.hpp>
-#include <realm/object-store/sync/app_credentials.hpp>
+
 #include <realm/object-store/sync/sync_user.hpp>
+#include <realm/object-store/sync/sync_manager.hpp>
+
 
 #include <utility>
 
+
 namespace realm {
+#if _WIN32
+
+    //static_assert(internal::bridge::SizeCheck<8, sizeof(realm::app::AppError)>{});
+    /*
+    static_assert(internal::bridge::SizeCheck<4, alignof(::realm::app::AppCredentials)>{});
+    static_assert(internal::bridge::SizeCheck<28, sizeof(::realm::app::AppError)>{});
+    static_assert(internal::bridge::SizeCheck<4, alignof(::realm::app::AppError)>{});
+    */
+
+#endif
+
+
 #ifdef __i386__
     static_assert(internal::bridge::SizeCheck<8, sizeof(realm::app::AppCredentials)>{});
     static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppCredentials)>{});
@@ -44,68 +61,85 @@ namespace realm {
     static_assert((int)user::state::removed == (int)SyncUser::State::Removed);
 
     app_error::app_error(const app_error& other) {
-        new (&m_error) app::AppError(*reinterpret_cast<const app::AppError*>(&other.m_error));
+        //new (&m_error) app::AppError(*reinterpret_cast<const app::AppError*>(&other.m_error));
     }
 
     app_error& app_error::operator=(const app_error& other) {
-        if (this != &other) {
-            *reinterpret_cast<app::AppError*>(&m_error) = *reinterpret_cast<const app::AppError*>(&other.m_error);
-        }
+        //if (this != &other) {
+       //     *reinterpret_cast<app::AppError*>(&m_error) = *reinterpret_cast<const app::AppError*>(&other.m_error);
+        //}
         return *this;
     }
 
     app_error::app_error(app_error&& other) {
-        new (&m_error) app::AppError(std::move(*reinterpret_cast<app::AppError*>(&other.m_error)));
+        //new (&m_error) app::AppError(std::move(*reinterpret_cast<app::AppError*>(&other.m_error)));
     }
 
     app_error& app_error::operator=(app_error&& other) {
-        if (this != &other) {
-            *reinterpret_cast<app::AppError*>(&m_error) = std::move(*reinterpret_cast<app::AppError*>(&other.m_error));
-        }
+        //if (this != &other) {
+        //    *reinterpret_cast<app::AppError*>(&m_error) = std::move(*reinterpret_cast<app::AppError*>(&other.m_error));
+        //}
         return *this;
     }
 
     app_error::~app_error() {
-        reinterpret_cast<app::AppError*>(&m_error)->~AppError();
+        //reinterpret_cast<app::AppError*>(&m_error)->~AppError();
     }
 
     app_error::app_error(realm::app::AppError&& error) {
-        new (&m_error) app::AppError(std::move(error));
+       // new (&m_error) app::AppError(std::move(error));
     }
 
     std::string_view app_error::mesage() const
     {
-        return reinterpret_cast<const app::AppError*>(&m_error)->reason();
+        return "";
+        //return reinterpret_cast<const app::AppError *>(&m_error)->reason();
     }
 
     std::string_view app_error::link_to_server_logs() const
     {
-        return reinterpret_cast<const app::AppError*>(&m_error)->link_to_server_logs;
+        return "";
+
+        //return reinterpret_cast<const app::AppError*>(&m_error)->link_to_server_logs;
     }
 
     bool app_error::is_json_error() const
     {
-        return reinterpret_cast<const app::AppError*>(&m_error)->is_json_error();
+        return true;
+
+        //return reinterpret_cast<const app::AppError*>(&m_error)->is_json_error();
     }
 
     bool app_error::is_service_error() const
     {
-        return reinterpret_cast<const app::AppError*>(&m_error)->is_service_error();
+        return true;
+
+        // return reinterpret_cast<const app::AppError*>(&m_error)->is_service_error();
     }
 
     bool app_error::is_http_error() const
     {
-        return reinterpret_cast<const app::AppError*>(&m_error)->is_http_error();
+        return true;
+
+        //return reinterpret_cast<const app::AppError*>(&m_error)->is_http_error();
     }
 
     bool app_error::is_custom_error() const
     {
-        return reinterpret_cast<const app::AppError*>(&m_error)->is_custom_error();
+        return true;
+
+       // return reinterpret_cast<const app::AppError*>(&m_error)->is_custom_error();
     }
 
     bool app_error::is_client_error() const
     {
-        return reinterpret_cast<const app::AppError*>(&m_error)->is_client_error();
+        return true;
+
+        //return reinterpret_cast<const app::AppError*>(&m_error)->is_client_error();
+    }
+
+    user::user(std::shared_ptr<SyncUser> user) : m_user(std::move(user))
+    {
     }
 
     /**
@@ -331,25 +365,29 @@ namespace realm {
         }
         config.base_file_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
 #else
-        if (path)
+        if (path) {
             config.base_file_path = *path;
-        else
-            config.base_file_path = std::filesystem::current_path();
+        } else {
+            // TODO: fix for windows
+            //config.base_file_path = std::filesystem::current_path();
+        }
 #endif
         config.user_agent_binding_info = "RealmCpp/0.0.1";
         config.user_agent_application_info = app_id;
 
-        m_app = app::App::get_shared_app(app::App::Config{
-                                                 .app_id = app_id,
-                                                 .transport = std::make_shared<internal::DefaultTransport>(),
-                                                 .base_url = base_url ? base_url : util::Optional<std::string>(),
-                                                 .device_info = {
-                                                         .platform = "Realm Cpp",
-                                                         .platform_version = "?",
-                                                         .sdk_version = "0.0.1",
-                                                         .sdk = "Realm Cpp"
-                                                 }},
-                                         config);
+        auto app_config = app::App::Config();
+        app_config.app_id = app_id;
+        app_config.transport = std::make_shared<internal::DefaultTransport>();
+        app_config.base_url = base_url ? base_url : util::Optional<std::string>();
+        auto device_info = app::App::Config::DeviceInfo();
+
+        device_info.platform = "Realm Cpp",
+        device_info.platform_version = "?",
+        device_info.sdk_version = "0.0.1",
+        device_info.sdk = "Realm Cpp";
+        app_config.device_info = std::move(device_info);
+
+        m_app = app::App::get_shared_app(std::move(app_config), config);
     }
 
 

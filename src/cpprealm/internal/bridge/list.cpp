@@ -1,12 +1,8 @@
-#include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/list.hpp>
-#include <cpprealm/internal/bridge/binary.hpp>
-#include <cpprealm/internal/bridge/mixed.hpp>
+
+#include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
-#include <cpprealm/internal/bridge/realm.hpp>
-#include <cpprealm/internal/bridge/utils.hpp>
-#include <cpprealm/internal/bridge/uuid.hpp>
-#include <cpprealm/internal/bridge/object_id.hpp>
+
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/type_info.hpp>
 
@@ -61,11 +57,11 @@ namespace realm::internal::bridge {
         new (&m_list) List(v);
     }
 
-    list::list(const realm &realm,
-               const obj &obj,
-               const col_key& col_key) {
-        new (&m_list) List(realm, obj, col_key);
-    }
+    //list::list(const realm &realm,
+    //           const obj &obj,
+    //           const col_key& col_key) {
+        //new (&m_list) List(realm, obj, col_key);
+    //}
 
     list::operator List() const {
         return *reinterpret_cast<const List*>(&m_list);
@@ -84,9 +80,9 @@ namespace realm::internal::bridge {
         reinterpret_cast<List *>(&m_list)->remove_all();
     }
 
-    realm list::get_realm() const {
-        return reinterpret_cast<const List *>(&m_list)->get_realm();
-    }
+    //realm list::get_realm() const {
+    //    return reinterpret_cast<const List *>(&m_list)->get_realm();
+    //}
 
     void list::add(const std::string &v) {
         reinterpret_cast<List *>(&m_list)->add(StringData(v));

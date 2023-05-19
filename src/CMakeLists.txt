@@ -4,7 +4,7 @@ set(SOURCES
     cpprealm/analytics.cpp
     cpprealm/logger.cpp
     cpprealm/internal/bridge/obj.cpp
-    cpprealm/persisted_string.cpp
+    # cpprealm/persisted_string.cpp
     cpprealm/internal/bridge/col_key.cpp
     cpprealm/internal/bridge/object.cpp
     cpprealm/internal/bridge/property.cpp
@@ -16,7 +16,7 @@ set(SOURCES
     cpprealm/internal/bridge/obj_key.cpp
     cpprealm/internal/bridge/table.cpp
     cpprealm/internal/bridge/query.cpp
-    cpprealm/persisted_uuid.cpp
+    # cpprealm/persisted_uuid.cpp
     cpprealm/internal/bridge/realm.cpp
     cpprealm/internal/bridge/dictionary.cpp
     cpprealm/internal/bridge/results.cpp
@@ -25,28 +25,29 @@ set(SOURCES
     cpprealm/internal/bridge/thread_safe_reference.cpp
     cpprealm/internal/bridge/lnklst.cpp
     cpprealm/internal/bridge/list.cpp
-    cpprealm/persisted_binary.cpp
-    cpprealm/persisted_int.cpp
-    cpprealm/flex_sync.cpp
-    cpprealm/persisted_bool.cpp
+    # cpprealm/persisted_binary.cpp
+    # cpprealm/persisted_int.cpp
+    # cpprealm/flex_sync.cpp
+    # cpprealm/persisted_bool.cpp
     cpprealm/internal/bridge/sync_session.cpp
     cpprealm/internal/bridge/sync_error.cpp
     cpprealm/internal/bridge/sync_manager.cpp
     cpprealm/internal/bridge/async_open_task.cpp
-    cpprealm/persisted_double.cpp
+    # cpprealm/persisted_double.cpp
     cpprealm/internal/bridge/object_id.cpp
-    cpprealm/persisted_object_id.cpp
-    cpprealm/experimental/managed_string.cpp
+    # cpprealm/persisted_object_id.cpp
+    # cpprealm/experimental/managed_string.cpp
     cpprealm/experimental/observation.cpp
-    cpprealm/experimental/managed_timestamp.cpp
-    cpprealm/experimental/managed_numeric.cpp
-    cpprealm/experimental/managed_uuid.cpp
-    cpprealm/experimental/managed_objectid.cpp
+    # cpprealm/experimental/managed_timestamp.cpp
+    # cpprealm/experimental/managed_numeric.cpp
+    # cpprealm/experimental/managed_uuid.cpp
+    # cpprealm/experimental/managed_objectid.cpp
     cpprealm/experimental/results.cpp
-    cpprealm/experimental/managed_binary.cpp
-    cpprealm/experimental/managed_list.cpp
-    cpprealm/experimental/managed_dictionary.cpp
-    cpprealm/experimental/managed_mixed.cpp) # REALM_SOURCES
+    # cpprealm/experimental/managed_binary.cpp
+    # cpprealm/experimental/managed_list.cpp
+    # cpprealm/experimental/managed_dictionary.cpp
+    # cpprealm/experimental/managed_mixed.cpp
+) # REALM_SOURCES
 
 set(HEADERS
     cpprealm/sdk.hpp
@@ -57,25 +58,25 @@ set(HEADERS
     cpprealm/notifications.hpp
     cpprealm/object.hpp
     cpprealm/asymmetric_object.hpp
-    cpprealm/persisted.hpp
+    # cpprealm/persisted.hpp
     cpprealm/schema.hpp
     cpprealm/task.hpp
     cpprealm/thread_safe_reference.hpp
-    cpprealm/flex_sync.hpp
-    cpprealm/persisted_string.hpp
-    cpprealm/persisted_bool.hpp
-    cpprealm/persisted_int.hpp
-    cpprealm/persisted_double.hpp
-    cpprealm/persisted_optional.hpp
-    cpprealm/persisted_enum.hpp
-    cpprealm/persisted_timestamp.hpp
-    cpprealm/persisted_uuid.hpp
-    cpprealm/persisted_list.hpp
-    cpprealm/persisted_embedded.hpp
-    cpprealm/persisted_binary.hpp
-    cpprealm/persisted_mixed.hpp
-    cpprealm/persisted_map.hpp
-    cpprealm/persisted_custom.hpp
+    # cpprealm/flex_sync.hpp
+    # cpprealm/persisted_string.hpp
+    # cpprealm/persisted_bool.hpp
+    # cpprealm/persisted_int.hpp
+    # cpprealm/persisted_double.hpp
+    # cpprealm/persisted_optional.hpp
+    # cpprealm/persisted_enum.hpp
+    # cpprealm/persisted_timestamp.hpp
+    # cpprealm/persisted_uuid.hpp
+    # cpprealm/persisted_list.hpp
+    # cpprealm/persisted_embedded.hpp
+    # cpprealm/persisted_binary.hpp
+    # cpprealm/persisted_mixed.hpp
+    # cpprealm/persisted_map.hpp
+    # cpprealm/persisted_custom.hpp
     cpprealm/analytics.hpp
     cpprealm/scheduler.hpp
     cpprealm/internal/generic_network_transport.hpp
@@ -105,24 +106,25 @@ set(HEADERS
     cpprealm/internal/bridge/sync_manager.hpp
     cpprealm/internal/bridge/async_open_task.hpp
     cpprealm/internal/bridge/object_id.hpp
-    cpprealm/persisted_object_id.hpp
+    # cpprealm/persisted_object_id.hpp
     cpprealm/experimental/db.hpp
     cpprealm/experimental/link.hpp
     cpprealm/experimental/macros.hpp
-    cpprealm/experimental/managed_string.hpp
+    # cpprealm/experimental/managed_string.hpp
     cpprealm/experimental/observation.hpp
-    cpprealm/experimental/managed_numeric.hpp
-    cpprealm/experimental/managed_timestamp.hpp
-    cpprealm/experimental/managed_uuid.hpp
-    cpprealm/experimental/managed_objectid.hpp
+    # cpprealm/experimental/managed_numeric.hpp
+    # cpprealm/experimental/managed_timestamp.hpp
+    # cpprealm/experimental/managed_uuid.hpp
+    # cpprealm/experimental/managed_objectid.hpp
     cpprealm/experimental/results.hpp
-    cpprealm/experimental/managed_binary.hpp
-    cpprealm/experimental/managed_list.hpp
-    cpprealm/experimental/managed_dictionary.hpp
-    cpprealm/experimental/managed_mixed.hpp
+    # cpprealm/experimental/managed_binary.hpp
+    # cpprealm/experimental/managed_list.hpp
+    # cpprealm/experimental/managed_dictionary.hpp
+    # cpprealm/experimental/managed_mixed.hpp
     cpprealm/experimental/accessors.hpp 
     cpprealm/experimental/types.cpp 
-    cpprealm/experimental/types.hpp) # REALM_INSTALL_HEADERS
+    cpprealm/experimental/types.hpp
+    ) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm STATIC ${SOURCES} ${HEADERS})
 include(GNUInstallDirs)

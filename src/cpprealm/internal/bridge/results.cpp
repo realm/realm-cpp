@@ -81,7 +81,8 @@ namespace realm::internal::bridge {
 
     template <>
     obj get(results& res, size_t v) {
-        return reinterpret_cast<Results*>(&res.m_results)-> template get(v);
+        abort();
+        //return reinterpret_cast<Results*>(&res.m_results)-> template get(v);
     }
 
     notification_token results::add_notification_callback(std::shared_ptr<collection_change_callback> &&cb) {

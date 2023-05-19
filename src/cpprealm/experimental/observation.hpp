@@ -9,7 +9,6 @@
 #include <cpprealm/internal/bridge/thread_safe_reference.hpp>
 
 #include <realm/object-store/util/scheduler.hpp>
-#include <CoreFoundation/CFRunLoop.h>
 #include <iostream>
 
 namespace realm::experimental {

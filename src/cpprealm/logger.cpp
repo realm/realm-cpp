@@ -1,5 +1,6 @@
-#include "logger.hpp"
-#include "realm/util/logger.hpp"
+/*
+#include <cpprealm/logger.hpp>
+#include <realm/util/logger.hpp>
 
 namespace realm {
     static_assert((int)util::Logger::Level::off == (int)logger::level::off);
@@ -77,4 +78,4 @@ namespace realm {
     void set_default_level_threshold(logger::level l) {
         util::Logger::set_default_level_threshold(log_level_for_level(l));
     }
-}
+}*/

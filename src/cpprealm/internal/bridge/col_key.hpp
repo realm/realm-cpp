@@ -5,7 +5,7 @@
 #include <type_traits>
 
 namespace realm {
-    class ColKey;
+    struct ColKey;
 }
 namespace realm::internal::bridge {
     struct col_key {
@@ -28,8 +28,9 @@ namespace realm::internal::bridge {
         std::aligned_storage<8, 8>::type m_col_key[1];
 #elif __aarch64__
         std::aligned_storage<8, 8>::type m_col_key[1];
-#else
-        std::aligned_storage<8, 4>::type m_col_key[1];
+#elif _WIN64
+        std::aligned_storage<1, 1>::type m_col_key[1];
+
 #endif
     };
 }

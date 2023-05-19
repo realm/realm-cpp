@@ -1,6 +1,8 @@
+#include <cpprealm/app.hpp>
+
 #include <cpprealm/analytics.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
-#include <cpprealm/logger.hpp>
+//#include <cpprealm/logger.hpp>
 #include <cpprealm/scheduler.hpp>
 #include <cpprealm/internal/bridge/object_schema.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
@@ -14,14 +16,16 @@
 #include <cpprealm/internal/bridge/sync_session.hpp>
 #include <cpprealm/internal/bridge/sync_error.hpp>
 
+#include <realm/sync/config.hpp>
+
 #include <realm/object-store/schema.hpp>
 #include <realm/object-store/shared_realm.hpp>
 #include <realm/object-store/thread_safe_reference.hpp>
 #include <realm/object-store/dictionary.hpp>
 #include <realm/object-store/impl/realm_coordinator.hpp>
 #include <realm/object-store/sync/sync_user.hpp>
+
 #include <realm/object-store/util/scheduler.hpp>
-#include <realm/sync/config.hpp>
 
 #include <filesystem>
 
@@ -54,11 +58,11 @@ namespace realm::internal::bridge {
     #endif
 #endif
 
-    class null_logger : public logger {
-    public:
-        null_logger() = default;
-        void do_log(logger::level, const std::string&) override {}
-    };
+    //class null_logger : public logger {
+    //public:
+    //    null_logger() = default;
+    //    void do_log(logger::level, const std::string&) override {}
+    //};
 
     realm::realm(std::shared_ptr<Realm> v)
     : m_realm(std::move(v)){}
@@ -159,6 +163,7 @@ namespace realm::internal::bridge {
     realm::sync_config::operator std::shared_ptr<SyncConfig>() const {
         return m_config;
     }
+
     std::string realm::config::path() const {
         return reinterpret_cast<const RealmConfig*>(&m_config)->path;
     }
@@ -190,8 +195,8 @@ namespace realm::internal::bridge {
     realm::realm(const config &v) {
         static bool initialized;
         if (!initialized) {
-            set_default_level_threshold(logger::level::off);
-            set_default_logger(std::make_shared<null_logger>());
+           // set_default_level_threshold(logger::level::off);
+            //set_default_logger(std::make_shared<null_logger>());
             realm_analytics::send();
             initialized = true;
         }

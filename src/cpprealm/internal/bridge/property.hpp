@@ -5,7 +5,7 @@
 #include <string>
 
 namespace realm {
-    class Property;
+    struct Property;
 }
 
 namespace realm::internal::bridge {
@@ -41,9 +41,9 @@ namespace realm::internal::bridge {
 
         property();
         property(const property& other) ;
-        property& operator=(const property& other) ;
-        property(property&& other);
-        property& operator=(property&& other);
+        property& operator=(const property& other);
+        property(property&& other) noexcept;
+        property &operator=(property &&other) noexcept;
         ~property();
         property(const Property&); //NOLINT(google-explicit-constructor)
         property(const std::string& name,
@@ -73,6 +73,8 @@ namespace realm::internal::bridge {
 #elif defined(__GNUC__) || defined(__GNUG__)
         std::aligned_storage<152, 8>::type m_property[1];
 #endif
+#elif _WIN32
+        std::aligned_storage<1, 1>::type m_property[1];
 #endif
     };
 

@@ -16,8 +16,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#include <cpprealm/app.hpp>
+#include <cpprealm/internal/generic_network_transport.hpp>
 #include <curl/curl.h>
+#include <iostream>
 
 namespace realm::internal {
 

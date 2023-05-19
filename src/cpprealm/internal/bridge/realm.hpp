@@ -9,8 +9,8 @@
 
 namespace realm {
     class Realm;
-    class RealmConfig;
-    class SyncConfig;
+    struct RealmConfig;
+    struct SyncConfig;
     struct scheduler;
     struct SyncUser;
 }
@@ -95,6 +95,8 @@ namespace realm::internal::bridge {
     #elif defined(__GNUC__) || defined(__GNUG__)
         std::aligned_storage<328, 8>::type m_config[1];
     #endif
+#elif _WIN32
+            std::aligned_storage<1, 1>::type m_config[1];
 #endif
         };
         realm();

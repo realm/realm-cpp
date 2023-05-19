@@ -69,7 +69,7 @@ namespace realm {
         struct property {
             using Result = typename persisted_type_extractor<typename ptr_type_extractor<Ptr>::member_type>::Result;
             using Class = typename ptr_type_extractor<Ptr>::class_type;
-            static constexpr auto Class::*ptr = Ptr;
+           // static constexpr auto Class::*ptr = Ptr;
             static constexpr bool is_primary_key = IsPrimaryKey;
             internal::bridge::property::type type;
             const char* name = "";

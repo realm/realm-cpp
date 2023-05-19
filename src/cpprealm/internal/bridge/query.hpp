@@ -129,6 +129,8 @@ namespace realm::internal::bridge {
 #elif defined(__GNUC__) || defined(__GNUG__)
         std::aligned_storage<136, 8>::type m_query[1];
 #endif
+#elif _WIN32
+        std::aligned_storage<1, 1>::type m_query[1];
 #endif
 
     };

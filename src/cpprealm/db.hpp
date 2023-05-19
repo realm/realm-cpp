@@ -27,7 +27,7 @@
 #include <cpprealm/internal/bridge/async_open_task.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
 #include <cpprealm/internal/bridge/sync_session.hpp>
-#include <cpprealm/logger.hpp>
+//#include <cpprealm/logger.hpp>
 #include <cpprealm/results.hpp>
 #include <cpprealm/scheduler.hpp>
 #include <cpprealm/task.hpp>
@@ -116,8 +116,7 @@ struct db {
     template <typename T>
     results<T, void> objects()
     {
-        return results<T, void>(internal::bridge::results(m_realm,
-                                                    m_realm.read_group().get_table(T::schema.name)));
+        return results<T, void>(internal::bridge::results(m_realm, m_realm.read_group().get_table(T::schema.name)));
     }
 
     template <typename T>

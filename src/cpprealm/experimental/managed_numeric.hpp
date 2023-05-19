@@ -2,6 +2,7 @@
 #define REALM_MANAGED_NUMERIC_HPP
 
 #include <cpprealm/experimental/macros.hpp>
+#include <stdexcept>
 
 namespace realm::experimental {
 

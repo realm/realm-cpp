@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <string>
 #include <memory>
+#include <optional>
 
 namespace realm {
     class List;
@@ -38,7 +39,7 @@ namespace realm::internal::bridge {
         ~list();
         list(const List&); //NOLINT(google-explicit-constructor)
         operator List() const; //NOLINT(google-explicit-constructor)
-        list(const realm& realm, const obj& obj, const col_key&);
+        //list(const realm& realm, const obj& obj, const col_key&);
 
         [[nodiscard]] size_t size() const;
         void remove(size_t idx);
@@ -62,7 +63,7 @@ namespace realm::internal::bridge {
         }
         obj add_embedded();
 
-        [[nodiscard]] realm get_realm() const;
+       // [[nodiscard]] realm get_realm() const;
 
         void set(size_t pos, const int64_t &);
         void set(size_t pos, const double &);
@@ -104,6 +105,8 @@ namespace realm::internal::bridge {
         std::aligned_storage<40, 4>::type m_list[1];
 #elif __aarch64__
         std::aligned_storage<80, 8>::type m_list[1];
+#elif _WIN32
+        std::aligned_storage<1, 1>::type m_list[1];
 #endif
     };
 
