@@ -2,8 +2,9 @@
 #define CPP_REALM_BRIDGE_SYNC_MANAGER_HPP
 
 #include <memory>
-#include <cpprealm/internal/bridge/realm.hpp>
+#include <string>
 #include <cpprealm/logger.hpp>
+#include <cpprealm/internal/bridge/realm.hpp>
 
 namespace realm {
     class SyncManager;

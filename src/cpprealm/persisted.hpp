@@ -268,11 +268,7 @@ protected:
 
         persisted_primitive_base& operator=(T&& o) noexcept {
             if (this->is_managed()) {
-                if constexpr (realm::internal::type_info::MixedPersistableConcept<T>::value) {
-                    abort();
-                } else {
-                    this->m_object->get_obj().set(managed, o);
-                }
+                this->m_object->get_obj().set(managed, experimental::serialize(o, this->m_object->get_realm()));
             } else {
                 new (&unmanaged) T(std::move(o));
             }
@@ -391,17 +387,13 @@ inline rbool operator ||(const rbool& lhs, const rbool& rhs) {
 template <typename T>
 inline std::ostream& operator<< (std::ostream& stream, const persisted_primitive_base<T>& value)
 {
-    return stream << *value;
+    return stream << value;
 }
 
 template <typename T>
 inline typename std::enable_if<std::is_base_of<realm::object_base<T>, T>::value, std::ostream>::type&
 operator<< (std::ostream& stream, const T& object)
 {
-    if (object.m_object) {
-        return stream << object.m_object->get_obj();
-    }
-
     std::apply([&stream, &object](auto&&... props) {
         stream << std::string("{\n");
         ((stream << std::string("\t") << props.name << ": " << *(object.*props.ptr) << "\n"), ...);

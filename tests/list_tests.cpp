@@ -65,14 +65,18 @@ TEST_CASE("list", "[list]") {
        obj.list_int_col.push_back(42);
        CHECK(obj.list_int_col[0] == 42);
 
-       obj.list_obj_col.push_back(AllTypesObjectLink{.str_col="Fido"});
+       AllTypesObjectLink o1;
+       o1.str_col = "Fido";
+       obj.list_obj_col.push_back(std::move(o1));
        CHECK(obj.list_obj_col[0].str_col == "Fido");
        CHECK(obj.list_int_col.size() == 1);
        for (auto &i: obj.list_int_col) {
            CHECK(i == 42);
        }
 
-       obj.list_embedded_obj_col.push_back(AllTypesObjectEmbedded{.str_col="Fido"});
+       AllTypesObjectEmbedded o2;
+       o2.str_col = "Fido";
+       obj.list_embedded_obj_col.push_back(std::move(o2));
        CHECK(obj.list_embedded_obj_col[0].str_col == "Fido");
        CHECK(obj.list_embedded_obj_col.size() == 1);
 
@@ -86,8 +90,13 @@ TEST_CASE("list", "[list]") {
 
        realm.write([&obj]() {
            obj.list_int_col.push_back(84);
-           obj.list_obj_col.push_back(AllTypesObjectLink{._id=1, .str_col="Rex"});
-           obj.list_embedded_obj_col.push_back(AllTypesObjectEmbedded{.str_col="Rex"});
+           AllTypesObjectLink o3;
+           o3._id = 1;
+           o3.str_col = "Rex";
+           obj.list_obj_col.push_back(std::move(o3));
+           AllTypesObjectEmbedded e;
+           e.str_col = "Rex";
+           obj.list_embedded_obj_col.push_back(std::move(e));
        });
        size_t idx = 0;
        for (auto &i: obj.list_int_col) {
@@ -146,7 +155,7 @@ TEST_CASE("list", "[list]") {
            obj.list_int_col.pop_back();
        });
        CHECK(obj.list_int_col.size() == 2);
-       CHECK(obj.list_int_col.find(1) == realm::npos);
+       CHECK(obj.list_int_col.find(1) == cpprealm::npos);
 
        realm.write([&realm, &obj] {
            obj.list_int_col.erase(0);
@@ -196,7 +205,7 @@ TEST_CASE("list", "[list]") {
        obj.list_obj_col.push_back(o3);
        obj.list_obj_col.push_back(o4);
 
-       CHECK(obj.list_obj_col.find(o4) == realm::npos);
+       CHECK(obj.list_obj_col.find(o4) == cpprealm::npos);
        CHECK(obj.list_obj_col[3].str_col == o4.str_col);
 
        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
@@ -224,7 +233,7 @@ TEST_CASE("list", "[list]") {
            obj.list_obj_col.pop_back();
        });
        CHECK(obj.list_obj_col.size() == 4);
-       CHECK(obj.list_obj_col.find(o5) == realm::npos);
+       CHECK(obj.list_obj_col.find(o5) == cpprealm::npos);
 
        realm.write([&realm, &obj] {
            obj.list_obj_col.erase(0);
@@ -269,7 +278,7 @@ TEST_CASE("list", "[list]") {
        obj.list_embedded_obj_col.push_back(o3);
        obj.list_embedded_obj_col.push_back(o4);
 
-       CHECK(obj.list_embedded_obj_col.find(o4) == realm::npos);
+       CHECK(obj.list_embedded_obj_col.find(o4) == cpprealm::npos);
        CHECK(obj.list_embedded_obj_col[3].str_col == o4.str_col);
 
        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
@@ -297,7 +306,7 @@ TEST_CASE("list", "[list]") {
            obj.list_embedded_obj_col.pop_back();
        });
        CHECK(obj.list_embedded_obj_col.size() == 4);
-       CHECK(obj.list_embedded_obj_col.find(o5) == realm::npos);
+       CHECK(obj.list_embedded_obj_col.find(o5) == cpprealm::npos);
 
        realm.write([&obj] {
            obj.list_embedded_obj_col.erase(0);
@@ -422,6 +431,8 @@ TEST_CASE("list", "[list]") {
        test_list(int_list_obj.list_int_col, std::vector<int>({1, 2}), realm, int_list_obj);
        auto bool_list_obj = AllTypesObject();
        test_list(bool_list_obj.list_bool_col, std::vector<uint8_t>({true, false}), realm, bool_list_obj);
+       auto double_list_obj = AllTypesObject();
+       test_list(double_list_obj.list_double_col, std::vector<double>({1.23, 2.45}), realm, double_list_obj);
        auto str_list_obj = AllTypesObject();
        test_list(str_list_obj.list_str_col, std::vector<std::string>({"foo", "bar"}), realm, str_list_obj);
        auto uuid_list_obj = AllTypesObject();

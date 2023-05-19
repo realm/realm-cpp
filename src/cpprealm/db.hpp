@@ -116,8 +116,7 @@ struct db {
     template <typename T>
     results<T, void> objects()
     {
-        return results<T, void>(internal::bridge::results(m_realm,
-                                                    m_realm.read_group().get_table(T::schema.name)));
+        return results<T, void>(internal::bridge::results(m_realm, m_realm.read_group().get_table(T::schema.name)));
     }
 
     template <typename T>

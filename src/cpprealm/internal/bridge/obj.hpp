@@ -2,6 +2,7 @@
 #define REALM_INTERNAL_OBJ_HPP
 
 #include <any>
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -11,8 +12,6 @@
 #include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
 #include <cpprealm/internal/bridge/object_id.hpp>
-#include <cpprealm/scheduler.hpp>
-//#include <cpprealm/experimental/types.hpp>
 
 namespace realm {
     class Group;
@@ -23,11 +22,11 @@ namespace realm {
     class Obj;
     class TableRef;
     class Query;
-    class ColKey;
+    struct ColKey;
     class LnkLst;
     template <typename T>
     struct object_base;
-    class NotificationToken;
+    struct NotificationToken;
 
     namespace internal::bridge {
         struct obj_key;
@@ -152,12 +151,6 @@ namespace realm::internal::bridge {
             }
         }
 
-//        template <typename T>
-//        void set(const col_key& col_key, const T& value) {
-//            ::realm::experimental::serialize(value);
-//            abort();
-////            set(col_key, persisted<T, void>::serialize(value));
-//        }
         void set_list_values(const col_key& col_key, const std::vector<obj_key>& values);
         void set_list_values(const col_key& col_key, const std::vector<std::string>& values);
         void set_list_values(const col_key& col_key, const std::vector<bool>& values);
@@ -204,6 +197,8 @@ namespace realm::internal::bridge {
 #elif __arm__
         std::aligned_storage<56, 8>::type m_obj[1];
 #elif __aarch64__
+        std::aligned_storage<64, 8>::type m_obj[1];
+#elif _WIN32
         std::aligned_storage<64, 8>::type m_obj[1];
 #endif
     };

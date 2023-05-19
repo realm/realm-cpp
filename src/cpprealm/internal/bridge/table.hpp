@@ -50,6 +50,8 @@ namespace realm {
         std::aligned_storage<16, 8>::type m_table[1];
 #elif __aarch64__
         std::aligned_storage<16, 8>::type m_table[1];
+#elif _WIN32
+        std::aligned_storage<16, 8>::type m_table[1];
 #endif
         };
 

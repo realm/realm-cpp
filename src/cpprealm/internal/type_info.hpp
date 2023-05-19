@@ -9,11 +9,10 @@
 #include <cpprealm/internal/bridge/obj_key.hpp>
 #include <cpprealm/internal/bridge/list.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
-#include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/object_id.hpp>
-#include <realm/obj.hpp>
 
 #include <vector>
+#include <map>
 
 namespace realm::experimental {
     template <typename>

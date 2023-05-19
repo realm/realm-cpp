@@ -21,7 +21,8 @@ TEST_CASE("date", "[date]") {
     SECTION("unmanaged_managed_ts_time_since_epoch", "[date]") {
         auto realm = open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
         auto ts = std::chrono::time_point<std::chrono::system_clock>();
-        auto object = AllTypesObject({.date_col=ts});
+        AllTypesObject object;
+        object.date_col = ts;
         CHECK(object.date_col.time_since_epoch() == ts.time_since_epoch());
         realm.write([&] {
             realm.add(object);

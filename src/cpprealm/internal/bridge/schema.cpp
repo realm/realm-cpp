@@ -18,6 +18,9 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<24, sizeof(Schema)>{});
     static_assert(SizeCheck<8, alignof(Schema)>{});
+#elif _WIN32
+    static_assert(SizeCheck<32, sizeof(Schema)>{});
+    static_assert(SizeCheck<8, alignof(Schema)>{});
 #endif
 
     schema::schema() {

@@ -1,6 +1,6 @@
-#include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/property.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
+#include <cpprealm/internal/bridge/col_key.hpp>
 
 #include <realm/object-store/property.hpp>
 
@@ -25,6 +25,9 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<152, sizeof(Property)>{});
 #endif
     static_assert(SizeCheck<8, alignof(Property)>{});
+#elif _WIN32
+    static_assert(SizeCheck<184, sizeof(Property)>{});
+    static_assert(SizeCheck<8, alignof(Property)>{});
 #endif
 
 
@@ -43,11 +46,11 @@ namespace realm::internal::bridge {
         return *this;
     }
 
-    property::property(property&& other) {
+    property::property(property&& other) noexcept {
         new (&m_property) Property(std::move(*reinterpret_cast<Property*>(&other.m_property)));
     }
 
-    property& property::operator=(property&& other) {
+    property& property::operator=(property&& other) noexcept {
         if (this != &other) {
             *reinterpret_cast<Property*>(&m_property) = std::move(*reinterpret_cast<Property*>(&other.m_property));
         }

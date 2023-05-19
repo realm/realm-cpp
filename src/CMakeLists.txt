@@ -46,7 +46,8 @@ set(SOURCES
     cpprealm/experimental/managed_binary.cpp
     cpprealm/experimental/managed_list.cpp
     cpprealm/experimental/managed_dictionary.cpp
-    cpprealm/experimental/managed_mixed.cpp) # REALM_SOURCES
+    cpprealm/experimental/managed_mixed.cpp
+) # REALM_SOURCES
 
 set(HEADERS
     cpprealm/sdk.hpp
@@ -122,7 +123,8 @@ set(HEADERS
     cpprealm/experimental/managed_mixed.hpp
     cpprealm/experimental/accessors.hpp 
     cpprealm/experimental/types.cpp 
-    cpprealm/experimental/types.hpp) # REALM_INSTALL_HEADERS
+    cpprealm/experimental/types.hpp
+    ) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm STATIC ${SOURCES} ${HEADERS})
 include(GNUInstallDirs)

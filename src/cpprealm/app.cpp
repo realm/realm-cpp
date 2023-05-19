@@ -1,13 +1,14 @@
 #include <cpprealm/app.hpp>
-#include <cpprealm/internal/bridge/utils.hpp>
+#include <cpprealm/internal/generic_network_transport.hpp>
 
 #include <realm/object-store/sync/app.hpp>
-#include <realm/object-store/sync/app_credentials.hpp>
 #include <realm/object-store/sync/sync_user.hpp>
+#include <realm/object-store/sync/sync_manager.hpp>
 
 #include <utility>
 
 namespace realm {
+
 #ifdef __i386__
     static_assert(internal::bridge::SizeCheck<8, sizeof(realm::app::AppCredentials)>{});
     static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppCredentials)>{});
@@ -36,6 +37,11 @@ namespace realm {
 #elif defined(__GNUC__) || defined(__GNUG__)
     static_assert(internal::bridge::SizeCheck<56, sizeof(realm::app::AppError)>{});
 #endif
+    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
+#elif _WIN32
+    static_assert(internal::bridge::SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
+    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppCredentials)>{});
+    static_assert(internal::bridge::SizeCheck<80, sizeof(realm::app::AppError)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
 #endif
 
@@ -75,7 +81,7 @@ namespace realm {
 
     std::string_view app_error::mesage() const
     {
-        return reinterpret_cast<const app::AppError*>(&m_error)->reason();
+        return reinterpret_cast<const app::AppError *>(&m_error)->reason();
     }
 
     std::string_view app_error::link_to_server_logs() const
@@ -106,6 +112,10 @@ namespace realm {
     bool app_error::is_client_error() const
     {
         return reinterpret_cast<const app::AppError*>(&m_error)->is_client_error();
+    }
+
+    user::user(std::shared_ptr<SyncUser> user) : m_user(std::move(user))
+    {
     }
 
     /**
@@ -331,25 +341,28 @@ namespace realm {
         }
         config.base_file_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
 #else
-        if (path)
+        if (path) {
             config.base_file_path = *path;
-        else
-            config.base_file_path = std::filesystem::current_path();
+        } else {
+            config.base_file_path = std::filesystem::current_path().make_preferred().generic_string();
+        }
 #endif
         config.user_agent_binding_info = "RealmCpp/0.0.1";
         config.user_agent_application_info = app_id;
 
-        m_app = app::App::get_shared_app(app::App::Config{
-                                                 .app_id = app_id,
-                                                 .transport = std::make_shared<internal::DefaultTransport>(),
-                                                 .base_url = base_url ? base_url : util::Optional<std::string>(),
-                                                 .device_info = {
-                                                         .platform = "Realm Cpp",
-                                                         .platform_version = "?",
-                                                         .sdk_version = "0.0.1",
-                                                         .sdk = "Realm Cpp"
-                                                 }},
-                                         config);
+        auto app_config = app::App::Config();
+        app_config.app_id = app_id;
+        app_config.transport = std::make_shared<internal::DefaultTransport>();
+        app_config.base_url = base_url ? base_url : util::Optional<std::string>();
+        auto device_info = app::App::Config::DeviceInfo();
+
+        device_info.platform = "Realm Cpp",
+        device_info.platform_version = "?",
+        device_info.sdk_version = "0.0.1",
+        device_info.sdk = "Realm Cpp";
+        app_config.device_info = std::move(device_info);
+
+        m_app = app::App::get_shared_app(std::move(app_config), config);
     }
 
 

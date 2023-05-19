@@ -16,6 +16,9 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<12, sizeof(::realm::ObjectId)>{});
     static_assert(SizeCheck<1, alignof(::realm::ObjectId)>{});
+#elif _WIN32
+    static_assert(SizeCheck<12, sizeof(::realm::ObjectId)>{});
+    static_assert(SizeCheck<1, alignof(::realm::ObjectId)>{});
 #endif
 
     object_id::object_id() {

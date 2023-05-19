@@ -9,8 +9,8 @@
 #include <cpprealm/internal/bridge/thread_safe_reference.hpp>
 
 #include <realm/object-store/util/scheduler.hpp>
-#include <CoreFoundation/CFRunLoop.h>
 #include <iostream>
+#include <variant>
 
 namespace realm::experimental {
     template<typename T>
@@ -146,16 +146,20 @@ namespace realm::experimental {
             forward_change(nullptr, {}, {}, {}, err);
         }
 
-        void forward_change(const T *ptr, \
-                std::vector<std::string> property_names, \
-                std::vector<typename decltype(T::schema)::variant_t> old_values, \
-                std::vector<typename decltype(T::schema)::variant_t> new_values, \
+        void forward_change(const T *ptr,
+                std::vector<std::string> property_names,
+                std::vector<typename decltype(T::schema)::variant_t> old_values,
+                std::vector<typename decltype(T::schema)::variant_t> new_values,
                 const std::exception_ptr &error) {
             if (!ptr) {
                 if (error) {
-                    block(std::forward<realm::experimental::object_change<T>>({.error = error}));
+                    auto oc = object_change<T>();
+                    oc.error = error;
+                    block(std::forward<realm::experimental::object_change<T>>(std::move(oc)));
                 } else {
-                    block(std::forward<realm::experimental::object_change<T>>({.is_deleted = true}));
+                    auto oc = object_change<T>();
+                    oc.is_deleted = true;
+                    block(std::forward<realm::experimental::object_change<T>>(std::move(oc)));
                 }
             } else {
                 std::vector<PropertyChange<T>> property_changes;
@@ -170,7 +174,10 @@ namespace realm::experimental {
                     }
                     property_changes.push_back(std::move(property));
                 }
-                block(std::forward<realm::experimental::object_change<T>>({.object = ptr, .property_changes = property_changes}));
+                auto oc = object_change<T>();
+                oc.object = ptr;
+                oc.property_changes = property_changes;
+                block(std::forward<realm::experimental::object_change<T>>(std::move(oc)));
             }
         }
     };

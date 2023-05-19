@@ -25,13 +25,15 @@
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/type_info.hpp>
-#include "cpprealm/experimental/link.hpp"
+#include <cpprealm/experimental/link.hpp>
 
 #include <type_traits>
 
 namespace realm {
     template <typename, typename>
     struct persisted;
+    template<typename>
+    struct asymmetric_object;
     namespace {
         template <typename T>
         struct ptr_type_extractor_base;
@@ -69,7 +71,7 @@ namespace realm {
         struct property {
             using Result = typename persisted_type_extractor<typename ptr_type_extractor<Ptr>::member_type>::Result;
             using Class = typename ptr_type_extractor<Ptr>::class_type;
-            static constexpr auto Class::*ptr = Ptr;
+            static constexpr auto ptr = Ptr;
             static constexpr bool is_primary_key = IsPrimaryKey;
             internal::bridge::property::type type;
             const char* name = "";
@@ -197,12 +199,16 @@ namespace realm {
             using PrimaryKeyProperty = decltype(primary_key());
             static constexpr bool HasPrimaryKeyProperty = !std::is_void_v<PrimaryKeyProperty>;
             static constexpr bool IsEmbedded = std::is_base_of_v<embedded_object<Class>, Class>;
+            static constexpr bool IsAsymmetric = std::is_base_of_v<asymmetric_object<Class>, Class>;
 
             [[nodiscard]] internal::bridge::object_schema to_core_schema() const {
                 internal::bridge::object_schema schema;
                 schema.set_name(name);
-                std::apply([&schema](auto&&... p) {
-                    (schema.add_property(p), ...);
+                auto add_property = [&schema](const internal::bridge::property &p) {
+                    schema.add_property(p);
+                };
+                std::apply([&](const auto&... p) {
+                    (add_property(p), ...);
                 }, ps);
 
                 if constexpr (HasPrimaryKeyProperty) {
@@ -210,6 +216,9 @@ namespace realm {
                 }
                 if constexpr (IsEmbedded) {
                     schema.set_object_type(internal::bridge::object_schema::object_type::Embedded);
+                }
+                if constexpr (IsAsymmetric) {
+                    schema.set_object_type(internal::bridge::object_schema::object_type::TopLevelAsymmetric);
                 }
                 return schema;
             }

@@ -30,6 +30,8 @@ namespace realm::internal::bridge {
         std::aligned_storage<12, 4>::type m_schema[1];
 #elif __aarch64__
         std::aligned_storage<24, 8>::type m_schema[1];
+#elif _WIN32
+        std::aligned_storage<32, 8>::type m_schema[1];
 #endif
     };
 }

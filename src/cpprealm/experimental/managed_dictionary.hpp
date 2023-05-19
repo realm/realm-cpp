@@ -22,7 +22,7 @@ namespace realm::experimental {
                 if (o) {
                     // TODO: remove repeated code
                     if (o->is_managed) {
-                        m_backing_map.insert(m_key, o->managed.m_obj.get_key());
+                        m_backing_map.insert(m_key, o->m_managed.m_obj.get_key());
                     } else {
                         auto m_obj = m_backing_map.create_and_insert_linked_object(m_key);
                         std::apply([&m_obj, &o](auto && ...p) {
@@ -32,7 +32,7 @@ namespace realm::experimental {
                         }, managed<typename mapped_type::value_type::value_type>::schema.ps);
                     }
                 } else {
-                    m_backing_map.insert(m_key, internal::bridge::mixed(std::nullopt));
+                    m_backing_map.insert(m_key, internal::bridge::mixed());
                 }
             } else {
                 if constexpr (internal::type_info::is_primitive<mapped_type>::value) {
@@ -286,7 +286,7 @@ namespace realm::experimental {
                 },
                 managed<V, void>::managed_pointers_names);
             },
-            managed<V, void>::managed_pointers);
+            managed<V, void>::managed_pointers());
             return m;
         }
     };

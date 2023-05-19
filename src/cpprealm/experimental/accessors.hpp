@@ -3,6 +3,7 @@
 
 #include <cpprealm/experimental/types.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
+#include <cpprealm/internal/bridge/table.hpp>
 
 namespace realm::experimental {
     template<typename>
@@ -229,7 +230,7 @@ namespace realm::experimental {
             std::vector<internal::bridge::obj_key> keys;
             for (const link<T>& lnk : value) {
                 if (lnk.is_managed) {
-                    keys.push_back(lnk.managed.m_obj.get_key());
+                    keys.push_back(lnk.m_managed.m_obj.get_key());
                 } else {
                     auto table = obj.get_target_table(key);
                     auto m_obj = table.create_object();
@@ -264,7 +265,7 @@ namespace realm::experimental {
                             if (v) {
                                 d.insert(k, static_cast<typename std::underlying_type<typename T::value_type>::type>(*v));
                             } else {
-                                d.insert(k, internal::bridge::mixed(std::nullopt));
+                                d.insert(k, internal::bridge::mixed());
                             }
                         } else {
                             using U = typename internal::type_info::type_info<T, void>::internal_type;
@@ -287,8 +288,7 @@ namespace realm::experimental {
             for (auto& [k, v] : value) {
                 if (v) {
                     if (v->is_managed) {
-                        abort();
-                        //d.insert(k, v.managed.m_obj);
+                        d.insert(k, v->m_managed.m_obj.get_key());
                     } else {
                         auto m_obj = d.create_and_insert_linked_object(k);
                         std::apply([&m_obj, o = *v](auto && ...p) {
@@ -296,6 +296,7 @@ namespace realm::experimental {
                                      m_obj, m_obj.get_table().get_column_key(p.name),
                                      o.unmanaged.*(std::decay_t<decltype(p)>::ptr)), ...);
                         }, managed<T, void>::schema.ps);
+                        d.insert(k, m_obj.get_key());
                     }
                 }
 
@@ -309,7 +310,7 @@ namespace realm::experimental {
                                internal::bridge::col_key&& key,
                                const link<T>& value) {
             if (value.is_managed) {
-                obj.set(key, value.managed.m_obj.get_key());
+                obj.set(key, value.m_managed.m_obj.get_key());
             } else {
                 auto table = obj.get_target_table(key);
                 auto m_obj = table.create_object();

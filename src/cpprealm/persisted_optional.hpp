@@ -216,7 +216,7 @@ namespace realm {
             if (b) {
                 query.equal(a.managed, internal::type_info::serialize(*b));
             } else {
-                query.equal(a.managed, realm::null{});
+                query.equal(a.managed, std::nullopt);
             }
             return query;
         }

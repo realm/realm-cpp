@@ -1,13 +1,12 @@
-#ifndef REALM_LOGGER_HPP
-#define REALM_LOGGER_HPP
+#ifndef CPP_REALM_LOGGER_HPP
+#define CPP_REALM_LOGGER_HPP
 
 #include <memory>
 #include <string>
 
 namespace realm {
     struct logger {
-        /// Specifies criticality when passed to log(). Functions as a criticality
-        /// threshold when returned from LevelThreshold::get().
+        /// Specifies criticality when passed to log().
         ///
         ///     error   Be silent unless when there is an error.
         ///     warn    Be silent unless when there is an error or a warning.
@@ -30,8 +29,9 @@ namespace realm {
                            off = 8 };
         virtual void do_log(level, const std::string &) = 0;
     };
-    void set_default_logger(std::shared_ptr<struct logger>&&);
+
+    void set_default_logger(std::shared_ptr<struct logger> &&);
     void set_default_level_threshold(logger::level);
 }
 
-#endif//REALM_LOGGER_HPP
+#endif//CPP_REALM_LOGGER_HPP

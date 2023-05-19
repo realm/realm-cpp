@@ -27,6 +27,9 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<912, sizeof(Results)>{});
 #endif
     static_assert(SizeCheck<8, alignof(Results)>{});
+#elif _WIN32
+    static_assert(SizeCheck<1008, sizeof(Results)>{});
+    static_assert(SizeCheck<8, alignof(Results)>{});
 #endif
 
     results::results() {
@@ -81,7 +84,7 @@ namespace realm::internal::bridge {
 
     template <>
     obj get(results& res, size_t v) {
-        return reinterpret_cast<Results*>(&res.m_results)-> template get(v);
+        return reinterpret_cast<Results*>(&res.m_results)->get(v);
     }
 
     notification_token results::add_notification_callback(std::shared_ptr<collection_change_callback> &&cb) {

@@ -302,7 +302,7 @@ namespace realm {
                             (*o).manage(internal::bridge::object(m_object.get_realm(), m_backing_map.get().insert_embedded(m_key)));
                         }
                     } else {
-                        m_backing_map.get().insert(m_key, internal::bridge::mixed(std::nullopt));
+                        m_backing_map.get().insert(m_key, internal::bridge::mixed());
                     }
                 } else {
                     m_backing_map.get().insert(m_key,

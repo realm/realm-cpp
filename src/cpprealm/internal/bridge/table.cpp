@@ -28,6 +28,11 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(TableRef)>{});
     static_assert(SizeCheck<16, sizeof(ConstTableRef)>{});
     static_assert(SizeCheck<8, alignof(ConstTableRef)>{});
+#elif _WIN32
+    static_assert(SizeCheck<16, sizeof(TableRef)>{});
+    static_assert(SizeCheck<8, alignof(TableRef)>{});
+    static_assert(SizeCheck<16, sizeof(ConstTableRef)>{});
+    static_assert(SizeCheck<8, alignof(ConstTableRef)>{});
 #endif
     table::table() {
         new (&m_table) TableRef();
@@ -110,5 +115,8 @@ namespace realm::internal::bridge {
 
     bool operator ==(table const& lhs, table const& rhs) {
         return static_cast<TableRef>(lhs) == static_cast<TableRef>(rhs);
+    }
+    bool operator!=(table const &lhs, table const &rhs) {
+        return static_cast<TableRef>(lhs) != static_cast<TableRef>(rhs);
     }
 }

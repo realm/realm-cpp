@@ -16,6 +16,9 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<16, sizeof(::realm::UUID)>{});
     static_assert(SizeCheck<1, alignof(::realm::UUID)>{});
+#elif _WIN32
+    static_assert(SizeCheck<16, sizeof(::realm::UUID)>{});
+    static_assert(SizeCheck<1, alignof(::realm::UUID)>{});
 #endif
     uuid::uuid() {
         new (&m_uuid) UUID();

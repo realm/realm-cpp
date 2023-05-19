@@ -3,9 +3,12 @@
 
 #include <cstdint>
 #include <optional>
-#include <cpprealm/internal/bridge/table.hpp>
+#include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/internal/bridge/schema.hpp>
 #include <cpprealm/internal/type_info.hpp>
+
+#include <array>
 
 namespace realm {
     struct uuid {
@@ -14,7 +17,7 @@ namespace realm {
         [[nodiscard]] std::string to_string() const;
         [[nodiscard]] std::string to_base64() const;
         [[nodiscard]] std::array<uint8_t, 16> to_bytes() const;
-        uuid(const internal::bridge::uuid&); //NOLINT(google-explicit-constructor)
+        uuid(const internal::bridge::uuid &);
         internal::bridge::uuid m_uuid;
         friend struct internal::bridge::uuid;
         template <typename mapped_type>
@@ -26,9 +29,8 @@ namespace realm {
         object_id() = default;
         [[nodiscard]] static object_id generate();
         [[nodiscard]] std::string to_string() const;
-        object_id(const internal::bridge::object_id&); //NOLINT(google-explicit-constructor)
+        object_id(const internal::bridge::object_id &);
         internal::bridge::object_id m_object_id;
-        friend object_id generate();
         friend struct internal::bridge::object_id;
         template <typename mapped_type>
         friend struct box_base;
@@ -193,9 +195,21 @@ namespace realm::experimental {
 
     template <typename T>
     static typename std::enable_if_t<internal::type_info::MixedPersistableConcept<T>::value, internal::bridge::mixed> serialize(const T& v, const std::optional<internal::bridge::realm>& realm = std::nullopt) {
-        return std::visit([](auto&& arg) {
-            using M = typename internal::type_info::type_info<std::decay_t<decltype(arg)>>::internal_type;
-            return internal::bridge::mixed(M(arg));
+        return std::visit([&](auto&& arg) {
+            using StoredType = std::decay_t<decltype(arg)>;
+            using M = typename internal::type_info::type_info<StoredType>::internal_type;
+            if constexpr (std::is_base_of_v<object<StoredType>, StoredType>) {
+                StoredType o = std::get<StoredType>(v);
+                if (!arg.m_object) {
+                    auto actual_schema = realm->schema().find(StoredType::schema.name);
+                    auto group = const_cast<internal::bridge::realm&>(*realm).read_group();
+                    auto table = group.get_table(actual_schema.table_key());
+                    o.manage(table, *realm);
+                }
+                return internal::bridge::mixed(o.m_object->get_obj().get_key());
+            } else {
+                return internal::bridge::mixed(M(arg));
+            }
         }, v);
     }
     template <typename T>

@@ -16,8 +16,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef realm_asymmetric_object_hpp
-#define realm_asymmetric_object_hpp
+#ifndef cpprealm_asymmetric_object_hpp
+#define cpprealm_asymmetric_object_hpp
 
 #include <cpprealm/object.hpp>
 

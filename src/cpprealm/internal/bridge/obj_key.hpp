@@ -4,8 +4,8 @@
 #include <type_traits>
 
 namespace realm {
-    class ObjKey;
-    class ObjLink;
+    struct ObjKey;
+    struct ObjLink;
 }
 
 namespace realm::internal::bridge {
@@ -27,6 +27,8 @@ namespace realm::internal::bridge {
 #elif __arm__
         std::aligned_storage<8, 8>::type m_obj_key[1];
 #elif __aarch64__
+        std::aligned_storage<8, 8>::type m_obj_key[1];
+#elif _WIN32
         std::aligned_storage<8, 8>::type m_obj_key[1];
 #endif
     };
@@ -55,6 +57,8 @@ namespace realm::internal::bridge {
 #elif __arm__
         std::aligned_storage<16, 8>::type m_obj_link[1];
 #elif __aarch64__
+        std::aligned_storage<16, 8>::type m_obj_link[1];
+#elif _WIN32
         std::aligned_storage<16, 8>::type m_obj_link[1];
 #endif
     };

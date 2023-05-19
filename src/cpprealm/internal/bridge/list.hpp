@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <string>
 #include <memory>
+#include <optional>
 
 namespace realm {
     class List;
@@ -62,7 +63,7 @@ namespace realm::internal::bridge {
         }
         obj add_embedded();
 
-        [[nodiscard]] realm get_realm() const;
+       // [[nodiscard]] realm get_realm() const;
 
         void set(size_t pos, const int64_t &);
         void set(size_t pos, const double &);
@@ -103,6 +104,8 @@ namespace realm::internal::bridge {
 #elif __arm__
         std::aligned_storage<40, 4>::type m_list[1];
 #elif __aarch64__
+        std::aligned_storage<80, 8>::type m_list[1];
+#elif _WIN32
         std::aligned_storage<80, 8>::type m_list[1];
 #endif
     };

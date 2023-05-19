@@ -47,6 +47,9 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<136, sizeof(Query)>{});
 #endif
     static_assert(SizeCheck<8, alignof(Query)>{});
+#elif _WIN32
+    static_assert(SizeCheck<160, sizeof(Query)>{});
+    static_assert(SizeCheck<8, alignof(Query)>{});
 #endif
 
     query::query() {

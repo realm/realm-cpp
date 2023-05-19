@@ -38,12 +38,14 @@ namespace realm::internal::bridge {
         obj get_object(const std::string& key);
     private:
 #ifdef __i386__
-        std::aligned_storage<40, 4>::type m_dictionary[1];
+        std::aligned_storage<144, 4>::type m_dictionary[1];
 #elif __x86_64__
-        std::aligned_storage<80, 8>::type m_dictionary[1];
+        std::aligned_storage<144, 8>::type m_dictionary[1];
 #elif __arm__
-        std::aligned_storage<40, 4>::type m_dictionary[1];
+        std::aligned_storage<144, 4>::type m_dictionary[1];
 #elif __aarch64__
+        std::aligned_storage<144, 8>::type m_dictionary[1];
+#elif _WIN32
         std::aligned_storage<144, 8>::type m_dictionary[1];
 #endif
     };
@@ -80,6 +82,8 @@ namespace realm::internal::bridge {
         std::aligned_storage<40, 4>::type m_dictionary[1];
 #elif __aarch64__
         std::aligned_storage<80, 8>::type m_dictionary[1];
+#elif _WIN32
+        std::aligned_storage<1, 1>::type m_dictionary[1];
 #endif
     };
 

@@ -2,6 +2,7 @@
 #define REALM_MANAGED_NUMERIC_HPP
 
 #include <cpprealm/experimental/macros.hpp>
+#include <stdexcept>
 
 namespace realm::experimental {
 
@@ -132,7 +133,7 @@ CPP_REALM_MANAGED_OPTIONAL_NUMERIC(double);
         using managed<std::optional<bool>>::managed_base::operator=;
 
         [[nodiscard]] std::optional<bool> value() const {
-            return m_obj->template get<bool>(m_key);
+            return m_obj->template get_optional<bool>(m_key);
         }
 
         std::optional<bool> operator *() const {

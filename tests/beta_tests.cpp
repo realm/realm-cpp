@@ -112,7 +112,7 @@ namespace realm::experimental {
         std::map<std::string, std::optional<std::string>> map_opt_str_col;
         std::map<std::string, std::optional<realm::uuid>> map_opt_uuid_col;
         std::map<std::string, std::optional<realm::object_id>> map_opt_object_id_col;
-        std::map<std::string, std::optional<std::vector<std::uint8_t>>> map_opt_binary_col;
+        std::map<std::string, std::optional<std::vector<uint8_t>>> map_opt_binary_col;
         std::map<std::string, std::optional<std::chrono::time_point<std::chrono::system_clock>>> map_opt_date_col;
         std::map<std::string, std::optional<Enum>> map_opt_enum_col;
 
@@ -133,7 +133,6 @@ namespace realm::experimental {
 
                  map_opt_int_col, map_opt_double_col, map_opt_bool_col, map_opt_str_col, map_opt_uuid_col,
                  map_opt_object_id_col, map_opt_binary_col, map_opt_date_col, map_opt_enum_col
-
                  )
 }
 
@@ -254,7 +253,7 @@ TEST_CASE("object_initialization_beta") {
     auto o = AllTypesObjectLink();
     o._id = 1;
     o.str_col = "link object";
-//
+
     auto o2 = AllTypesObjectLink();
     o2._id = 2;
     o2.str_col = "link object 2";
@@ -262,76 +261,75 @@ TEST_CASE("object_initialization_beta") {
     embedded_obj.str_col = "embedded obj";
     auto object_id = realm::object_id::generate();
 
-    auto obj = AllTypes {
-            ._id = 123,
-            .double_col = 12.34,
-            .bool_col = true,
-            .str_col = std::string("foo"),
-            .enum_col = AllTypes::Enum::two,
-            .date_col = date,
-            .uuid_col = uuid,
-            .object_id_col = object_id,
-            .binary_col = std::vector<uint8_t>({1}),
-            .mixed_col = AllTypes::my_mixed("mixed"),
-//            .my_mixed_col = AllTypesObject::foo_mixed(o2),
+    AllTypes obj;
+    obj._id = 123;
+    obj.double_col = 12.34;
+    obj.bool_col = true;
+    obj.str_col = std::string("foo");
+    obj.enum_col = AllTypes::Enum::two;
+    obj.date_col = date;
+    obj.uuid_col = uuid;
+    obj.object_id_col = object_id;
+    obj.binary_col = std::vector<uint8_t>({1});
+    obj.mixed_col = AllTypes::my_mixed("mixed");
+    //            .my_mixed_col = AllTypesObject::foo_mixed(o2),
 
-            .opt_int_col = 2,
-            .opt_double_col = 2.34,
-            .opt_str_col = "opt string",
-            .opt_bool_col = true,
-            .opt_enum_col = AllTypes::Enum::two,
-            .opt_date_col = date,
-            .opt_uuid_col = uuid,
-            .opt_object_id_col = object_id,
-            .opt_binary_col = std::vector<uint8_t>({ 1 }),
+    obj.opt_int_col = 2;
+    obj.opt_double_col = 2.34;
+    obj.opt_str_col = "opt string";
+    obj.opt_bool_col = true;
+    obj.opt_enum_col = AllTypes::Enum::two;
+    obj.opt_date_col = date;
+    obj.opt_uuid_col = uuid;
+    obj.opt_object_id_col = object_id;
+    obj.opt_binary_col = std::vector<uint8_t>({1});
 
-            .opt_obj_col = o,
-            .opt_embedded_obj_col = embedded_obj,
+    obj.opt_obj_col = o,
+    obj.opt_embedded_obj_col = embedded_obj,
 
-            .list_int_col = std::vector<int64_t>({1}),
-            .list_double_col = std::vector<double>({1.23}),
-            .list_bool_col = std::vector<bool>({true}),
-            .list_str_col = std::vector<std::string>({"bar"}),
-            .list_uuid_col = std::vector<realm::uuid>({uuid}),
-            .list_object_id_col = std::vector<realm::object_id>({object_id}),
-            .list_binary_col = std::vector<std::vector<uint8_t>>({{ 1 }}),
-            .list_date_col = std::vector<std::chrono::time_point<std::chrono::system_clock>>({date}),
-            .list_mixed_col = std::vector<realm::mixed>({realm::mixed("mixed str")}),
-            .list_obj_col = std::vector<link<AllTypesObjectLink>>({o}),
-            .list_embedded_obj_col = std::vector<link<AllTypesObjectEmbedded>>({embedded_obj}),
+    obj.list_int_col = std::vector<int64_t>({1});
+    obj.list_double_col = std::vector<double>({1.23});
+    obj.list_bool_col = std::vector<bool>({true});
+    obj.list_str_col = std::vector<std::string>({"bar"});
+    obj.list_uuid_col = std::vector<realm::uuid>({uuid});
+    obj.list_object_id_col = std::vector<realm::object_id>({object_id});
+    obj.list_binary_col = std::vector<std::vector<uint8_t>>({{1}});
+    obj.list_date_col = std::vector<std::chrono::time_point<std::chrono::system_clock>>({date});
+    obj.list_mixed_col = std::vector<realm::mixed>({realm::mixed("mixed str")});
+    obj.list_obj_col = std::vector<link<AllTypesObjectLink>>({o});
+    obj.list_embedded_obj_col = std::vector<link<AllTypesObjectEmbedded>>({embedded_obj});
 
-            .list_opt_int_col = std::vector<std::optional<int64_t>>({123, std::nullopt}),
-            .list_opt_double_col = std::vector<std::optional<double>>({123.456, std::nullopt}),
-            .list_opt_bool_col = std::vector<std::optional<bool>>({true, std::nullopt}),
-            .list_opt_str_col = std::vector<std::optional<std::string>>({"hello", std::nullopt}),
-            .list_opt_uuid_col = std::vector<std::optional<realm::uuid>>({uuid, std::nullopt}),
-            .list_opt_object_id_col = std::vector<std::optional<realm::object_id>>({object_id, std::nullopt}),
-            .list_opt_binary_col = std::vector<std::optional<std::vector<uint8_t>>>({std::vector<uint8_t>({1}), std::nullopt}),
-            .list_opt_date_col = std::vector<std::optional<std::chrono::time_point<std::chrono::system_clock>>>({date, std::nullopt}),
+    obj.list_opt_int_col = std::vector<std::optional<int64_t>>({123, std::nullopt});
+    obj.list_opt_double_col = std::vector<std::optional<double>>({123.456, std::nullopt});
+    obj.list_opt_bool_col = std::vector<std::optional<bool>>({true, std::nullopt});
+    obj.list_opt_str_col = std::vector<std::optional<std::string>>({"hello", std::nullopt});
+    obj.list_opt_uuid_col = std::vector<std::optional<realm::uuid>>({uuid, std::nullopt});
+    obj.list_opt_object_id_col = std::vector<std::optional<realm::object_id>>({object_id, std::nullopt});
+    obj.list_opt_binary_col = std::vector<std::optional<std::vector<uint8_t>>>({std::vector<uint8_t>({1}), std::nullopt});
+    obj.list_opt_date_col = std::vector<std::optional<std::chrono::time_point<std::chrono::system_clock>>>({date, std::nullopt});
 
-            .map_int_col = std::map<std::string, int64_t>({{"foo", 1}}),
-            .map_double_col = std::map<std::string, double>({{"foo", 1.23}}),
-            .map_bool_col = std::map<std::string, bool>({{"foo", true}}),
-            .map_str_col = std::map<std::string, std::string>({{"foo", "bar"}}),
-            .map_uuid_col = std::map<std::string, realm::uuid>({{"foo", uuid}}),
-            .map_object_id_col = std::map<std::string, realm::object_id>({{"foo", object_id}}),
-            .map_binary_col = std::map<std::string, std::vector<std::uint8_t>>({{"foo", {1}}}),
-            .map_date_col = std::map<std::string, std::chrono::time_point<std::chrono::system_clock>>({{"foo", date}}),
-            .map_enum_col = std::map<std::string, AllTypes::Enum>({{"foo", AllTypes::Enum::one}}),
-            .map_mixed_col = std::map<std::string, realm::mixed>({{"foo", realm::mixed("bar")}}),
-            .map_link_col = std::map<std::string, std::optional<link<AllTypesObjectLink>>>({{"foo", o}}),
-            .map_embedded_col = std::map<std::string, std::optional<link<AllTypesObjectEmbedded>>>({{"foo", embedded_obj}}),
+    obj.map_int_col = std::map<std::string, int64_t>({{"foo", 1}});
+    obj.map_double_col = std::map<std::string, double>({{"foo", 1.23}});
+    obj.map_bool_col = std::map<std::string, bool>({{"foo", true}});
+    obj.map_str_col = std::map<std::string, std::string>({{"foo", "bar"}});
+    obj.map_uuid_col = std::map<std::string, realm::uuid>({{"foo", uuid}});
+    obj.map_object_id_col = std::map<std::string, realm::object_id>({{"foo", object_id}});
+    obj.map_binary_col = std::map<std::string, std::vector<std::uint8_t>>({{"foo", {1}}});
+    obj.map_date_col = std::map<std::string, std::chrono::time_point<std::chrono::system_clock>>({{"foo", date}});
+    obj.map_enum_col = std::map<std::string, AllTypes::Enum>({{"foo", AllTypes::Enum::one}});
+    obj.map_mixed_col = std::map<std::string, realm::mixed>({{"foo", realm::mixed("bar")}});
+    obj.map_link_col = std::map<std::string, std::optional<link<AllTypesObjectLink>>>({{"foo", o}});
+    obj.map_embedded_col = std::map<std::string, std::optional<link<AllTypesObjectEmbedded>>>({{"foo", embedded_obj}});
 
-            .map_opt_int_col = std::map<std::string, std::optional<int64_t>>({{"foo", 1}, {"bar", std::nullopt}}),
-            .map_opt_double_col = std::map<std::string, std::optional<double>>({{"foo", 1.23}, {"bar", std::nullopt}}),
-            .map_opt_bool_col = std::map<std::string,std::optional< bool>>({{"foo", true}, {"bar", std::nullopt}}),
-            .map_opt_str_col = std::map<std::string, std::optional<std::string>>({{"foo", "bar"}, {"bar", std::nullopt}}),
-            .map_opt_uuid_col = std::map<std::string, std::optional<realm::uuid>>({{"foo", uuid}, {"bar", std::nullopt}}),
-            .map_opt_object_id_col = std::map<std::string, std::optional<realm::object_id>>({{"foo", object_id}, {"bar", std::nullopt}}),
-            .map_opt_binary_col = std::map<std::string, std::optional<std::vector<std::uint8_t>>>({{"foo", std::optional<std::vector<std::uint8_t>>({1})}, {"bar", std::nullopt}}),
-            .map_opt_date_col = std::map<std::string, std::optional<std::chrono::time_point<std::chrono::system_clock>>>({{"foo", date}, {"bar", std::nullopt}}),
-            .map_opt_enum_col = std::map<std::string, std::optional<AllTypes::Enum>>({{"foo", AllTypes::Enum::one}, {"bar", std::nullopt}}),
-    };
+    obj.map_opt_int_col = std::map<std::string, std::optional<int64_t>>({{"foo", 1}, {"bar", std::nullopt}});
+    obj.map_opt_double_col = std::map<std::string, std::optional<double>>({{"foo", 1.23}, {"bar", std::nullopt}});
+    obj.map_opt_bool_col = std::map<std::string, std::optional<bool>>({{"foo", true}, {"bar", std::nullopt}});
+    obj.map_opt_str_col = std::map<std::string, std::optional<std::string>>({{"foo", "bar"}, {"bar", std::nullopt}});
+    obj.map_opt_uuid_col = std::map<std::string, std::optional<realm::uuid>>({{"foo", uuid}, {"bar", std::nullopt}});
+    obj.map_opt_object_id_col = std::map<std::string, std::optional<realm::object_id>>({{"foo", object_id}, {"bar", std::nullopt}});
+    obj.map_opt_binary_col = std::map<std::string, std::optional<std::vector<uint8_t>>>({  {"foo", std::vector<uint8_t>({1})}, {"bar", std::nullopt }});
+    obj.map_opt_date_col = std::map<std::string, std::optional<std::chrono::time_point<std::chrono::system_clock>>>({{"foo", date}, {"bar", std::nullopt}});
+    obj.map_opt_enum_col = std::map<std::string, std::optional<AllTypes::Enum>>({{"foo", AllTypes::Enum::one}, {"bar", std::nullopt}});
 
     experimental::db db = experimental::open(path);
     Dog d;
@@ -610,7 +608,7 @@ TEST_CASE("object_notifications_beta") {
             managed_foo.date_col = date;
             managed_foo.uuid_col = realm::uuid();
             managed_foo.binary_col.push_back(1);
-            managed_foo.mixed_col = "mixed";
+            managed_foo.mixed_col = std::string("mixed");
 
             managed_foo.opt_int_col = 2;
             managed_foo.opt_double_col = 1.23;

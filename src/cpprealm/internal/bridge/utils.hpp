@@ -4,6 +4,8 @@
 #include <functional>
 #include <string_view>
 #include <string>
+#include <type_traits>
+#include <realm/utilities.hpp>
 
 namespace realm::internal::bridge {
     template <size_t lhs, size_t rhs, typename = void>

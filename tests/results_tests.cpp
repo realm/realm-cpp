@@ -11,7 +11,9 @@ TEST_CASE("results", "[results]") {
     SECTION("results_notifications") {
         auto realm = realm::open<Person, Dog>(std::move(config));
 
-        auto person = Person{.name = "John", .age = 42};
+        Person person;
+        person.name = "John";
+        person.age = 42;
         realm.write([&realm, &person]() {
             realm.add(person);
         });
@@ -30,7 +32,9 @@ TEST_CASE("results", "[results]") {
         };
 
         auto token = require_change();
-        auto person2 = Person{.name = "Jane", .age = 24};
+        Person person2;
+        person2.name = "Jane";
+        person2.age = 24;
         realm.write([&realm, &person2]() {
             realm.add(person2);
         });
@@ -44,7 +48,9 @@ TEST_CASE("results", "[results]") {
     SECTION("results_notifications_insertions") {
         auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
         realm.write([&realm] {
-            realm.add(AllTypesObject{._id = 1});
+            AllTypesObject o;
+            o._id = 1;
+            realm.add(std::move(o));
         });
 
         bool did_run = false;
@@ -64,7 +70,9 @@ TEST_CASE("results", "[results]") {
 
         auto token = require_change();
         realm.write([&realm] {
-            realm.add(AllTypesObject{._id = 2});
+            AllTypesObject o;
+            o._id = 2;
+            realm.add(std::move(o));
         });
 
         realm.write([] {});
@@ -74,8 +82,12 @@ TEST_CASE("results", "[results]") {
         CHECK(change.modifications.size() == 0);
 
         realm.write([&realm] {
-            realm.add(AllTypesObject{._id = 3});
-            realm.add(AllTypesObject{._id = 4});
+            AllTypesObject o1;
+            o1._id = 3;
+            realm.add(std::move(o1));
+            AllTypesObject o2;
+            o2._id = 4;
+            realm.add(std::move(o2));
         });
 
         realm.write([] {});

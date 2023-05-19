@@ -1,6 +1,6 @@
-#include <realm/sync/subscriptions.hpp>
 #include <cpprealm/flex_sync.hpp>
 #include <realm/object-store/shared_realm.hpp>
+#include <realm/sync/subscriptions.hpp>
 
 namespace realm {
 #ifdef __i386__
@@ -33,15 +33,20 @@ namespace realm {
 #endif
     static_assert(internal::bridge::SizeCheck<8, alignof(sync::SubscriptionSet)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
+#elif _WIN32
+    static_assert(internal::bridge::SizeCheck<120, sizeof(sync::SubscriptionSet)>{});
+    static_assert(internal::bridge::SizeCheck<8, alignof(sync::SubscriptionSet)>{});
+    static_assert(internal::bridge::SizeCheck<208, sizeof(sync::MutableSubscriptionSet)>{});
+    static_assert(internal::bridge::SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
 #endif
     sync_subscription::sync_subscription(const sync::Subscription &v)
     {
-        identifier = v.id.to_string();
-        name = v.name;
-        created_at = v.created_at.get_time_point();
-        updated_at = v.updated_at.get_time_point();
-        query_string = v.query_string;
-        object_class_name = v.object_class_name;
+       identifier = v.id.to_string();
+       name = v.name;
+       created_at = v.created_at.get_time_point();
+       updated_at = v.updated_at.get_time_point();
+       query_string = v.query_string;
+       object_class_name = v.object_class_name;
     }
     mutable_sync_subscription_set& mutable_sync_subscription_set::operator=(const mutable_sync_subscription_set& other) {
         if (this != &other) {

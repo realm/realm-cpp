@@ -1,6 +1,7 @@
 #include <cpprealm/internal/bridge/sync_manager.hpp>
 #include <realm/object-store/sync/sync_manager.hpp>
 
+
 namespace realm::internal::bridge {
     std::string sync_manager::path_for_realm(const realm::sync_config &v) const {
         return m_manager->path_for_realm(*static_cast<std::shared_ptr<SyncConfig>>(v));

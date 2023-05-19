@@ -2,6 +2,7 @@
 #define CPP_REALM_BRIDGE_SYNC_ERROR_HPP
 
 #include <system_error>
+#include <string>
 
 namespace realm {
     struct SyncError;
@@ -48,6 +49,8 @@ namespace realm::internal::bridge {
 #elif defined(__GNUC__) || defined(__GNUG__)
         std::aligned_storage<144, 8>::type m_error[1];
 #endif
+#elif _WIN32
+        std::aligned_storage<192, 8>::type m_error[1];
 #endif
     };
 }
