@@ -344,8 +344,7 @@ namespace realm {
         if (path) {
             config.base_file_path = *path;
         } else {
-            // TODO: fix for windows
-            //config.base_file_path = std::filesystem::current_path();
+            config.base_file_path = std::filesystem::current_path().make_preferred().generic_string();
         }
 #endif
         config.user_agent_binding_info = "RealmCpp/0.0.1";

@@ -1,8 +1,8 @@
 #include <cpprealm/app.hpp>
 
-//#include <cpprealm/analytics.hpp>
+#include <cpprealm/analytics.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
-//#include <cpprealm/logger.hpp>
+#include <cpprealm/logger.hpp>
 #include <cpprealm/scheduler.hpp>
 #include <cpprealm/internal/bridge/object_schema.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
@@ -61,11 +61,11 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(Realm::Config)>{});
 #endif
 
-    //class null_logger : public logger {
-    //public:
-    //    null_logger() = default;
-    //    void do_log(logger::level, const std::string&) override {}
-    //};
+    class null_logger : public logger {
+    public:
+        null_logger() = default;
+        void do_log(logger::level, const std::string&) override {}
+    };
 
     realm::realm(std::shared_ptr<Realm> v)
     : m_realm(std::move(v)){}
@@ -161,7 +161,7 @@ namespace realm::internal::bridge {
     }
 
     realm::sync_config::sync_config(const std::shared_ptr<SyncConfig> &v) {
-       // m_config = v;
+        m_config = v;
     }
     realm::sync_config::operator std::shared_ptr<SyncConfig>() const {
         return m_config;
@@ -198,8 +198,8 @@ namespace realm::internal::bridge {
     realm::realm(const config &v) {
         static bool initialized;
         if (!initialized) {
-           // set_default_level_threshold(logger::level::off);
-            //set_default_logger(std::make_shared<null_logger>());
+            set_level_threshold(logger::level::off);
+            set_logger(std::make_shared<null_logger>());
             //realm_analytics::send();
             initialized = true;
         }
@@ -223,10 +223,10 @@ namespace realm::internal::bridge {
         reinterpret_cast<RealmConfig*>(&m_config)->scheduler = std::make_shared<internal_scheduler>(s);
     }
     void realm::config::set_sync_config(const std::optional<struct sync_config> &s) {
-        //if (s)
-        //    reinterpret_cast<RealmConfig*>(&m_config)->sync_config = static_cast<std::shared_ptr<SyncConfig>>(*s);
-        //else
-        //    reinterpret_cast<RealmConfig*>(&m_config)->sync_config = nullptr;
+        if (s)
+            reinterpret_cast<RealmConfig*>(&m_config)->sync_config = static_cast<std::shared_ptr<SyncConfig>>(*s);
+        else
+            reinterpret_cast<RealmConfig*>(&m_config)->sync_config = nullptr;
     }
 
     realm::sync_config realm::config::sync_config() const {
@@ -293,8 +293,8 @@ namespace realm::internal::bridge {
     }
 
     realm::sync_config::sync_config(const std::shared_ptr<SyncUser> &user) {
-        //SyncConfig(user, SyncConfig::FLXSyncEnabled{});
-        //m_config = std::make_shared<SyncConfig>(user, SyncConfig::FLXSyncEnabled{});
+        SyncConfig(user, SyncConfig::FLXSyncEnabled{});
+        m_config = std::make_shared<SyncConfig>(user, SyncConfig::FLXSyncEnabled{});
     }
 
     void realm::config::set_path(const std::string &path) {
@@ -307,12 +307,15 @@ namespace realm::internal::bridge {
 
     [[nodiscard]] std::optional<sync_session> realm::get_sync_session() const {
         auto& config = m_realm->config().sync_config;
-        //if (!config) {
-       //     return std::nullopt;
-        //}
-        //if (auto session = config->user->session_for_on_disk_path(m_realm->config().path)) {
-        //    return sync_session(std::move(session));
-        //}
+        if (!config) {
+            return std::nullopt;
+        }
+        //TODO: Fix missing symbol on Windows
+#ifndef _WIN32
+        if (auto session = config->user->session_for_on_disk_path(m_realm->config().path)) {
+            return sync_session(std::move(session));
+        }
+#endif// !_WIN32
         return std::nullopt;
     }
 

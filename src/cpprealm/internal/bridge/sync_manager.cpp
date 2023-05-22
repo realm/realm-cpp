@@ -12,7 +12,7 @@ namespace realm::internal::bridge {
         m_manager = v;
     }
 
-   // void sync_manager::set_log_level(logger::level level) {
-   //     m_manager->set_log_level(static_cast<util::Logger::Level>(level));
-   // }
+    void sync_manager::set_log_level(logger::level level) {
+        m_manager->set_log_level(static_cast<util::Logger::Level>(level));
+    }
 }

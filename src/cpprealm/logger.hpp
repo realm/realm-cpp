@@ -1,4 +1,3 @@
-/*
 #ifndef CPP_REALM_LOGGER_HPP
 #define CPP_REALM_LOGGER_HPP
 
@@ -31,9 +30,8 @@ namespace realm {
                            off = 8 };
         virtual void do_log(level, const std::string &) = 0;
     };
-    void set_default_logger(std::shared_ptr<struct logger>&&);
-    void set_default_level_threshold(logger::level);
+    void set_logger(std::shared_ptr<struct logger> &&);
+    void set_level_threshold(logger::level);
 }
 
 #endif//CPP_REALM_LOGGER_HPP
-*/

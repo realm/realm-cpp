@@ -50,7 +50,7 @@
 // - An anonymous MAC address to aggregate the other information on.
 namespace realm {
     struct realm_analytics {
-        static void send() {}
+        static void send();
     };
 } // namespace realm
 
