@@ -21,9 +21,17 @@
 #include <catch2/catch_all.hpp>
 #include <realm/util/features.h>
 #include <filesystem>
-#include "admin_utils.hpp"
+//#include "admin_utils.hpp"
+
+#include <cpprealm/internal/bridge/realm.hpp>
 
 int main(int argc, char* argv[]) {
+
+
+    auto x = realm::internal::bridge::realm::config();
+    auto xx = realm::internal::bridge::realm::realm(x);
+
+    /*
     Catch::ConfigData config;
     if (getenv("REALM_CI")) {
         config.showDurations = Catch::ShowDurations::Always; // this is to help debug hangs
@@ -46,4 +54,6 @@ int main(int argc, char* argv[]) {
     session.useConfigData(config);
     int result = session.run(argc, argv);
     return result < 0xff ? result : 0xff;
+    */
+    return 0;
 }

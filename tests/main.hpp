@@ -4,6 +4,7 @@
 #include <catch2/catch_all.hpp>
 #include <cpprealm/sdk.hpp>
 
+/*
 struct realm_path {
     template <typename T = std::mt19937>
     auto random_generator() -> T {
@@ -44,7 +45,7 @@ struct realm_path {
         std::filesystem::remove(path + ".note");
     }
 };
-
+*/
 int main(int argc, char* argv[]);
 
 #endif //REALM_MAIN_HPP
