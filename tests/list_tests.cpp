@@ -65,14 +65,18 @@ TEST_CASE("list", "[list]") {
        obj.list_int_col.push_back(42);
        CHECK(obj.list_int_col[0] == 42);
 
-       obj.list_obj_col.push_back(AllTypesObjectLink{.str_col="Fido"});
+       AllTypesObjectLink o1;
+       o1.str_col = "Fido";
+       obj.list_obj_col.push_back(std::move(o1));
        CHECK(obj.list_obj_col[0].str_col == "Fido");
        CHECK(obj.list_int_col.size() == 1);
        for (auto &i: obj.list_int_col) {
            CHECK(i == 42);
        }
 
-       obj.list_embedded_obj_col.push_back(AllTypesObjectEmbedded{.str_col="Fido"});
+       AllTypesObjectLink o2;
+       o2.str_col = "Fido";
+       obj.list_embedded_obj_col.push_back(std::move(o2));
        CHECK(obj.list_embedded_obj_col[0].str_col == "Fido");
        CHECK(obj.list_embedded_obj_col.size() == 1);
 
@@ -86,8 +90,13 @@ TEST_CASE("list", "[list]") {
 
        realm.write([&obj]() {
            obj.list_int_col.push_back(84);
-           obj.list_obj_col.push_back(AllTypesObjectLink{._id=1, .str_col="Rex"});
-           obj.list_embedded_obj_col.push_back(AllTypesObjectEmbedded{.str_col="Rex"});
+           AllTypesObjectLink o3;
+           o3._id = 1;
+           o3.str_col = "Rex";
+           obj.list_obj_col.push_back(std::move(o3));
+           AllTypesObjectEmbedded e;
+           e.str_col = "Rex";
+           obj.list_embedded_obj_col.push_back(std::move(e));
        });
        size_t idx = 0;
        for (auto &i: obj.list_int_col) {
@@ -146,7 +155,7 @@ TEST_CASE("list", "[list]") {
            obj.list_int_col.pop_back();
        });
        CHECK(obj.list_int_col.size() == 2);
-       CHECK(obj.list_int_col.find(1) == realm::npos);
+       CHECK(obj.list_int_col.find(1) == cpprealm::npos);
 
        realm.write([&realm, &obj] {
            obj.list_int_col.erase(0);

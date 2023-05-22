@@ -92,8 +92,8 @@ namespace realm {
                             T obj;
                             auto fn = [&](auto& first, auto& second) {
                                 using Result = typename std::decay_t<decltype(first)>::Result;
-                                obj.*std::decay_t<decltype(first)>::ptr =
-                                        managed.m_obj.template get<Result>((managed.*second).m_key);
+                                auto prop = managed.*second;
+                                obj.*std::decay_t<decltype(first)>::ptr = managed.m_obj.get<Result>(prop.m_key);
                             };
                             (fn(pairs.first, pairs.second), ...);
                             return obj;
@@ -101,6 +101,7 @@ namespace realm {
                     }, experimental::managed<T>::schema.ps);
                     return box(std::move(obj));
                 } else {
+                    
                     return box(&unmanaged);
                 }
             }

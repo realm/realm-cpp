@@ -23,13 +23,12 @@ TEST_CASE("query") {
         auto date = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
         auto create_obj = [&]() {
-            auto obj = AllTypesObject{
-                    ._id = 123,
-                    .str_col = "foo bar",
-                    .enum_col = AllTypesObject::Enum::two,
-                    .date_col = std::chrono::system_clock::from_time_t(date),
-                    .uuid_col = realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002")
-            };
+            AllTypesObject obj;
+            obj._id = 123;
+            obj.str_col = "foo bar";
+            obj.enum_col = AllTypesObject::Enum::two;
+            obj.date_col = std::chrono::system_clock::from_time_t(date);
+            obj.uuid_col = realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002");
 
             obj.binary_col.push_back(0);
             obj.binary_col.push_back(1);
@@ -91,13 +90,12 @@ TEST_CASE("query") {
         auto date = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
         auto create_obj = [&]() {
-            auto obj = AllTypesObject{
-                    ._id = 123,
-                    .str_col = "foo bar",
-                    .enum_col = AllTypesObject::Enum::two,
-                    .date_col = std::chrono::system_clock::from_time_t(date),
-                    .uuid_col = realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002")
-            };
+            AllTypesObject obj;
+            obj._id = 123;
+            obj.str_col = "foo bar";
+            obj.enum_col = AllTypesObject::Enum::two;
+            obj.date_col = std::chrono::system_clock::from_time_t(date);
+            obj.uuid_col = realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002");
 
             obj.binary_col.push_back(0);
             obj.binary_col.push_back(1);
@@ -154,7 +152,9 @@ TEST_CASE("query") {
     SECTION("tsq_compound", "[query]") {
         auto realm = realm::open<Person, Dog>(std::move(config));
 
-        auto person = Person{.name = "John", .age = 42};
+        Person person;
+        person.name = "John";
+        person.age = 42;
         realm.write([&realm, &person]() {
             realm.add(person);
         });
@@ -182,7 +182,9 @@ TEST_CASE("query") {
     SECTION("equality") {
         auto realm = realm::open<Person, Dog>(std::move(config));
 
-        auto person = Person { .name = "John", .age = 42 };
+        Person person;
+        person.name = "John";
+        person.age = 42;
         realm.write([&realm, &person](){
             realm.add(person);
         });

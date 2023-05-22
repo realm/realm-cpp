@@ -10,7 +10,9 @@ TEST_CASE("embedded_objects") {
         auto realm = realm::open<Foo, EmbeddedFoo>(std::move(config));
 
         auto foo = Foo();
-        foo.foo = EmbeddedFoo{.bar=42};
+        EmbeddedFoo embedded;
+        embedded.bar = 42;
+        foo.foo = embedded.bar;
 
         realm.write([&foo, &realm]() {
             realm.add(foo);

@@ -38,7 +38,7 @@ namespace realm::experimental {
         void push_back(const T& value)
         {
             auto list = internal::bridge::list(*m_realm, *m_obj, m_key);
-            list.template add(value);
+            list.add(value);
         }
     };
 

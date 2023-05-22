@@ -88,6 +88,9 @@ static size_t curl_header_cb(char* buffer, size_t size, size_t nitems, std::map<
 
 static app::Response do_http_request(const app::Request& request)
 {
+    #ifdef FOO
+
+
     CurlGlobalGuard curl_global_guard;
     auto curl = curl_easy_init();
     if (!curl) {
@@ -155,6 +158,8 @@ static app::Response do_http_request(const app::Request& request)
         std::move(response_headers),
         std::move(response),
     };
+#endif
+    return app::Response();
 }
 } // namespace
 

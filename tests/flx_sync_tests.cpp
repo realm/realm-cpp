@@ -35,7 +35,10 @@ TEST_CASE("flx_sync", "[sync]") {
         CHECK((non_existent_sub == std::nullopt) == true);
 
         synced_realm.write([&synced_realm]() {
-            synced_realm.add(AllTypesObject{._id=1, .str_col="foo"});
+            AllTypesObject o;
+            o._id = 1;
+            o.str_col = "foo";
+            synced_realm.add(std::move(o));
         });
 
         test::wait_for_sync_uploads(user).get_future().get();
@@ -57,7 +60,10 @@ TEST_CASE("flx_sync", "[sync]") {
         CHECK(sub2.query_string == "str_col == \"bar\" and _id == 1230");
 
         synced_realm.write([&synced_realm]() {
-            synced_realm.add(AllTypesObject{._id=1230, .str_col="bar"});
+            AllTypesObject o;
+            o._id = 1230;
+            o.str_col = "bar";
+            synced_realm.add(std::move(o));
         });
 
         test::wait_for_sync_uploads(user).get_future().get();
@@ -108,7 +114,10 @@ TEST_CASE("realm_is_populated_on_async_open", "[sync]") {
 
             synced_realm.write([&synced_realm]() {
                 for (size_t i = 0; i < 1000; i++) {
-                    synced_realm.add(AllTypesObject{._id=i, .str_col="foo"});
+                    AllTypesObject o;
+                    o._id = i;
+                    o.str_col = "foo";
+                    synced_realm.add(std::move(o));
                 }
             });
 

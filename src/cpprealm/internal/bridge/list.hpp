@@ -39,7 +39,7 @@ namespace realm::internal::bridge {
         ~list();
         list(const List&); //NOLINT(google-explicit-constructor)
         operator List() const; //NOLINT(google-explicit-constructor)
-        //list(const realm& realm, const obj& obj, const col_key&);
+        list(const realm& realm, const obj& obj, const col_key&);
 
         [[nodiscard]] size_t size() const;
         void remove(size_t idx);

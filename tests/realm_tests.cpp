@@ -33,8 +33,12 @@ TEST_CASE("tsr") {
     config.set_path(path);
     auto realm = realm::open<Person, Dog>(std::move(config));
 
-    auto person = Person { .name = "John", .age = 17 };
-    person.dog = Dog {.name = "Fido"};
+    Person person;
+    person.name = "John";
+    person.age = 17;
+    Dog dog;
+    dog.name = "Fido";
+    person.dog = dog;
 
     realm.write([&realm, &person] {
         realm.add(person);

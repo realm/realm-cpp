@@ -4,7 +4,6 @@
 #include <catch2/catch_all.hpp>
 #include <cpprealm/sdk.hpp>
 
-
 struct realm_path {
     template<typename T = std::mt19937>
     auto random_generator() -> T {
@@ -37,15 +36,15 @@ struct realm_path {
         //path = std::filesystem::current_path().append(path);
         //std::filesystem::remove_all(path + ".realm.management");
         //std::filesystem::remove_all(path + ".management");
-       // std::filesystem::remove(path);
-       // std::filesystem::remove(path + ".realm");
-      //  std::filesystem::remove(path + ".realm.lock");
-      //  std::filesystem::remove(path + ".lock");
-      //  std::filesystem::remove(path + ".realm.note");
-      //  std::filesystem::remove(path + ".note");
+        //std::filesystem::remove(path);
+        //std::filesystem::remove(path + ".realm");
+        //std::filesystem::remove(path + ".realm.lock");
+        //std::filesystem::remove(path + ".lock");
+        //std::filesystem::remove(path + ".realm.note");
+        //std::filesystem::remove(path + ".note");
     }
 };
 
-int main(int argc, char* argv[]);
+int main(int argc, char *argv[]);
 
-#endif //REALM_MAIN_HPP
+#endif//REALM_MAIN_HPP

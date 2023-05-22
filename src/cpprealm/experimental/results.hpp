@@ -47,16 +47,14 @@ namespace realm::experimental {
             }
 
             reference operator*() noexcept {
-                abort();
-                //                auto obj = m_parent->m_parent.template get<Obj>(m_idx);
-                //                value = std::move(T::schema.create(std::move(obj), m_parent->m_parent.get_realm()));
-                //                return value;
+                auto obj = m_parent->m_parent.template get<Obj>(m_idx);
+                value = std::move(T::schema.create(std::move(obj), m_parent->m_parent.get_realm()));
+                return value;
             }
 
             pointer operator->() const noexcept {
-                abort();
-                //                auto obj = m_parent->m_parent.template get<Obj>(m_idx);
-                //                return T::schema::create_unique(std::move(obj), m_parent->m_parent.get_realm());
+                auto obj = m_parent->m_parent.template get<Obj>(m_idx);
+                return T::schema::create_unique(std::move(obj), m_parent->m_parent.get_realm());
             }
 
             iterator &operator++() {
@@ -162,8 +160,8 @@ namespace realm::experimental {
         }
 
     protected:
-        template<typename... V>
-        friend struct db;
+        //template<typename... V>
+       // friend struct db;
 
         internal::bridge::results m_parent;
     };

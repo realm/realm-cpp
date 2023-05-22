@@ -60,11 +60,11 @@ namespace realm::internal::bridge {
         new (&m_list) List(v);
     }
 
-    //list::list(const realm &realm,
-    //           const obj &obj,
-    //           const col_key& col_key) {
-        //new (&m_list) List(realm, obj, col_key);
-    //}
+    list::list(const realm &realm,
+               const obj &obj,
+               const col_key& col_key) {
+        new (&m_list) List(object(realm, obj).get_list(col_key));
+    }
 
     list::operator List() const {
         return *reinterpret_cast<const List*>(&m_list);
