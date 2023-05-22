@@ -198,7 +198,9 @@ namespace realm::experimental {
         static constexpr bool is_object = true; \
         FOR_EACH(DECLARE_PERSISTED, cls, __VA_ARGS__) \
         static constexpr auto schema = realm::schema(#cls, std::tuple{ FOR_EACH(DECLARE_PROPERTY, cls, __VA_ARGS__) }  ); \
-        static constexpr auto managed_pointers = std::tuple{FOR_EACH(DECLARE_MANAGED_PROPERTY, cls, __VA_ARGS__)};        \
+        static constexpr auto managed_pointers() { \
+            return std::tuple{FOR_EACH(DECLARE_MANAGED_PROPERTY, cls, __VA_ARGS__)};  \
+        } \
         static constexpr auto managed_pointers_names = std::tuple{FOR_EACH(DECLARE_MANAGED_PROPERTY_NAME, cls, __VA_ARGS__)}; \
         internal::bridge::obj m_obj;\
         internal::bridge::realm m_realm;        \
@@ -211,13 +213,13 @@ namespace realm::experimental {
                 std::apply([&](auto&& ..._name) { \
                 ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
                 }, managed_pointers_names); \
-            }, managed_pointers); \
+            }, managed_pointers()); \
         }                       \
         managed(const managed& other) : m_obj(other.m_obj) {   \
             m_realm = other.m_realm;                   \
             std::apply([this, &other](auto && ...ptr) {               \
                 ((*this.*ptr).assign(&m_obj, &m_realm, ((other.*ptr)).m_key), ...);   \
-            }, managed_pointers);                      \
+            }, managed_pointers());                      \
         }                      \
         typename decltype(schema)::variant_t property_value_for_name(std::string_view _name) const {         \
             FOR_EACH(DECLARE_COND_PROPERTY_VALUE_FOR_NAME, cls, __VA_ARGS__)               \

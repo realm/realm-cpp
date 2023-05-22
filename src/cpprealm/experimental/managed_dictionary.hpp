@@ -286,7 +286,7 @@ namespace realm::experimental {
                 },
                 managed<V, void>::managed_pointers_names);
             },
-            managed<V, void>::managed_pointers);
+            managed<V, void>::managed_pointers());
             return m;
         }
     };

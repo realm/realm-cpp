@@ -69,7 +69,7 @@ namespace realm {
         struct property {
             using Result = typename persisted_type_extractor<typename ptr_type_extractor<Ptr>::member_type>::Result;
             using Class = typename ptr_type_extractor<Ptr>::class_type;
-           // static constexpr auto Class::*ptr = Ptr;
+            static constexpr auto ptr = Ptr;
             static constexpr bool is_primary_key = IsPrimaryKey;
             internal::bridge::property::type type;
             const char* name = "";
@@ -201,9 +201,9 @@ namespace realm {
             [[nodiscard]] internal::bridge::object_schema to_core_schema() const {
                 internal::bridge::object_schema schema;
                 schema.set_name(name);
-                std::apply([&schema](auto&&... p) {
-                    (schema.add_property(p), ...);
-                }, ps);
+                //std::apply([&schema](auto&&... p) {
+                //    (schema.add_property(p), ...);
+                //}, ps);
 
                 if constexpr (HasPrimaryKeyProperty) {
                     schema.set_primary_key(primary_key_name);

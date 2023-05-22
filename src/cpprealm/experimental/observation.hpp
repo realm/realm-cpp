@@ -152,9 +152,13 @@ namespace realm::experimental {
                 const std::exception_ptr &error) {
             if (!ptr) {
                 if (error) {
-                    block(std::forward<realm::experimental::object_change<T>>({.error = error}));
+                    auto oc = object_change<T>();
+                    oc.error = error;
+                    block(std::forward<realm::experimental::object_change<T>>(std::move(oc)));
                 } else {
-                    block(std::forward<realm::experimental::object_change<T>>({.is_deleted = true}));
+                    auto oc = object_change<T>();
+                    oc.is_deleted = true;
+                    block(std::forward<realm::experimental::object_change<T>>(std::move(oc)));
                 }
             } else {
                 std::vector<PropertyChange<T>> property_changes;
@@ -169,7 +173,10 @@ namespace realm::experimental {
                     }
                     property_changes.push_back(std::move(property));
                 }
-                block(std::forward<realm::experimental::object_change<T>>({.object = ptr, .property_changes = property_changes}));
+                auto oc = object_change<T>();
+                oc.object = ptr;
+                oc.property_changes = property_changes;
+                block(std::forward<realm::experimental::object_change<T>>(std::move(oc)));
             }
         }
     };

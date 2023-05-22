@@ -87,7 +87,7 @@ namespace realm {
                     T obj = std::apply([this](auto &&...p) {
                         auto pairs = std::apply([&](auto &&...v) {
                             return std::make_tuple(std::make_pair(p, v)...);
-                        }, experimental::managed<T>::managed_pointers);
+                        }, experimental::managed<T>::managed_pointers());
                         return std::apply([&](auto&& ...pairs) {
                             T obj;
                             auto fn = [&](auto& first, auto& second) {
@@ -129,7 +129,7 @@ namespace realm {
                     std::apply([&](auto&&...name) {
                         ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
                     }, managed<T>::managed_pointers_names);
-                }, managed<T>::managed_pointers);
+                }, managed<T>::managed_pointers());
                 return {std::move(m)};
             }
 
@@ -148,7 +148,7 @@ namespace realm {
                     std::apply([&](auto&& ...name) {
                         ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
                     }, managed<T>::managed_pointers_names);
-                }, managed<T>::managed_pointers);
+                }, managed<T>::managed_pointers());
                 return *this;
             }
         };

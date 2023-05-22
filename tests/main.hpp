@@ -4,9 +4,9 @@
 #include <catch2/catch_all.hpp>
 #include <cpprealm/sdk.hpp>
 
-/*
+
 struct realm_path {
-    template <typename T = std::mt19937>
+    template<typename T = std::mt19937>
     auto random_generator() -> T {
         auto constexpr seed_bytes = sizeof(typename T::result_type) * T::state_size;
         auto constexpr seed_len = seed_bytes / sizeof(std::seed_seq::result_type);
@@ -30,11 +30,11 @@ struct realm_path {
     }
 
     std::string path = gen_random(32);
-    operator std::string() const { //NOLINT(google-explicit-constructor)
+    operator std::string() const {//NOLINT(google-explicit-constructor)
         return path;
     }
     ~realm_path() {
-        path = std::filesystem::current_path().append(path);
+        //path = std::filesystem::current_path().append(path);
         std::filesystem::remove_all(path + ".realm.management");
         std::filesystem::remove_all(path + ".management");
         std::filesystem::remove(path);
@@ -45,7 +45,7 @@ struct realm_path {
         std::filesystem::remove(path + ".note");
     }
 };
-*/
+
 int main(int argc, char* argv[]);
 
 #endif //REALM_MAIN_HPP

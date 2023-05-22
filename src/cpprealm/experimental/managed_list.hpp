@@ -56,7 +56,7 @@ namespace realm::experimental {
                 std::apply([&](auto &&...name) {
                     ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
                 }, managed<T>::managed_pointers_names);
-            }, managed<T>::managed_pointers);
+            }, managed<T>::managed_pointers());
             return m;
         }
     };
