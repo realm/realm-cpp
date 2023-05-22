@@ -72,7 +72,7 @@ private:
 #ifdef __i386__
     std::aligned_storage<28, 4>::type m_error[1];
 #elif _WIN32
-    std::aligned_storage<1, 1>::type m_error[1];
+    std::aligned_storage<80, 8>::type m_error[1];
 #elif __x86_64__
     #if defined(__clang__)
 std::aligned_storage<48, 8>::type m_error[1];
@@ -242,7 +242,7 @@ public:
 #ifdef __i386__
     std::aligned_storage<8, 4>::type m_credentials[1];
 #elif _WIN32
-        std::aligned_storage<16, 8>::type m_credentials[1];
+    std::aligned_storage<16, 8>::type m_credentials[1];
 #elif __x86_64__
     std::aligned_storage<16, 8>::type m_credentials[1];
 #elif __arm__

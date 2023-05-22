@@ -1,5 +1,5 @@
 #include <cpprealm/internal/bridge/property.hpp>
-//#include <cpprealm/internal/bridge/utils.hpp>
+#include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/internal/bridge/col_key.hpp>
 
 #include <realm/object-store/property.hpp>
@@ -24,6 +24,9 @@ namespace realm::internal::bridge {
 #elif defined(__GNUC__) || defined(__GNUG__)
     static_assert(SizeCheck<152, sizeof(Property)>{});
 #endif
+    static_assert(SizeCheck<8, alignof(Property)>{});
+#elif _WIN32
+    static_assert(SizeCheck<184, sizeof(Property)>{});
     static_assert(SizeCheck<8, alignof(Property)>{});
 #endif
 

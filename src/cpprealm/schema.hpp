@@ -201,9 +201,12 @@ namespace realm {
             [[nodiscard]] internal::bridge::object_schema to_core_schema() const {
                 internal::bridge::object_schema schema;
                 schema.set_name(name);
-                //std::apply([&schema](auto&&... p) {
-                //    (schema.add_property(p), ...);
-                //}, ps);
+                auto add_property = [&schema](const internal::bridge::property &p) {
+                    schema.add_property(p);
+                };
+                std::apply([&](const auto&... p) {
+                    (add_property(p), ...);
+                }, ps);
 
                 if constexpr (HasPrimaryKeyProperty) {
                     schema.set_primary_key(primary_key_name);

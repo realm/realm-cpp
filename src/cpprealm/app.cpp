@@ -1,29 +1,13 @@
-
 #include <cpprealm/app.hpp>
 #include <cpprealm/internal/generic_network_transport.hpp>
 
-
 #include <realm/object-store/sync/app.hpp>
-
 #include <realm/object-store/sync/sync_user.hpp>
 #include <realm/object-store/sync/sync_manager.hpp>
 
-
 #include <utility>
 
-
 namespace realm {
-#if _WIN32
-
-    //static_assert(internal::bridge::SizeCheck<8, sizeof(realm::app::AppError)>{});
-    /*
-    static_assert(internal::bridge::SizeCheck<4, alignof(::realm::app::AppCredentials)>{});
-    static_assert(internal::bridge::SizeCheck<28, sizeof(::realm::app::AppError)>{});
-    static_assert(internal::bridge::SizeCheck<4, alignof(::realm::app::AppError)>{});
-    */
-
-#endif
-
 
 #ifdef __i386__
     static_assert(internal::bridge::SizeCheck<8, sizeof(realm::app::AppCredentials)>{});
@@ -54,6 +38,11 @@ namespace realm {
     static_assert(internal::bridge::SizeCheck<56, sizeof(realm::app::AppError)>{});
 #endif
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
+#elif _WIN32
+    static_assert(internal::bridge::SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
+    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppCredentials)>{});
+    static_assert(internal::bridge::SizeCheck<80, sizeof(realm::app::AppError)>{});
+    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
 #endif
 
     static_assert((int)user::state::logged_in == (int)SyncUser::State::LoggedIn);
@@ -61,81 +50,68 @@ namespace realm {
     static_assert((int)user::state::removed == (int)SyncUser::State::Removed);
 
     app_error::app_error(const app_error& other) {
-        //new (&m_error) app::AppError(*reinterpret_cast<const app::AppError*>(&other.m_error));
+        new (&m_error) app::AppError(*reinterpret_cast<const app::AppError*>(&other.m_error));
     }
 
     app_error& app_error::operator=(const app_error& other) {
-        //if (this != &other) {
-       //     *reinterpret_cast<app::AppError*>(&m_error) = *reinterpret_cast<const app::AppError*>(&other.m_error);
-        //}
+        if (this != &other) {
+            *reinterpret_cast<app::AppError*>(&m_error) = *reinterpret_cast<const app::AppError*>(&other.m_error);
+        }
         return *this;
     }
 
     app_error::app_error(app_error&& other) {
-        //new (&m_error) app::AppError(std::move(*reinterpret_cast<app::AppError*>(&other.m_error)));
+        new (&m_error) app::AppError(std::move(*reinterpret_cast<app::AppError*>(&other.m_error)));
     }
 
     app_error& app_error::operator=(app_error&& other) {
-        //if (this != &other) {
-        //    *reinterpret_cast<app::AppError*>(&m_error) = std::move(*reinterpret_cast<app::AppError*>(&other.m_error));
-        //}
+        if (this != &other) {
+            *reinterpret_cast<app::AppError*>(&m_error) = std::move(*reinterpret_cast<app::AppError*>(&other.m_error));
+        }
         return *this;
     }
 
     app_error::~app_error() {
-        //reinterpret_cast<app::AppError*>(&m_error)->~AppError();
+        reinterpret_cast<app::AppError*>(&m_error)->~AppError();
     }
 
     app_error::app_error(realm::app::AppError&& error) {
-       // new (&m_error) app::AppError(std::move(error));
+        new (&m_error) app::AppError(std::move(error));
     }
 
     std::string_view app_error::mesage() const
     {
-        return "";
-        //return reinterpret_cast<const app::AppError *>(&m_error)->reason();
+        return reinterpret_cast<const app::AppError *>(&m_error)->reason();
     }
 
     std::string_view app_error::link_to_server_logs() const
     {
-        return "";
-
-        //return reinterpret_cast<const app::AppError*>(&m_error)->link_to_server_logs;
+        return reinterpret_cast<const app::AppError*>(&m_error)->link_to_server_logs;
     }
 
     bool app_error::is_json_error() const
     {
-        return true;
-
-        //return reinterpret_cast<const app::AppError*>(&m_error)->is_json_error();
+        return reinterpret_cast<const app::AppError*>(&m_error)->is_json_error();
     }
 
     bool app_error::is_service_error() const
     {
-        return true;
-
-        // return reinterpret_cast<const app::AppError*>(&m_error)->is_service_error();
+        return reinterpret_cast<const app::AppError*>(&m_error)->is_service_error();
     }
 
     bool app_error::is_http_error() const
     {
-        return true;
-
-        //return reinterpret_cast<const app::AppError*>(&m_error)->is_http_error();
+        return reinterpret_cast<const app::AppError*>(&m_error)->is_http_error();
     }
 
     bool app_error::is_custom_error() const
     {
-        return true;
-
-       // return reinterpret_cast<const app::AppError*>(&m_error)->is_custom_error();
+        return reinterpret_cast<const app::AppError*>(&m_error)->is_custom_error();
     }
 
     bool app_error::is_client_error() const
     {
-        return true;
-
-        //return reinterpret_cast<const app::AppError*>(&m_error)->is_client_error();
+        return reinterpret_cast<const app::AppError*>(&m_error)->is_client_error();
     }
 
     user::user(std::shared_ptr<SyncUser> user) : m_user(std::move(user))

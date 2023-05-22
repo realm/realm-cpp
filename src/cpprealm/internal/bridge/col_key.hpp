@@ -29,7 +29,7 @@ namespace realm::internal::bridge {
 #elif __aarch64__
         std::aligned_storage<8, 8>::type m_col_key[1];
 #elif _WIN64
-        std::aligned_storage<1, 1>::type m_col_key[1];
+        std::aligned_storage<8, 8>::type m_col_key[1];
 
 #endif
     };

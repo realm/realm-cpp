@@ -46,7 +46,7 @@ namespace realm::internal::bridge {
 #elif __aarch64__
         std::aligned_storage<144, 8>::type m_dictionary[1];
 #elif _WIN32
-        std::aligned_storage<1, 1>::type m_dictionary[1];
+        std::aligned_storage<144, 8>::type m_dictionary[1];
 #endif
     };
 

@@ -33,7 +33,7 @@ namespace realm::internal::bridge {
 #elif __aarch64__
         std::aligned_storage<12, 1>::type m_object_id[1];
 #elif _WIN32
-        std::aligned_storage<1, 1>::type m_object_id[1];
+        std::aligned_storage<12, 1>::type m_object_id[1];
 #endif
         friend bool operator ==(const object_id&, const object_id&);
         friend bool operator !=(const object_id&, const object_id&);

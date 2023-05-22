@@ -29,7 +29,7 @@ namespace realm::internal::bridge {
 #elif __aarch64__
         std::aligned_storage<8, 8>::type m_obj_key[1];
 #elif _WIN32
-        std::aligned_storage<1, 1>::type m_obj_key[1];
+        std::aligned_storage<8, 8>::type m_obj_key[1];
 #endif
     };
 
@@ -59,7 +59,7 @@ namespace realm::internal::bridge {
 #elif __aarch64__
         std::aligned_storage<16, 8>::type m_obj_link[1];
 #elif _WIN32
-        std::aligned_storage<1, 1>::type m_obj_link[1];
+        std::aligned_storage<16, 8>::type m_obj_link[1];
 #endif
     };
 

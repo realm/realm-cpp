@@ -99,7 +99,7 @@ namespace realm::internal::bridge {
 #elif __aarch64__
         std::aligned_storage<24, 8>::type m_mixed[1];
 #elif _WIN32
-        std::aligned_storage<1, 1>::type m_mixed[1];
+        std::aligned_storage<24, 8>::type m_mixed[1];
 #endif
         //friend bool operator ==(const mixed&, const mixed&);
         //friend bool operator !=(const mixed&, const mixed&);

@@ -136,7 +136,7 @@ namespace realm {
         std::aligned_storage<192, 8>::type m_subscription_set[1];
 #endif
 #elif _WIN32
-        std::aligned_storage<1, 1>::type m_subscription_set[1];
+        std::aligned_storage<208, 8>::type m_subscription_set[1];
 #endif
         std::reference_wrapper<internal::bridge::realm> m_realm;
         friend struct sync_subscription_set;
@@ -182,7 +182,7 @@ namespace realm {
         std::aligned_storage<104, 8>::type m_subscription_set[1];
 #endif
 #elif _WIN32
-        std::aligned_storage<1, 1>::type m_subscription_set[1];
+        std::aligned_storage<120, 8>::type m_subscription_set[1];
 #endif
         std::reference_wrapper<internal::bridge::realm> m_realm;
     };

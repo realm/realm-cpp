@@ -21,6 +21,9 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<80, sizeof(List)>{});
     static_assert(SizeCheck<8, alignof(List)>{});
+#elif _WIN32
+    static_assert(SizeCheck<80, sizeof(List)>{});
+    static_assert(SizeCheck<8, alignof(List)>{});
 #endif
 
     list::list() {

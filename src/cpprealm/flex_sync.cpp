@@ -33,6 +33,11 @@ namespace realm {
 #endif
     static_assert(internal::bridge::SizeCheck<8, alignof(sync::SubscriptionSet)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
+#elif _WIN32
+    static_assert(internal::bridge::SizeCheck<120, sizeof(sync::SubscriptionSet)>{});
+    static_assert(internal::bridge::SizeCheck<8, alignof(sync::SubscriptionSet)>{});
+    static_assert(internal::bridge::SizeCheck<208, sizeof(sync::MutableSubscriptionSet)>{});
+    static_assert(internal::bridge::SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
 #endif
     sync_subscription::sync_subscription(const sync::Subscription &v)
     {

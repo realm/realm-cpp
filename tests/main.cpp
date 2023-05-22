@@ -18,6 +18,7 @@
 
 #define CATCH_CONFIG_RUNNER
 
+#include "main.hpp"
 #include <catch2/catch_all.hpp>
 #include <realm/util/features.h>
 #include <filesystem>
@@ -102,12 +103,14 @@ int main(int argc, char* argv[]) {
     auto dog = realm::experimental::Dog();
 
 
-    auto x = realm::internal::bridge::realm::config();
-    auto db = realm::experimental::db(x);
+    realm_path path;
+    experimental::db db = experimental::open(path);
 
     auto managed_dog = db.write([&]() {
         return db.add(realm::experimental::Dog());
     });
+
+    auto x = managed_dog.name;
 
     
     Catch::ConfigData config;

@@ -16,6 +16,9 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<8, sizeof(ObjKey)>{});
     static_assert(SizeCheck<8, alignof(ObjKey)>{});
+#elif _WIN32
+    static_assert(SizeCheck<8, sizeof(ObjKey)>{});
+    static_assert(SizeCheck<8, alignof(ObjKey)>{});
 #endif
 
     obj_key::obj_key() {
@@ -78,6 +81,9 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<16, sizeof(ObjLink)>{});
     static_assert(SizeCheck<8, alignof(ObjLink)>{});
 #elif __aarch64__
+    static_assert(SizeCheck<16, sizeof(ObjLink)>{});
+    static_assert(SizeCheck<8, alignof(ObjLink)>{});
+#elif _WIN32
     static_assert(SizeCheck<16, sizeof(ObjLink)>{});
     static_assert(SizeCheck<8, alignof(ObjLink)>{});
 #endif

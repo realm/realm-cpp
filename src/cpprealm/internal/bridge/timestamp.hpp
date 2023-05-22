@@ -40,7 +40,7 @@ namespace realm::internal::bridge {
 #elif __aarch64__
         std::aligned_storage<16, 8>::type m_timestamp[1];
 #elif _WIN32
-        std::aligned_storage<1, 1>::type m_timestamp[1];
+        std::aligned_storage<16, 8>::type m_timestamp[1];
 #endif
         friend bool operator ==(const timestamp&, const timestamp&);
         friend bool operator !=(const timestamp&, const timestamp&);

@@ -34,6 +34,9 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<144, sizeof(CoreDictionary)>{});
     static_assert(SizeCheck<8, alignof(CoreDictionary)>{});
+#elif _WIN32
+    static_assert(SizeCheck<144, sizeof(CoreDictionary)>{});
+    static_assert(SizeCheck<8, alignof(CoreDictionary)>{});
 #endif
 
     core_dictionary::core_dictionary() {

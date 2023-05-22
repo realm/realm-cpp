@@ -56,6 +56,9 @@ namespace realm::internal::bridge {
 #endif
     static_assert(SizeCheck<8, alignof(Realm::Config)>{});
     #endif
+#elif _WIN32
+    static_assert(SizeCheck<456, sizeof(Realm::Config)>{});
+    static_assert(SizeCheck<8, alignof(Realm::Config)>{});
 #endif
 
     //class null_logger : public logger {

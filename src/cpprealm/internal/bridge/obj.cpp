@@ -32,6 +32,9 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<64, sizeof(Obj)>{});
     static_assert(SizeCheck<8, alignof(Obj)>{});
+#elif _WIN32
+    static_assert(SizeCheck<64, sizeof(Obj)>{});
+    static_assert(SizeCheck<8, alignof(Obj)>{});
 #endif
     
     obj::obj() {
