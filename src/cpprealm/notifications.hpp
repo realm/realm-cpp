@@ -42,9 +42,6 @@ struct notification_token {
     notification_token(notification_token&& nt) noexcept = default;
     notification_token& operator=(notification_token&&) = default;
     notification_token() = default;
-    ~notification_token() {
-        m_token.unregister();
-    }
 
     notification_token(internal::bridge::notification_token&& token)
             : m_token(token) {}

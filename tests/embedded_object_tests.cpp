@@ -12,7 +12,7 @@ TEST_CASE("embedded_objects") {
         auto foo = Foo();
         EmbeddedFoo embedded;
         embedded.bar = 42;
-        foo.foo = embedded.bar;
+        foo.foo = embedded;
 
         realm.write([&foo, &realm]() {
             realm.add(foo);

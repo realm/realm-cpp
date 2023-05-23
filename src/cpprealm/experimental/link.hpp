@@ -93,7 +93,8 @@ namespace realm {
                             auto fn = [&](auto& first, auto& second) {
                                 using Result = typename std::decay_t<decltype(first)>::Result;
                                 auto prop = managed.*second;
-                                obj.*std::decay_t<decltype(first)>::ptr = managed.m_obj.get<Result>(prop.m_key);
+                                // TODO: Resolve syntax issue on windows
+                                obj.*std::decay_t<decltype(first)>::ptr = managed.m_obj.template get<Result>(prop.m_key);
                             };
                             (fn(pairs.first, pairs.second), ...);
                             return obj;

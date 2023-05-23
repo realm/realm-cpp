@@ -151,12 +151,6 @@ namespace realm::internal::bridge {
             }
         }
 
-//        template <typename T>
-//        void set(const col_key& col_key, const T& value) {
-//            ::realm::experimental::serialize(value);
-//            abort();
-////            set(col_key, persisted<T, void>::serialize(value));
-//        }
         void set_list_values(const col_key& col_key, const std::vector<obj_key>& values);
         void set_list_values(const col_key& col_key, const std::vector<std::string>& values);
         void set_list_values(const col_key& col_key, const std::vector<bool>& values);

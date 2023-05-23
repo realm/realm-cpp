@@ -118,7 +118,12 @@ namespace realm::internal::bridge {
     }
 
     realm::config::config() {
-        new (&m_config) RealmConfig();
+        RealmConfig config;
+        config.cache = true;
+        config.path = std::filesystem::current_path().append("default.realm");
+        config.scheduler = std::make_shared<internal_scheduler>(scheduler::make_default());
+        config.schema_version = 0;
+        new (&m_config) RealmConfig(config);
     }
 
     realm::config::config(const config& other) {
@@ -200,7 +205,7 @@ namespace realm::internal::bridge {
         if (!initialized) {
             set_level_threshold(logger::level::off);
             set_logger(std::make_shared<null_logger>());
-            //realm_analytics::send();
+            realm_analytics::send();
             initialized = true;
         }
         m_realm = Realm::get_shared_realm(static_cast<RealmConfig>(v));

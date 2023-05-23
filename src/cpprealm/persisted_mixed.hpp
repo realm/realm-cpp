@@ -163,8 +163,6 @@ namespace realm {
                 stream << " }";
             } else if constexpr (std::is_same_v<M, std::monostate>) {
                 stream << "null";
-            } else {
-                stream << static_cast<M>(arg);
             }
         }, *value);
         return stream;

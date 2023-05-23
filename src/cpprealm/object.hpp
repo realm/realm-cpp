@@ -280,9 +280,13 @@ protected:
 
     __cpp_realm_friends
     template <typename, typename> friend struct thread_safe_reference;
-        template <typename V>
-        friend inline std::enable_if_t<std::is_base_of_v<object_base<V>, V>, bool> operator==(const V& lhs,
-                                                                                            const V& rhs);
+    template <typename V>
+    friend inline std::enable_if_t<std::is_base_of_v<object_base<V>, V>, bool> operator==(const V& lhs,
+                                                                                          const V& rhs);
+
+    template <typename V>
+    friend typename std::enable_if_t<internal::type_info::MixedPersistableConcept<V>::value, internal::bridge::mixed>
+        experimental::serialize(const V& v, const std::optional<internal::bridge::realm>&);
     };
 // MARK: Object
 /**

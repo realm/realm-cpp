@@ -17,6 +17,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include <cpprealm/app.hpp>
+#include <cpprealm/internal/generic_network_transport.hpp>
 
 #include <Foundation/NSData.h>
 #include <Foundation/NSURL.h>

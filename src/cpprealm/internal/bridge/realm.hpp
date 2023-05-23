@@ -91,7 +91,6 @@ namespace realm::internal::bridge {
 #endif
         };
 
-
         struct sync_config {
             struct flx_sync_enabled {};
             sync_config() {}
@@ -105,7 +104,6 @@ namespace realm::internal::bridge {
         private:
             std::shared_ptr<SyncConfig> m_config;
         };
-
 
         realm();
         realm(const config&); //NOLINT(google-explicit-constructor)
@@ -126,8 +124,6 @@ namespace realm::internal::bridge {
         std::shared_ptr<Realm> m_realm;
         friend struct group;
     };
-
-
 
     template <typename T>
     T resolve(const realm&, thread_safe_reference&& tsr);

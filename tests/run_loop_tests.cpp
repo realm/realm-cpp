@@ -278,7 +278,6 @@ TEST_CASE("run loops", "[run loops]") {
 
                 auto config = realm::db_config(path, std::make_shared<RunLoopScheduler>(loop));
                 auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
-
                 {
                     obj._id = 123;
                     realm.write([&realm, &obj] {

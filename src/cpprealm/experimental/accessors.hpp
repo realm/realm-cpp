@@ -3,6 +3,7 @@
 
 #include <cpprealm/experimental/types.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
+#include <cpprealm/internal/bridge/table.hpp>
 
 namespace realm::experimental {
     template<typename>
@@ -264,7 +265,7 @@ namespace realm::experimental {
                             if (v) {
                                 d.insert(k, static_cast<typename std::underlying_type<typename T::value_type>::type>(*v));
                             } else {
-                                d.insert(k, internal::bridge::mixed(std::nullopt));
+                                d.insert(k, internal::bridge::mixed());
                             }
                         } else {
                             using U = typename internal::type_info::type_info<T, void>::internal_type;

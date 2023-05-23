@@ -32,7 +32,7 @@ namespace realm::experimental {
                         }, managed<typename mapped_type::value_type::value_type>::schema.ps);
                     }
                 } else {
-                    m_backing_map.insert(m_key, internal::bridge::mixed(std::nullopt));
+                    m_backing_map.insert(m_key, internal::bridge::mixed());
                 }
             } else {
                 if constexpr (internal::type_info::is_primitive<mapped_type>::value) {
