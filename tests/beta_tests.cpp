@@ -133,7 +133,6 @@ namespace realm::experimental {
 
                  map_opt_int_col, map_opt_double_col, map_opt_bool_col, map_opt_str_col, map_opt_uuid_col,
                  map_opt_object_id_col, map_opt_binary_col, map_opt_date_col, map_opt_enum_col
-
                  )
 }
 

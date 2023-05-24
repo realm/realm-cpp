@@ -101,6 +101,10 @@ namespace realm::experimental {
         {
             return m_realm.refresh();
         }
+
+        sync_subscription_set subscriptions() {
+            return sync_subscription_set(m_realm);
+        }
     };
 
     template <typename ...Ts>
