@@ -6,7 +6,7 @@ CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
 {
     auto app = realm::App("MY_APP_ID");
     mUser = app.login(realm::App::credentials::anonymous()).get_future().get();
-    auto realm = realm::open<CoffeeMachine, DrinkTemplate>(mUser.flexible_sync_configuration());
+    auto realm = realm::open<CoffeeMachine, DrinkTemplate, CoffeeMachineReading>(mUser.flexible_sync_configuration());
     realm.subscriptions().update([](realm::mutable_sync_subscription_set& subs) {
         if (!subs.find("all")) {
             subs.add<CoffeeMachine>("all");
@@ -91,11 +91,24 @@ void CoffeeMachineManager::prepareForBrew(const QString &)
 
 void CoffeeMachineManager::startBrew(const QString&, int64_t milkQty, int64_t espressoQty, int64_t sugarQty)
 {
-    auto realm = realm::open<CoffeeMachine, DrinkTemplate>(mUser.flexible_sync_configuration());
+    auto realm = realm::open<CoffeeMachine, DrinkTemplate, CoffeeMachineReading>(mUser.flexible_sync_configuration());
     realm.write([&]() {
         mCoffeeMachine.espressoQty -= espressoQty;
         mCoffeeMachine.milkQty -= milkQty;
         mCoffeeMachine.sugarQty -= sugarQty;
+    });
+
+    realm.write([&]() {
+        auto machineReading = CoffeeMachineReading();
+        machineReading._id = realm::object_id::generate();
+        machineReading.coffeeMachineName = *mCoffeeMachine.location;
+        machineReading.milkQty = *mCoffeeMachine.milkQty;
+        machineReading.espressoQty = *mCoffeeMachine.espressoQty;
+        machineReading.chocolateQty = *mCoffeeMachine.chocolateQty;
+        machineReading.sugarQty = *mCoffeeMachine.sugarQty;
+        machineReading.state = *mCoffeeMachine.state;
+        machineReading.timestamp = std::chrono::system_clock::now();
+        realm.add(machineReading);
     });
 }
 

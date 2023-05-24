@@ -51,4 +51,27 @@ public:
     );
 };
 
+class CoffeeMachineReading : public realm::asymmetric_object<CoffeeMachineReading> {
+public:
+    realm::persisted<realm::object_id> _id;
+    realm::persisted<std::string> coffeeMachineName;
+    realm::persisted<int64_t> milkQty;
+    realm::persisted<int64_t> espressoQty;
+    realm::persisted<int64_t> chocolateQty;
+    realm::persisted<int64_t> sugarQty;
+    realm::persisted<CoffeeMachine::State> state;
+    realm::persisted<std::chrono::time_point<std::chrono::system_clock>> timestamp;
+
+    static constexpr auto schema = realm::schema("CoffeeMachineReading",
+        realm::property<&CoffeeMachineReading::_id, true>("_id"),
+        realm::property<&CoffeeMachineReading::coffeeMachineName>("name"),
+        realm::property<&CoffeeMachineReading::milkQty>("milkQty"),
+        realm::property<&CoffeeMachineReading::espressoQty>("espressoQty"),
+        realm::property<&CoffeeMachineReading::chocolateQty>("chocolateQty"),
+        realm::property<&CoffeeMachineReading::sugarQty>("sugarQty"),
+        realm::property<&CoffeeMachineReading::state>("state"),
+        realm::property<&CoffeeMachineReading::timestamp>("timestamp")
+    );
+};
+
 #endif // REALM_MODELS_HPP
