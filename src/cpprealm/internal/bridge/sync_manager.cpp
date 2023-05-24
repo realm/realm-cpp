@@ -4,8 +4,7 @@
 
 namespace realm::internal::bridge {
     std::string sync_manager::path_for_realm(const realm::sync_config &v) const {
-        return "";
-        //m_manager->path_for_realm(*static_cast<std::shared_ptr<SyncConfig>>(v));
+        return m_manager->path_for_realm(*static_cast<std::shared_ptr<SyncConfig>>(v));
     }
 
     sync_manager::sync_manager(const std::shared_ptr<SyncManager> &v) {

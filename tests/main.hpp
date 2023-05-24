@@ -32,16 +32,20 @@ struct realm_path {
     operator std::string() const {//NOLINT(google-explicit-constructor)
         return path;
     }
-    ~realm_path() {
-        path = std::filesystem::current_path().append(path).generic_string();
-        std::filesystem::remove_all(path + ".realm.management");
-        std::filesystem::remove_all(path + ".management");
-        std::filesystem::remove(path);
-        std::filesystem::remove(path + ".realm");
-        std::filesystem::remove(path + ".realm.lock");
-        std::filesystem::remove(path + ".lock");
-        std::filesystem::remove(path + ".realm.note");
-        std::filesystem::remove(path + ".note");
+    ~realm_path() { 
+        try {
+            path = std::filesystem::current_path().append(path).generic_string();
+            std::filesystem::remove_all(path + ".realm.management");
+            std::filesystem::remove_all(path + ".management");
+            std::filesystem::remove(path);
+            std::filesystem::remove(path + ".realm");
+            std::filesystem::remove(path + ".realm.lock");
+            std::filesystem::remove(path + ".lock");
+            std::filesystem::remove(path + ".realm.note");
+            std::filesystem::remove(path + ".note");
+        } catch (...) {
+
+        }
     }
 };
 

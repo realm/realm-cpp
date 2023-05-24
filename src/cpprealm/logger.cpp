@@ -1,8 +1,11 @@
+#if !defined(WIN32_LEAN_AND_MEAN) && _WIN32
+#define WIN32_LEAN_AND_MEAN
+#endif
+
 #include <cpprealm/logger.hpp>
-//#include <realm/util/logger.hpp>
+#include <realm/util/logger.hpp>
 
 namespace realm {
-    /*
     static_assert((int)util::Logger::Level::off == (int)logger::level::off);
     static_assert((int)util::Logger::Level::fatal == (int)logger::level::fatal);
     static_assert((int)util::Logger::Level::error == (int)logger::level::error);
@@ -34,8 +37,8 @@ namespace realm {
                 return logger::level::all;
         }
         abort();
-    }*/
-    /*
+    }
+
     inline util::Logger::Level log_level_for_level(logger::level log_level) {
         switch (log_level) {
             case logger::level::off:
@@ -58,24 +61,24 @@ namespace realm {
                 return util::Logger::Level::all;
         }
         abort();
-    }*/
-
-    //struct internal_logger : public util::Logger {
-     //   internal_logger(std::shared_ptr<logger> &&s) {
-            //m_logger = std::move(s);
-     //   }
-        //void do_log(util::Logger::Level level, const std::string &msg) override {
-            //m_logger->do_log(log_level_for_level(level), msg);
-        //}
-
-    //private:
-        //std::shared_ptr<logger> m_logger;
-    //};
-
-    void set_logger(std::shared_ptr<struct logger>&& l) {
-       // util::Logger::set_default_logger(std::make_shared<internal_logger>(std::move(l)));
     }
-    void set_level_threshold(logger::level l) {
-        //util::Logger::set_default_level_threshold(log_level_for_level(l));
+
+    struct internal_logger : public util::Logger {
+        internal_logger(std::shared_ptr<logger> &&s) {
+            m_logger = std::move(s);
+        }
+        void do_log(util::Logger::Level level, const std::string &msg) override {
+            m_logger->do_log(log_level_for_level(level), msg);
+        }
+
+    private:
+        std::shared_ptr<logger> m_logger;
+    };
+
+    void set_default_logger(std::shared_ptr<struct logger>&& l) {
+        util::Logger::set_default_logger(std::make_shared<internal_logger>(std::move(l)));
+    }
+    void set_default_level_threshold(logger::level l) {
+        util::Logger::set_default_level_threshold(log_level_for_level(l));
     }
 }

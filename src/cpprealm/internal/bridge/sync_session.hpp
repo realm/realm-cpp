@@ -7,7 +7,7 @@
 #include <future>
 
 namespace realm {
-    struct SyncSession;
+    class SyncSession;
     namespace internal::bridge {
         struct sync_session {
             enum class state {

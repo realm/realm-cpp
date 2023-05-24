@@ -288,8 +288,7 @@ namespace realm::experimental {
             for (auto& [k, v] : value) {
                 if (v) {
                     if (v->is_managed) {
-                        abort();
-                        //d.insert(k, v.managed.m_obj);
+                        d.insert(k, v->managed.m_obj.get_key());
                     } else {
                         auto m_obj = d.create_and_insert_linked_object(k);
                         std::apply([&m_obj, o = *v](auto && ...p) {
@@ -297,6 +296,7 @@ namespace realm::experimental {
                                      m_obj, m_obj.get_table().get_column_key(p.name),
                                      o.unmanaged.*(std::decay_t<decltype(p)>::ptr)), ...);
                         }, managed<T, void>::schema.ps);
+                        d.insert(k, m_obj.get_key());
                     }
                 }
 
