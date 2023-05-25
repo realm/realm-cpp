@@ -274,7 +274,7 @@ TEST_CASE("object_initialization_beta") {
     obj.mixed_col = AllTypes::my_mixed("mixed");
     //            .my_mixed_col = AllTypesObject::foo_mixed(o2),
 
-            obj.opt_int_col = 2;
+    obj.opt_int_col = 2;
     obj.opt_double_col = 2.34;
     obj.opt_str_col = "opt string";
     obj.opt_bool_col = true;

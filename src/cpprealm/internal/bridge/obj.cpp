@@ -202,8 +202,13 @@ namespace realm::internal::bridge {
         }
         reinterpret_cast<Obj*>(&m_obj)->set_list_values(col_key, v);
     }
-    void obj::set_list_values(const col_key &col_key, const std::vector<bool> &values) {
-        reinterpret_cast<Obj*>(&m_obj)->set_list_values(col_key, values);
+    void obj::set_list_values(const col_key &col_key, const std::vector<bool>& values) {
+        if (values.empty())
+            return;
+        auto list = reinterpret_cast<Obj*>(m_obj)->get_list<bool>(col_key);
+        for (size_t i = 0; i < values.size(); ++i) {
+            list.add(values[i]);
+        }
     }
     void obj::set_list_values(const col_key &col_key, const std::vector<int64_t> &values) {
         reinterpret_cast<Obj*>(&m_obj)->set_list_values(col_key, values);

@@ -10,6 +10,7 @@
 
 #include <realm/object-store/util/scheduler.hpp>
 #include <iostream>
+#include <variant>
 
 namespace realm::experimental {
     template<typename T>
@@ -145,10 +146,10 @@ namespace realm::experimental {
             forward_change(nullptr, {}, {}, {}, err);
         }
 
-        void forward_change(const T *ptr, \
-                std::vector<std::string> property_names, \
-                std::vector<typename decltype(T::schema)::variant_t> old_values, \
-                std::vector<typename decltype(T::schema)::variant_t> new_values, \
+        void forward_change(const T *ptr,
+                std::vector<std::string> property_names,
+                std::vector<typename decltype(T::schema)::variant_t> old_values,
+                std::vector<typename decltype(T::schema)::variant_t> new_values,
                 const std::exception_ptr &error) {
             if (!ptr) {
                 if (error) {

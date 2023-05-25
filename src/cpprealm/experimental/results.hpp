@@ -8,8 +8,6 @@
 #include <cpprealm/internal/bridge/results.hpp>
 #include <cpprealm/experimental/macros.hpp>
 
-//#include <cpprealm/persisted.hpp>
-
 namespace realm::experimental {
 
     template<typename T>
@@ -47,13 +45,13 @@ namespace realm::experimental {
             }
 
             reference operator*() noexcept {
-                auto obj = m_parent->m_parent.template get<Obj>(m_idx);
+                auto obj = internal::bridge::get<internal::bridge::obj>(*m_parent, m_idx);
                 value = std::move(T::schema.create(std::move(obj), m_parent->m_parent.get_realm()));
                 return value;
             }
 
             pointer operator->() const noexcept {
-                auto obj = m_parent->m_parent.template get<Obj>(m_idx);
+                auto obj = internal::bridge::get<internal::bridge::obj>(*m_parent, m_idx);
                 return T::schema::create_unique(std::move(obj), m_parent->m_parent.get_realm());
             }
 
@@ -160,9 +158,6 @@ namespace realm::experimental {
         }
 
     protected:
-        //template<typename... V>
-       // friend struct db;
-
         internal::bridge::results m_parent;
     };
 }

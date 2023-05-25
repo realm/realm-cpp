@@ -5,44 +5,42 @@
 #include <realm/query.hpp>
 
 namespace realm::experimental {
-    namespace {
-        //MARK: - char reference
-        struct char_reference {
-            char_reference& operator =(char c);
-        private:
-            char_reference(managed<std::string>* parent, size_t idx);
-            template <typename, typename> friend struct realm::experimental::managed;
-            friend struct char_pointer;
-            managed<std::string>* m_parent;
-            size_t m_idx;
-        };
-        //MARK: - const char reference
-        struct const_char_reference {
-            operator char() const; //NOLINT(google-explicit-constructor)
-        private:
-            const_char_reference(const managed<std::string>* parent, size_t idx);
-            template <typename, typename> friend struct realm::experimental::managed;
-            friend struct const_char_pointer;
-            const managed<std::string>* m_parent;
-            size_t m_idx;
-        };
-        //MARK: - char pointer
-        struct char_pointer {
-            char_reference operator [](size_t idx);
-        private:
-            explicit char_pointer(managed<std::string>* parent);
-            template <typename, typename> friend struct realm::experimental::managed;
-            managed<std::string>* m_parent;
-        };
-        //MARK: - const char pointer
-        struct const_char_pointer {
-            const_char_reference operator [](size_t idx) const;
-        private:
-            explicit const_char_pointer(const managed<std::string>* parent);
-            template <typename, typename> friend struct realm::experimental::managed;
-            const managed<std::string>* m_parent;
-        };
-    }
+    //MARK: - char reference
+    struct char_reference {
+        char_reference& operator =(char c);
+    private:
+        char_reference(managed<std::string>* parent, size_t idx);
+        template <typename, typename> friend struct realm::experimental::managed;
+        friend struct char_pointer;
+        managed<std::string>* m_parent;
+        size_t m_idx;
+    };
+    //MARK: - const char reference
+    struct const_char_reference {
+        operator char() const; //NOLINT(google-explicit-constructor)
+    private:
+        const_char_reference(const managed<std::string>* parent, size_t idx);
+        template <typename, typename> friend struct realm::experimental::managed;
+        friend struct const_char_pointer;
+        const managed<std::string>* m_parent;
+        size_t m_idx;
+    };
+    //MARK: - char pointer
+    struct char_pointer {
+        char_reference operator [](size_t idx);
+    private:
+        explicit char_pointer(managed<std::string>* parent);
+        template <typename, typename> friend struct realm::experimental::managed;
+        managed<std::string>* m_parent;
+    };
+    //MARK: - const char pointer
+    struct const_char_pointer {
+        const_char_reference operator [](size_t idx) const;
+    private:
+        explicit const_char_pointer(const managed<std::string>* parent);
+        template <typename, typename> friend struct realm::experimental::managed;
+        const managed<std::string>* m_parent;
+    };
 
     //MARK: - managed string
     template <> struct managed<std::string> : managed_base {

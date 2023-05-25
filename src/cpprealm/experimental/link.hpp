@@ -23,7 +23,7 @@ namespace realm {
             link& operator =(const link& v) {
                 if (v.is_managed) {
                     is_managed = true;
-                    new (&managed) experimental::managed<T>(v.managed);
+                    new (&m_managed) experimental::managed<T>(v.m_managed);
                 } else {
                     new (&unmanaged) T(v.unmanaged);
                 }
@@ -31,20 +31,20 @@ namespace realm {
             }
             link(managed<T>&& v) {
                 is_managed = true;
-                new (&managed) experimental::managed<T>(std::move(v));
+                new (&m_managed) experimental::managed<T>(std::move(v));
             }
             link(const T& v) {
                 is_managed = false;
                 new (&unmanaged) T(v);
             }
             ~link() {
-                if (is_managed) managed.~managed();
+                if (is_managed) m_managed.~managed();
                 else unmanaged.~T();
             }
 
             bool operator ==(const managed<T>& other) const {
                 if (is_managed) {
-                    return managed.m_obj.operator Obj() == other.m_obj.operator Obj();
+                    return m_managed.m_obj.operator Obj() == other.m_obj.operator Obj();
                 } else {
                     return false;
                 }
@@ -52,7 +52,7 @@ namespace realm {
 
             bool operator ==(const link<T>& other) const {
                 if (other.is_managed && is_managed) {
-                    return managed.m_obj.operator Obj() == other.managed.m_obj.operator Obj();
+                    return m_managed.m_obj.operator Obj() == other.m_managed.m_obj.operator Obj();
                 } else {
                     return false;
                 }
@@ -92,8 +92,8 @@ namespace realm {
                             T obj;
                             auto fn = [&](auto& first, auto& second) {
                                 using Result = typename std::decay_t<decltype(first)>::Result;
-                                auto prop = managed.*second;
-                                obj.*std::decay_t<decltype(first)>::ptr = managed.m_obj.template get<Result>(prop.m_key);
+                                auto prop = m_managed.*second;
+                                obj.*std::decay_t<decltype(first)>::ptr = m_managed.m_obj.template get<Result>(prop.m_key);
                             };
                             (fn(pairs.first, pairs.second), ...);
                             return obj;
@@ -107,7 +107,7 @@ namespace realm {
             }
             union {
                 T unmanaged;
-                managed<T> managed;
+                managed<T> m_managed;
             };
             bool is_managed = false;
         };

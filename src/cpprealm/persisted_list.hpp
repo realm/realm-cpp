@@ -114,6 +114,7 @@ namespace realm {
             }
             persisted_list_base() {
                 new (&unmanaged) std::vector<T>();
+                this->unmanaged.resize(0);
             }
             ~persisted_list_base() {
                 if (this->m_object) {
