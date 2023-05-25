@@ -28,6 +28,7 @@ namespace realm {
                            fatal = 7,
                            off = 8 };
         virtual void do_log(level, const std::string &) = 0;
+        virtual inline ~logger() noexcept = default;
     };
 
     void set_default_logger(std::shared_ptr<struct logger> &&);
