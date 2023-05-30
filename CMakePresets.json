@@ -16,14 +16,8 @@
     },
     {
       "name": "windows",
-      "hidden": true,
       "inherits": "default",
-      "generator": "Visual Studio 17 2022",
-      "condition": {
-        "lhs": "${hostSystemName}",
-        "type": "equals",
-        "rhs": "Windows"
-      }
+      "generator": "Visual Studio 17 2022"
     },
     {
       "name": "linux",

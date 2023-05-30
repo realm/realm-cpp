@@ -279,11 +279,14 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: 'recursive'
-          
+
       - uses: ammaraskar/msvc-problem-matcher@master
 
+      - name: Configure
+        run: cmake --preset windows
+
       - name: Compile
-        run: cmake --build --config ${{ matrix.configuration }}
+        run: cmake --build --preset windows --config ${{ matrix.configuration }}
 
       - name: Open a tmate debug session
         if: ${{ failure() && runner.debug }}
