@@ -33,8 +33,9 @@ namespace realm::experimental {
         static inline std::vector<internal::bridge::object_schema> schemas;
         internal::bridge::realm m_realm;
         explicit db(realm::db_config config)
-        : m_realm(config)
         {
+            config.set_schema(db::schemas);
+            m_realm = internal::bridge::realm(config);
         }
 
         void begin_write() const { m_realm.begin_transaction(); }
@@ -56,7 +57,13 @@ namespace realm::experimental {
         managed<T> add(T &&v) {
             static_assert(sizeof(managed<T>), "Must declare schema for T");
             auto table = m_realm.table_for_object_type(managed<T>::schema.name);
-            auto m_obj = table.create_object();
+            internal::bridge::obj m_obj;
+            if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
+                auto pk = v.*(managed<T>::schema.primary_key().ptr);
+                m_obj = table.create_object_with_primary_key(pk.value);
+            } else {
+                m_obj = table.create_object();
+            }
 
             std::apply([&m_obj, &v](auto && ...p) {
                 (accessor<typename std::decay_t<decltype(p)>::Result>::set(
@@ -82,7 +89,13 @@ namespace realm::experimental {
             static_assert(sizeof(managed<T>), "Must declare schema for T");
             internal::bridge::table table = m_realm.table_for_object_type(managed<T>::schema.name);
             for (auto& obj : v) {
-                auto m_obj = table.create_object();
+                internal::bridge::obj m_obj;
+                if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
+                    auto pk = obj.*(managed<T>::schema.primary_key().ptr);
+                    m_obj = table.create_object_with_primary_key(pk.value);
+                } else {
+                    m_obj = table.create_object();
+                }
                 std::apply([&m_obj, &obj](auto && ...p) {
                     (accessor<typename std::decay_t<decltype(p)>::Result>::set(
                             m_obj, m_obj.get_table().get_column_key(p.name), obj.*(std::decay_t<decltype(p)>::ptr)
@@ -217,7 +230,13 @@ namespace realm::experimental {
             internal::bridge::table table = transaction_ref->get_table(internal::bridge::table_name_for_object_type(managed<T>::schema.name));
 
             for (auto& obj : v) {
-                auto m_obj = table.create_object();
+                internal::bridge::obj m_obj;
+                if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
+                    auto pk = obj.*(managed<T>::schema.primary_key().ptr);
+                    m_obj = table.create_object_with_primary_key(pk.value);
+                } else {
+                    m_obj = table.create_object();
+                }
                 std::apply([&m_obj, &obj](auto && ...p) {
                     (accessor<typename std::decay_t<decltype(p)>::Result>::set(
                             m_obj, m_obj.get_table().get_column_key(p.name), obj.*(std::decay_t<decltype(p)>::ptr)

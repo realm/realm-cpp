@@ -17,6 +17,8 @@
 namespace realm::experimental {
     template <typename>
     struct link;
+    template <typename>
+    struct primary_key;
 }
 namespace realm::internal::type_info {
     template <typename T, typename = void>
@@ -197,6 +199,7 @@ namespace realm::internal::type_info {
             return bridge::property::type::Object;
         }
     };
+
     template <typename T>
     struct is_link : std::false_type {
         static constexpr auto value = false;
@@ -330,5 +333,23 @@ namespace realm::internal::type_info {
     struct type_info<T, std::enable_if_t<is_custom_persistable<T>::value>> :
         public type_info<typename is_custom_persistable<T>::underlying> {
     };
+
+    template <typename T>
+    struct is_experimental_primary_key : std::false_type {
+        static constexpr auto value = false;
+    };
+    template <typename T>
+    struct is_experimental_primary_key<experimental::primary_key<T>> : std::true_type {
+        static constexpr auto value = true;
+    };
+
+    template <typename T>
+    struct type_info<experimental::primary_key<T>, void> {
+        using internal_type = int64_t;
+        static constexpr bridge::property::type type() {
+            return bridge::property::type::Int;//type_info<T>::type();
+        }
+    };
+
 }
 #endif //REALM_TYPE_INFO_HPP

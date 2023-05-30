@@ -58,6 +58,13 @@ namespace realm::internal::bridge {
         reinterpret_cast<CoreDictionary*>(m_dictionary)->insert(key, value);
     }
 
+    obj core_dictionary::create_and_insert_linked_object(const std::string& key, const internal::bridge::mixed& pk) {
+        Table& t = *(reinterpret_cast<CoreDictionary*>(m_dictionary)->get_target_table());
+        auto o = t.create_object_with_primary_key(pk.operator Mixed());
+        reinterpret_cast<CoreDictionary*>(m_dictionary)->insert(key, o.get_key());
+        return o;
+    }
+
     obj core_dictionary::create_and_insert_linked_object(const std::string& key) {
         return reinterpret_cast<CoreDictionary*>(m_dictionary)->create_and_insert_linked_object(key);
     }

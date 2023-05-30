@@ -34,6 +34,7 @@ namespace realm::internal::bridge {
         void insert(const std::string& key, const mixed& value);
         void insert(const std::string& key, const std::string& value);
         obj create_and_insert_linked_object(const std::string& key);
+        obj create_and_insert_linked_object(const std::string& key, const internal::bridge::mixed& pk);
         mixed get(const std::string& key) const;
         obj get_object(const std::string& key);
     private:

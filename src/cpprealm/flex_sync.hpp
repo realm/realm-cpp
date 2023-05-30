@@ -101,23 +101,23 @@ namespace realm {
         // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
         // for the templated class type.
         template<typename T>
-        std::enable_if_t<sizeof(experimental::managed<T>)>
-        add(const std::string &name /*,
-            std::optional<std::function<rbool(T &)>> &&query_fn = std::nullopt*/) {
-            //static_assert(sizeof(managed<T>), "Must declare schema for T");
+        std::enable_if_t<!std::is_base_of_v<object<T>, T>>
+        add(const std::string &name ,
+            std::optional<std::function<rbool(experimental::managed<T> &)>> &&query_fn = std::nullopt) {
+            static_assert(sizeof(experimental::managed<T>), "Must declare schema for T");
 
-          //   auto schema = m_realm.get().schema().find(T::schema.name);
-          //  auto group = m_realm.get().read_group();
-          //  auto table_ref = group.get_table(schema.table_key());
-           // auto builder = internal::bridge::query(table_ref);
+            auto schema = m_realm.get().schema().find(experimental::managed<T>::schema.name);
+            auto group = m_realm.get().read_group();
+            auto table_ref = group.get_table(schema.table_key());
+            auto builder = internal::bridge::query(table_ref);
 
-           // if (query_fn) {
-           //     auto q = realm::query<T>(builder, std::move(schema));
-           //     auto full_query = (*query_fn)(q).q;
-           //     insert_or_assign(name, full_query);
-           // } else {
-           //     insert_or_assign(name, builder);
-           // }
+            if (query_fn) {
+                auto q = realm::query<experimental::managed<T>>(builder, std::move(schema), true);
+                auto full_query = (*query_fn)(q).q;
+                insert_or_assign(name, full_query);
+            } else {
+                insert_or_assign(name, builder);
+            }
         }
 
         // Removes a subscription for a given name. Will throw if subscription does
@@ -135,6 +135,18 @@ namespace realm {
         template <typename T>
         std::enable_if_t<std::is_base_of_v<object<T>, T>>
         update_subscription(const std::string& name, std::optional<std::function<rbool(T&)>>&& query_fn = std::nullopt) {
+            remove(name);
+            add(name, std::move(query_fn));
+        }
+
+        // Updates a subscription for a given name.
+        // Will throw if subscription does not exist.
+        // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
+        // for the templated class type.
+        template <typename T>
+        std::enable_if_t<!std::is_base_of_v<object<T>, T>>
+        update_subscription(const std::string& name,
+                            std::optional<std::function<rbool(experimental::managed<T>&)>>&& query_fn = std::nullopt) {
             remove(name);
             add(name, std::move(query_fn));
         }

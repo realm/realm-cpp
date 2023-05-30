@@ -86,4 +86,16 @@ namespace realm::internal::bridge {
     void property::set_type(realm::internal::bridge::property::type t) {
         reinterpret_cast<Property*>(&m_property)->type = static_cast<PropertyType>(t);
     }
+
+    void property::set_primary_key(bool v) {
+        reinterpret_cast<Property*>(&m_property)->is_primary = v;
+    }
+
+    bool property::is_primary() const {
+        return reinterpret_cast<const Property*>(&m_property)->is_primary;
+    }
+
+    std::string property::name() const {
+        return reinterpret_cast<const Property*>(&m_property)->name;
+    }
 }

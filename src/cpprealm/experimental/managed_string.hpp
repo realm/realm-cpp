@@ -1,8 +1,11 @@
 #ifndef CPP_REALM_MANAGED_STRING_HPP
 #define CPP_REALM_MANAGED_STRING_HPP
 
-#include <cpprealm/experimental/db.hpp>
-#include <realm/query.hpp>
+#include <cpprealm/experimental/macros.hpp>
+
+namespace realm {
+    class rbool;
+}
 
 namespace realm::experimental {
     //MARK: - char reference
@@ -96,12 +99,11 @@ namespace realm::experimental {
         void pop_back();
 
         //MARK: -   comparison operators
-        inline bool operator==(const std::string& rhs) const noexcept {
-            return value() == rhs;
-        }
-        inline bool operator==(const char* rhs) const noexcept {
-            return value() == rhs;
-        }
+        rbool operator==(const std::string& rhs) const noexcept;
+        rbool operator==(const char* rhs) const noexcept;
+        rbool operator!=(const std::string& rhs) const noexcept;
+        rbool operator!=(const char* rhs) const noexcept;
+
 #ifdef __cpp_impl_three_way_comparison
         inline auto operator<=>(const std::string& rhs) const noexcept {
             return get().compare(rhs) <=> 0;
@@ -110,16 +112,16 @@ namespace realm::experimental {
             return get().compare(rhs) <=> 0;
         }
 #else
-        inline auto operator<(const std::string& rhs) const noexcept {
+        inline bool operator<(const std::string& rhs) const noexcept {
             return get() < rhs;
         }
-        inline auto operator>(const char* rhs) const noexcept {
+        inline bool operator>(const char* rhs) const noexcept {
             return get() > rhs;
         }
-        inline auto operator<=(const char* rhs) const noexcept {
+        inline bool operator<=(const char* rhs) const noexcept {
             return get() <= rhs;
         }
-        inline auto operator>=(const char* rhs) const noexcept {
+        inline bool operator>=(const char* rhs) const noexcept {
             return get() >= rhs;
         }
 #endif
@@ -144,17 +146,6 @@ namespace realm::experimental {
         }
     private:
         void inline set(const std::optional<std::string>& v) { m_obj->template set<std::optional<std::string>>(m_key, v); }
-    };
-
-    template <typename T>
-    struct query;
-
-    template <> struct query<std::string> {
-        Query query;
-        ColKey col_key;
-        inline auto operator>=(const char* rhs) noexcept {
-            //query.greater_equal(col_key, StringData(rhs));
-        }
     };
 }
 

@@ -26,6 +26,7 @@
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/type_info.hpp>
 #include <cpprealm/experimental/link.hpp>
+#include <cpprealm/experimental/managed_primary_key.hpp>
 
 #include <type_traits>
 
@@ -72,7 +73,8 @@ namespace realm {
             using Result = typename persisted_type_extractor<typename ptr_type_extractor<Ptr>::member_type>::Result;
             using Class = typename ptr_type_extractor<Ptr>::class_type;
             static constexpr auto ptr = Ptr;
-            static constexpr bool is_primary_key = IsPrimaryKey;
+            static constexpr bool is_primary_key = IsPrimaryKey || internal::type_info::is_experimental_primary_key<Result>::value;
+//            static constexpr bool is_experimental_primary_key = internal::type_info::is_experimental_primary_key<Result>::value;
             internal::bridge::property::type type;
             const char* name = "";
 
@@ -179,6 +181,11 @@ namespace realm {
                   , ps(props) {
                 apply_name(props);
             }
+            explicit constexpr schema(const char *name_, bool is_embedded_object, std::tuple<Properties...>&& props)
+                : name(name_)
+                  , ps(props), m_is_embedded_object(is_embedded_object) {
+                apply_name(props);
+            }
             template<size_t N, typename P>
             static constexpr auto primary_key(P &) {
                 if constexpr (P::is_primary_key) {
@@ -201,10 +208,15 @@ namespace realm {
             static constexpr bool IsEmbedded = std::is_base_of_v<embedded_object<Class>, Class>;
             static constexpr bool IsAsymmetric = std::is_base_of_v<asymmetric_object<Class>, Class>;
 
+            bool is_embedded_experimental() const {
+                return m_is_embedded_object;
+            }
+
             [[nodiscard]] internal::bridge::object_schema to_core_schema() const {
                 internal::bridge::object_schema schema;
                 schema.set_name(name);
-                auto add_property = [&schema](const internal::bridge::property &p) {
+
+                auto add_property = [&](const internal::bridge::property &p) {
                     schema.add_property(p);
                 };
                 std::apply([&](const auto&... p) {
@@ -219,6 +231,9 @@ namespace realm {
                 }
                 if constexpr (IsAsymmetric) {
                     schema.set_object_type(internal::bridge::object_schema::object_type::TopLevelAsymmetric);
+                }
+                if (m_is_embedded_object) {
+                    schema.set_object_type(internal::bridge::object_schema::object_type::Embedded);
                 }
                 return schema;
             }
@@ -253,12 +268,20 @@ namespace realm {
             constexpr auto property_value_for_name(std::string_view property_name, const Class &cls) const {
                 return property_value_for_name<0>(property_name, cls, std::get<0>(properties));
             }
+        private:
+            bool m_is_embedded_object = false;
         };
     }
-template <auto Ptr, bool IsPrimaryKey = false>
+    template <auto Ptr, bool IsPrimaryKey = false>
     static constexpr auto property(const char* name)
     {
         return schemagen::property<Ptr, IsPrimaryKey>(name);
+    }
+
+    template <auto Ptr>
+    static constexpr auto property_test(const char* name)
+    {
+        return schemagen::property<Ptr, false>(name);
     }
 
     template <typename ...T>
@@ -276,6 +299,15 @@ template <auto Ptr, bool IsPrimaryKey = false>
         auto i = std::get<0>(props);
         using Cls = typename decltype(i)::Class;
         return schemagen::schema<Cls, T...>(name, std::move(props));
+    }
+
+    template <typename ...T>
+    static constexpr auto schema(const char * name,
+                                 bool is_embedded_object,
+                                 std::tuple<T...>&& props) {
+        auto i = std::get<0>(props);
+        using Cls = typename decltype(i)::Class;
+        return schemagen::schema<Cls, T...>(name, is_embedded_object, std::move(props));
     }
 }
 
