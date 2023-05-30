@@ -283,10 +283,10 @@ jobs:
       - uses: ammaraskar/msvc-problem-matcher@master
 
       - name: Configure
-        run: cmake --preset windows-x64
+        run: cmake --preset windows
 
       - name: Compile
-        run: cmake --build --preset windows-x64 --config ${{ matrix.configuration }}
+        run: cmake --build --preset windows --config ${{ matrix.configuration }}
 
       - name: Open a tmate debug session
         if: ${{ failure() && runner.debug }}
@@ -295,7 +295,7 @@ jobs:
           timeout-minutes: 15
 
       - name: Test
-        working-directory: .build/cmake-preset-windows-x64/tests
+        working-directory: .build/cmake-preset-windows/tests
         run: ./${{ matrix.configuration }}/cpprealm_exe_tests
 
       - name: Publish Test Report
