@@ -106,89 +106,6 @@ namespace realm::internal::type_info {
             static_assert(std::conjunction<
                           std::is_convertible<const char*, std::string>,
                           std::is_constructible<std::string, const char*>>::value);
-
-            template <class Custom, class Underlying>
-            using is_persistable = std::conjunction<
-                    std::is_convertible<Custom, Underlying>,
-                    std::is_constructible<Custom, Underlying>,
-                    std::negation<std::is_same<Custom, Underlying>>>;
-            template <class Custom>
-            using is_int_persistable = std::conjunction<
-                    std::is_convertible<Custom, int64_t>,
-                    std::is_constructible<Custom, int64_t>,
-                    std::negation<std::is_same<Custom, bool>>,
-                    std::negation<std::is_same<Custom, int64_t>>>;
-            template <class Custom>
-            using is_double_persistable = std::conjunction<
-                    std::is_convertible<Custom, double>,
-                    std::is_constructible<Custom, double>,
-                    std::negation<std::is_same<Custom, double>>>;
-            template <class Custom>
-            using is_string_persistable = is_persistable<Custom, std::string>;
-            template <class Custom>
-            using is_bool_persistable = std::conjunction<
-                    std::is_convertible<Custom, bool>,
-                    std::is_constructible<Custom, bool>,
-                    std::negation<std::is_integral<Custom>>,
-                    std::negation<std::is_same<Custom, bool>>>;
-            template <class Custom>
-            using is_uuid_persistable = is_persistable<Custom, uuid>;
-            template <class Custom>
-            using is_object_id_persistable = is_persistable<Custom, object_id>;
-            template <class Custom>
-            using is_binary_persistable = is_persistable<Custom, std::vector<uint8_t>>;
-            template <class Custom, typename C = std::chrono::system_clock, typename D = typename C::duration>
-            using is_time_point_persistable = is_persistable<Custom, std::chrono::time_point<C, D>>;
-            template <class Custom>
-            using is_null_persistable = is_persistable<Custom, std::monostate>;
-
-            template <typename Custom, typename = void>
-            struct is_custom_persistable : std::false_type {};
-            template <typename Custom>
-            struct is_custom_persistable<Custom, std::enable_if_t<is_string_persistable<Custom>::value>> :
-                std::true_type {
-                using underlying = std::string;
-            };
-            template <typename Custom>
-            struct is_custom_persistable<Custom, std::enable_if_t<is_int_persistable<Custom>::value>> :
-                std::true_type {
-                using underlying = int64_t;
-            };
-            template <typename Custom>
-            struct is_custom_persistable<Custom, std::enable_if_t<is_double_persistable<Custom>::value>> :
-                std::true_type {
-                using underlying = double;
-            };
-            template <typename Custom>
-            struct is_custom_persistable<Custom, std::enable_if_t<is_bool_persistable<Custom>::value>> :
-                std::true_type {
-                using underlying = bool;
-            };
-            template <typename Custom>
-            struct is_custom_persistable<Custom, std::enable_if_t<is_uuid_persistable<Custom>::value>> :
-                std::true_type {
-                using underlying = uuid;
-            };
-            template <typename Custom>
-            struct is_custom_persistable<Custom, std::enable_if_t<is_object_id_persistable<Custom>::value>> :
-                std::true_type {
-                using underlying = object_id;
-            };
-            template <typename Custom>
-            struct is_custom_persistable<Custom, std::enable_if_t<is_binary_persistable<Custom>::value>> :
-                std::true_type {
-                using underlying = std::vector<uint8_t>;
-            };
-            template <typename Custom>
-            struct is_custom_persistable<Custom, std::enable_if_t<is_time_point_persistable<Custom>::value>> :
-                std::true_type {
-                using underlying = std::chrono::time_point<std::chrono::system_clock, std::chrono::system_clock::duration>;
-            };
-            template <typename Custom>
-            struct is_custom_persistable<Custom, std::enable_if_t<is_null_persistable<Custom>::value>> :
-                std::true_type {
-                using underlying = std::monostate;
-            };
         }
     }
 
@@ -328,10 +245,6 @@ namespace realm::internal::type_info {
         static constexpr auto type() {
             return type_info<V>::type() | bridge::property::type::Array;
         }
-    };
-    template <typename T>
-    struct type_info<T, std::enable_if_t<is_custom_persistable<T>::value>> :
-        public type_info<typename is_custom_persistable<T>::underlying> {
     };
 
     template <typename T>
