@@ -15,6 +15,29 @@
       }
     },
     {
+      "name": "windows",
+      "hidden": true,
+      "inherits": "default",
+      "generator": "Visual Studio 17 2022",
+      "toolchainFile": "${sourceDir}/realm-core/tools/vcpkg/ports/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "$env{vcpkg_arch}-windows"
+      },
+      "condition": {
+        "lhs": "${hostSystemName}",
+        "type": "equals",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "windows-x64",
+      "displayName": "Windows x64",
+      "inherits": "windows",
+      "environment": {
+        "vcpkg_arch": "x64"
+      }
+    },
+    {
       "name": "linux",
       "displayName": "Linux",
       "inherits": "default",
@@ -39,6 +62,12 @@
         "type": "equals",
         "rhs": "Darwin"
       }
+    },
+    {
+      "name": "windows-x64",
+      "configurePreset": "windows-x64",
+      "displayName": "x64",
+      "configuration": "Debug"
     },
     {
       "name": "android",
