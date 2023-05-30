@@ -41,6 +41,11 @@ namespace realm {
             }
         }
 
+        template<typename V>
+        void set_managed_beta(V &prop, const internal::bridge::col_key &column_key) {
+            new(&prop.m_key) internal::bridge::col_key(column_key);
+        }
+
         template<size_t N, typename P>
         constexpr auto
         prepare_for_query(internal::bridge::query &query, internal::bridge::object_schema &schema, P &property) {
@@ -55,8 +60,26 @@ namespace realm {
             }
         }
 
+        template<size_t N, typename P>
+        constexpr auto
+        prepare_for_query_beta(internal::bridge::query &query, internal::bridge::object_schema &schema, P property) {
+            if constexpr (N + 1 == std::tuple_size_v<decltype(T::managed_pointers() )>) {
+                (this->*property).prepare_for_query(query);
+                set_managed_beta((this->*property), schema.property_for_name(T::schema.names[N]).column_key());
+                return;
+            } else {
+                (this->*property).prepare_for_query(query);
+                set_managed_beta((this->*property), schema.property_for_name(T::schema.names[N]).column_key());
+                return prepare_for_query_beta<N + 1>(query, schema, std::get<N + 1>(T::managed_pointers() ));
+            }
+        }
+
         query(internal::bridge::query &query, internal::bridge::object_schema &&schema) {
             prepare_for_query<0>(query, schema, std::get<0>(T::schema.properties));
+        }
+
+        query(internal::bridge::query &query, internal::bridge::object_schema &&schema, bool beta) {
+            prepare_for_query_beta<0>(query, schema, std::get<0>(T::managed_pointers()));
         }
 
         template<typename, typename>

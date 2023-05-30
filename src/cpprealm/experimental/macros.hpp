@@ -152,9 +152,11 @@ constexpr constant_index< acc > counter_crumb( id, constant_index< rank >, const
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
+#include <cpprealm/internal/bridge/property.hpp>
 
 namespace realm::experimental {
     struct managed_base {
+        managed_base() = default;
         static constexpr bool is_object = false;
         internal::bridge::obj *m_obj = nullptr;
         internal::bridge::realm *m_realm = nullptr;
@@ -181,10 +183,20 @@ namespace realm::experimental {
             m_obj->template set<typename internal::type_info::type_info<T, void>::internal_type>(m_key, v);
             return *this;
         }
+
+        // MARK: Queries
+        bool should_detect_usage_for_queries = false;
+        internal::bridge::query* query = nullptr;
+
+        void prepare_for_query(internal::bridge::query& query_builder) {
+            should_detect_usage_for_queries = true;
+            query = &query_builder;
+        }
     };
 
     template<typename T, typename = void>
     struct managed : public managed_base {
+        managed() = default;
         using value_type = T;
 
         T value() const {
@@ -194,10 +206,18 @@ namespace realm::experimental {
 }
 
 #define REALM_SCHEMA(cls, ...) \
+    DECLARE_REALM_SCHEMA(cls, false, __VA_ARGS__) \
+
+#define REALM_EMBEDDED_SCHEMA(cls, ...) \
+    DECLARE_REALM_SCHEMA(cls, true, __VA_ARGS__)
+
+#define DECLARE_REALM_SCHEMA(cls, is_embedded_object, ...) \
     template <> struct managed<cls> { \
-        static constexpr bool is_object = true; \
+        managed() = default; \
+        static constexpr bool is_object = true;     \
+        static constexpr bool is_embedded = is_embedded_object; \
         FOR_EACH(DECLARE_PERSISTED, cls, __VA_ARGS__) \
-        static constexpr auto schema = realm::schema(#cls, std::tuple{ FOR_EACH(DECLARE_PROPERTY, cls, __VA_ARGS__) }  ); \
+        static constexpr auto schema = realm::schema(#cls, is_embedded_object, std::tuple{ FOR_EACH(DECLARE_PROPERTY, cls, __VA_ARGS__) }  ); \
         static constexpr auto managed_pointers() { \
             return std::tuple{FOR_EACH(DECLARE_MANAGED_PROPERTY, cls, __VA_ARGS__)};  \
         } \

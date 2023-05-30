@@ -5,8 +5,6 @@
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/experimental/types.hpp>
 
-//#include <vector>
-
 namespace realm::experimental {
 
     template<typename T>

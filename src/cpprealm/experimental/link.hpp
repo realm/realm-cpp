@@ -15,7 +15,7 @@ namespace realm {
             using value_type = T;
 
             link() {
-                new (&unmanaged) T();
+                new (&unmanaged) std::optional<T>();
             }
             link(const link& v) {
                 *this = v;
@@ -25,7 +25,7 @@ namespace realm {
                     is_managed = true;
                     new (&m_managed) experimental::managed<T>(v.m_managed);
                 } else {
-                    new (&unmanaged) T(v.unmanaged);
+                    new (&unmanaged) std::optional<T>(v.unmanaged);
                 }
                 return *this;
             }
@@ -35,11 +35,11 @@ namespace realm {
             }
             link(const T& v) {
                 is_managed = false;
-                new (&unmanaged) T(v);
+                new (&unmanaged) std::optional<T>(v);
             }
             ~link() {
-                if (is_managed) m_managed.~managed();
-                else unmanaged.~T();
+                if (is_managed)
+                    m_managed.~managed();
             }
 
             bool operator ==(const managed<T>& other) const {
@@ -93,7 +93,14 @@ namespace realm {
                             auto fn = [&](auto& first, auto& second) {
                                 using Result = typename std::decay_t<decltype(first)>::Result;
                                 auto prop = m_managed.*second;
-                                obj.*std::decay_t<decltype(first)>::ptr = m_managed.m_obj.template get<Result>(prop.m_key);
+                                if constexpr (::realm::internal::type_info::is_link<Result>::value) {
+                                    // TODO: impl
+                                    abort();
+                                } else if constexpr (::realm::internal::type_info::is_experimental_primary_key<Result>::value) {
+                                    obj.*std::decay_t<decltype(first)>::ptr =m_managed.m_obj.template get<decltype(typename Result::internal_type())>(prop.m_key);
+                                } else {
+                                    obj.*std::decay_t<decltype(first)>::ptr = m_managed.m_obj.template get<Result>(prop.m_key);
+                                }
                             };
                             (fn(pairs.first, pairs.second), ...);
                             return obj;
@@ -101,12 +108,14 @@ namespace realm {
                     }, experimental::managed<T>::schema.ps);
                     return box(std::move(obj));
                 } else {
-                    
-                    return box(&unmanaged);
+                    if (unmanaged) {
+                        return box(&(*unmanaged));
+                    }
+                    throw std::runtime_error("Cannot access null unmanaged link");
                 }
             }
             union {
-                T unmanaged;
+                std::optional<T> unmanaged;
                 managed<T> m_managed;
             };
             bool is_managed = false;
@@ -136,8 +145,17 @@ namespace realm {
 
             managed &operator=(T&& o) {
                 auto table = m_realm->table_for_object_type(managed<T>::schema.name);
-                auto obj = table.create_object();
-                m_obj->set(m_key, obj.get_key());
+                internal::bridge::obj obj;
+                if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
+                    auto pk = o.*(managed<T>::schema.primary_key().ptr);
+                    obj = table.create_object_with_primary_key(pk.value);
+                    m_obj->set(m_key, obj.get_key());
+                } else if (managed<T>::schema.is_embedded_experimental()) {
+                    obj = m_obj->create_and_set_linked_object(m_key);
+                } else {
+                    obj = table.create_object();
+                    m_obj->set(m_key, obj.get_key());
+                }
 
                 std::apply([&obj, &o](auto && ...p) {
                     (accessor<typename std::decay_t<decltype(p)>::Result>::set(

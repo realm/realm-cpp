@@ -24,11 +24,18 @@ namespace realm::experimental {
                     if (o->is_managed) {
                         m_backing_map.insert(m_key, o->m_managed.m_obj.get_key());
                     } else {
-                        auto m_obj = m_backing_map.create_and_insert_linked_object(m_key);
+                        internal::bridge::obj m_obj;
+                        if constexpr (managed<typename mapped_type::value_type::value_type>::schema.HasPrimaryKeyProperty) {
+                            auto pk = (*o->unmanaged).*(managed<typename mapped_type::value_type::value_type>::schema.primary_key().ptr);
+                            m_obj = m_backing_map.create_and_insert_linked_object(m_key, pk.value);
+                        } else {
+                            m_obj = m_backing_map.create_and_insert_linked_object(m_key);
+                        }
+
                         std::apply([&m_obj, &o](auto && ...p) {
                             (accessor<typename std::decay_t<decltype(p)>::Result>::set(
                                      m_obj, m_obj.get_table().get_column_key(p.name),
-                                     o->unmanaged.*(std::decay_t<decltype(p)>::ptr)), ...);
+                                     (*o->unmanaged).*(std::decay_t<decltype(p)>::ptr)), ...);
                         }, managed<typename mapped_type::value_type::value_type>::schema.ps);
                     }
                 } else {
@@ -40,14 +47,21 @@ namespace realm::experimental {
                 } else {
                    if (o.is_managed) {
                         m_backing_map.insert(m_key, o.managed.m_obj.get_key());
-                    } else {
-                        auto m_obj = m_backing_map.create_and_insert_linked_object(m_key);
+                   } else {
+                        internal::bridge::obj m_obj;
+                        if constexpr (managed<typename mapped_type::value_type>::schema.HasPrimaryKeyProperty) {
+                            auto pk = (*o->unmanaged).*(managed<typename mapped_type::value_type>::schema.primary_key().ptr);
+                            m_obj = m_backing_map.create_and_insert_linked_object(m_key, pk.value);
+                        } else {
+                            m_obj = m_backing_map.create_and_insert_linked_object(m_key);
+                        }
+
                         std::apply([&m_obj, &o](auto && ...p) {
                             (accessor<typename std::decay_t<decltype(p)>::Result>::set(
                                      m_obj, m_obj.get_table().get_column_key(p.name),
                                      o.unmanaged.*(std::decay_t<decltype(p)>::ptr)), ...);
                         }, managed<typename mapped_type::value_type>::schema.ps);
-                    }
+                   }
                 }
             }
             return *this;

@@ -55,6 +55,9 @@ namespace realm::internal::bridge {
         operator Property() const; //NOLINT(google-explicit-constructor)
         void set_object_link(const std::string&);
         void set_type(type);
+        void set_primary_key(bool);
+        bool is_primary() const;
+        std::string name() const;
         [[nodiscard]] col_key column_key() const;
     private:
 #ifdef __i386__

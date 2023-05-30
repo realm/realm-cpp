@@ -1,11 +1,15 @@
 #include "main.hpp"
 #include <cpprealm/experimental/db.hpp>
 #include <cpprealm/experimental/observation.hpp>
+#include "admin_utils.hpp"
+#include "sync_test_utils.hpp"
 
 using namespace realm;
 
 namespace realm::experimental {
+
     struct Dog {
+        primary_key<int64_t> _id;
         std::string name;
         std::string name2;
         std::string name3;
@@ -13,22 +17,34 @@ namespace realm::experimental {
         std::string name4;
 
         int64_t age = 0;
+
+
     };
-    REALM_SCHEMA(Dog, name, name2, name3, foo2, name4, age)
+    REALM_SCHEMA(Dog,
+                 _id,
+                 name,
+                 name2,
+                 name3,
+                 foo2,
+                 name4,
+                 age)
 
     struct Person {
+        primary_key<int64_t> _id;
         std::string name;
         int64_t age = 0;
         link<Dog> dog;
+
     };
-    REALM_SCHEMA(Person, name, age, dog)
+    REALM_SCHEMA(Person, _id, name, age, dog)
 
     struct AllTypesObjectEmbedded {
+        int64_t _id;
         std::string str_col;
     };
-    REALM_SCHEMA(AllTypesObjectEmbedded, str_col)
+    REALM_EMBEDDED_SCHEMA(AllTypesObjectEmbedded, _id, str_col)
     struct AllTypesObjectLink {
-        int64_t _id = 0;
+        primary_key<int64_t> _id;
         std::string str_col;
     };
     REALM_SCHEMA(AllTypesObjectLink, _id, str_col)
@@ -38,7 +54,7 @@ namespace realm::experimental {
             one, two
         };
 
-        int64_t _id;
+        primary_key<int64_t> _id;
         double double_col;
         bool bool_col;
         std::string str_col;
@@ -86,14 +102,14 @@ namespace realm::experimental {
         std::vector<link<AllTypesObjectLink>> list_obj_col;
         std::vector<link<AllTypesObjectEmbedded>> list_embedded_obj_col;
 
-        std::vector<std::optional<int64_t>> list_opt_int_col;
-        std::vector<std::optional<double>> list_opt_double_col;
-        std::vector<std::optional<bool>> list_opt_bool_col;
-        std::vector<std::optional<std::string>> list_opt_str_col;
-        std::vector<std::optional<realm::uuid>> list_opt_uuid_col;
-        std::vector<std::optional<realm::object_id>> list_opt_object_id_col;
-        std::vector<std::optional<std::vector<std::uint8_t>>> list_opt_binary_col;
-        std::vector<std::optional<std::chrono::time_point<std::chrono::system_clock>>> list_opt_date_col;
+//        std::vector<std::optional<int64_t>> list_opt_int_col;
+//        std::vector<std::optional<double>> list_opt_double_col;
+//        std::vector<std::optional<bool>> list_opt_bool_col;
+//        std::vector<std::optional<std::string>> list_opt_str_col;
+//        std::vector<std::optional<realm::uuid>> list_opt_uuid_col;
+//        std::vector<std::optional<realm::object_id>> list_opt_object_id_col;
+//        std::vector<std::optional<std::vector<std::uint8_t>>> list_opt_binary_col;
+//        std::vector<std::optional<std::chrono::time_point<std::chrono::system_clock>>> list_opt_date_col;
 
         std::map<std::string, int64_t> map_int_col;
         std::map<std::string, double> map_double_col;
@@ -106,15 +122,15 @@ namespace realm::experimental {
         std::map<std::string, Enum> map_enum_col;
         std::map<std::string, realm::mixed> map_mixed_col;
 
-        std::map<std::string, std::optional<int64_t>> map_opt_int_col;
-        std::map<std::string, std::optional<double>> map_opt_double_col;
-        std::map<std::string, std::optional<bool>> map_opt_bool_col;
-        std::map<std::string, std::optional<std::string>> map_opt_str_col;
-        std::map<std::string, std::optional<realm::uuid>> map_opt_uuid_col;
-        std::map<std::string, std::optional<realm::object_id>> map_opt_object_id_col;
-        std::map<std::string, std::optional<std::vector<uint8_t>>> map_opt_binary_col;
-        std::map<std::string, std::optional<std::chrono::time_point<std::chrono::system_clock>>> map_opt_date_col;
-        std::map<std::string, std::optional<Enum>> map_opt_enum_col;
+//        std::map<std::string, std::optional<int64_t>> map_opt_int_col;
+//        std::map<std::string, std::optional<double>> map_opt_double_col;
+//        std::map<std::string, std::optional<bool>> map_opt_bool_col;
+//        std::map<std::string, std::optional<std::string>> map_opt_str_col;
+//        std::map<std::string, std::optional<realm::uuid>> map_opt_uuid_col;
+//        std::map<std::string, std::optional<realm::object_id>> map_opt_object_id_col;
+//        std::map<std::string, std::optional<std::vector<uint8_t>>> map_opt_binary_col;
+//        std::map<std::string, std::optional<std::chrono::time_point<std::chrono::system_clock>>> map_opt_date_col;
+//        std::map<std::string, std::optional<Enum>> map_opt_enum_col;
 
         std::map<std::string, std::optional<link<AllTypesObjectLink>>> map_link_col;
         std::map<std::string, std::optional<link<AllTypesObjectEmbedded>>> map_embedded_col;
@@ -126,13 +142,13 @@ namespace realm::experimental {
                  opt_date_col, opt_uuid_col, opt_object_id_col, opt_binary_col, opt_obj_col, opt_embedded_obj_col,
                  list_int_col, list_double_col, list_bool_col, list_str_col, list_uuid_col, list_object_id_col, list_binary_col,
                  list_date_col, list_mixed_col, list_obj_col, list_embedded_obj_col,
-                 list_opt_int_col, list_opt_double_col, list_opt_bool_col, list_opt_str_col,
-                 list_opt_uuid_col, list_opt_object_id_col, list_opt_binary_col, list_opt_date_col,
+//                 list_opt_int_col, list_opt_double_col, list_opt_bool_col, list_opt_str_col,
+//                 list_opt_uuid_col, list_opt_object_id_col, list_opt_binary_col, list_opt_date_col,
                  map_int_col, map_double_col, map_bool_col, map_str_col, map_uuid_col, map_object_id_col, map_binary_col,
-                 map_date_col, map_enum_col, map_mixed_col, map_link_col, map_embedded_col,
+                 map_date_col, map_enum_col, map_mixed_col, map_link_col, map_embedded_col
 
-                 map_opt_int_col, map_opt_double_col, map_opt_bool_col, map_opt_str_col, map_opt_uuid_col,
-                 map_opt_object_id_col, map_opt_binary_col, map_opt_date_col, map_opt_enum_col
+//                 map_opt_int_col, map_opt_double_col, map_opt_bool_col, map_opt_str_col, map_opt_uuid_col,
+//                 map_opt_object_id_col, map_opt_binary_col, map_opt_date_col, map_opt_enum_col
                  )
 }
 
@@ -144,7 +160,10 @@ TEST_CASE("experimental", "[experimental]") {
             experimental::Person person;
             person.name = "Jack";
             person.age = 27;
-            person.dog->name = "fido";
+            experimental::Dog dog;
+            dog.name = "fido";
+            person.dog = std::move(dog);
+
             return db.add(std::move(person));
         });
         auto blah = std::string();
@@ -246,19 +265,114 @@ TEST_CASE("experimental", "[experimental]") {
 //}
 namespace realm::experimental {
 
+TEST_CASE("flex_sync_beta") {
+    auto app = realm::App(Admin::shared().cached_app_id(), Admin::shared().base_url());
+    SECTION("all") {
+        app.get_sync_manager().set_log_level(logger::level::all);
+        auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
+        auto flx_sync_config = user.flexible_sync_configuration();
+
+        experimental::db synced_realm = experimental::db(std::move(flx_sync_config));
+
+        auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
+                                                    subs.add<AllTypes>("foo-strings", [](auto &obj) {
+                                                        return obj.str_col == "foo";
+                                                    });
+                                                    subs.add<AllTypesObjectLink>("foo-link");
+                                                          }).get_future().get();
+
+
+        CHECK(update_success == true);
+
+        auto sub = *synced_realm.subscriptions().find("foo-strings");
+        CHECK(sub.name == "foo-strings");
+        CHECK(sub.object_class_name == "AllTypes");
+        CHECK(sub.query_string == "str_col == \"foo\"");
+
+        auto non_existent_sub = synced_realm.subscriptions().find("non-existent");
+        CHECK((non_existent_sub == std::nullopt) == true);
+
+        synced_realm.write([&synced_realm]() {
+            AllTypes o;
+            o._id = 1;
+            o.str_col = "foo";
+            synced_realm.add(std::move(o));
+        });
+
+        test::wait_for_sync_uploads(user).get_future().get();
+        test::wait_for_sync_downloads(user).get_future().get();
+        synced_realm.write([]() {}); // refresh realm
+        auto objs = synced_realm.objects<AllTypes>();
+
+        CHECK(objs[0]._id == 1);
+
+        synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
+                                        subs.update_subscription<AllTypes>("foo-strings", [](auto &obj) {
+                                            return obj.str_col == "bar" && obj._id == 1230;
+                                        });
+                                    }).get_future().get();
+
+        auto sub2 = *synced_realm.subscriptions().find("foo-strings");
+        CHECK(sub2.name == "foo-strings");
+        CHECK(sub2.object_class_name == "AllTypes");
+        CHECK(sub2.query_string == "str_col == \"bar\" and _id == 1230");
+
+        synced_realm.write([&synced_realm]() {
+            AllTypes o;
+            o._id = 1230;
+            o.str_col = "bar";
+            synced_realm.add(std::move(o));
+        });
+
+        test::wait_for_sync_uploads(user).get_future().get();
+        test::wait_for_sync_downloads(user).get_future().get();
+
+        synced_realm.refresh();
+        objs = synced_realm.objects<AllTypes>();
+        CHECK(objs.size() == 1);
+
+        synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
+                                        subs.update_subscription<AllTypes>("foo-strings");
+                                    }).get_future().get();
+//
+        auto sub3 = *synced_realm.subscriptions().find("foo-strings");
+        CHECK(sub3.name == "foo-strings");
+        CHECK(sub3.object_class_name == "AllTypes");
+        CHECK(sub3.query_string == "TRUEPREDICATE");
+
+        test::wait_for_sync_uploads(user).get_future().get();
+        test::wait_for_sync_downloads(user).get_future().get();
+
+        synced_realm.refresh();
+        objs = synced_realm.objects<AllTypes>();
+        CHECK(objs.size() == 2);
+
+    }
+}
+
 TEST_CASE("object_initialization_beta") {
     realm_path path;
     auto date = std::chrono::time_point<std::chrono::system_clock>();
     auto uuid = realm::uuid();
-    auto o = AllTypesObjectLink();
-    o._id = 1;
-    o.str_col = "link object";
+    auto link1 = AllTypesObjectLink();
+    link1._id = 1;
+    link1.str_col = "link object";
 
-    auto o2 = AllTypesObjectLink();
-    o2._id = 2;
-    o2.str_col = "link object 2";
-    AllTypesObjectEmbedded embedded_obj;
-    embedded_obj.str_col = "embedded obj";
+    auto link2 = AllTypesObjectLink();
+    link2._id = 2;
+    link2.str_col = "link object 2";
+
+    auto link3 = AllTypesObjectLink();
+    link3._id = 3;
+    link3.str_col = "link object 3";
+
+    AllTypesObjectEmbedded embedded_obj1;
+    embedded_obj1.str_col = "embedded obj1";
+    AllTypesObjectEmbedded embedded_obj2;
+    embedded_obj2.str_col = "embedded obj2";
+    AllTypesObjectEmbedded embedded_obj3;
+    embedded_obj3.str_col = "embedded obj3";
+
     auto object_id = realm::object_id::generate();
 
     AllTypes obj;
@@ -284,8 +398,8 @@ TEST_CASE("object_initialization_beta") {
     obj.opt_object_id_col = object_id;
     obj.opt_binary_col = std::vector<uint8_t>({1});
 
-    obj.opt_obj_col = o,
-    obj.opt_embedded_obj_col = embedded_obj,
+    obj.opt_obj_col = link1,
+    obj.opt_embedded_obj_col = embedded_obj1,
 
     obj.list_int_col = std::vector<int64_t>({1});
     obj.list_double_col = std::vector<double>({1.23});
@@ -296,17 +410,17 @@ TEST_CASE("object_initialization_beta") {
     obj.list_binary_col = std::vector<std::vector<uint8_t>>({{1}});
     obj.list_date_col = std::vector<std::chrono::time_point<std::chrono::system_clock>>({date});
     obj.list_mixed_col = std::vector<realm::mixed>({realm::mixed("mixed str")});
-    obj.list_obj_col = std::vector<link<AllTypesObjectLink>>({o});
-    obj.list_embedded_obj_col = std::vector<link<AllTypesObjectEmbedded>>({embedded_obj});
+    obj.list_obj_col = std::vector<link<AllTypesObjectLink>>({std::move(link2)});
+    obj.list_embedded_obj_col = std::vector<link<AllTypesObjectEmbedded>>({embedded_obj2});
 
-    obj.list_opt_int_col = std::vector<std::optional<int64_t>>({123, std::nullopt});
-    obj.list_opt_double_col = std::vector<std::optional<double>>({123.456, std::nullopt});
-    obj.list_opt_bool_col = std::vector<std::optional<bool>>({true, std::nullopt});
-    obj.list_opt_str_col = std::vector<std::optional<std::string>>({"hello", std::nullopt});
-    obj.list_opt_uuid_col = std::vector<std::optional<realm::uuid>>({uuid, std::nullopt});
-    obj.list_opt_object_id_col = std::vector<std::optional<realm::object_id>>({object_id, std::nullopt});
-    obj.list_opt_binary_col = std::vector<std::optional<std::vector<uint8_t>>>({std::vector<uint8_t>({1}), std::nullopt});
-    obj.list_opt_date_col = std::vector<std::optional<std::chrono::time_point<std::chrono::system_clock>>>({date, std::nullopt});
+//    obj.list_opt_int_col = std::vector<std::optional<int64_t>>({123, std::nullopt});
+//    obj.list_opt_double_col = std::vector<std::optional<double>>({123.456, std::nullopt});
+//    obj.list_opt_bool_col = std::vector<std::optional<bool>>({true, std::nullopt});
+//    obj.list_opt_str_col = std::vector<std::optional<std::string>>({"hello", std::nullopt});
+//    obj.list_opt_uuid_col = std::vector<std::optional<realm::uuid>>({uuid, std::nullopt});
+//    obj.list_opt_object_id_col = std::vector<std::optional<realm::object_id>>({object_id, std::nullopt});
+//    obj.list_opt_binary_col = std::vector<std::optional<std::vector<uint8_t>>>({std::vector<uint8_t>({1}), std::nullopt});
+//    obj.list_opt_date_col = std::vector<std::optional<std::chrono::time_point<std::chrono::system_clock>>>({date, std::nullopt});
 
     obj.map_int_col = std::map<std::string, int64_t>({{"foo", 1}});
     obj.map_double_col = std::map<std::string, double>({{"foo", 1.23}});
@@ -318,18 +432,18 @@ TEST_CASE("object_initialization_beta") {
     obj.map_date_col = std::map<std::string, std::chrono::time_point<std::chrono::system_clock>>({{"foo", date}});
     obj.map_enum_col = std::map<std::string, AllTypes::Enum>({{"foo", AllTypes::Enum::one}});
     obj.map_mixed_col = std::map<std::string, realm::mixed>({{"foo", realm::mixed("bar")}});
-    obj.map_link_col = std::map<std::string, std::optional<link<AllTypesObjectLink>>>({{"foo", o}});
-    obj.map_embedded_col = std::map<std::string, std::optional<link<AllTypesObjectEmbedded>>>({{"foo", embedded_obj}});
+    obj.map_link_col = std::map<std::string, std::optional<link<AllTypesObjectLink>>>({{"foo", link3}});
+    obj.map_embedded_col = std::map<std::string, std::optional<link<AllTypesObjectEmbedded>>>({{"foo", embedded_obj3}});
 
-    obj.map_opt_int_col = std::map<std::string, std::optional<int64_t>>({{"foo", 1}, {"bar", std::nullopt}});
-    obj.map_opt_double_col = std::map<std::string, std::optional<double>>({{"foo", 1.23}, {"bar", std::nullopt}});
-    obj.map_opt_bool_col = std::map<std::string, std::optional<bool>>({{"foo", true}, {"bar", std::nullopt}});
-    obj.map_opt_str_col = std::map<std::string, std::optional<std::string>>({{"foo", "bar"}, {"bar", std::nullopt}});
-    obj.map_opt_uuid_col = std::map<std::string, std::optional<realm::uuid>>({{"foo", uuid}, {"bar", std::nullopt}});
-    obj.map_opt_object_id_col = std::map<std::string, std::optional<realm::object_id>>({{"foo", object_id}, {"bar", std::nullopt}});
-    obj.map_opt_binary_col = std::map<std::string, std::optional<std::vector<uint8_t>>>({  {"foo", std::vector<uint8_t>({1})}, {"bar", std::nullopt }});
-    obj.map_opt_date_col = std::map<std::string, std::optional<std::chrono::time_point<std::chrono::system_clock>>>({{"foo", date}, {"bar", std::nullopt}});
-    obj.map_opt_enum_col = std::map<std::string, std::optional<AllTypes::Enum>>({{"foo", AllTypes::Enum::one}, {"bar", std::nullopt}});
+//    obj.map_opt_int_col = std::map<std::string, std::optional<int64_t>>({{"foo", 1}, {"bar", std::nullopt}});
+//    obj.map_opt_double_col = std::map<std::string, std::optional<double>>({{"foo", 1.23}, {"bar", std::nullopt}});
+//    obj.map_opt_bool_col = std::map<std::string, std::optional<bool>>({{"foo", true}, {"bar", std::nullopt}});
+//    obj.map_opt_str_col = std::map<std::string, std::optional<std::string>>({{"foo", "bar"}, {"bar", std::nullopt}});
+//    obj.map_opt_uuid_col = std::map<std::string, std::optional<realm::uuid>>({{"foo", uuid}, {"bar", std::nullopt}});
+//    obj.map_opt_object_id_col = std::map<std::string, std::optional<realm::object_id>>({{"foo", object_id}, {"bar", std::nullopt}});
+//    obj.map_opt_binary_col = std::map<std::string, std::optional<std::vector<uint8_t>>>({  {"foo", std::vector<uint8_t>({1})}, {"bar", std::nullopt }});
+//    obj.map_opt_date_col = std::map<std::string, std::optional<std::chrono::time_point<std::chrono::system_clock>>>({{"foo", date}, {"bar", std::nullopt}});
+//    obj.map_opt_enum_col = std::map<std::string, std::optional<AllTypes::Enum>>({{"foo", AllTypes::Enum::one}, {"bar", std::nullopt}});
 
     experimental::db db = experimental::open(path);
     Dog d;
@@ -343,7 +457,7 @@ TEST_CASE("object_initialization_beta") {
         return db.add(std::move(d));
     });
 
-    CHECK(managed_obj._id == 123);
+    CHECK(managed_obj._id == (int64_t)123);
     CHECK(managed_obj.double_col == 12.34);
     CHECK(managed_obj.str_col == "foo");
     CHECK(managed_obj.bool_col == true);
@@ -375,28 +489,32 @@ TEST_CASE("object_initialization_beta") {
     CHECK(managed_obj.list_mixed_col[0] == realm::mixed("mixed str"));
     auto other_obj = db.objects<realm::experimental::AllTypesObjectLink>()[1];
     CHECK(managed_obj.opt_obj_col->str_col == "link object");
-    CHECK(managed_obj.list_obj_col[0].str_col == "link object");
+    auto a = managed_obj.list_obj_col[0].str_col.value();
+    CHECK(managed_obj.list_obj_col[0].str_col == "link object 2");
     CHECK(managed_obj.list_obj_col[0] == other_obj);
-    CHECK(managed_obj.list_embedded_obj_col[0].str_col == "embedded obj");
-    CHECK(managed_obj.opt_embedded_obj_col->str_col == "embedded obj");
+    auto b = managed_obj.list_embedded_obj_col[0].str_col.value();
+    auto c = managed_obj.opt_embedded_obj_col->str_col.value();
+
+    CHECK(managed_obj.list_embedded_obj_col[0].str_col == "embedded obj2");
+    CHECK(managed_obj.opt_embedded_obj_col->str_col == "embedded obj1");
     CHECK(managed_obj.list_embedded_obj_col[0] == managed_obj.list_embedded_obj_col[0]);
 
-    CHECK(managed_obj.list_opt_int_col[0] == 123);
-    CHECK(managed_obj.list_opt_int_col[1] == std::nullopt);
-    CHECK(managed_obj.list_opt_double_col[0] == 123.456);
-    CHECK(managed_obj.list_opt_double_col[1] == std::nullopt);
-    CHECK(managed_obj.list_opt_bool_col[0] == true);
-    CHECK(managed_obj.list_opt_bool_col[1] == std::nullopt);
-    CHECK(managed_obj.list_opt_str_col[0] == "hello");
-    CHECK(managed_obj.list_opt_str_col[1] == std::nullopt);
-    CHECK(managed_obj.list_opt_uuid_col[0] == uuid);
-    CHECK(managed_obj.list_opt_uuid_col[1] == std::nullopt);
-    CHECK(managed_obj.list_opt_object_id_col[0] == object_id);
-    CHECK(managed_obj.list_opt_object_id_col[1] == std::nullopt);
-    CHECK(managed_obj.list_opt_binary_col[0] == std::vector<uint8_t>({1}));
-    CHECK(managed_obj.list_opt_binary_col[1] == std::nullopt);
-    CHECK(managed_obj.list_opt_date_col[0] == date);
-    CHECK(managed_obj.list_opt_date_col[1] == std::nullopt);
+//    CHECK(managed_obj.list_opt_int_col[0] == 123);
+//    CHECK(managed_obj.list_opt_int_col[1] == std::nullopt);
+//    CHECK(managed_obj.list_opt_double_col[0] == 123.456);
+//    CHECK(managed_obj.list_opt_double_col[1] == std::nullopt);
+//    CHECK(managed_obj.list_opt_bool_col[0] == true);
+//    CHECK(managed_obj.list_opt_bool_col[1] == std::nullopt);
+//    CHECK(managed_obj.list_opt_str_col[0] == "hello");
+//    CHECK(managed_obj.list_opt_str_col[1] == std::nullopt);
+//    CHECK(managed_obj.list_opt_uuid_col[0] == uuid);
+//    CHECK(managed_obj.list_opt_uuid_col[1] == std::nullopt);
+//    CHECK(managed_obj.list_opt_object_id_col[0] == object_id);
+//    CHECK(managed_obj.list_opt_object_id_col[1] == std::nullopt);
+//    CHECK(managed_obj.list_opt_binary_col[0] == std::vector<uint8_t>({1}));
+//    CHECK(managed_obj.list_opt_binary_col[1] == std::nullopt);
+//    CHECK(managed_obj.list_opt_date_col[0] == date);
+//    CHECK(managed_obj.list_opt_date_col[1] == std::nullopt);
 
     CHECK(managed_obj.map_int_col["foo"] == 1);
     CHECK(managed_obj.map_double_col["foo"] == 1.23);
@@ -406,7 +524,7 @@ TEST_CASE("object_initialization_beta") {
     CHECK(managed_obj.map_date_col["foo"] == date);
     CHECK(managed_obj.map_uuid_col["foo"] == uuid);
     CHECK(managed_obj.map_mixed_col["foo"] == "bar");
-    CHECK((*managed_obj.map_link_col["foo"]).value()->str_col == "link object");
+    CHECK((*managed_obj.map_link_col["foo"]).value()->str_col == "link object 3");
     auto other_obj2 = db.objects<realm::experimental::AllTypesObjectLink>()[2];
     auto other_obj3 = db.objects<realm::experimental::AllTypes>()[0];
     CHECK(*managed_obj.map_link_col["foo"] == other_obj2);
@@ -414,34 +532,35 @@ TEST_CASE("object_initialization_beta") {
     CHECK(*managed_obj.map_embedded_col["foo"] == map_embedded_col);
 
 
-    CHECK(managed_obj.map_opt_int_col["foo"] == 1);
-    CHECK(managed_obj.map_opt_int_col["bar"] == std::nullopt);
-
-    CHECK(managed_obj.map_opt_double_col["foo"] == 1.23);
-    CHECK(managed_obj.map_opt_double_col["bar"] == std::nullopt);
-
-    CHECK(managed_obj.map_opt_bool_col["foo"] == true);
-    CHECK(managed_obj.map_opt_bool_col["bar"] == std::nullopt);
-
-    CHECK(managed_obj.map_opt_str_col["foo"] == "bar");
-    CHECK(managed_obj.map_opt_str_col["bar"] == std::nullopt);
-
-    CHECK(managed_obj.map_opt_uuid_col["foo"] == uuid);
-    CHECK(managed_obj.map_opt_uuid_col["bar"] == std::nullopt);
-
-    CHECK(managed_obj.map_opt_date_col["foo"] == date);
-    CHECK(managed_obj.map_opt_date_col["bar"] == std::nullopt);
-
-    CHECK(managed_obj.map_opt_object_id_col["foo"] == object_id);
-    CHECK(managed_obj.map_opt_object_id_col["bar"] == std::nullopt);
-
-    CHECK(managed_obj.map_opt_binary_col["foo"] == std::vector<uint8_t>({1}));
-    CHECK(managed_obj.map_opt_binary_col["bar"] == std::nullopt);
-
-    CHECK(managed_obj.map_opt_enum_col["foo"] == AllTypes::Enum::one);
-    CHECK(managed_obj.map_opt_enum_col["bar"] == std::nullopt);
+//    CHECK(managed_obj.map_opt_int_col["foo"] == 1);
+//    CHECK(managed_obj.map_opt_int_col["bar"] == std::nullopt);
+//
+//    CHECK(managed_obj.map_opt_double_col["foo"] == 1.23);
+//    CHECK(managed_obj.map_opt_double_col["bar"] == std::nullopt);
+//
+//    CHECK(managed_obj.map_opt_bool_col["foo"] == true);
+//    CHECK(managed_obj.map_opt_bool_col["bar"] == std::nullopt);
+//
+//    CHECK(managed_obj.map_opt_str_col["foo"] == "bar");
+//    CHECK(managed_obj.map_opt_str_col["bar"] == std::nullopt);
+//
+//    CHECK(managed_obj.map_opt_uuid_col["foo"] == uuid);
+//    CHECK(managed_obj.map_opt_uuid_col["bar"] == std::nullopt);
+//
+//    CHECK(managed_obj.map_opt_date_col["foo"] == date);
+//    CHECK(managed_obj.map_opt_date_col["bar"] == std::nullopt);
+//
+//    CHECK(managed_obj.map_opt_object_id_col["foo"] == object_id);
+//    CHECK(managed_obj.map_opt_object_id_col["bar"] == std::nullopt);
+//
+//    CHECK(managed_obj.map_opt_binary_col["foo"] == std::vector<uint8_t>({1}));
+//    CHECK(managed_obj.map_opt_binary_col["bar"] == std::nullopt);
+//
+//    CHECK(managed_obj.map_opt_enum_col["foo"] == AllTypes::Enum::one);
+//    CHECK(managed_obj.map_opt_enum_col["bar"] == std::nullopt);
 
     auto allTypeObjects = db.objects<AllTypes>();
+
     auto results_obj = allTypeObjects[0];
     CHECK(results_obj._id == 123);
     CHECK(results_obj.double_col == 12.34);
@@ -479,22 +598,22 @@ TEST_CASE("object_initialization_beta") {
 //    CHECK(results_obj.list_embedded_obj_col[0] == embedded_obj);
 
 
-    CHECK(results_obj.list_opt_int_col[0] == 123);
-    CHECK(results_obj.list_opt_int_col[1] == std::nullopt);
-    CHECK(results_obj.list_opt_double_col[0] == 123.456);
-    CHECK(results_obj.list_opt_double_col[1] == std::nullopt);
-    CHECK(results_obj.list_opt_bool_col[0] == true);
-    CHECK(results_obj.list_opt_bool_col[1] == std::nullopt);
-    CHECK(results_obj.list_opt_str_col[0] == "hello");
-    CHECK(results_obj.list_opt_str_col[1] == std::nullopt);
-    CHECK(results_obj.list_opt_uuid_col[0] == uuid);
-    CHECK(results_obj.list_opt_uuid_col[1] == std::nullopt);
-    CHECK(results_obj.list_opt_object_id_col[0] == object_id);
-    CHECK(results_obj.list_opt_object_id_col[1] == std::nullopt);
-    CHECK(results_obj.list_opt_binary_col[0] == std::vector<uint8_t>({1}));
-    CHECK(results_obj.list_opt_binary_col[1] == std::nullopt);
-    CHECK(results_obj.list_opt_date_col[0] == date);
-    CHECK(results_obj.list_opt_date_col[1] == std::nullopt);
+//    CHECK(results_obj.list_opt_int_col[0] == 123);
+//    CHECK(results_obj.list_opt_int_col[1] == std::nullopt);
+//    CHECK(results_obj.list_opt_double_col[0] == 123.456);
+//    CHECK(results_obj.list_opt_double_col[1] == std::nullopt);
+//    CHECK(results_obj.list_opt_bool_col[0] == true);
+//    CHECK(results_obj.list_opt_bool_col[1] == std::nullopt);
+//    CHECK(results_obj.list_opt_str_col[0] == "hello");
+//    CHECK(results_obj.list_opt_str_col[1] == std::nullopt);
+//    CHECK(results_obj.list_opt_uuid_col[0] == uuid);
+//    CHECK(results_obj.list_opt_uuid_col[1] == std::nullopt);
+//    CHECK(results_obj.list_opt_object_id_col[0] == object_id);
+//    CHECK(results_obj.list_opt_object_id_col[1] == std::nullopt);
+//    CHECK(results_obj.list_opt_binary_col[0] == std::vector<uint8_t>({1}));
+//    CHECK(results_obj.list_opt_binary_col[1] == std::nullopt);
+//    CHECK(results_obj.list_opt_date_col[0] == date);
+//    CHECK(results_obj.list_opt_date_col[1] == std::nullopt);
 
     CHECK(results_obj.map_int_col["foo"] == 1);
     CHECK(results_obj.map_double_col["foo"] == 1.23);

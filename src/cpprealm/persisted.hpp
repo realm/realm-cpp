@@ -168,7 +168,7 @@ namespace realm::experimental {
     } \
     inline rbool operator op(const persisted<type>& a, const persisted<type>& b) { \
         return a op *b; \
-    }
+    } \
 
 namespace realm {
     namespace cpprealm {

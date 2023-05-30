@@ -1,4 +1,5 @@
-#include "managed_string.hpp"
+#include <cpprealm/experimental/managed_string.hpp>
+#include <cpprealm/persisted.hpp>
 
 namespace realm::experimental {
     using managed_string = managed<std::string>;
@@ -91,7 +92,43 @@ namespace realm::experimental {
         set(value);
     }
 
-    std::string managed_string::value() const { return get(); }
+    std::string managed_string::value() const {
+        return get();
+    }
+
+    rbool managed_string::operator==(const std::string& rhs) const noexcept {
+        if (this->should_detect_usage_for_queries) {
+            auto query = internal::bridge::query(this->query->get_table());
+            query.equal(this->m_key, serialize(rhs));
+            return query;
+        }
+        return value() == rhs;
+    }
+    rbool managed_string::operator==(const char* rhs) const noexcept {
+        if (this->should_detect_usage_for_queries) {
+            auto query = internal::bridge::query(this->query->get_table());
+            query.equal(this->m_key, std::string(rhs));
+            return query;
+        }
+        return value() == rhs;
+    }
+
+    rbool managed_string::operator!=(const std::string& rhs) const noexcept {
+        if (this->should_detect_usage_for_queries) {
+            auto query = internal::bridge::query(this->query->get_table());
+            query.not_equal(this->m_key, serialize(rhs));
+            return query;
+        }
+        return value() != rhs;
+    }
+    rbool managed_string::operator!=(const char* rhs) const noexcept {
+        if (this->should_detect_usage_for_queries) {
+            auto query = internal::bridge::query(this->query->get_table());
+            query.not_equal(this->m_key, std::string(rhs));
+            return query;
+        }
+        return value() != rhs;
+    }
 
 #ifdef __cpp_lib_starts_ends_with
     bool managed_string::starts_with(std::string_view v) const noexcept {
