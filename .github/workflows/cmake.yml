@@ -279,20 +279,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: 'recursive'
-
-      - name: Get vcpkg submodule commit sha
-        id: vcpkg_cache_key
-        working-directory: realm-core/tools/vcpkg/ports
-        shell: bash
-        run: echo "::set-output name=commit::$(git rev-parse HEAD)" 
-      - name: Setup Vcpkg
-        continue-on-error: true
-        uses: friendlyanon/setup-vcpkg@v1
-        with:
-          path: realm-core/tools/vcpkg/ports
-          cache-key: vcpkg-windows-x64-${{ hashFiles('./realm-core/tools/vcpkg/vcpkg.json') }}-${{ steps.vcpkg_cache_key.outputs.commit }}
-          cache-restore-keys: vcpkg-windows-x64-
-
+          
       - uses: ammaraskar/msvc-problem-matcher@master
 
       - name: Configure

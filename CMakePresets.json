@@ -19,7 +19,6 @@
       "hidden": true,
       "inherits": "default",
       "generator": "Visual Studio 17 2022",
-      "toolchainFile": "${sourceDir}/realm-core/tools/vcpkg/ports/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "$env{vcpkg_arch}-windows"
       },
