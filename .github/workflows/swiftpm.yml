@@ -26,7 +26,6 @@ jobs:
           - tvOS
           - tvOS Simulator
         xcode:
-          - '13.2.1'
           - '14.0'
         configuration:
           - Debug
