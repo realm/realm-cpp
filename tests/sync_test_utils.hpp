@@ -8,29 +8,31 @@
 #include <realm/object-store/sync/sync_user.hpp>
 
 namespace test {
-    inline std::promise<void> wait_for_sync_uploads(const realm::user& user) {
+    inline std::future<void> wait_for_sync_uploads(const realm::user& user) {
         auto sync_sessions = user.m_user->sync_manager()->get_all_sessions();
         auto session = sync_sessions[0];
 
         std::promise<void> p;
-        session->wait_for_upload_completion([&p](realm::Status&& ec){
+        std::future<void> f = p.get_future();
+        session->wait_for_upload_completion([p = std::move(p)](realm::Status &&ec) mutable {
             if (ec != realm::Status::OK()) p.set_exception(std::make_exception_ptr(ec));
             else p.set_value();
         });
 
-        return p;
+        return f;
     }
 
-    inline std::promise<void> wait_for_sync_downloads(const realm::user& user) {
+    inline std::future<void> wait_for_sync_downloads(const realm::user &user) {
         auto sync_sessions = user.m_user->sync_manager()->get_all_sessions();
         auto session = sync_sessions[0];
         std::promise<void> p;
-        session->wait_for_download_completion([&p](realm::Status&& ec) {
+        std::future<void> f = p.get_future();
+        session->wait_for_download_completion([p = std::move(p)](realm::Status&& ec) mutable {
             if (ec != realm::Status::OK()) p.set_exception(std::make_exception_ptr(ec));
             else p.set_value();
         });
 
-        return p;
+        return f;
     }
 }
 

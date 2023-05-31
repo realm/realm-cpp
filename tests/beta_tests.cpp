@@ -269,7 +269,7 @@ TEST_CASE("flex_sync_beta") {
         auto app = realm::App("typestest-ypkgr");
     SECTION("all") {
         app.get_sync_manager().set_log_level(logger::level::all);
-        auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
+        auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
 
         experimental::db synced_realm = experimental::db(std::move(flx_sync_config));
@@ -279,7 +279,7 @@ TEST_CASE("flex_sync_beta") {
                                                         return obj.str_col == "foo";
                                                     });
                                                     subs.add<AllTypesObjectLink>("foo-link");
-                                                          }).get_future().get();
+                                                          }).get();
 
 
         CHECK(update_success == true);
@@ -299,8 +299,8 @@ TEST_CASE("flex_sync_beta") {
             synced_realm.add(std::move(o));
         });
 
-        test::wait_for_sync_uploads(user).get_future().get();
-        test::wait_for_sync_downloads(user).get_future().get();
+        test::wait_for_sync_uploads(user).get();
+        test::wait_for_sync_downloads(user).get();
         synced_realm.write([]() {}); // refresh realm
         auto objs = synced_realm.objects<AllTypes>();
 
@@ -310,7 +310,7 @@ TEST_CASE("flex_sync_beta") {
                                         subs.update_subscription<AllTypes>("foo-strings", [](auto &obj) {
                                             return obj.str_col == "bar" && obj._id == 1230;
                                         });
-                                    }).get_future().get();
+                                    }).get();
 
         auto sub2 = *synced_realm.subscriptions().find("foo-strings");
         CHECK(sub2.name == "foo-strings");
@@ -324,8 +324,8 @@ TEST_CASE("flex_sync_beta") {
             synced_realm.add(std::move(o));
         });
 
-        test::wait_for_sync_uploads(user).get_future().get();
-        test::wait_for_sync_downloads(user).get_future().get();
+        test::wait_for_sync_uploads(user).get();
+        test::wait_for_sync_downloads(user).get();
 
         synced_realm.refresh();
         objs = synced_realm.objects<AllTypes>();
@@ -333,15 +333,15 @@ TEST_CASE("flex_sync_beta") {
 
         synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
                                         subs.update_subscription<AllTypes>("foo-strings");
-                                    }).get_future().get();
+                                    }).get();
 //
         auto sub3 = *synced_realm.subscriptions().find("foo-strings");
         CHECK(sub3.name == "foo-strings");
         CHECK(sub3.object_class_name == "AllTypes");
         CHECK(sub3.query_string == "TRUEPREDICATE");
 
-        test::wait_for_sync_uploads(user).get_future().get();
-        test::wait_for_sync_downloads(user).get_future().get();
+        test::wait_for_sync_uploads(user).get();
+        test::wait_for_sync_downloads(user).get();
 
         synced_realm.refresh();
         objs = synced_realm.objects<AllTypes>();

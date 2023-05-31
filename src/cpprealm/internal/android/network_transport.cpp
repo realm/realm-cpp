@@ -16,6 +16,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
+#if __has_include(<realm/util/config.h>)
+#include <realm/util/config.h>
+#endif
 #include <cpprealm/app.hpp>
 #include <cpprealm/internal/generic_network_transport.hpp>
 
@@ -96,6 +99,10 @@ namespace realm::internal {
 
         socket.ssl_stream.emplace(socket, m_ssl_context, Stream::client);
         socket.ssl_stream->set_host_name(host); // Throws
+        socket.ssl_stream->set_verify_mode(VerifyMode::peer);
+        #if REALM_INCLUDE_CERTS
+        socket.ssl_stream->use_included_certificates();
+        #endif
 
         realm::sync::HTTPHeaders headers;
         for (auto& [k, v] : request.headers) {
