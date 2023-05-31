@@ -366,23 +366,25 @@ namespace realm {
     }
 
 
-    std::promise<void> App::register_user(const std::string& username, const std::string& password) {
+    std::future<void> App::register_user(const std::string &username, const std::string &password) {
         std::promise<void> p;
+        std::future<void> f = p.get_future();
         m_app->template provider_client<app::App::UsernamePasswordProviderClient>().register_email(username,
                                                                                                    password,
-                                                                                                   [&p](auto err){
+                                                                                                   [p = std::move(p)](auto err) mutable {
                                                                                                        if (err) p.set_exception(std::make_exception_ptr(*err));
                                                                                                        else p.set_value();
                                                                                                    });
-        return p;
+        return f;
     }
-    std::promise<user> App::login(const credentials& credentials) {
+    std::future<user> App::login(const credentials& credentials) {
         std::promise<user> p;
-        m_app->log_in_with_credentials(credentials, [&p](auto& u, auto err) {
+        std::future<user> f = p.get_future();
+        m_app->log_in_with_credentials(credentials, [p = std::move(p)](auto& u, auto err) mutable {
             if (err) p.set_exception(std::make_exception_ptr(*err));
             else p.set_value(user{std::move(u)});
         });
-        return p;
+        return f;
     }
 
     void App::login(const credentials& credentials, std::function<void(user, std::optional<app_error>)>&& callback) {

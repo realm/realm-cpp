@@ -196,7 +196,7 @@ namespace realm {
         // not exist.
         std::optional<sync_subscription> find(const std::string& name);
 
-        std::promise<bool> update(std::function<void(mutable_sync_subscription_set&)>&& fn);
+        std::future<bool> update(std::function<void(mutable_sync_subscription_set&)>&& fn);
 
         explicit sync_subscription_set(internal::bridge::realm& realm);
     private:

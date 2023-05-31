@@ -152,6 +152,12 @@
       "configuration": "Debug"
     },
     {
+      "name": "windows-x64",
+      "configurePreset": "windows-x64",
+      "displayName": "x64",
+      "configuration": "Debug"
+    },
+    {
       "name": "android-x86_64",
       "configurePreset": "android-x86_64",
       "displayName": "x86_64",

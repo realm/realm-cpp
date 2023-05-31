@@ -133,18 +133,20 @@ namespace realm {
         return std::nullopt;
     }
 
-    std::promise<bool> sync_subscription_set::update(std::function<void(mutable_sync_subscription_set&)>&& fn) {
+    std::future<bool> sync_subscription_set::update(std::function<void(mutable_sync_subscription_set&)>&& fn) {
         auto* set = reinterpret_cast<sync::SubscriptionSet *>(&m_subscription_set);
         auto mutable_set = mutable_sync_subscription_set(m_realm, set->make_mutable_copy());
         fn(mutable_set);
         reinterpret_cast<sync::SubscriptionSet*>(&m_subscription_set)->~SubscriptionSet();
         new (&m_subscription_set) sync::SubscriptionSet(mutable_set.get_subscription_set().commit());
         std::promise<bool> p;
+        std::future<bool> f = p.get_future();
+
         reinterpret_cast<sync::SubscriptionSet *>(&m_subscription_set)->get_state_change_notification(realm::sync::SubscriptionSet::State::Complete)
-                .get_async([&p](const realm::StatusWith<realm::sync::SubscriptionSet::State>& state) mutable noexcept {
+                .get_async([p = std::move(p)](const realm::StatusWith<realm::sync::SubscriptionSet::State>& state) mutable noexcept {
                     p.set_value(state == sync::SubscriptionSet::State::Complete);
                 });
-        return p;
+        return f;
     }
 
     sync_subscription_set::sync_subscription_set(internal::bridge::realm& realm)

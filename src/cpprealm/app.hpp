@@ -252,8 +252,8 @@ public:
 #endif
     };
 
-    std::promise<void> register_user(const std::string& username, const std::string& password);
-    std::promise<user> login(const credentials& credentials);
+    std::future<void> register_user(const std::string& username, const std::string& password);
+    std::future<user> login(const credentials &credentials);
     void login(const credentials& credentials, std::function<void(user, std::optional<app_error>)>&& callback);
     [[nodiscard]] internal::bridge::sync_manager get_sync_manager() const;
 private:
