@@ -9,7 +9,7 @@ TEST_CASE("asymmetric object", "[sync]") {
     SECTION("basic", "[sync]") {
         auto asymmetric_app_id = Admin::shared().create_app();
         auto app = realm::App(asymmetric_app_id, Admin::shared().base_url());
-        auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
+        auto user = app.login(realm::App::credentials::anonymous()).get();
         auto p = realm::async_open<AllTypesAsymmetricObject, EmbeddedFoo>(user.flexible_sync_configuration());
         auto tsr = p.get_future().get();
         auto synced_realm = tsr.resolve();
@@ -21,8 +21,8 @@ TEST_CASE("asymmetric object", "[sync]") {
             synced_realm.add(obj);
         });
 
-        test::wait_for_sync_uploads(user).get_future().get();
-        test::wait_for_sync_downloads(user).get_future().get();
+        test::wait_for_sync_uploads(user).get();
+        test::wait_for_sync_downloads(user).get();
 
         auto result = user.call_function("asymmetricSyncData", bson::BsonArray({bson::BsonDocument{{"_id", oid.to_string()}}})).get_future().get();
         CHECK(result);
