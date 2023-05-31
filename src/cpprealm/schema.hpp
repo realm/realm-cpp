@@ -35,6 +35,15 @@ namespace realm {
     struct persisted;
     template<typename>
     struct asymmetric_object;
+
+    namespace experimental {
+        enum class BetaObjectType {
+            None,
+            TopLevel,
+            Embedded,
+            Asymmetric
+        };
+    }
     namespace {
         template <typename T>
         struct ptr_type_extractor_base;
@@ -74,7 +83,6 @@ namespace realm {
             using Class = typename ptr_type_extractor<Ptr>::class_type;
             static constexpr auto ptr = Ptr;
             static constexpr bool is_primary_key = IsPrimaryKey || internal::type_info::is_experimental_primary_key<Result>::value;
-//            static constexpr bool is_experimental_primary_key = internal::type_info::is_experimental_primary_key<Result>::value;
             internal::bridge::property::type type;
             const char* name = "";
 
@@ -181,9 +189,9 @@ namespace realm {
                   , ps(props) {
                 apply_name(props);
             }
-            explicit constexpr schema(const char *name_, bool is_embedded_object, std::tuple<Properties...>&& props)
+            explicit constexpr schema(const char *name_, experimental::BetaObjectType beta_object_type, std::tuple<Properties...>&& props)
                 : name(name_)
-                  , ps(props), m_is_embedded_object(is_embedded_object) {
+                  , ps(props), m_beta_object_type(beta_object_type) {
                 apply_name(props);
             }
             template<size_t N, typename P>
@@ -209,7 +217,7 @@ namespace realm {
             static constexpr bool IsAsymmetric = std::is_base_of_v<asymmetric_object<Class>, Class>;
 
             bool is_embedded_experimental() const {
-                return m_is_embedded_object;
+                return m_beta_object_type == experimental::BetaObjectType::Embedded;
             }
 
             [[nodiscard]] internal::bridge::object_schema to_core_schema() const {
@@ -232,8 +240,11 @@ namespace realm {
                 if constexpr (IsAsymmetric) {
                     schema.set_object_type(internal::bridge::object_schema::object_type::TopLevelAsymmetric);
                 }
-                if (m_is_embedded_object) {
+                if (m_beta_object_type == experimental::BetaObjectType::Embedded) {
                     schema.set_object_type(internal::bridge::object_schema::object_type::Embedded);
+                }
+                if (m_beta_object_type == experimental::BetaObjectType::Asymmetric) {
+                    schema.set_object_type(internal::bridge::object_schema::object_type::TopLevelAsymmetric);
                 }
                 return schema;
             }
@@ -269,19 +280,13 @@ namespace realm {
                 return property_value_for_name<0>(property_name, cls, std::get<0>(properties));
             }
         private:
-            bool m_is_embedded_object = false;
+            experimental::BetaObjectType m_beta_object_type = experimental::BetaObjectType::None;
         };
     }
     template <auto Ptr, bool IsPrimaryKey = false>
     static constexpr auto property(const char* name)
     {
         return schemagen::property<Ptr, IsPrimaryKey>(name);
-    }
-
-    template <auto Ptr>
-    static constexpr auto property_test(const char* name)
-    {
-        return schemagen::property<Ptr, false>(name);
     }
 
     template <typename ...T>
@@ -303,11 +308,11 @@ namespace realm {
 
     template <typename ...T>
     static constexpr auto schema(const char * name,
-                                 bool is_embedded_object,
+                                 experimental::BetaObjectType object_type,
                                  std::tuple<T...>&& props) {
         auto i = std::get<0>(props);
         using Cls = typename decltype(i)::Class;
-        return schemagen::schema<Cls, T...>(name, is_embedded_object, std::move(props));
+        return schemagen::schema<Cls, T...>(name, object_type, std::move(props));
     }
 }
 

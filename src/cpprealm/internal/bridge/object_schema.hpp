@@ -36,6 +36,7 @@ namespace realm::internal::bridge {
         void set_primary_key(const std::string& primary_key);
         void set_object_type(object_type);
         property property_for_name(const std::string&);
+        bool operator==(const object_schema& rhs);
     private:
 #ifdef __i386__
         std::aligned_storage<68, 4>::type m_schema[1];

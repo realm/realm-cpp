@@ -88,16 +88,14 @@ target_link_libraries(cpprealm PUBLIC Realm::ObjectStore)
 set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
 
 if (APPLE)
-    target_sources(cpprealm PRIVATE
-        src/cpprealm/internal/apple/network_transport.mm
-    )
+    target_sources(cpprealm PRIVATE src/cpprealm/internal/apple/network_transport.mm)
 elseif(ANDROID)
     set(REALM_ANDROID)
-    target_sources(cpprealm PUBLIC
-        src/cpprealm/internal/android/network_transport.cpp)
+    target_sources(cpprealm PUBLIC src/cpprealm/internal/network/network_transport.cpp)
+elseif(MSVC)
+    target_sources(cpprealm PUBLIC src/cpprealm/internal/network/network_transport.cpp)
 else()
-    target_sources(cpprealm PUBLIC
-        src/cpprealm/internal/android/network_transport.cpp)
+    target_sources(cpprealm PUBLIC src/cpprealm/internal/curl/network_transport.cpp)
 endif()
 
 if(MSVC)
@@ -150,28 +148,32 @@ else()
     tests/main.hpp 
     tests/main.cpp 
     tests/admin_utils.hpp
-    tests/admin_utils.cpp 
-    tests/str_tests.cpp 
-    tests/list_tests.cpp 
+    tests/admin_utils.cpp
+    tests/str_tests.cpp
+    tests/list_tests.cpp
     tests/query_tests.cpp
-    tests/sync_test_utils.hpp 
-    tests/test_objects.hpp 
-    tests/date_tests.cpp 
+    tests/sync_test_utils.hpp
+    tests/test_objects.hpp
+    tests/date_tests.cpp
     tests/mixed_tests.cpp
     tests/results_tests.cpp
-    tests/binary_tests.cpp 
+    tests/binary_tests.cpp
     tests/flx_sync_tests.cpp
-    tests/app_tests.cpp 
+    tests/app_tests.cpp
     tests/embedded_object_tests.cpp
     tests/opt_tests.cpp
-    tests/run_loop_tests.cpp 
-    tests/map_tests.cpp 
-    tests/perf_tests.cpp 
+    tests/run_loop_tests.cpp
+    tests/map_tests.cpp
+    tests/perf_tests.cpp
     tests/object_tests.cpp
     tests/object_id_tests.cpp
     tests/asymmetric_object_tests.cpp
     tests/realm_tests.cpp
-    tests/beta_tests.cpp)
+    tests/beta_tests.cpp
+
+    tests/experimental/flexible_sync_tests.cpp
+    tests/experimental/asymmetric_object_tests.cpp
+    tests/experimental/test_objects.hpp)
 endif()
 
 target_link_libraries(cpprealm_exe_tests cpprealm Catch2::Catch2)

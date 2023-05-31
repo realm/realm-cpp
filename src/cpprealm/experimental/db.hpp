@@ -60,7 +60,7 @@ namespace realm::experimental {
             internal::bridge::obj m_obj;
             if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
                 auto pk = v.*(managed<T>::schema.primary_key().ptr);
-                m_obj = table.create_object_with_primary_key(pk.value);
+                m_obj = table.create_object_with_primary_key(serialize(pk.value));
             } else {
                 m_obj = table.create_object();
             }
@@ -92,7 +92,7 @@ namespace realm::experimental {
                 internal::bridge::obj m_obj;
                 if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
                     auto pk = obj.*(managed<T>::schema.primary_key().ptr);
-                    m_obj = table.create_object_with_primary_key(pk.value);
+                    m_obj = table.create_object_with_primary_key(serialize(pk.value));
                 } else {
                     m_obj = table.create_object();
                 }
@@ -117,6 +117,17 @@ namespace realm::experimental {
 
         sync_subscription_set subscriptions() {
             return sync_subscription_set(m_realm);
+        }
+
+        /**
+        An object encapsulating an Atlas App Services "session". Sessions represent the
+        communication between the client (and a local Realm file on disk), and the server
+
+        Sessions are always created by the SDK and vended out through various APIs. The
+        lifespans of sessions associated with Realms are managed automatically.
+        */
+        std::optional<sync_session> get_sync_session() const {
+            return m_realm.get_sync_session();
         }
     };
 
@@ -233,7 +244,7 @@ namespace realm::experimental {
                 internal::bridge::obj m_obj;
                 if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
                     auto pk = obj.*(managed<T>::schema.primary_key().ptr);
-                    m_obj = table.create_object_with_primary_key(pk.value);
+                    m_obj = table.create_object_with_primary_key(serialize(pk.value));
                 } else {
                     m_obj = table.create_object();
                 }
