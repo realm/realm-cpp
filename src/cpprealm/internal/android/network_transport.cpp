@@ -17,9 +17,11 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include <cpprealm/app.hpp>
-#include "realm/sync/network/http.hpp"
+#include <cpprealm/internal/generic_network_transport.hpp>
+
+#include <realm/sync/network/http.hpp>
 #include <realm/sync/network/network.hpp>
-#include "realm/sync/noinst/client_impl_base.hpp"
+#include <realm/sync/noinst/client_impl_base.hpp>
 
 namespace realm::internal {
     struct AndroidSocket : realm::sync::network::Socket {
@@ -43,7 +45,7 @@ namespace realm::internal {
         void async_read_until(char* buffer, std::size_t size, char delim, H handler)
         {
             if (ssl_stream) {
-                ssl_stream->template async_read_until(buffer, size, delim, m_read_buffer, std::move(handler));
+                ssl_stream->async_read_until(buffer, size, delim, m_read_buffer, std::move(handler));
             } else {
                 realm::sync::network::Socket::async_read_until(buffer, size, delim, m_read_buffer, std::move(handler));
             }
@@ -92,7 +94,7 @@ namespace realm::internal {
         AndroidSocket socket{service};
         socket.connect(ep);
 
-        socket.ssl_stream.emplace(socket, m_ssl_context, Stream::client);;
+        socket.ssl_stream.emplace(socket, m_ssl_context, Stream::client);
         socket.ssl_stream->set_host_name(host); // Throws
 
         realm::sync::HTTPHeaders headers;
@@ -139,11 +141,13 @@ namespace realm::internal {
         service.post([&](realm::Status&&){
             auto handler = [&](std::error_code ec) {
                 if (ec.value() == 0) {
-                    m_http_client.async_request({.method = method,
-                                                 .headers = headers,
-                                                 .path = request.url,
-                                                 .body = request.body.empty() ? std::nullopt : std::optional<std::string>(request.body)
-                                                }, [cb = std::move(completion_block)](realm::sync::HTTPResponse r, std::error_code e) {
+                    realm::sync::HTTPRequest req;
+                    req.method = method;
+                    req.headers = headers;
+                    req.path = request.url;
+                    req.body = request.body.empty() ? std::nullopt : std::optional<std::string>(request.body);
+
+                    m_http_client.async_request(std::move(req), [cb = std::move(completion_block)](const realm::sync::HTTPResponse& r, const std::error_code& e) {
                         app::Response res;
                         res.body = r.body ? *r.body : "";
                         for (auto& [k, v] : r.headers)  {

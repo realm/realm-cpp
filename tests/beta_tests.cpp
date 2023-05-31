@@ -266,7 +266,7 @@ TEST_CASE("experimental", "[experimental]") {
 namespace realm::experimental {
 
 TEST_CASE("flex_sync_beta") {
-    auto app = realm::App(Admin::shared().cached_app_id(), Admin::shared().base_url());
+        auto app = realm::App("typestest-ypkgr");
     SECTION("all") {
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get_future().get();

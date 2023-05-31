@@ -96,13 +96,8 @@ elseif(ANDROID)
     target_sources(cpprealm PUBLIC
         src/cpprealm/internal/android/network_transport.cpp)
 else()
-    find_package(CURL REQUIRED)
-    target_link_libraries(cpprealm PUBLIC
-        CURL::libcurl
-    )
-    target_sources(cpprealm PRIVATE
-        src/cpprealm/internal/curl/network_transport.cpp
-    )
+    target_sources(cpprealm PUBLIC
+        src/cpprealm/internal/android/network_transport.cpp)
 endif()
 
 if(MSVC)
