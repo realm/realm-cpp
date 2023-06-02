@@ -1,6 +1,7 @@
 #include <cpprealm/internal/bridge/sync_session.hpp>
-
 #include <realm/object-store/sync/sync_session.hpp>
+
+#include <future>
 
 namespace realm::internal::bridge {
     enum sync_session::state sync_session::state() const {
@@ -30,30 +31,42 @@ namespace realm::internal::bridge {
         }
     }
 
-    std::promise<void> sync_session::wait_for_upload_completion() {
+    std::future<void> sync_session::wait_for_upload_completion() {
         std::promise<void> p;
-        wait_for_upload_completion([&p](std::error_code ec) {
-            if (ec) {
-                p.set_exception(std::make_exception_ptr(ec));
-            }
-            else {
-                p.set_value();
-            }
-        });
-        return p;
+        std::future<void> f = p.get_future();
+
+        if (auto session = m_session.lock()) {
+            session->wait_for_upload_completion([p = std::move(p)](auto ec) mutable {
+                if (ec.get_std_error_code()) {
+                    p.set_exception(std::make_exception_ptr(ec.get_std_error_code()));
+                }
+                else {
+                    p.set_value();
+                }
+            });
+        } else {
+            p.set_exception(std::make_exception_ptr(std::runtime_error("Realm: Error accessing sync_session which has been destroyed.")));
+        }
+
+        return f;
     }
 
-    std::promise<void> sync_session::wait_for_download_completion() {
+    std::future<void> sync_session::wait_for_download_completion() {
         std::promise<void> p;
-        wait_for_download_completion([&p](std::error_code ec) {
-            if (ec) {
-                p.set_exception(std::make_exception_ptr(ec));
-            }
-            else {
-                p.set_value();
-            }
-        });
-        return p;
+        std::future<void> f = p.get_future();
+        if (auto session = m_session.lock()) {
+            session->wait_for_download_completion([p = std::move(p)](auto ec) mutable {
+                if (ec.get_std_error_code()) {
+                    p.set_exception(std::make_exception_ptr(ec.get_std_error_code()));
+                }
+                else {
+                    p.set_value();
+                }
+            });
+        } else {
+            p.set_exception(std::make_exception_ptr(std::runtime_error("Realm: Error accessing sync_session which has been destroyed.")));
+        }
+        return f;
     }
 
     sync_session::sync_session(const std::shared_ptr<SyncSession> &v) {

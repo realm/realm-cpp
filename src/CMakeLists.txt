@@ -125,7 +125,7 @@ set(HEADERS
     cpprealm/experimental/types.cpp 
     cpprealm/experimental/types.hpp
     cpprealm/rbool.hpp
-    cpprealm/experimental/managed_primary_key.hpp) # REALM_INSTALL_HEADERS
+    cpprealm/experimental/managed_primary_key.hpp cpprealm/experimental/sdk.hpp) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm STATIC ${SOURCES} ${HEADERS})
 include(GNUInstallDirs)

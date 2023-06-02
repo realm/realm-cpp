@@ -122,8 +122,7 @@ TEST_CASE("realm_is_populated_on_async_open", "[sync]") {
             });
 
             auto sync_session = synced_realm.get_sync_session();
-            auto upload_completion = sync_session->wait_for_upload_completion();
-            upload_completion.get_future().get();
+            sync_session->wait_for_upload_completion().get();
 
             auto objs = synced_realm.objects<AllTypesObject>();
             CHECK(objs.size() == 1000);
@@ -144,7 +143,7 @@ TEST_CASE("realm_is_populated_on_async_open", "[sync]") {
             CHECK(objs.size() < 1000);
 
             auto sync_session = synced_realm.get_sync_session();
-            sync_session->wait_for_download_completion().get_future().get();
+            sync_session->wait_for_download_completion().get();
             synced_realm.refresh();
             CHECK(objs.size() == 1000);
         }

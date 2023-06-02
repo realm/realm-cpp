@@ -2,6 +2,7 @@
 #define CPPREALM_MANAGED_PRIMARY_KEY_HPP
 
 #include <cpprealm/experimental/macros.hpp>
+#include <cpprealm/experimental/types.hpp>
 
 namespace realm {
 class rbool;
@@ -18,9 +19,6 @@ namespace realm::experimental {
             }
             T value;
             using internal_type = T;
-
-//            using internal_type = typename ::realm::internal::type_info::type_info<T, void>::internal_type;
-
             operator T() {
                 return value;
             }
@@ -29,14 +27,25 @@ namespace realm::experimental {
         template<>
         struct primary_key<int64_t> {
             using internal_type = int64_t;
-
             primary_key() = default;
-
             primary_key(const int64_t& v) {
                 this->value = v;
             }
             int64_t value;
             operator int64_t() {
+                return value;
+            }
+        };
+
+        template<>
+        struct primary_key<object_id> {
+            using internal_type = internal::bridge::object_id;
+            primary_key() = default;
+            primary_key(const object_id& v) {
+                this->value = v;
+            }
+            object_id value;
+            operator object_id() {
                 return value;
             }
         };
@@ -59,19 +68,6 @@ namespace realm::experimental {
             rbool operator>=(const T& rhs) const noexcept;
             rbool operator<(const T& rhs) const noexcept;
             rbool operator<=(const T& rhs) const noexcept;
-
-            std::enable_if_t<std::is_integral_v<T>, rbool>
-            operator==(const int& rhs) const noexcept;
-            std::enable_if_t<std::is_integral_v<T>, rbool>
-            operator!=(const int& rhs) const noexcept;
-            std::enable_if_t<std::is_integral_v<T>, rbool>
-            operator>(const int& rhs) const noexcept;
-            std::enable_if_t<std::is_integral_v<T>, rbool>
-            operator>=(const int& rhs) const noexcept;
-            std::enable_if_t<std::is_integral_v<T>, rbool>
-            operator<(const int& rhs) const noexcept;
-            std::enable_if_t<std::is_integral_v<T>, rbool>
-            operator<=(const int& rhs) const noexcept;
         };
 }
 
