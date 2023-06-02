@@ -92,12 +92,10 @@ namespace realm::internal {
         auto resolved = resolver.resolve(sync::network::Resolver::Query(host, "443"));
         realm::sync::network::Endpoint ep = *resolved.begin();
 
-        auto test = realm::sync::network::Endpoint(realm::sync::network::make_address("127.0.0.1"), 9090);
-
         using namespace realm::sync::network::ssl;
         Context m_ssl_context;
         DefaultSocket socket{service};
-        socket.connect(test);
+        socket.connect(ep);
 
         socket.ssl_stream.emplace(socket, m_ssl_context, Stream::client);
         socket.ssl_stream->set_host_name(host); // Throws
