@@ -1,6 +1,6 @@
-#include "../admin_utils.hpp"
-#include "../main.hpp"
-#include "../sync_test_utils.hpp"
+#include "../../admin_utils.hpp"
+#include "../../main.hpp"
+#include "../../sync_test_utils.hpp"
 #include "test_objects.hpp"
 
 using namespace realm;

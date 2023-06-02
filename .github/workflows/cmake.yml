@@ -172,7 +172,7 @@ jobs:
 
       - name: Test
         working-directory: .build/cmake-preset-linux
-        run: ./${{ matrix.configuration }}/cpprealm_exe_tests
+        run: ./${{ matrix.configuration }}/cpprealm_db_tests
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
@@ -298,7 +298,7 @@ jobs:
 
       - name: Test
         working-directory: .build/cmake-preset-windows-x64
-        run: ./${{ matrix.configuration }}/cpprealm_exe_tests
+        run: ./${{ matrix.configuration }}/cpprealm_db_tests
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
