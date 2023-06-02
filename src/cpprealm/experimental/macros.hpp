@@ -240,11 +240,7 @@ namespace realm::experimental {
             std::apply([this, &other](auto && ...ptr) {               \
                 ((*this.*ptr).assign(&m_obj, &m_realm, ((other.*ptr)).m_key), ...);   \
             }, managed_pointers());                      \
-        }                      \
-        typename decltype(schema)::variant_t property_value_for_name(std::string_view _name) const {         \
-            FOR_EACH(DECLARE_COND_PROPERTY_VALUE_FOR_NAME, cls, __VA_ARGS__)               \
-            return {};                       \
-        }     \
+        } \
         auto observe(std::function<void(realm::experimental::object_change<managed>&&)>&& fn) { \
             auto m_object = std::make_shared<internal::bridge::object>(m_realm, m_obj);                   \
             auto wrapper = realm::experimental::ObjectChangeCallbackWrapper<managed>{ \

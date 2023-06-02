@@ -75,6 +75,11 @@ namespace realm::internal::bridge {
     void property::set_object_link(const std::string & v) {
         reinterpret_cast<Property*>(&m_property)->object_type = v;
     }
+    void property::set_is_computed(bool b) {
+    }
+    void property::set_origin_property_name(const std::string & v) {
+        reinterpret_cast<Property*>(&m_property)->link_origin_property_name = v;
+    }
     col_key property::column_key() const {
         return reinterpret_cast<const Property*>(&m_property)->column_key;
     }

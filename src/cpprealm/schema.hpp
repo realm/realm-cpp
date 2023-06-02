@@ -29,13 +29,14 @@
 #include <cpprealm/experimental/managed_primary_key.hpp>
 
 #include <type_traits>
+#include <iostream>
 
 namespace realm {
     template <typename, typename>
     struct persisted;
     template<typename>
     struct asymmetric_object;
-    namespace {
+    namespace internal {
         template <typename T>
         struct ptr_type_extractor_base;
         template <typename Result, typename Class>
@@ -70,8 +71,8 @@ namespace realm {
     namespace schemagen {
         template <auto Ptr, bool IsPrimaryKey = false>
         struct property {
-            using Result = typename persisted_type_extractor<typename ptr_type_extractor<Ptr>::member_type>::Result;
-            using Class = typename ptr_type_extractor<Ptr>::class_type;
+            using Result = typename internal::persisted_type_extractor<typename internal::ptr_type_extractor<Ptr>::member_type>::Result;
+            using Class = typename internal::ptr_type_extractor<Ptr>::class_type;
             static constexpr auto ptr = Ptr;
             static constexpr bool is_primary_key = IsPrimaryKey || internal::type_info::is_experimental_primary_key<Result>::value;
 //            static constexpr bool is_experimental_primary_key = internal::type_info::is_experimental_primary_key<Result>::value;
@@ -120,6 +121,16 @@ namespace realm {
                     property.set_object_link(experimental::managed<typename Result::value_type, void>::schema.name);
                     property.set_type(type | internal::bridge::property::type::Nullable);
                 }
+                else if constexpr (std::is_pointer_v<Result>) {
+                    property.set_object_link(experimental::managed<typename std::remove_pointer_t<Result>, void>::schema.name);
+                    property.set_type(type | internal::bridge::property::type::Nullable);
+                } else if constexpr (internal::type_info::is_backlink<Result>::value) {
+                    return internal::bridge::property{};
+//                    property.set_object_link(experimental::managed<typename Result::Class, void>::schema.name);
+//                    property.set_type(internal::bridge::property::type::LinkingObjects | internal::bridge::property::type::Array);
+//                    property.set_origin_property_name(experimental::managed<typename Result::Class, void>::schema.template name_for_property(Result::Ptr));
+                }
+
                 return property;
             }
         };
@@ -217,7 +228,9 @@ namespace realm {
                 schema.set_name(name);
 
                 auto add_property = [&](const internal::bridge::property &p) {
-                    schema.add_property(p);
+                    if (!p.name().empty()) {
+                        schema.add_property(p);
+                    }
                 };
                 std::apply([&](const auto&... p) {
                     (add_property(p), ...);
@@ -268,6 +281,34 @@ namespace realm {
             constexpr auto property_value_for_name(std::string_view property_name, const Class &cls) const {
                 return property_value_for_name<0>(property_name, cls, std::get<0>(properties));
             }
+
+            template<size_t N, typename T, typename P>
+            constexpr const char*
+            name_for_property(T ptr, P &property) const {
+                if constexpr (N + 1 == sizeof...(Properties)) {
+                    if constexpr (std::is_same_v<decltype(ptr), std::remove_const_t<decltype(property.ptr)>>) {
+                        if (ptr == property.ptr) {
+                            return property.name;
+                        }
+                    }
+                    return "";
+                } else {
+                    if constexpr (std::is_same_v<decltype(ptr), std::remove_const_t<decltype(property.ptr)>>) {
+                        if (ptr == property.ptr) {
+                            return property.name;
+                        }
+                    }
+                    return name_for_property<N + 1>(ptr, std::get<N + 1>(ps));
+                }
+            }
+            template <auto ptr>
+            constexpr const char* name_for_property() const {
+                return name_for_property<0>(ptr, std::get<0>(ps));
+            }
+            template <typename T>
+            constexpr const char* name_for_property(T ptr) const {
+                return name_for_property<0>(ptr, std::get<0>(ps));
+            }
         private:
             bool m_is_embedded_object = false;
         };
@@ -287,7 +328,7 @@ namespace realm {
     template <typename ...T>
     static constexpr auto schema(const char * name,
                                  T&&... props) {
-        auto tup = make_subpack_tuple(props...);
+        auto tup = internal::make_subpack_tuple(props...);
         auto i = std::get<0>(tup);
         using Cls = typename decltype(i)::Class;
         return schemagen::schema<Cls, T...>(name, std::move(props)...);

@@ -7,7 +7,14 @@
 using namespace realm;
 
 namespace realm::experimental {
-
+    struct Dog;
+    struct Person {
+        primary_key<int64_t> _id;
+        std::string name;
+        int64_t age = 0;
+        Dog* dog;
+    };
+    REALM_SCHEMA(Person, _id, name, age, dog)
     struct Dog {
         primary_key<int64_t> _id;
         std::string name;
@@ -17,8 +24,7 @@ namespace realm::experimental {
         std::string name4;
 
         int64_t age = 0;
-
-
+        linking_objects<&Person::dog> owners;
     };
     REALM_SCHEMA(Dog,
                  _id,
@@ -27,16 +33,8 @@ namespace realm::experimental {
                  name3,
                  foo2,
                  name4,
-                 age)
-
-    struct Person {
-        primary_key<int64_t> _id;
-        std::string name;
-        int64_t age = 0;
-        link<Dog> dog;
-
-    };
-    REALM_SCHEMA(Person, _id, name, age, dog)
+                 age,
+                 owners)
 
     struct AllTypesObjectEmbedded {
         int64_t _id;
@@ -156,13 +154,13 @@ TEST_CASE("experimental", "[experimental]") {
     SECTION("write return multiple") {
         realm_path path;
         experimental::db db = experimental::open(path);
-        auto managed_person = db.write([&db]() {
+        experimental::managed<experimental::Person> managed_person = db.write([&db]() {
             experimental::Person person;
             person.name = "Jack";
             person.age = 27;
             experimental::Dog dog;
             dog.name = "fido";
-            person.dog = std::move(dog);
+            person.dog = &dog;
 
             return db.add(std::move(person));
         });
@@ -178,6 +176,8 @@ TEST_CASE("experimental", "[experimental]") {
 
         CHECK(managed_person.name.value() == "Meghna");
         CHECK(managed_person.dog->name == "fido");
+        CHECK(managed_person.dog->owners[0].name == "Meghna");
+        CHECK(managed_person.dog->owners.size() == 1);
     }
 }
 

@@ -171,6 +171,55 @@ namespace realm {
                 return *this;
             }
         };
+
+        template<typename T>
+        struct managed<T*> : managed_base {
+            T* value() const { return this->operator->().m_managed; }
+            struct ref_type {
+                managed<T> m_managed;
+
+                managed<T>* operator ->() {
+                    return &m_managed;
+                }
+            };
+            ref_type operator ->() const {
+                managed<T> m(m_obj->get_linked_object(m_key), *m_realm);
+                std::apply([&m](auto && ...ptr) {
+                    std::apply([&](auto&&...name) {
+                        ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
+                    }, managed<T>::managed_pointers_names);
+                }, managed<T>::managed_pointers());
+                return {std::move(m)};
+            }
+
+            managed &operator=(T&& o) {
+                auto table = m_realm->table_for_object_type(managed<T>::schema.name);
+                internal::bridge::obj obj;
+                if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
+                    auto pk = o.*(managed<T>::schema.primary_key().ptr);
+                    obj = table.create_object_with_primary_key(pk.value);
+                    m_obj->set(m_key, obj.get_key());
+                } else if (managed<T>::schema.is_embedded_experimental()) {
+                    obj = m_obj->create_and_set_linked_object(m_key);
+                } else {
+                    obj = table.create_object();
+                    m_obj->set(m_key, obj.get_key());
+                }
+
+                std::apply([&obj, &o](auto && ...p) {
+                    (accessor<typename std::decay_t<decltype(p)>::Result>::set(
+                             obj, obj.get_table().get_column_key(p.name), o.*(std::decay_t<decltype(p)>::ptr)
+                                     ), ...);
+                }, managed<T>::schema.ps);
+                auto m = managed<T>(std::move(obj), *m_realm);
+                std::apply([&m](auto && ...ptr) {
+                    std::apply([&](auto&& ...name) {
+                        ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
+                    }, managed<T>::managed_pointers_names);
+                }, managed<T>::managed_pointers());
+                return *this;
+            }
+        };
     }
 }
 #endif //CPP_REALM_BRIDGE_LINK_HPP

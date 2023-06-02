@@ -116,6 +116,7 @@ namespace realm::internal::bridge {
         void begin_transaction() const;
         void commit_transaction() const;
         table table_for_object_type(const std::string& object_type);
+        table get_table(const uint32_t &);
         [[nodiscard]] std::shared_ptr<struct scheduler> scheduler() const;
         static async_open_task get_synchronized_realm(const config&);
         bool refresh();

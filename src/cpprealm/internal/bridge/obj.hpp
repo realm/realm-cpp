@@ -59,6 +59,7 @@ namespace realm::internal::bridge {
     struct object_id;
     struct list;
     struct row;
+    struct table_view;
 
     namespace {
         template <typename T>
@@ -187,6 +188,7 @@ namespace realm::internal::bridge {
         core_dictionary get_dictionary(const col_key& col_key);
         void set_null(const col_key&);
         obj create_and_set_linked_object(const col_key&);
+        table_view get_backlink_view(table, col_key);
     private:
         template <typename T>
         friend T get(const obj&, const col_key& col_key);

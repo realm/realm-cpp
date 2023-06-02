@@ -355,6 +355,38 @@ namespace realm::experimental {
         }
     };
 
+    template <typename T>
+    struct accessor<T*> {
+        static inline void set(internal::bridge::obj& obj,
+                               internal::bridge::col_key&& key,
+                               T* value) {
+            auto table = obj.get_target_table(key);
+            internal::bridge::obj m_obj;
+            if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
+                auto pk = (*value).*(managed<T>::schema.primary_key().ptr);
+                m_obj = table.create_object_with_primary_key(pk.value);
+                obj.set(key, m_obj.get_key());
+            } else if (managed<T>::schema.is_embedded_experimental()) {
+                m_obj = obj.create_and_set_linked_object(key);
+            } else {
+                m_obj = table.create_object();
+                obj.set(key, m_obj.get_key());
+            }
+            std::apply([&m_obj, &value](auto && ...p) {
+                (accessor<typename std::decay_t<decltype(p)>::Result>::set(
+                         m_obj, m_obj.get_table().get_column_key(p.name),
+                         (*value).*(std::decay_t<decltype(p)>::ptr)), ...);
+            }, managed<T, void>::schema.ps);
+        }
+    };
+
+    template <auto T>
+    struct accessor<linking_objects<T>> {
+        static inline void set(internal::bridge::obj& obj,
+                               internal::bridge::col_key&& key,
+                               linking_objects<T> value) {
+        }
+    };
     // MARK: - accessor primary key
     template <typename T>
     struct accessor<primary_key<T>> {

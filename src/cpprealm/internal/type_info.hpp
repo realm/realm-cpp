@@ -11,12 +11,14 @@
 #include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/object_id.hpp>
 
-#include <vector>
 #include <map>
+#include <vector>
 
 namespace realm::experimental {
     template <typename>
     struct link;
+    template <auto>
+    struct linking_objects;
     template <typename>
     struct primary_key;
 }
@@ -116,7 +118,20 @@ namespace realm::internal::type_info {
             return bridge::property::type::Object;
         }
     };
-
+    template <typename T>
+    struct type_info<T*> {
+        using internal_type = bridge::obj_key;
+        static constexpr bridge::property::type type() {
+            return bridge::property::type::Object;
+        }
+    };
+    template <auto T>
+    struct type_info<experimental::linking_objects<T>> {
+        using internal_type = bridge::obj_key;
+        static constexpr bridge::property::type type() {
+            return bridge::property::type::LinkingObjects | bridge::property::type::Array;
+        }
+    };
     template <typename T>
     struct is_link : std::false_type {
         static constexpr auto value = false;
@@ -126,6 +141,18 @@ namespace realm::internal::type_info {
         static constexpr auto value = true;
     };
 
+    template <typename T>
+    struct is_backlink : std::false_type {
+        static constexpr auto value = false;
+    };
+    template <auto T>
+    struct is_backlink<experimental::linking_objects<T>> : std::true_type {
+        static constexpr auto value = true;
+    };
+//    template <typename T>
+//    struct is_link<T*> : std::true_type {
+//        static constexpr auto value = true;
+//    };
     template <>
     struct type_info<std::monostate> {
         using internal_type = std::monostate;
