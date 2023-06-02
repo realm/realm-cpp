@@ -25,6 +25,19 @@ namespace realm::experimental {
         };
 
         template<>
+        struct primary_key<int> {
+            using internal_type = int64_t;
+            primary_key() = default;
+            primary_key(const int& v) {
+                this->value = v;
+            }
+            int64_t value;
+            operator int64_t() {
+                return value;
+            }
+        };
+
+        template<>
         struct primary_key<int64_t> {
             using internal_type = int64_t;
             primary_key() = default;
@@ -46,6 +59,32 @@ namespace realm::experimental {
             }
             object_id value;
             operator object_id() {
+                return value;
+            }
+        };
+
+        template<>
+        struct primary_key<std::string> {
+            using internal_type = std::string;
+            primary_key() = default;
+            primary_key(const std::string& v) {
+                this->value = v;
+            }
+            std::string value;
+            operator std::string() {
+                return value;
+            }
+        };
+
+        template<>
+        struct primary_key<uuid> {
+            using internal_type = internal::bridge::uuid;
+            primary_key() = default;
+            primary_key(const uuid& v) {
+                this->value = v;
+            }
+            uuid value;
+            operator uuid() {
                 return value;
             }
         };
