@@ -192,11 +192,14 @@ namespace realm {
                 return {std::move(m)};
             }
 
-            managed &operator=(T&& o) {
+            managed &operator=(T* o) {
                 auto table = m_realm->table_for_object_type(managed<T>::schema.name);
                 internal::bridge::obj obj;
-                if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
-                    auto pk = o.*(managed<T>::schema.primary_key().ptr);
+                if (!o) {
+                    m_obj->set_null(m_key);
+                    return *this;
+                } else if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
+                    auto pk = (*o).*(managed<T>::schema.primary_key().ptr);
                     obj = table.create_object_with_primary_key(pk.value);
                     m_obj->set(m_key, obj.get_key());
                 } else if (managed<T>::schema.is_embedded_experimental()) {
@@ -208,7 +211,7 @@ namespace realm {
 
                 std::apply([&obj, &o](auto && ...p) {
                     (accessor<typename std::decay_t<decltype(p)>::Result>::set(
-                             obj, obj.get_table().get_column_key(p.name), o.*(std::decay_t<decltype(p)>::ptr)
+                             obj, obj.get_table().get_column_key(p.name), (*o).*(std::decay_t<decltype(p)>::ptr)
                                      ), ...);
                 }, managed<T>::schema.ps);
                 auto m = managed<T>(std::move(obj), *m_realm);
@@ -218,6 +221,10 @@ namespace realm {
                     }, managed<T>::managed_pointers_names);
                 }, managed<T>::managed_pointers());
                 return *this;
+            }
+
+            bool operator ==(const std::nullptr_t nptr) const {
+                return !m_obj->get_linked_object(m_key).is_valid();
             }
         };
     }

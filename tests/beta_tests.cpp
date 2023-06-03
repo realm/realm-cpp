@@ -904,4 +904,73 @@ TEST_CASE("map_beta", "[map]") {
 
 }
 
+TEST_CASE("links") {
+    realm_path path;
+    experimental::db db = experimental::open(path);
+    SECTION("null check") {
+        experimental::Dog dog;
+        dog.name = "fido";
+
+        experimental::managed<experimental::Person> managed_person = db.write([&db]() {
+            experimental::Person person;
+            person.name = "Jack";
+            person.age = 27;
+            person.dog = nullptr;
+            return db.add(std::move(person));
+        });
+
+        CHECK(managed_person.dog == nullptr);
+        db.write([&managed_person, &dog]() {
+           managed_person.dog = &dog;
+        });
+        CHECK(managed_person.dog->name == "fido");
+        db.write([&managed_person]() {
+            managed_person.dog = nullptr;
+        });
+        CHECK(managed_person.dog == nullptr);
+    }
+}
+
+TEST_CASE("backlinks") {
+    realm_path path;
+    experimental::db db = experimental::open(path);
+    SECTION("size check") {
+        experimental::Dog dog;
+        dog.name = "fido";
+
+        auto [jack, jill] = db.write([&db]() {
+            experimental::Person person;
+            person.name = "Jack";
+            person.age = 27;
+            person.dog = nullptr;
+            experimental::Person person2;
+            person2.name = "Jill";
+            person2.age = 28;
+            person2.dog = nullptr;
+            return db.insert(person, person2);
+        });
+        CHECK(jack.dog == nullptr);
+        db.write([&dog, jack = &jack]() {
+            jack->dog = &dog;
+        });
+        CHECK(jack.dog->name == "fido");
+        CHECK(jack.dog->owners.size() == 1);
+        db.write([&dog, jill = &jill]() {
+            jill->dog = &dog;
+        });
+        CHECK(jill.dog->name == "fido");
+        CHECK(jill.dog->owners.size() == 2);
+        CHECK(jack.dog->owners.size() == 2);
+        db.write([jack = &jack]() {
+            jack->dog = nullptr;
+        });
+        CHECK(jack.dog == nullptr);
+        CHECK(jill.dog->owners.size() == 1);
+        db.write([jill = &jill]() {
+            jill->dog = nullptr;
+        });
+        CHECK(db.objects<Dog>()[0].owners.size() == 0);
+    }
+}
+
 } // namespace experimental

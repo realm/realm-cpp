@@ -360,6 +360,9 @@ namespace realm::experimental {
         static inline void set(internal::bridge::obj& obj,
                                internal::bridge::col_key&& key,
                                T* value) {
+            if (!value) {
+                return;
+            }
             auto table = obj.get_target_table(key);
             internal::bridge::obj m_obj;
             if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {

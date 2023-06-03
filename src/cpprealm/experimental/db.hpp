@@ -53,13 +53,14 @@ namespace realm::experimental {
                 commit_write();
             }
         }
-        template <typename T>
-        managed<T> add(T &&v) {
+        template <typename U>
+        managed<std::remove_const_t<U>> add(U &&v) {
+            using T = std::remove_const_t<U>;
             static_assert(sizeof(managed<T>), "Must declare schema for T");
-            auto table = m_realm.table_for_object_type(managed<T>::schema.name);
+            auto table = m_realm.table_for_object_type(managed<std::remove_const_t<T>>::schema.name);
             internal::bridge::obj m_obj;
-            if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
-                auto pk = v.*(managed<T>::schema.primary_key().ptr);
+            if constexpr (managed<std::remove_const_t<T>>::schema.HasPrimaryKeyProperty) {
+                auto pk = v.*(managed<std::remove_const_t<T>>::schema.primary_key().ptr);
                 m_obj = table.create_object_with_primary_key(pk.value);
             } else {
                 m_obj = table.create_object();
@@ -104,6 +105,27 @@ namespace realm::experimental {
             }
         }
 
+    private:
+        template <size_t N, typename Tpl, typename ...Ts> auto v_add(const Tpl& tpl, const std::tuple<Ts...>& vs) {
+            if constexpr (N + 1 == sizeof...(Ts)) {
+                auto managed = add(std::move(std::get<N>(vs)));
+                return std::tuple_cat(tpl, std::make_tuple(std::move(managed)));
+            } else {
+                auto managed = add(std::move(std::get<N>(vs)));
+                return v_add<N + 1>(std::tuple_cat(tpl, std::make_tuple(std::move(managed))), vs);
+            }
+        }
+    public:
+        template <typename ...Ts>
+        std::tuple<managed<Ts>...> insert(const Ts&... v) {
+//            static_assert(sizeof...(managed<Ts>), "Must declare schema for T");
+            std::tuple<> tpl;
+            return v_add<0>(tpl, std::make_tuple(v...));
+//            return std::make_tuple((add(v), ...));
+//            for (auto& obj : v) {
+//                add(obj);
+//            }
+        }
         template <typename T>
         results<T> objects()
         {
