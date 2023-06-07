@@ -29,6 +29,7 @@
 
 #include <cpprealm/results.hpp>
 #include <cpprealm/experimental/macros.hpp>
+#include <cpprealm/experimental/results.hpp>
 
 namespace realm {
     template <typename>
@@ -97,7 +98,7 @@ namespace realm {
             }
         }
 
-                // Inserts a new subscription into the set if one does not exist already.
+        // Inserts a new subscription into the set if one does not exist already.
         // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
         // for the templated class type.
         template<typename T>
@@ -112,7 +113,7 @@ namespace realm {
             auto builder = internal::bridge::query(table_ref);
 
             if (query_fn) {
-                auto q = realm::query<experimental::managed<T>>(builder, std::move(schema), true);
+                auto q = realm::experimental::query<experimental::managed<T>>(builder, std::move(schema));
                 auto full_query = (*query_fn)(q).q;
                 insert_or_assign(name, full_query);
             } else {

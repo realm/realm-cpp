@@ -23,8 +23,7 @@ TEST_CASE("flexible_sync_beta", "[sync]") {
                                                          subs.add<experimental::AllTypesObject>("foo-strings", [](auto &obj) {
                                                              return obj.str_col == "foo";
                                                          });
-                                                     })
-                                 .get();
+                                                     }).get();
         CHECK(update_success == true);
 
         auto sub = *synced_realm.subscriptions().find("foo-strings");
@@ -86,8 +85,7 @@ TEST_CASE("beta_realm_is_populated_on_async_open", "[sync]") {
 
             auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
                                                                   subs.clear();
-                                                              })
-                                          .get();
+                                                              }).get();
             CHECK(update_success == true);
             CHECK(synced_realm.subscriptions().size() == 0);
 
@@ -95,8 +93,7 @@ TEST_CASE("beta_realm_is_populated_on_async_open", "[sync]") {
                                                              subs.add<experimental::AllTypesObject>("foo-strings", [](auto &obj) {
                                                                  return obj.str_col == "foo";
                                                              });
-                                                         })
-                                     .get();
+                                                         }).get();
             CHECK(update_success == true);
 
             synced_realm.write([&synced_realm]() {
@@ -125,8 +122,7 @@ TEST_CASE("beta_realm_is_populated_on_async_open", "[sync]") {
                                                                   subs.add<experimental::AllTypesObject>("foo-strings", [](auto &obj) {
                                                                       return obj.str_col == "foo";
                                                                   });
-                                                              })
-                                          .get();
+                                                              }).get();
             CHECK(update_success == true);
             auto objs = synced_realm.objects<experimental::AllTypesObject>();
             CHECK(objs.size() < 1000);

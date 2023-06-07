@@ -1,9 +1,12 @@
-#ifndef REALM_MANAGED_TIMESTAMP_HPP
-#define REALM_MANAGED_TIMESTAMP_HPP
+#ifndef CPPREALM_MANAGED_TIMESTAMP_HPP
+#define CPPREALM_MANAGED_TIMESTAMP_HPP
 
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/internal/bridge/timestamp.hpp>
 
+namespace realm {
+    class rbool;
+};
 namespace realm::experimental {
 
     template<>
@@ -14,17 +17,24 @@ namespace realm::experimental {
             return m_obj->template get<realm::internal::bridge::timestamp>(m_key);
         }
 
-        [[nodiscard]] std::chrono::time_point<std::chrono::system_clock> operator *() const {
+        [[nodiscard]] operator std::chrono::time_point<std::chrono::system_clock>() const {
             return value();
         }
 
+        auto time_since_epoch() const {
+            auto ts = m_obj->template get<internal::bridge::timestamp>(m_key);
+            return ts.get_time_point().time_since_epoch();
+        }
+
+        template <typename S>
+        void operator+=(const std::chrono::duration<S>& rhs) {
+            auto ts = m_obj->template get<internal::bridge::timestamp>(m_key);
+            m_obj->set(m_key, internal::bridge::timestamp(ts.get_time_point() + rhs));
+        }
+
         //MARK: -   comparison operators
-        inline bool operator==(const std::chrono::time_point<std::chrono::system_clock>& rhs) const noexcept {
-            return value() == rhs;
-        }
-        inline bool operator!=(const std::chrono::time_point<std::chrono::system_clock>& rhs) const noexcept {
-            return value() != rhs;
-        }
+        rbool operator==(const std::chrono::time_point<std::chrono::system_clock>& rhs) const noexcept;
+        rbool operator!=(const std::chrono::time_point<std::chrono::system_clock>& rhs) const noexcept;
     };
 
     template<>
@@ -35,20 +45,40 @@ namespace realm::experimental {
             return m_obj->template get<realm::internal::bridge::timestamp>(m_key);
         }
 
-        [[nodiscard]] std::optional<std::chrono::time_point<std::chrono::system_clock>> operator *() const {
+        [[nodiscard]] operator std::optional<std::chrono::time_point<std::chrono::system_clock>>() const {
             return value();
         }
 
+        struct box {
+            template <typename S>
+            void operator+=(const std::chrono::duration<S>& rhs) {
+                auto ts = m_parent.get().m_obj->get_optional<internal::bridge::timestamp>(m_parent.get().m_key);
+                m_parent.get().m_obj->set(m_parent.get().m_key, internal::bridge::timestamp(ts->get_time_point() + rhs));
+            }
+            auto time_since_epoch() const {
+                auto ts = m_parent.get().m_obj->get_optional<internal::bridge::timestamp>(m_parent.get().m_key);
+                return ts->get_time_point().time_since_epoch();
+            }
+        private:
+            box(managed& parent) : m_parent(parent) { }
+            std::reference_wrapper<managed<std::optional<std::chrono::time_point<std::chrono::system_clock>>>> m_parent;
+            friend struct managed<std::optional<std::chrono::time_point<std::chrono::system_clock>>>;
+        };
+
+        std::unique_ptr<box> operator->()
+        {
+            return std::make_unique<box>(box(*this));
+        }
+        [[nodiscard]] box operator*() {
+            return box(*this);
+        }
+
         //MARK: -   comparison operators
-        inline bool operator==(const std::optional<std::chrono::time_point<std::chrono::system_clock>>& rhs) const noexcept {
-            return value() == rhs;
-        }
-        inline bool operator!=(const std::optional<std::chrono::time_point<std::chrono::system_clock>>& rhs) const noexcept {
-            return value() != rhs;
-        }
+        rbool operator==(const std::optional<std::chrono::time_point<std::chrono::system_clock>>& rhs) const noexcept;
+        rbool operator!=(const std::optional<std::chrono::time_point<std::chrono::system_clock>>& rhs) const noexcept;
     };
 
 } // namespace realm::experimental
 
 
-#endif//REALM_MANAGED_TIMESTAMP_HPP
+#endif//CPPREALM_MANAGED_TIMESTAMP_HPP

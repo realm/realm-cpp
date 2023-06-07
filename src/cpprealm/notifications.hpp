@@ -22,6 +22,7 @@
 #include <cpprealm/persisted.hpp>
 #include <cpprealm/thread_safe_reference.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
+#include <cpprealm/internal/bridge/list.hpp>
 
 #include <any>
 #include <future>
@@ -51,6 +52,7 @@ struct notification_token {
 
     internal::bridge::notification_token m_token;
     internal::bridge::dictionary m_dictionary;
+    std::shared_ptr<realm::internal::bridge::list> m_list;
     internal::bridge::realm m_realm;
 };
 
