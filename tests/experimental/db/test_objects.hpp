@@ -5,6 +5,28 @@
 
 namespace realm::experimental {
 
+    struct EmbeddedDepth3 {
+        std::string str_col;
+    };
+    REALM_EMBEDDED_SCHEMA(EmbeddedDepth3, str_col)
+
+    struct EmbeddedDepth2 {
+        std::string str_col;
+        link<EmbeddedDepth3> embedded_link;
+    };
+    REALM_EMBEDDED_SCHEMA(EmbeddedDepth2, str_col, embedded_link)
+
+    struct EmbeddedDepth1 {
+        std::string str_col;
+        link<EmbeddedDepth2> embedded_link;
+    };
+    REALM_EMBEDDED_SCHEMA(EmbeddedDepth1, str_col, embedded_link)
+
+    struct EmbeddedDepthObject {
+        link<EmbeddedDepth1> embedded_link;
+    };
+    REALM_SCHEMA(EmbeddedDepthObject, embedded_link)
+
     struct AllTypesObjectEmbedded {
         int64_t _id;
         std::string str_col;

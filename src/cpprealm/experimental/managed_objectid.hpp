@@ -6,8 +6,11 @@
 
 #include <cpprealm/internal/bridge/object_id.hpp>
 
-namespace realm::experimental {
+namespace realm {
+    class rbool;
+}
 
+namespace realm::experimental {
     template<>
     struct managed<realm::object_id> : managed_base {
         using managed<realm::object_id>::managed_base::operator=;
@@ -20,12 +23,8 @@ namespace realm::experimental {
         }
 
         //MARK: -   comparison operators
-        inline bool operator==(const realm::object_id& rhs) const noexcept {
-            return value().m_object_id == rhs.m_object_id;
-        }
-        inline bool operator!=(const realm::object_id& rhs) const noexcept {
-            return value().m_object_id != rhs.m_object_id;
-        }
+        rbool operator==(const realm::object_id& rhs) const noexcept;
+        rbool operator!=(const realm::object_id& rhs) const noexcept;
     };
 
     template<>
@@ -46,26 +45,8 @@ namespace realm::experimental {
         }
 
         //MARK: -   comparison operators
-        inline bool operator==(const std::optional<realm::object_id>& rhs) const noexcept {
-            auto lhs = value();
-            if (lhs && rhs) {
-                return value()->m_object_id == rhs->m_object_id;
-            } else if (!lhs && !rhs) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-        inline bool operator!=(const std::optional<realm::object_id>& rhs) const noexcept {
-            auto lhs = value();
-            if (lhs && rhs) {
-                return value()->m_object_id != rhs->m_object_id;
-            } else if (!lhs && !rhs) {
-                return false;
-            } else {
-                return true;
-            }
-        }
+        rbool operator==(const std::optional<realm::object_id>& rhs) const noexcept;
+        rbool operator!=(const std::optional<realm::object_id>& rhs) const noexcept;
     };
 
 } // namespace realm::experimental

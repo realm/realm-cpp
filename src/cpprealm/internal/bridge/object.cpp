@@ -32,11 +32,11 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(Object)>{});
     static_assert(SizeCheck<24, sizeof(IndexSet)>{});
     static_assert(SizeCheck<8, alignof(IndexSet)>{});
-    #if defined(__clang__)
+#if defined(__clang__)
     static_assert(SizeCheck<168, sizeof(CollectionChangeSet)>{});
-    #elif defined(__GNUC__) || defined(__GNUG__)
+#elif defined(__GNUC__) || defined(__GNUG__)
     static_assert(SizeCheck<184, sizeof(CollectionChangeSet)>{});
-    #endif
+#endif
     static_assert(SizeCheck<8, alignof(CollectionChangeSet)>{});
     static_assert(SizeCheck<32, sizeof(IndexSet::IndexIterator)>{});
     static_assert(SizeCheck<8, alignof(IndexSet::IndexIterator)>{});
@@ -153,7 +153,7 @@ namespace realm::internal::bridge {
         struct wrapper : CollectionChangeCallback {
             std::shared_ptr<collection_change_callback> m_cb;
             explicit wrapper(std::shared_ptr<collection_change_callback>&& cb)
-            : m_cb(std::move(cb)) {}
+                : m_cb(std::move(cb)) {}
             void before(const CollectionChangeSet& v) const {
                 m_cb->before(v);
             }
@@ -280,7 +280,7 @@ namespace realm::internal::bridge {
     }
 
     index_set::index_iterator::index_iterator(index_set::index_iterator&& other) {
-        new (&m_iterator) IndexSet::IndexIterator(std::move(*reinterpret_cast<IndexSet::IndexIterator*>(&other.m_iterator)));
+        new (&m_iterator) IndexSet::IndexIterator(std::move(*reinterpret_cast<IndexSet::IndexIterator *>(&other.m_iterator)));
     }
 
     index_set::index_iterator& index_set::index_iterator::operator=(index_set::index_iterator&& other) {
@@ -304,7 +304,7 @@ namespace realm::internal::bridge {
     }
 
     index_set::index_iterator &index_set::index_iterator::operator++() noexcept {
-        new (&m_iterator) IndexSet::IndexIterator(reinterpret_cast<IndexSet::IndexIterator*>(&m_iterator)->operator++());
+        reinterpret_cast<IndexSet::IndexIterator*>(&m_iterator)->operator++();
         return *this;
     }
 
@@ -322,41 +322,35 @@ namespace realm::internal::bridge {
     }
 
     index_set::index_iterable_adaptor::index_iterable_adaptor(const index_set::index_iterable_adaptor& other) {
-        new (&m_index_iterable_adaptor) IndexSet::IndexIterator(*reinterpret_cast<const IndexSet::IndexIterator*>(&other.m_index_iterable_adaptor));
+        new (&m_index_iterable_adaptor) IndexSet::IndexIteratableAdaptor(*reinterpret_cast<const IndexSet::IndexIteratableAdaptor *>(&other.m_index_iterable_adaptor));
     }
 
     index_set::index_iterable_adaptor& index_set::index_iterable_adaptor::operator=(const index_set::index_iterable_adaptor& other) {
-        if (this != &other) {
-            *reinterpret_cast<IndexSet::IndexIterator*>(&m_index_iterable_adaptor) = *reinterpret_cast<const IndexSet::IndexIterator*>(&other.m_index_iterable_adaptor);
-        }
+        new (&m_index_iterable_adaptor) IndexSet::IndexIteratableAdaptor(*reinterpret_cast<const IndexSet::IndexIteratableAdaptor *>(&other.m_index_iterable_adaptor));
         return *this;
     }
 
     index_set::index_iterable_adaptor::index_iterable_adaptor(index_set::index_iterable_adaptor&& other) {
-        new (&m_index_iterable_adaptor) IndexSet::IndexIterator(std::move(*reinterpret_cast<IndexSet::IndexIterator*>(&other.m_index_iterable_adaptor)));
+        new (&m_index_iterable_adaptor) IndexSet::IndexIteratableAdaptor(std::move(*reinterpret_cast<IndexSet::IndexIteratableAdaptor *>(&other.m_index_iterable_adaptor)));
     }
 
     index_set::index_iterable_adaptor& index_set::index_iterable_adaptor::operator=(index_set::index_iterable_adaptor&& other) {
-        if (this != &other) {
-            *reinterpret_cast<IndexSet::IndexIterator*>(&m_index_iterable_adaptor) = std::move(*reinterpret_cast<IndexSet::IndexIterator*>(&other.m_index_iterable_adaptor));
-        }
+        new (&m_index_iterable_adaptor) IndexSet::IndexIteratableAdaptor(std::move(*reinterpret_cast<IndexSet::IndexIteratableAdaptor *>(&other.m_index_iterable_adaptor)));
         return *this;
     }
 
     index_set::index_iterable_adaptor::~index_iterable_adaptor() {
-        reinterpret_cast<IndexSet::IndexIterator*>(&m_index_iterable_adaptor)->~IndexIterator();
+        reinterpret_cast<IndexSet::IndexIteratableAdaptor*>(&m_index_iterable_adaptor)->~IndexIteratableAdaptor();
     }
 
     index_set::index_iterator index_set::index_iterable_adaptor::begin() const noexcept {
         index_iterator iter;
-        new (&iter.m_iterator) IndexSet::IndexIterator(
-                reinterpret_cast<const IndexSet::IndexIteratableAdaptor*>(&m_index_iterable_adaptor)->begin());
+        new (&iter.m_iterator) IndexSet::IndexIterator(reinterpret_cast<const IndexSet::IndexIteratableAdaptor *>(&m_index_iterable_adaptor)->begin());
         return iter;
     }
     index_set::index_iterator index_set::index_iterable_adaptor::end() const noexcept {
         index_iterator iter;
-        new (&iter.m_iterator) IndexSet::IndexIterator(
-                reinterpret_cast<const IndexSet::IndexIteratableAdaptor*>(&m_index_iterable_adaptor)->end());
+        new (&iter.m_iterator) IndexSet::IndexIterator(reinterpret_cast<const IndexSet::IndexIteratableAdaptor *>(&m_index_iterable_adaptor)->end());
         return iter;
     }
 

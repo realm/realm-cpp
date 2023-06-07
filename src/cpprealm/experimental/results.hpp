@@ -1,14 +1,53 @@
-#ifndef REALM_RESULTS_HPP
-#define REALM_RESULTS_HPP
+#ifndef CPPREALM_EXPERIMENTAL_RESULTS_HPP
+#define CPPREALM_EXPERIMENTAL_RESULTS_HPP
 
-#include <vector>
 #include <cpprealm/internal/bridge/mixed.hpp>
 #include <cpprealm/internal/bridge/query.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/results.hpp>
 #include <cpprealm/experimental/macros.hpp>
 
+#include <cpprealm/persisted.hpp>
+
+namespace realm {
+    class rbool;
+    struct mutable_sync_subscription_set;
+}
+
 namespace realm::experimental {
+
+    template<typename>
+    struct results;
+
+    template<typename T>
+    struct query : public T {
+    private:
+        template<typename V>
+        void set_managed(V &prop, const internal::bridge::col_key &column_key) {
+            new(&prop.m_key) internal::bridge::col_key(column_key);
+        }
+
+        template<size_t N, typename P>
+        constexpr auto
+        prepare_for_query(internal::bridge::query &query, internal::bridge::object_schema &schema, P property) {
+            if constexpr (N + 1 == std::tuple_size_v<decltype(T::managed_pointers() )>) {
+                (this->*property).prepare_for_query(query);
+                set_managed((this->*property), schema.property_for_name(T::schema.names[N]).column_key());
+                return;
+            } else {
+                (this->*property).prepare_for_query(query);
+                set_managed((this->*property), schema.property_for_name(T::schema.names[N]).column_key());
+                return prepare_for_query<N + 1>(query, schema, std::get<N + 1>(T::managed_pointers() ));
+            }
+        }
+
+        query(internal::bridge::query &query, internal::bridge::object_schema &&schema) {
+            prepare_for_query<0>(query, schema, std::get<0>(T::managed_pointers()));
+        }
+        template<typename>
+        friend struct ::realm::experimental::results;
+        friend struct ::realm::mutable_sync_subscription_set;
+    };
 
     template<typename T>
     struct results {
@@ -75,7 +114,7 @@ namespace realm::experimental {
             T value;
 
             template<typename>
-            friend class results;
+            friend struct results;
         };
         virtual ~results() = default;
         iterator begin() {
@@ -96,14 +135,18 @@ namespace realm::experimental {
             return dynamic_cast<results<T> &>(*this);
         }
 
-//        results<T> &where(std::function<rbool(T &)> fn) {
-//            auto builder = internal::bridge::query(m_parent.get_table());
-//            auto schema = m_parent.get_realm().schema().find(T::schema.name);
-//            auto q = query<T>(builder, std::move(schema));
-//            auto full_query = fn(q).q;
-//            m_parent = internal::bridge::results(m_parent.get_realm(), full_query);
-//            return dynamic_cast<results<T> &>(*this);
-//        }
+        results<T> &where(std::function<rbool(experimental::managed<T>&)>&& fn) {
+            static_assert(sizeof(managed<T>), "Must declare schema for T");
+            auto realm = m_parent.get_realm();
+            auto schema = realm.schema().find(experimental::managed<T>::schema.name);
+            auto group = realm.read_group();
+            auto table_ref = group.get_table(schema.table_key());
+            auto builder = internal::bridge::query(table_ref);
+            auto q = realm::experimental::query<experimental::managed<T>>(builder, std::move(schema));
+            auto full_query = fn(q).q;
+            m_parent = internal::bridge::results(m_parent.get_realm(), full_query);
+            return dynamic_cast<results &>(*this);
+        }
 
         struct results_callback_wrapper : internal::bridge::collection_change_callback {
             std::function<void(results_change)> handler;
@@ -163,4 +206,4 @@ namespace realm::experimental {
 }
 
 
-#endif//REALM_RESULTS_HPP
+#endif //CPPREALM_EXPERIMENTAL_RESULTS_HPP

@@ -180,7 +180,11 @@ namespace realm::experimental {
 
         template<typename T>
         managed_base& operator =(const T& v) {
-            m_obj->template set<typename internal::type_info::type_info<T, void>::internal_type>(m_key, v);
+            if constexpr (std::is_same_v<T, std::nullopt_t>) {
+                m_obj->set_null(m_key);
+            } else {
+                m_obj->template set<typename internal::type_info::type_info<T, void>::internal_type>(m_key, v);
+            }
             return *this;
         }
 
@@ -204,6 +208,30 @@ namespace realm::experimental {
         }
     };
 }
+
+#define __cpprealm_build_experimental_query(op, name, type) \
+rbool managed<type>::operator op(const type& rhs) const noexcept { \
+    if (this->should_detect_usage_for_queries) { \
+        auto query = internal::bridge::query(this->query->get_table()); \
+        query.name(this->m_key, serialize(rhs)); \
+        return query; \
+    } \
+    return serialize(value()) op serialize(rhs); \
+} \
+
+#define __cpprealm_build_optional_experimental_query(op, name, type) \
+rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) const noexcept { \
+    if (this->should_detect_usage_for_queries) { \
+        auto query = internal::bridge::query(this->query->get_table()); \
+        if (auto r = serialize(rhs)) { \
+            query.name(this->m_key, *r); \
+        } else { \
+            query.name(this->m_key, std::nullopt); \
+        } \
+        return query; \
+    } \
+    return serialize(value()) op serialize(rhs); \
+} \
 
 #define REALM_SCHEMA(cls, ...) \
     DECLARE_REALM_SCHEMA(cls, false, false, experimental::BetaObjectType::TopLevel, __VA_ARGS__) \

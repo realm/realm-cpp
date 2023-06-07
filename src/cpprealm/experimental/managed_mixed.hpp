@@ -3,6 +3,7 @@
 
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/experimental/types.hpp>
+#include <cpprealm/persisted.hpp>
 
 namespace realm::experimental {
     template <typename T>
@@ -23,10 +24,40 @@ namespace realm::experimental {
             return value();
         }
 
-        inline bool operator==(const T& rhs) const noexcept {
+        //MARK: -   comparison operators
+        rbool operator==(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.equal(this->m_key, serialize(rhs));
+                return query;
+            }
             return value() == rhs;
         }
-        inline bool operator!=(const T& rhs) const noexcept {
+
+        rbool operator!=(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.not_equal(this->m_key, serialize(rhs));
+                return query;
+            }
+            return value() != rhs;
+        }
+
+        rbool operator==(const std::nullopt_t& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.equal(this->m_key, rhs);
+                return query;
+            }
+            return value() == rhs;
+        }
+
+        rbool operator!=(const std::nullopt_t& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.not_equal(this->m_key, rhs);
+                return query;
+            }
             return value() != rhs;
         }
     };

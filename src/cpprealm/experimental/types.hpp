@@ -212,11 +212,40 @@ namespace realm::experimental {
             }
         }, v);
     }
+
     template <typename T>
-    static T deserialize(const internal::bridge::mixed& value) {
+    static typename std::enable_if_t<!internal::type_info::MixedPersistableConcept<T>::value, T>
+    deserialize(const internal::bridge::mixed& value) {
+        if constexpr (internal::type_info::is_optional<T>::value) {
+            return std::nullopt;
+        } else if constexpr (std::is_same_v<T, int64_t>) {
+            return value.operator int64_t();
+        } else if constexpr (std::is_same_v<T, bool>) {
+            return value.operator bool();
+        } else if constexpr (std::is_same_v<T, std::string>) {
+            return static_cast<std::string>(value);
+        } else if constexpr (std::is_same_v<T, std::vector<uint8_t>>) {
+            return static_cast<std::vector<uint8_t>>(static_cast<internal::bridge::binary>(value));
+        } else if constexpr (std::is_same_v<T, std::chrono::time_point<std::chrono::system_clock>>) {
+            return static_cast<internal::bridge::timestamp>(value);
+        } else if constexpr (std::disjunction_v<std::is_same<T, double>, std::is_same<T, float>>) {
+            return static_cast<double>(value);
+        } else if constexpr (std::is_same_v<T, realm::uuid>) {
+            return static_cast<internal::bridge::uuid>(value).operator ::realm::uuid();
+        } else if constexpr (std::is_same_v<T, realm::object_id>) {
+            return static_cast<internal::bridge::object_id>(value).operator ::realm::object_id();
+        } else {
+            abort();
+        }
+    }
+
+    template <typename T>
+    static typename std::enable_if_t<internal::type_info::MixedPersistableConcept<T>::value, T>
+            deserialize(const internal::bridge::mixed& value) {
         if (value.is_null()) {
             return std::monostate();
         }
+
         switch (value.type()) {
             case internal::bridge::data_type::Int:
                 return value.operator int64_t();
@@ -237,7 +266,7 @@ namespace realm::experimental {
                 return static_cast<internal::bridge::object_id>(value).operator ::realm::object_id();
             case internal::bridge::data_type::TypedLink:
                 abort();
-//                REALM_TERMINATE("Objects stored in mixed properties must be accessed via `get_object_value()`");
+                //                REALM_TERMINATE("Objects stored in mixed properties must be accessed via `get_object_value()`");
             default:
                 abort();
         }
