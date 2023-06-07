@@ -16,6 +16,9 @@ namespace realm {
 
 namespace realm::experimental {
 
+    template<typename>
+    struct results;
+
     template<typename T>
     struct query : public T {
     private:
@@ -42,7 +45,7 @@ namespace realm::experimental {
             prepare_for_query<0>(query, schema, std::get<0>(T::managed_pointers()));
         }
         template<typename>
-        friend struct results;
+        friend struct ::realm::experimental::results;
         friend struct ::realm::mutable_sync_subscription_set;
     };
 
@@ -111,7 +114,7 @@ namespace realm::experimental {
             T value;
 
             template<typename>
-            friend class results;
+            friend struct results;
         };
         virtual ~results() = default;
         iterator begin() {
