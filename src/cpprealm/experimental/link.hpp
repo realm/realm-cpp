@@ -223,7 +223,7 @@ namespace realm {
                 return *this;
             }
 
-            bool operator ==(const std::nullptr_t nptr) const {
+            bool operator ==(const std::nullptr_t) const {
                 return !m_obj->get_linked_object(m_key).is_valid();
             }
         };
