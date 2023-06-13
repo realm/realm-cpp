@@ -180,7 +180,11 @@ namespace realm::experimental {
 
         template<typename T>
         managed_base& operator =(const T& v) {
-            m_obj->template set<typename internal::type_info::type_info<T, void>::internal_type>(m_key, v);
+            if constexpr (std::is_same_v<T, std::nullopt_t>) {
+                m_obj->set_null(m_key);
+            } else {
+                m_obj->template set<typename internal::type_info::type_info<T, void>::internal_type>(m_key, v);
+            }
             return *this;
         }
 
@@ -205,19 +209,45 @@ namespace realm::experimental {
     };
 }
 
+#define __cpprealm_build_experimental_query(op, name, type) \
+rbool managed<type>::operator op(const type& rhs) const noexcept { \
+    if (this->should_detect_usage_for_queries) { \
+        auto query = internal::bridge::query(this->query->get_table()); \
+        query.name(this->m_key, serialize(rhs)); \
+        return query; \
+    } \
+    return value() op rhs; \
+} \
+
+#define __cpprealm_build_optional_experimental_query(op, name, type) \
+rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) const noexcept { \
+    if (this->should_detect_usage_for_queries) { \
+        auto query = internal::bridge::query(this->query->get_table()); \
+        if (auto r = serialize(rhs)) { \
+            query.name(this->m_key, *r); \
+        } else { \
+            query.name(this->m_key, std::nullopt); \
+        } \
+        return query; \
+    } \
+    return value() op rhs; \
+} \
+
 #define REALM_SCHEMA(cls, ...) \
-    DECLARE_REALM_SCHEMA(cls, false, __VA_ARGS__) \
+    DECLARE_REALM_SCHEMA(cls, false, false, experimental::BetaObjectType::TopLevel, __VA_ARGS__) \
 
 #define REALM_EMBEDDED_SCHEMA(cls, ...) \
-    DECLARE_REALM_SCHEMA(cls, true, __VA_ARGS__)
+    DECLARE_REALM_SCHEMA(cls, true, false, experimental::BetaObjectType::Embedded, __VA_ARGS__)
 
-#define DECLARE_REALM_SCHEMA(cls, is_embedded_object, ...) \
+#define REALM_ASYMMETRIC_SCHEMA(cls, ...) \
+    DECLARE_REALM_SCHEMA(cls, false, true, experimental::BetaObjectType::Asymmetric, __VA_ARGS__)
+
+#define DECLARE_REALM_SCHEMA(cls, is_embedded_object, is_asymmetric_object, beta_object_type, ...) \
     template <> struct managed<cls> { \
         managed() = default; \
-        static constexpr bool is_object = true;     \
-        static constexpr bool is_embedded = is_embedded_object; \
+        static constexpr experimental::BetaObjectType object_type = beta_object_type;     \
         FOR_EACH(DECLARE_PERSISTED, cls, __VA_ARGS__) \
-        static constexpr auto schema = realm::schema(#cls, is_embedded_object, std::tuple{ FOR_EACH(DECLARE_PROPERTY, cls, __VA_ARGS__) }  ); \
+        static constexpr auto schema = realm::schema(#cls, beta_object_type, std::tuple{ FOR_EACH(DECLARE_PROPERTY, cls, __VA_ARGS__) }  ); \
         static constexpr auto managed_pointers() { \
             return std::tuple{FOR_EACH(DECLARE_MANAGED_PROPERTY, cls, __VA_ARGS__)};  \
         } \
@@ -272,10 +302,13 @@ namespace realm::experimental {
         }                       \
     };                         \
     struct meta_schema_##cls {   \
-        meta_schema_##cls() {    \
-            realm::experimental::db::schemas.push_back(managed<cls>::schema.to_core_schema());                     \
+        meta_schema_##cls() {                                                    \
+            auto s = managed<cls>::schema.to_core_schema();                      \
+            auto it = std::find(std::begin(realm::experimental::db::schemas), std::end(realm::experimental::db::schemas), s);                                  \
+            if (it == std::end(realm::experimental::db::schemas))                                                                     \
+                realm::experimental::db::schemas.push_back(s);       \
         }                     \
     }; \
-    meta_schema_##cls _meta_schema_##cls{};
+    static inline meta_schema_##cls _meta_schema_##cls{};
 
 #endif //CPP_REALM_MACROS_HPP

@@ -285,9 +285,9 @@ namespace realm::internal::type_info {
 
     template <typename T>
     struct type_info<experimental::primary_key<T>, void> {
-        using internal_type = int64_t;
+        using internal_type = typename type_info<T>::internal_type;
         static constexpr bridge::property::type type() {
-            return bridge::property::type::Int;//type_info<T>::type();
+            return type_info<T>::type();
         }
     };
 

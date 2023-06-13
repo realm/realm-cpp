@@ -1,10 +1,12 @@
 #ifndef CPP_REALM_CORO_OBSERVATION_HPP
 #define CPP_REALM_CORO_OBSERVATION_HPP
 
-#include "macros.hpp"
+#include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/internal/bridge/list.hpp>
+
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/thread_safe_reference.hpp>
 
@@ -180,6 +182,68 @@ namespace realm::experimental {
                 block(std::forward<realm::experimental::object_change<T>>(std::move(oc)));
             }
         }
+    };
+
+    template <typename T>
+    struct collection_change {
+        /// The list being observed.
+        const managed<std::vector<T>>* collection;
+        std::vector<uint64_t> deletions;
+        std::vector<uint64_t> insertions;
+        std::vector<uint64_t> modifications;
+
+        // This flag indicates whether the underlying object which is the source of this
+        // collection was deleted. This applies to lists, dictionaries and sets.
+        // This enables notifiers to report a change on empty collections that have been deleted.
+        bool collection_root_was_deleted = false;
+
+        [[nodiscard]] bool empty() const noexcept {
+            return deletions.empty() && insertions.empty() && modifications.empty() &&
+                   !collection_root_was_deleted;
+        }
+    };
+
+    template <typename T>
+    struct collection_callback_wrapper : internal::bridge::collection_change_callback {
+        std::function<void(collection_change<T>)> handler;
+        managed<std::vector<T>>& collection;
+        bool ignoreChangesInInitialNotification;
+
+        collection_callback_wrapper(std::function<void(collection_change<T>)> handler,
+                                    managed<std::vector<T>>& collection,
+                                    bool ignoreChangesInInitialNotification)
+            : handler(handler)
+              , collection(collection)
+              , ignoreChangesInInitialNotification(ignoreChangesInInitialNotification)
+        {}
+
+        void before(const realm::internal::bridge::collection_change_set &c) final {}
+        void after(internal::bridge::collection_change_set const& changes) final {
+            if (ignoreChangesInInitialNotification) {
+                ignoreChangesInInitialNotification = false;
+                handler({&collection, {},{},{}});
+            }
+            else if (changes.empty()) {
+                handler({&collection, {},{},{}});
+
+            }
+            else if (!changes.collection_root_was_deleted() || !changes.deletions().empty()) {
+                handler({&collection,
+                        to_vector(changes.deletions()),
+                        to_vector(changes.insertions()),
+                        to_vector(changes.modifications()),
+                });
+            }
+        }
+
+    private:
+        std::vector<uint64_t> to_vector(const internal::bridge::index_set& index_set) {
+            auto vector = std::vector<uint64_t>();
+            for (auto index : index_set.as_indexes()) {
+                vector.push_back(index);
+            }
+            return vector;
+        };
     };
 
 #if __cpp_coroutines

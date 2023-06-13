@@ -27,8 +27,8 @@
 #include <realm/sync/noinst/client_impl_base.hpp>
 
 namespace realm::internal {
-    struct AndroidSocket : realm::sync::network::Socket {
-        AndroidSocket(realm::sync::network::Service& service)
+    struct DefaultSocket : realm::sync::network::Socket {
+        DefaultSocket(realm::sync::network::Service& service)
                 : realm::sync::network::Socket(service)
         {
         }
@@ -93,12 +93,13 @@ namespace realm::internal {
         realm::sync::network::Endpoint ep = *resolved.begin();
 
         using namespace realm::sync::network::ssl;
-        realm::sync::network::ssl::Context m_ssl_context;
-        AndroidSocket socket{service};
+        Context m_ssl_context;
+        DefaultSocket socket{service};
         socket.connect(ep);
 
         socket.ssl_stream.emplace(socket, m_ssl_context, Stream::client);
         socket.ssl_stream->set_host_name(host); // Throws
+
         socket.ssl_stream->set_verify_mode(VerifyMode::peer);
         #if REALM_INCLUDE_CERTS
         socket.ssl_stream->use_included_certificates();
@@ -109,14 +110,14 @@ namespace realm::internal {
             headers[k] = v;
         }
         headers["Host"] = host;
-        headers["User-Agent"] = "Realm C++ SDK Android";
+        headers["User-Agent"] = "Realm C++ SDK";
 
         if (!request.body.empty()) {
             headers["Content-Length"] = util::to_string(request.body.size());
         }
 
         std::shared_ptr<realm::util::StderrLogger> logger = std::make_shared<realm::util::StderrLogger>();
-        realm::sync::HTTPClient<AndroidSocket> m_http_client = realm::sync::HTTPClient<AndroidSocket>(socket, logger);
+        realm::sync::HTTPClient<DefaultSocket> m_http_client = realm::sync::HTTPClient<DefaultSocket>(socket, logger);
 
         realm::sync::HTTPMethod method;
         switch (request.method) {

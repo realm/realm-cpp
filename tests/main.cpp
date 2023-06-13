@@ -29,18 +29,12 @@ int main(int argc, char *argv[]) {
         config.showDurations = Catch::ShowDurations::Always;// this is to help debug hangs
         config.reporterSpecifications.push_back(Catch::ReporterSpec{"console", {}, {}, {}});
         config.reporterSpecifications.push_back(Catch::ReporterSpec{"junit", {"TestResults.xml"}, {}, {}});
-//        Admin::shared().cache_app_id(Admin::shared().create_app({"str_col", "_id"}));
-    } else if (getenv("REALM_LOCAL_ENDPOINT") == nullptr) {
-#if REALM_MOBILE || REALM_WINDOWS
-        // skip app and sync tests on Mobile and Windows platforms if we're not running on CI or have an explicit BAAS endpoint set
-        config.testsOrTags.push_back("~[app]");
-        config.testsOrTags.push_back("~[sync]");
-#else
-        config.showDurations = Catch::ShowDurations::Always;// this is to help debug hangs
-                                                            //        config.testsOrTags.emplace_back("~[performance]");
-//        Admin::shared().cache_app_id(Admin::shared().create_app({"str_col", "_id"}));
-#endif
     }
+
+
+#ifdef CPPREALM_ENABLE_SYNC_TESTS
+    Admin::shared().cache_app_id(Admin::shared().create_app({"str_col", "_id"}));
+#endif
 
     Catch::Session session;
     session.useConfigData(config);

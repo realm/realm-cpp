@@ -106,4 +106,8 @@ namespace realm::internal::bridge {
     object_schema::operator ObjectSchema() const {
         return *reinterpret_cast<const ObjectSchema*>(&m_schema);
     }
+
+    bool object_schema::operator==(const object_schema& rhs) {
+        return reinterpret_cast<const ObjectSchema*>(&m_schema)->name == reinterpret_cast<const ObjectSchema*>(&rhs.m_schema)->name;
+    }
 }

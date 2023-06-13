@@ -4,54 +4,59 @@
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/experimental/types.hpp>
 
+namespace realm {
+    class rbool;
+}
+
 namespace realm::experimental {
 
     template<>
     struct managed<std::vector<uint8_t>> : managed_base {
         using managed<std::vector<uint8_t>>::managed_base::operator=;
 
-        [[nodiscard]] std::vector<uint8_t> value() const {
-            return m_obj->template get<realm::internal::bridge::binary>(m_key);
-        }
+        [[nodiscard]] std::vector<uint8_t> value() const;
+        [[nodiscard]]  operator std::vector<uint8_t>() const;
 
-        std::vector<uint8_t> operator*() const {
-            return value();
-        }
+        std::vector<uint8_t> operator*() const;
+        void push_back(uint8_t v);
+        uint8_t operator[](uint8_t idx) const;
+        size_t size() const;
 
         //MARK: -   comparison operators
-        inline bool operator==(const std::vector<uint8_t>& rhs) const noexcept {
-            return value() == rhs;
-        }
-        inline bool operator!=(const std::vector<uint8_t>& rhs) const noexcept {
-            return value() != rhs;
-        }
-
-        void push_back(uint8_t v) {
-            auto v2 = m_obj->template get<internal::bridge::binary>(m_key).operator std::vector<uint8_t>();
-            v2.push_back(v);
-            m_obj->template set<internal::bridge::binary>(m_key, v2);
-        }
+        rbool operator==(const std::vector<uint8_t>& rhs) const noexcept;
+        rbool operator!=(const std::vector<uint8_t>& rhs) const noexcept;
     };
 
     template<>
     struct managed<std::optional<std::vector<uint8_t>>> : managed_base {
         using managed<std::optional<std::vector<uint8_t>>>::managed_base::operator=;
 
-        [[nodiscard]] std::optional<std::vector<uint8_t>> value() const {
-            return deserialize(m_obj->template get_optional<realm::internal::bridge::binary>(m_key));
-        }
 
-        std::optional<std::vector<uint8_t>> operator*() const {
-            return value();
+        [[nodiscard]] std::optional<std::vector<uint8_t>> value() const;
+        [[nodiscard]]  operator std::optional<std::vector<uint8_t>>() const;
+
+        struct box {
+            std::optional<std::vector<uint8_t>> operator*() const;
+            void push_back(uint8_t v);
+            uint8_t operator[](uint8_t idx) const;
+            size_t size() const;
+        private:
+            box(managed& parent) : m_parent(parent) { }
+            std::reference_wrapper<managed<std::optional<std::vector<uint8_t>>>> m_parent;
+            friend struct managed<std::optional<std::vector<uint8_t>>>;
+        };
+
+        std::unique_ptr<box> operator->()
+        {
+            return std::make_unique<box>(box(*this));
+        }
+        [[nodiscard]] box operator*() {
+            return box(*this);
         }
 
         //MARK: -   comparison operators
-        inline bool operator==(const std::optional<std::vector<uint8_t>>& rhs) const noexcept {
-            return value() == rhs;
-        }
-        inline bool operator!=(const std::optional<std::vector<uint8_t>>& rhs) const noexcept {
-            return value() != rhs;
-        }
+        rbool operator==(const std::optional<std::vector<uint8_t>>& rhs) const noexcept;
+        rbool operator!=(const std::optional<std::vector<uint8_t>>& rhs) const noexcept;
     };
 }
 

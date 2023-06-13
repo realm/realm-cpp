@@ -148,7 +148,7 @@ namespace realm {
                 internal::bridge::obj obj;
                 if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
                     auto pk = o.*(managed<T>::schema.primary_key().ptr);
-                    obj = table.create_object_with_primary_key(pk.value);
+                    obj = table.create_object_with_primary_key(serialize(pk.value));
                     m_obj->set(m_key, obj.get_key());
                 } else if (managed<T>::schema.is_embedded_experimental()) {
                     obj = m_obj->create_and_set_linked_object(m_key);
