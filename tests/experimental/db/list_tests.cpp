@@ -1,35 +1,16 @@
 #include "../../main.hpp"
 #include "test_objects.hpp"
-//#include <cpprealm/notifications.hpp>
 
 using namespace realm;
 
-template<typename Col, typename Value, typename Realm, typename Object>
-void test_list(Col& list, std::vector<Value> values, Realm& realm, Object& obj) {
-    CHECK(!obj.is_managed());
-
-    // unmanaged
-    list.push_back(values[0]);
-    list.push_back(values[1]);
-    CHECK(list.size() == 2);
-
-    list.pop_back();
-    CHECK(list.size() == 1);
-    list.erase(0);
-    CHECK(list.size() == 0);
-    list.clear();
-    CHECK(list.size() == 0);
-    list.push_back(values[0]);
-    list.push_back(values[1]);
-    CHECK(list.find(values[1]) == 1);
-    CHECK(list[1] == values[1]);
-
-    realm.write([&realm, &obj] {
-        realm.add(obj);
+template<typename Col, typename Value>
+void test_list(Col& list, std::vector<Value> values, experimental::db& realm) {
+    realm.write([&] {
+        list.push_back(values[0]);
+        list.push_back(values[1]);
     });
 
     // ensure values exist
-    CHECK(obj.is_managed());
     CHECK(list.size() == 2);
 
     realm.write([&] {
@@ -305,7 +286,7 @@ TEST_CASE("list", "[list]") {
         });
         CHECK(managed_obj.list_embedded_obj_col.size() == 0);
     }
-/*
+
     SECTION("notifications_insertions", "[list]") {
         auto obj = realm::experimental::AllTypesObject();
 
@@ -314,16 +295,12 @@ TEST_CASE("list", "[list]") {
             return realm.add(std::move(obj));
         });
 
-        bool did_run = false;
-
-        realm::experimental::collection_change<std::vector<int64_t>> change;
-
         int callback_count = 0;
 
         auto token = managed_obj.list_int_col.observe([&](auto&& c) {
-            CHECK(c.collection == &managed_obj.list_int_col);
             callback_count++;
-//            change = std::move(c);
+            if (callback_count > 1)
+                CHECK(c.insertions.size() == 1);
         });
 
         realm.write([&realm, &managed_obj] {
@@ -332,7 +309,6 @@ TEST_CASE("list", "[list]") {
 
         realm.refresh();
 
-        CHECK(change.insertions.size() == 1);
 
         realm.write([&realm, &managed_obj] {
             managed_obj.list_int_col.push_back(456);
@@ -340,105 +316,81 @@ TEST_CASE("list", "[list]") {
 
         realm.refresh();
 
-        CHECK(change.insertions.size() == 1);
         CHECK(callback_count == 3);
     }
-    */
-/*
+
     SECTION("notifications_deletions") {
-        auto obj = AllTypesObject();
+        auto obj = realm::experimental::AllTypesObject();
 
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
-        realm.write([&realm, &obj] {
-            realm.add(obj);
-            obj.list_int_col.push_back(456);
+        auto realm = realm::experimental::db(std::move(config));
+        auto managed_obj = realm.write([&realm, &obj] {
+            auto managed_obj = realm.add(std::move(obj));
+            managed_obj.list_int_col.push_back(456);
+            return managed_obj;
         });
 
-        bool did_run = false;
-
-        collection_change<std::vector<int64_t>> change;
-
-        auto require_change = [&] {
-            auto token = obj.list_int_col.observe([&](collection_change<std::vector<int64_t>> c) {
-                did_run = true;
-                change = std::move(c);
-            });
-            return token;
-        };
-
-        auto token = require_change();
-        realm.write([&realm, &obj] {
-            obj.list_int_col.erase(0);
+        int deletions = 0;
+        auto token = managed_obj.list_int_col.observe([&](auto&& c) {
+            deletions = c.deletions.size();
         });
-        realm.write([] {});
-        CHECK(change.deletions.size() == 1);
-        CHECK(did_run == true);
+
+        realm.write([&realm, &managed_obj] {
+            managed_obj.list_int_col.erase(0);
+        });
+        realm.refresh();
+        CHECK(deletions == 1);
     }
 
     SECTION("notifications_modifications", "[list]") {
-        auto obj = AllTypesObject();
+        auto obj = realm::experimental::AllTypesObject();
 
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
-        realm.write([&realm, &obj] {
-            realm.add(obj);
-            obj.list_int_col.push_back(123);
-            obj.list_int_col.push_back(456);
+        auto realm = realm::experimental::db(std::move(config));
+        auto managed_obj = realm.write([&realm, &obj] {
+            auto o = realm.add(std::move(obj));
+            o.list_int_col.push_back(123);
+            o.list_int_col.push_back(456);
+            return o;
         });
 
-        bool did_run = false;
+        std::vector<uint64_t> modifications;
 
-        collection_change<std::vector<int64_t>> change;
-
-        auto require_change = [&] {
-            auto token = obj.list_int_col.observe([&](collection_change<std::vector<int64_t>> c) {
-                did_run = true;
-                change = std::move(c);
-            });
-            return token;
-        };
-
-        auto token = require_change();
-        realm.write([&realm, &obj] {
-            obj.list_int_col.set(1, 345);
+        auto token = managed_obj.list_int_col.observe([&](auto c) {
+            modifications = c.modifications;
         });
-        realm.write([] {});
 
-        CHECK(change.modifications.size() == 1);
-        CHECK(change.modifications[0] == 1);
-        CHECK(did_run);
+        realm.write([&realm, &managed_obj] {
+            managed_obj.list_int_col.set(1, 345);
+        });
+        realm.refresh();
+
+        CHECK(modifications.size() == 1);
+        CHECK(modifications[0] == 1);
     }
 
     SECTION("list_all_primitive_types") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
+        auto realm = realm::experimental::db(std::move(config));
 
-        auto int_list_obj = AllTypesObject();
-        test_list(int_list_obj.list_int_col, std::vector<int>({1, 2}), realm, int_list_obj);
-        auto bool_list_obj = AllTypesObject();
-        test_list(bool_list_obj.list_bool_col, std::vector<uint8_t>({true, false}), realm, bool_list_obj);
-        auto double_list_obj = AllTypesObject();
-        test_list(double_list_obj.list_double_col, std::vector<double>({1.23, 2.45}), realm, double_list_obj);
-        auto str_list_obj = AllTypesObject();
-        test_list(str_list_obj.list_str_col, std::vector<std::string>({"foo", "bar"}), realm, str_list_obj);
-        auto uuid_list_obj = AllTypesObject();
-        test_list(uuid_list_obj.list_uuid_col,
+        auto obj = realm.write([&]() {
+            return realm.add(realm::experimental::AllTypesObject());
+        });
+        test_list(obj.list_int_col, std::vector<uint64_t>({1, 2}), realm);
+        test_list(obj.list_bool_col, std::vector<uint8_t>({true, false}), realm);
+        test_list(obj.list_double_col, std::vector<double>({1.23, 2.45}), realm);
+        test_list(obj.list_str_col, std::vector<std::string>({"foo", "bar"}), realm);
+        test_list(obj.list_uuid_col,
                   std::vector<realm::uuid>({realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120000"),
-                                            realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002")}), realm,
-                  uuid_list_obj);
-        auto binary_list_obj = AllTypesObject();
-        test_list(binary_list_obj.list_binary_col, std::vector<std::vector<uint8_t>>({{0},
-                                                                                      {1}}), realm, binary_list_obj);
-        auto date_list_obj = AllTypesObject();
+                                            realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002")}), realm);
+        test_list(obj.list_binary_col, std::vector<std::vector<uint8_t>>({{0}, {1}}), realm);
+        auto date_list_obj = realm::experimental::AllTypesObject();
         auto date1 = std::chrono::system_clock::now();
         auto date2 = date1 + std::chrono::hours(24);
-        test_list(date_list_obj.list_date_col,
-                  std::vector<std::chrono::time_point<std::chrono::system_clock>>({date1, date2}), realm,
-                  date_list_obj);
+        test_list(obj.list_date_col,
+                  std::vector<std::chrono::time_point<std::chrono::system_clock>>({date1, date2}), realm);
     }
 
     SECTION("list_mixed") {
-        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
-
-        auto obj = AllTypesObject();
+        auto realm = realm::experimental::db(std::move(config));
+        auto obj = realm::experimental::AllTypesObject();
         obj.list_mixed_col.push_back(42);
         obj.list_mixed_col.push_back(true);
         obj.list_mixed_col.push_back("hello world");
@@ -465,34 +417,33 @@ TEST_CASE("list", "[list]") {
         CHECK(std::holds_alternative<std::chrono::time_point<std::chrono::system_clock>>(obj.list_mixed_col[5]));
         CHECK(std::get<std::chrono::time_point<std::chrono::system_clock>>(obj.list_mixed_col[5]) == ts);
 
-        realm.write([&realm, &obj] {
-            realm.add(obj);
+        auto managed_obj = realm.write([&]() {
+            return realm.add(std::move(obj));
         });
 
-        CHECK(std::holds_alternative<int64_t>(obj.list_mixed_col[0]));
-        CHECK(std::get<int64_t>(obj.list_mixed_col[0]) == 42);
+        CHECK(std::holds_alternative<int64_t>(managed_obj.list_mixed_col[0]));
+        CHECK(std::get<int64_t>(managed_obj.list_mixed_col[0]) == 42);
 
-        CHECK(std::holds_alternative<bool>(obj.list_mixed_col[1]));
-        CHECK(std::get<bool>(obj.list_mixed_col[1]) == true);
+        CHECK(std::holds_alternative<bool>(managed_obj.list_mixed_col[1]));
+        CHECK(std::get<bool>(managed_obj.list_mixed_col[1]) == true);
 
-        CHECK(std::holds_alternative<std::string>(obj.list_mixed_col[2]));
-        CHECK(std::get<std::string>(obj.list_mixed_col[2]) == "hello world");
+        CHECK(std::holds_alternative<std::string>(managed_obj.list_mixed_col[2]));
+        CHECK(std::get<std::string>(managed_obj.list_mixed_col[2]) == "hello world");
 
-        CHECK(std::holds_alternative<double>(obj.list_mixed_col[3]));
-        CHECK(std::get<double>(obj.list_mixed_col[3]) == 42.42);
+        CHECK(std::holds_alternative<double>(managed_obj.list_mixed_col[3]));
+        CHECK(std::get<double>(managed_obj.list_mixed_col[3]) == 42.42);
 
-        CHECK(std::holds_alternative<std::vector<uint8_t>>(obj.list_mixed_col[4]));
-        CHECK(std::get<std::vector<uint8_t>>(obj.list_mixed_col[4]) == std::vector<uint8_t>{0,1,2});
+        CHECK(std::holds_alternative<std::vector<uint8_t>>(managed_obj.list_mixed_col[4]));
+        CHECK(std::get<std::vector<uint8_t>>(managed_obj.list_mixed_col[4]) == std::vector<uint8_t>{0,1,2});
 
-        CHECK(std::holds_alternative<std::chrono::time_point<std::chrono::system_clock>>(obj.list_mixed_col[5]));
-        CHECK(std::get<std::chrono::time_point<std::chrono::system_clock>>(obj.list_mixed_col[5]) == ts);
+        CHECK(std::holds_alternative<std::chrono::time_point<std::chrono::system_clock>>(managed_obj.list_mixed_col[5]));
+        CHECK(std::get<std::chrono::time_point<std::chrono::system_clock>>(managed_obj.list_mixed_col[5]) == ts);
 
-        realm.write([&obj] {
-            obj.list_mixed_col.push_back(realm::uuid());
+        realm.write([&managed_obj] {
+            managed_obj.list_mixed_col.push_back(realm::uuid());
         });
 
-        CHECK(std::holds_alternative<realm::uuid>(obj.list_mixed_col[6]));
-        CHECK(std::get<realm::uuid>(obj.list_mixed_col[6]) == realm::uuid());
+        CHECK(std::holds_alternative<realm::uuid>(managed_obj.list_mixed_col[6]));
+        CHECK(std::get<realm::uuid>(managed_obj.list_mixed_col[6]) == realm::uuid());
     }
-    */
 }

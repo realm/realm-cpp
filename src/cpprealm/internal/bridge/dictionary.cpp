@@ -40,41 +40,53 @@ namespace realm::internal::bridge {
 #endif
 
     core_dictionary::core_dictionary() {
-        new (m_dictionary) CoreDictionary();
+        new (&m_dictionary) CoreDictionary();
 
     }
     core_dictionary::core_dictionary(const CoreDictionary& v) {
-        new (m_dictionary) CoreDictionary(v);
+        new (&m_dictionary) CoreDictionary(v);
     }
     core_dictionary::operator CoreDictionary() const {
-        return *reinterpret_cast<const CoreDictionary*>(m_dictionary);
+        return *reinterpret_cast<const CoreDictionary*>(&m_dictionary);
     }
 
     void core_dictionary::insert(const std::string& key, const mixed& value) {
-        reinterpret_cast<CoreDictionary*>(m_dictionary)->insert(key, value.operator Mixed());
+        reinterpret_cast<CoreDictionary*>(&m_dictionary)->insert(key, value.operator Mixed());
     }
 
     void core_dictionary::insert(const std::string& key, const std::string& value) {
-        reinterpret_cast<CoreDictionary*>(m_dictionary)->insert(key, value);
+        reinterpret_cast<CoreDictionary*>(&m_dictionary)->insert(key, value);
     }
 
     obj core_dictionary::create_and_insert_linked_object(const std::string& key, const internal::bridge::mixed& pk) {
-        Table& t = *(reinterpret_cast<CoreDictionary*>(m_dictionary)->get_target_table());
+        Table& t = *(reinterpret_cast<CoreDictionary*>(&m_dictionary)->get_target_table());
         auto o = t.create_object_with_primary_key(pk.operator Mixed());
-        reinterpret_cast<CoreDictionary*>(m_dictionary)->insert(key, o.get_key());
+        reinterpret_cast<CoreDictionary*>(&m_dictionary)->insert(key, o.get_key());
         return o;
     }
 
     obj core_dictionary::create_and_insert_linked_object(const std::string& key) {
-        return reinterpret_cast<CoreDictionary*>(m_dictionary)->create_and_insert_linked_object(key);
+        return reinterpret_cast<CoreDictionary*>(&m_dictionary)->create_and_insert_linked_object(key);
     }
 
     mixed core_dictionary::get(const std::string& key) const {
-        return reinterpret_cast<const CoreDictionary*>(m_dictionary)->get(key);
+        return reinterpret_cast<const CoreDictionary*>(&m_dictionary)->get(key);
     }
 
     obj core_dictionary::get_object(const std::string& key) {
-        return reinterpret_cast<CoreDictionary*>(m_dictionary)->get_object(key);
+        return reinterpret_cast<CoreDictionary*>(&m_dictionary)->get_object(key);
+    }
+
+    size_t core_dictionary::size() const {
+        return reinterpret_cast<const CoreDictionary*>(&m_dictionary)->size();
+    }
+
+    std::pair<mixed, mixed> core_dictionary::get_pair(size_t ndx) const {
+        return reinterpret_cast<const CoreDictionary*>(&m_dictionary)->get_pair(ndx);
+    }
+
+    size_t core_dictionary::find_any_key(const std::string& value) const noexcept {
+        return reinterpret_cast<const CoreDictionary*>(&m_dictionary)->find_any_key(value);
     }
 
     dictionary::dictionary() {

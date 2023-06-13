@@ -184,10 +184,7 @@ namespace realm::experimental {
         }
     };
 
-    template <typename T>
     struct collection_change {
-        /// The list being observed.
-        const managed<std::vector<T>>* collection;
         std::vector<uint64_t> deletions;
         std::vector<uint64_t> insertions;
         std::vector<uint64_t> modifications;
@@ -203,33 +200,29 @@ namespace realm::experimental {
         }
     };
 
-    template <typename T>
     struct collection_callback_wrapper : internal::bridge::collection_change_callback {
-        std::function<void(collection_change<T>)> handler;
-        managed<std::vector<T>>& collection;
+        std::function<void(collection_change)> handler;
         bool ignoreChangesInInitialNotification;
 
-        collection_callback_wrapper(std::function<void(collection_change<T>)> handler,
-                                    managed<std::vector<T>>& collection,
+        collection_callback_wrapper(std::function<void(collection_change)> handler,
                                     bool ignoreChangesInInitialNotification)
             : handler(handler)
-              , collection(collection)
               , ignoreChangesInInitialNotification(ignoreChangesInInitialNotification)
         {}
+
 
         void before(const realm::internal::bridge::collection_change_set &c) final {}
         void after(internal::bridge::collection_change_set const& changes) final {
             if (ignoreChangesInInitialNotification) {
                 ignoreChangesInInitialNotification = false;
-                handler({&collection, {},{},{}});
+                handler({{},{},{}});
             }
             else if (changes.empty()) {
-                handler({&collection, {},{},{}});
+                handler({{},{},{}});
 
             }
             else if (!changes.collection_root_was_deleted() || !changes.deletions().empty()) {
-                handler({&collection,
-                        to_vector(changes.deletions()),
+                handler({to_vector(changes.deletions()),
                         to_vector(changes.insertions()),
                         to_vector(changes.modifications()),
                 });

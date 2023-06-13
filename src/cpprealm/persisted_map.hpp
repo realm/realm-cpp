@@ -261,7 +261,6 @@ namespace realm {
                         *static_cast<persisted<T>*>(this),
                         false)
         );
-        token.m_dictionary = managed;
         return token;
     }
 
