@@ -216,7 +216,7 @@ rbool managed<type>::operator op(const type& rhs) const noexcept { \
         query.name(this->m_key, serialize(rhs)); \
         return query; \
     } \
-    return value() op rhs; \
+    return serialize(value()) op serialize(rhs); \
 } \
 
 #define __cpprealm_build_optional_experimental_query(op, name, type) \
@@ -230,7 +230,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         } \
         return query; \
     } \
-    return value() op rhs; \
+    return serialize(value()) op serialize(rhs); \
 } \
 
 #define REALM_SCHEMA(cls, ...) \

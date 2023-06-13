@@ -37,6 +37,10 @@ namespace realm::internal::bridge {
         obj create_and_insert_linked_object(const std::string& key, const internal::bridge::mixed& pk);
         mixed get(const std::string& key) const;
         obj get_object(const std::string& key);
+        std::pair<mixed, mixed> get_pair(size_t ndx) const;
+        size_t find_any_key(const std::string& value) const noexcept;
+
+        size_t size() const;
     private:
 #ifdef __i386__
         std::aligned_storage<144, 4>::type m_dictionary[1];

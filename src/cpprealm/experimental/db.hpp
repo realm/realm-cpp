@@ -59,10 +59,9 @@ namespace realm::experimental {
             static_assert(sizeof(managed<T>), "Must declare schema for T");
             auto table = m_realm.table_for_object_type(managed<std::remove_const_t<T>>::schema.name);
             internal::bridge::obj m_obj;
-
             if constexpr (managed<std::remove_const_t<T>>::schema.HasPrimaryKeyProperty) {
                 auto pk = v.*(managed<std::remove_const_t<T>>::schema.primary_key().ptr);
-                m_obj = table.create_object_with_primary_key(serialize(pk.value));
+                m_obj = table.create_object_with_primary_key(realm::internal::bridge::mixed(serialize(pk.value)));
             } else {
                 m_obj = table.create_object();
             }

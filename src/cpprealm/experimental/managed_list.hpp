@@ -15,12 +15,11 @@ namespace realm::experimental {
             return std::vector<T>();
         }
 
-        realm::notification_token observe(std::function<void(realm::experimental::collection_change<T>)>&& fn) {
+        realm::notification_token observe(std::function<void(realm::experimental::collection_change)>&& fn) {
             auto list = std::make_shared<realm::internal::bridge::list>(*m_realm, *m_obj, m_key);
             realm::notification_token token = list->add_notification_callback(
-                                                          std::make_shared<realm::experimental::collection_callback_wrapper<T>>(
+                                                          std::make_shared<realm::experimental::collection_callback_wrapper>(
                                                                   std::move(fn),
-                                                                  *static_cast<managed<std::vector<T>>*>(this),
                                                                   false));
             token.m_realm = *m_realm;
             token.m_list = list;
@@ -57,6 +56,9 @@ namespace realm::experimental {
         }
         size_t find(const T& a) {
             return internal::bridge::list(*m_realm, *m_obj, m_key).find(a);
+        }
+        void set(size_t pos, const T& a) {
+            internal::bridge::list(*m_realm, *m_obj, m_key).set(pos, a);
         }
     };
 

@@ -70,6 +70,9 @@ namespace realm::experimental {
             primary_key(const std::string& v) {
                 this->value = v;
             }
+            primary_key(const char* v) {
+                this->value = v;
+            }
             std::string value;
             operator std::string() {
                 return value;

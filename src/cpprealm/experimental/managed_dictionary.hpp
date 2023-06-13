@@ -3,6 +3,8 @@
 
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/experimental/accessors.hpp>
+#include <cpprealm/experimental/observation.hpp>
+#include <cpprealm/notifications.hpp>
 
 namespace realm::experimental {
 
@@ -261,23 +263,22 @@ namespace realm::experimental {
         using box_base<std::optional<link<V>>>::operator==;
 
         bool operator==(const std::optional<link<V>>& rhs) const {
-            auto a = const_cast<box<link<V>> *>(this)->m_backing_map.get_object(this->m_key);
-            auto &b = rhs.managed.m_obj;
-            if (this->m_realm != rhs.managed.m_realm) {
+            auto a = const_cast<box<std::optional<link<V>>> *>(this)->m_backing_map.get_object(this->m_key);
+            auto &b = rhs->m_managed.m_obj;
+            if (this->m_realm != rhs->m_managed.m_realm) {
                 return false;
             }
             return a.get_table() == b.get_table() && a.get_key() == b.get_key();
         }
 
         bool operator==(const managed<V, void> &rhs) const {
-            auto a = const_cast<box<link<V>> *>(this)->m_backing_map.get_object(this->m_key);
+            auto a = const_cast<box<std::optional<link<V>>> *>(this)->m_backing_map.get_object(this->m_key);
             auto &b = rhs.m_obj;
             if (this->m_realm != rhs.m_realm) {
                 return false;
             }
             return a.get_table() == b.get_table() && a.get_key() == b.get_key();
         }
-
 
         bool operator==(const V &rhs) const {
             auto a = const_cast<box<link<V>> *>(this)->m_backing_map.get_object(this->m_key);
@@ -312,8 +313,90 @@ namespace realm::experimental {
             abort();
         }
 
+        class iterator {
+        public:
+            using iterator_category = std::input_iterator_tag;
+
+            bool operator!=(const iterator& other) const
+            {
+                return !(*this == other);
+            }
+
+            bool operator==(const iterator& other) const
+            {
+                return (m_parent == other.m_parent) && (m_i == other.m_i);
+            }
+
+            std::pair<std::string, T> operator*() noexcept
+            {
+                auto pair = m_parent->m_obj->get_dictionary(m_parent->m_key).get_pair(m_i);
+                return { pair.first, deserialize<T>(pair.second) };
+            }
+
+            iterator& operator++()
+            {
+                this->m_i++;
+                return *this;
+            }
+
+            const iterator& operator++(int i)
+            {
+                this->m_i += i;
+                return *this;
+            }
+        private:
+            template<typename, typename>
+            friend struct managed;
+
+            iterator(size_t i, managed<std::map<std::string, T>>* parent)
+                : m_i(i), m_parent(parent)
+            {
+            }
+            size_t m_i;
+            managed<std::map<std::string, T>>* m_parent;
+        };
+
+        size_t size()
+        {
+            return m_obj->get_dictionary(m_key).size();
+        }
+
+        iterator begin()
+        {
+            return iterator(0, this);
+        }
+
+        iterator end()
+        {
+            return iterator(size(), this);
+        }
+
+        iterator find(const std::string& key) {
+            // Dictionary's `find` searches for the index of the value and not the key.
+            auto d = m_obj->get_dictionary(m_key);
+            auto i = d.find_any_key(key);
+            if (i == size_t(-1)) {
+                return iterator(size(), this);
+            } else {
+                return iterator(i, this);
+            }
+        }
+
         box<T> operator[](const std::string &a) {
             return box<T>(m_obj->get_dictionary(m_key), a, *m_realm);
+        }
+
+        notification_token observe(std::function<void(realm::experimental::collection_change)>&& fn)
+        {
+            auto o = internal::bridge::object(*m_realm, *m_obj);
+            auto dict = std::make_shared<realm::internal::bridge::dictionary>(o.get_dictionary(m_key));
+
+            realm::notification_token token = dict->add_notification_callback(
+                    std::make_shared<realm::experimental::collection_callback_wrapper>(
+                            std::move(fn), false));
+            token.m_realm = *m_realm;
+            token.m_dictionary = dict;
+            return token;
         }
     };
 

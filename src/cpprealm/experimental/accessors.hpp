@@ -396,7 +396,11 @@ namespace realm::experimental {
         static inline void set(internal::bridge::obj& obj,
                                internal::bridge::col_key&& key,
                                const primary_key<T>& value) {
-            obj.set(key, value.value);
+            if constexpr (std::is_enum_v<T>) {
+                obj.set(key, static_cast<int64_t>(value.value));
+            } else {
+                obj.set(key, value.value);
+            }
         }
     };
 } // realm::experimental
