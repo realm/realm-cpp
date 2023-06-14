@@ -87,7 +87,7 @@ namespace realm::experimental {
             return db.add(std::move(obj));
         });
 
-        CHECK(managed_obj._id == (int64_t)123);
+        CHECK(managed_obj._id == 123);
         CHECK(managed_obj.double_col == 12.34);
         CHECK(managed_obj.str_col == "foo");
         CHECK(managed_obj.bool_col == true);
@@ -147,7 +147,7 @@ namespace realm::experimental {
         auto allTypeObjects = db.objects<AllTypesObject>();
 
         auto results_obj = allTypeObjects[0];
-        CHECK(results_obj._id == (int64_t)123);
+        CHECK(results_obj._id == 123);
         CHECK(results_obj.double_col == 12.34);
         CHECK(results_obj.str_col == "foo");
         CHECK(results_obj.bool_col == true);

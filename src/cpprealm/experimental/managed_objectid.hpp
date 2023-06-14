@@ -22,6 +22,10 @@ namespace realm::experimental {
             return value();
         }
 
+        [[nodiscard]] operator realm::object_id () const {
+            return value();
+        }
+
         //MARK: -   comparison operators
         rbool operator==(const realm::object_id& rhs) const noexcept;
         rbool operator!=(const realm::object_id& rhs) const noexcept;
@@ -41,6 +45,10 @@ namespace realm::experimental {
         }
 
         [[nodiscard]] std::optional<realm::object_id> operator *() const {
+            return value();
+        }
+
+        [[nodiscard]] operator std::optional<realm::object_id>() const {
             return value();
         }
 

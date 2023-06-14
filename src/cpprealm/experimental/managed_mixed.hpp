@@ -49,7 +49,7 @@ namespace realm::experimental {
                 query.equal(this->m_key, rhs);
                 return query;
             }
-            return value() == rhs;
+            return value() == T(std::monostate());
         }
 
         rbool operator!=(const std::nullopt_t& rhs) const noexcept {
@@ -58,7 +58,7 @@ namespace realm::experimental {
                 query.not_equal(this->m_key, rhs);
                 return query;
             }
-            return value() != rhs;
+            return value() != T(std::monostate());
         }
     };
 }

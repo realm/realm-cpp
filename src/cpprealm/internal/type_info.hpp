@@ -256,6 +256,7 @@ namespace realm::internal::type_info {
         static constexpr auto value = true;
     };
 
+
     template <typename T>
     struct type_info<experimental::primary_key<T>, void> {
         using internal_type = typename type_info<T>::internal_type;

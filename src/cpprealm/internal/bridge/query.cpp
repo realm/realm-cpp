@@ -147,6 +147,11 @@ namespace realm::internal::bridge {
         return *this;
     }
 
+    query& query::negate() {
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->Not();
+        return *this;
+    }
+
     __generate_query_operator_case_sensitive(equal, std::string_view)
     __generate_query_operator_case_sensitive(not_equal, std::string_view)
     __generate_query_operator_case_sensitive(contains, std::string_view)
