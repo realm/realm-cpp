@@ -41,8 +41,30 @@ namespace realm::internal::bridge {
 
     core_dictionary::core_dictionary() {
         new (&m_dictionary) CoreDictionary();
+    }
+    core_dictionary::core_dictionary(const core_dictionary &other) {
+        new (&m_dictionary) CoreDictionary(*reinterpret_cast<const CoreDictionary *>(&other.m_dictionary));
+    }
+    core_dictionary &core_dictionary::operator=(const core_dictionary &other) {
+        if (this != &other) {
+            *reinterpret_cast<CoreDictionary *>(&m_dictionary) = *reinterpret_cast<const CoreDictionary *>(&other.m_dictionary);
+        }
+        return *this;
+    }
+    core_dictionary::core_dictionary(core_dictionary &&other) {
+        new (&m_dictionary) CoreDictionary(std::move(*reinterpret_cast<CoreDictionary *>(&other.m_dictionary)));
 
     }
+    core_dictionary &core_dictionary::operator=(core_dictionary &&other) {
+        if (this != &other) {
+            *reinterpret_cast<CoreDictionary *>(&m_dictionary) = std::move(*reinterpret_cast<CoreDictionary *>(&other.m_dictionary));
+        }
+        return *this;
+    }
+    core_dictionary::~core_dictionary() {
+        reinterpret_cast<CoreDictionary *>(&m_dictionary)->~CoreDictionary();
+    }
+
     core_dictionary::core_dictionary(const CoreDictionary& v) {
         new (&m_dictionary) CoreDictionary(v);
     }

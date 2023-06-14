@@ -31,7 +31,6 @@ int main(int argc, char *argv[]) {
         config.reporterSpecifications.push_back(Catch::ReporterSpec{"junit", {"TestResults.xml"}, {}, {}});
     }
 
-
 #ifdef CPPREALM_ENABLE_SYNC_TESTS
     Admin::shared().cache_app_id(Admin::shared().create_app({"str_col", "_id"}));
 #endif

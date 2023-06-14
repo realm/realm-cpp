@@ -129,6 +129,27 @@ namespace realm::experimental {
         std::optional<sync_session> get_sync_session() const {
             return m_realm.get_sync_session();
         }
+
+        template <typename T>
+        managed<T> resolve(thread_safe_reference<T>&& tsr)
+        {
+            auto object = internal::bridge::resolve<internal::bridge::object>(m_realm, std::move(tsr.m_tsr));
+            internal::bridge::obj m_obj = object.get_obj();
+            auto m = managed<T>(std::move(m_obj), m_realm);
+            std::apply([&m](auto && ...ptr) {
+                std::apply([&](auto&& ...name) {
+                    ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
+                }, managed<T>::managed_pointers_names);
+            }, managed<T>::managed_pointers());
+            return m;
+        }
+
+    private:
+        friend struct ::realm::thread_safe_reference<experimental::db>;
+        db(internal::bridge::realm&& r)
+        {
+            m_realm = std::move(r);
+        }
     };
 
     template <typename ...Ts>
@@ -276,6 +297,50 @@ namespace realm::experimental {
         stream << "link:" << object.is_managed << std::endl;
         return stream;
     }
+}
+
+namespace realm {
+
+    template <typename T>
+    struct thread_safe_reference<T> {
+        explicit thread_safe_reference(const experimental::managed<T>& object)
+            : m_tsr(internal::bridge::thread_safe_reference(internal::bridge::object(object.m_realm, object.m_obj)))
+        {
+        }
+        thread_safe_reference(internal::bridge::thread_safe_reference&& tsr)
+            : m_tsr(std::move(tsr))
+        {
+        }
+        experimental::managed<T> resolve(std::shared_ptr<Realm> const&);
+    private:
+        internal::bridge::thread_safe_reference m_tsr;
+        friend struct experimental::db;
+    };
+
+    template<>
+    struct thread_safe_reference<experimental::db> {
+        thread_safe_reference(internal::bridge::thread_safe_reference&& tsr)
+            : m_tsr(std::move(tsr))
+        {
+        }
+        thread_safe_reference() = default;
+        thread_safe_reference(thread_safe_reference&&) = delete;
+        thread_safe_reference& operator=(thread_safe_reference&&) noexcept = default;
+        ~thread_safe_reference() = default;
+
+        experimental::db resolve(const std::optional<std::shared_ptr<scheduler>>& s = std::nullopt)
+        {
+            return experimental::db(internal::bridge::realm(std::move(m_tsr), s));
+        }
+
+        explicit operator bool() const noexcept
+        {
+            return m_tsr.operator bool();
+        }
+    private:
+        internal::bridge::thread_safe_reference m_tsr;
+        friend struct experimental::db;
+    };
 }
 
 

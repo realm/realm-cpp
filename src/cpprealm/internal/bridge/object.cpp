@@ -227,6 +227,16 @@ namespace realm::internal::bridge {
         new (&m_token) NotificationToken();
     }
 
+    notification_token::notification_token(notification_token&& other) {
+        new (&m_token) NotificationToken(std::move(*reinterpret_cast<NotificationToken *>(&other.m_token)));
+    }
+    notification_token& notification_token::operator=(notification_token&& other) {
+        if (this != &other) {
+            *reinterpret_cast<NotificationToken *>(&m_token) = std::move(*reinterpret_cast<NotificationToken *>(&other.m_token));
+        }
+        return *this;
+    }
+
     notification_token::notification_token(NotificationToken &&v) {
         new (&m_token) NotificationToken(std::move(v));
     }
