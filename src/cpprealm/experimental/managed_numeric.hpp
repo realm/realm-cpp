@@ -2,7 +2,7 @@
 #define REALM_MANAGED_NUMERIC_HPP
 
 #include <cpprealm/experimental/macros.hpp>
-#include <stdexcept>
+#include <cpprealm/persisted.hpp>
 
 namespace realm::experimental {
 
@@ -18,13 +18,12 @@ namespace realm::experimental {
         type operator *() const { \
             return value(); \
         } \
-\
-        inline bool operator==(type rhs) const noexcept { \
-            return value() == rhs; \
-        } \
-        inline bool operator!=(type rhs) const noexcept { \
-            return value() != rhs; \
-        }                               \
+        rbool operator==(const type& rhs) const noexcept; \
+        rbool operator!=(const type& rhs) const noexcept; \
+        rbool operator>(const type& rhs) const noexcept; \
+        rbool operator<(const type& rhs) const noexcept;  \
+        rbool operator>=(const type& rhs) const noexcept; \
+        rbool operator<=(const type& rhs) const noexcept; \
         void operator+=(const type& o) { \
             auto old_val = m_obj->template get<type>(m_key); \
             m_obj->template set<type>(this->m_key, old_val + o); \
@@ -62,12 +61,8 @@ CPP_REALM_MANAGED_NUMERIC(double);
             return value();
         }
 
-        inline bool operator==(bool rhs) const noexcept {
-            return value() == rhs;
-        }
-        inline bool operator!=(bool rhs) const noexcept {
-            return value() != rhs;
-        }
+        rbool operator==(const bool& rhs) const noexcept;
+        rbool operator!=(const bool& rhs) const noexcept;
     };
 
 #define CPP_REALM_MANAGED_OPTIONAL_NUMERIC(type) \
@@ -82,12 +77,8 @@ CPP_REALM_MANAGED_NUMERIC(double);
             return value(); \
         } \
 \
-        inline bool operator==(const std::optional<type>& rhs) const noexcept { \
-            return value() == rhs; \
-        } \
-        inline bool operator!=(const std::optional<type>& rhs) const noexcept { \
-            return value() != rhs; \
-        }                                        \
+        rbool operator==(const std::optional<type>& rhs) const noexcept; \
+        rbool operator!=(const std::optional<type>& rhs) const noexcept; \
         void operator+=(const type& o) { \
             auto old_val = m_obj->get_optional<type>(m_key);    \
             if (!old_val) { \
@@ -140,12 +131,8 @@ CPP_REALM_MANAGED_OPTIONAL_NUMERIC(double);
             return value();
         }
 
-        inline bool operator==(const std::optional<bool>& rhs) const noexcept {
-            return value() == rhs;
-        }
-        inline bool operator!=(const std::optional<bool>& rhs) const noexcept {
-            return value() != rhs;
-        }
+        rbool operator==(const std::optional<bool>& rhs) const noexcept;
+        rbool operator!=(const std::optional<bool>& rhs) const noexcept;
     };
 
     template <typename T>
@@ -163,12 +150,58 @@ CPP_REALM_MANAGED_OPTIONAL_NUMERIC(double);
             return value();
         }
 
+        [[nodiscard]] operator T() const {
+            return value();
+        }
+
         //MARK: -   comparison operators
-        inline bool operator==(const T& rhs) const noexcept {
+        rbool operator==(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.equal(this->m_key, serialize(rhs));
+                return query;
+            }
             return value() == rhs;
         }
-        inline bool operator!=(const T& rhs) const noexcept {
+        rbool operator!=(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.not_equal(this->m_key, serialize(rhs));
+                return query;
+            }
             return value() != rhs;
+        }
+        rbool operator>(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.greater(this->m_key, serialize(rhs));
+                return query;
+            }
+            return value() > rhs;
+        }
+        rbool operator<(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.less(this->m_key, serialize(rhs));
+                return query;
+            }
+            return value() < rhs;
+        }
+        rbool operator>=(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.greater_equal(this->m_key, serialize(rhs));
+                return query;
+            }
+            return value() >= rhs;
+        }
+        rbool operator<=(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.less_equal(this->m_key, serialize(rhs));
+                return query;
+            }
+            return value() <= rhs;
         }
     };
 
@@ -184,19 +217,76 @@ CPP_REALM_MANAGED_OPTIONAL_NUMERIC(double);
         }
 
         [[nodiscard]] std::optional<T> value() const {
-            return static_cast<T>(m_obj->get<int64_t>(m_key));
+            if (auto v = m_obj->get_optional<int64_t>(m_key)) {
+                return static_cast<T>(*v);
+            }
+            return std::nullopt;
         }
 
         [[nodiscard]] std::optional<T> operator *() const {
             return value();
         }
 
+        [[nodiscard]] operator std::optional<T>() const {
+            return value();
+        }
+
         //MARK: -   comparison operators
-        inline bool operator==(const std::optional<T>& rhs) const noexcept {
+        rbool operator==(const std::optional<T>& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                if (auto r = rhs) {
+                    query.equal(this->m_key, serialize(*r));
+                } else {
+                    query.equal(this->m_key, std::nullopt);
+                }
+                return query;
+            }
             return value() == rhs;
         }
-        inline bool operator!=(const std::optional<T>& rhs) const noexcept {
+        rbool operator!=(const std::optional<T>& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                if (auto r = rhs) {
+                    query.not_equal(this->m_key, serialize(*r));
+                } else {
+                    query.not_equal(this->m_key, std::nullopt);
+                }
+                return query;
+            }
             return value() != rhs;
+        }
+        rbool operator>(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.greater(this->m_key, serialize(rhs));
+                return query;
+            }
+            return value() > rhs;
+        }
+        rbool operator<(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.less(this->m_key, serialize(rhs));
+                return query;
+            }
+            return value() < rhs;
+        }
+        rbool operator>=(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.greater_equal(this->m_key, serialize(rhs));
+                return query;
+            }
+            return value() >= rhs;
+        }
+        rbool operator<=(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.less_equal(this->m_key, serialize(rhs));
+                return query;
+            }
+            return value() <= rhs;
         }
     };
 } // namespace realm::experimental

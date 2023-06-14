@@ -35,6 +35,10 @@ namespace realm::experimental {
         //MARK: -   comparison operators
         rbool operator==(const std::chrono::time_point<std::chrono::system_clock>& rhs) const noexcept;
         rbool operator!=(const std::chrono::time_point<std::chrono::system_clock>& rhs) const noexcept;
+        rbool operator>(const std::chrono::time_point<std::chrono::system_clock>& rhs) const noexcept;
+        rbool operator>=(const std::chrono::time_point<std::chrono::system_clock>& rhs) const noexcept;
+        rbool operator<(const std::chrono::time_point<std::chrono::system_clock>& rhs) const noexcept;
+        rbool operator<=(const std::chrono::time_point<std::chrono::system_clock>& rhs) const noexcept;
     };
 
     template<>
@@ -42,7 +46,7 @@ namespace realm::experimental {
         using managed<std::optional<std::chrono::time_point<std::chrono::system_clock>>>::managed_base::operator=;
 
         [[nodiscard]] std::optional<std::chrono::time_point<std::chrono::system_clock>> value() const {
-            return m_obj->template get<realm::internal::bridge::timestamp>(m_key);
+            return m_obj->get_optional<realm::internal::bridge::timestamp>(m_key);
         }
 
         [[nodiscard]] operator std::optional<std::chrono::time_point<std::chrono::system_clock>>() const {

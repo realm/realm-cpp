@@ -350,6 +350,13 @@ public:
     operator bool() const {
         return b;
     }
+    rbool operator !() const {
+        if (is_for_queries) {
+            new (&q) internal::bridge::query(q.negate());
+            return *this;
+        }
+        return !b;
+    }
     union {
         bool b;
         mutable internal::bridge::query q;

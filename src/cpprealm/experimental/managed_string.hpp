@@ -77,8 +77,9 @@ namespace realm::experimental {
 
         /// returns a non-modifiable string_view into the entire string
         operator std::string_view() const = delete;
+        operator std::string() const;
 
-        [[nodiscard]] bool empty() const noexcept;
+
         [[nodiscard]] size_t size() const noexcept;
 #ifdef __cpp_lib_starts_ends_with
         [[nodiscard]] bool starts_with(std::string_view) const noexcept;
@@ -103,7 +104,8 @@ namespace realm::experimental {
         rbool operator==(const char* rhs) const noexcept;
         rbool operator!=(const std::string& rhs) const noexcept;
         rbool operator!=(const char* rhs) const noexcept;
-
+        rbool contains(const std::string &s) const noexcept;
+        rbool empty() const noexcept;
 #ifdef __cpp_impl_three_way_comparison
         inline auto operator<=>(const std::string& rhs) const noexcept {
             return get().compare(rhs) <=> 0;
@@ -112,18 +114,6 @@ namespace realm::experimental {
             return get().compare(rhs) <=> 0;
         }
 #else
-        inline bool operator<(const std::string& rhs) const noexcept {
-            return get() < rhs;
-        }
-        inline bool operator>(const char* rhs) const noexcept {
-            return get() > rhs;
-        }
-        inline bool operator<=(const char* rhs) const noexcept {
-            return get() <= rhs;
-        }
-        inline bool operator>=(const char* rhs) const noexcept {
-            return get() >= rhs;
-        }
 #endif
     private:
         friend struct char_reference;
@@ -144,6 +134,13 @@ namespace realm::experimental {
         [[nodiscard]] std::optional<std::string> operator *() const {
             return value();
         }
+
+        [[nodiscard]] operator std::optional<std::string>() const {
+            return value();
+        }
+
+        rbool operator==(const std::optional<std::string>& rhs) const noexcept;
+        rbool operator!=(const std::optional<std::string>& rhs) const noexcept;
     private:
         void inline set(const std::optional<std::string>& v) { m_obj->template set<std::optional<std::string>>(m_key, v); }
     };

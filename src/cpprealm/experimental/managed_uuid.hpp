@@ -4,6 +4,9 @@
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/experimental/types.hpp>
 
+namespace realm {
+    class rbool;
+}
 namespace realm::experimental {
 
     template<>
@@ -18,13 +21,13 @@ namespace realm::experimental {
             return value();
         }
 
+        [[nodiscard]] operator realm::uuid() const {
+            return value();
+        }
+
         //MARK: -   comparison operators
-        inline bool operator==(const realm::uuid& rhs) const noexcept {
-            return value().m_uuid == rhs.m_uuid;
-        }
-        inline bool operator!=(const realm::uuid& rhs) const noexcept {
-            return value().m_uuid != rhs.m_uuid;
-        }
+        rbool operator==(const realm::uuid& rhs) const noexcept;
+        rbool operator!=(const realm::uuid& rhs) const noexcept;
     };
 
     template<>
@@ -44,27 +47,13 @@ namespace realm::experimental {
             return value();
         }
 
+        [[nodiscard]] operator std::optional<realm::uuid>() const {
+            return value();
+        }
+
         //MARK: -   comparison operators
-        inline bool operator==(const std::optional<realm::uuid>& rhs) const noexcept {
-            auto lhs = value();
-            if (lhs && rhs) {
-                return value()->m_uuid == rhs->m_uuid;
-            } else if (!lhs && !rhs) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-        inline bool operator!=(const std::optional<realm::uuid>& rhs) const noexcept {
-            auto lhs = value();
-            if (lhs && rhs) {
-                return value()->m_uuid != rhs->m_uuid;
-            } else if (!lhs && !rhs) {
-                return false;
-            } else {
-                return true;
-            }
-        }
+        rbool operator==(const std::optional<realm::uuid>& rhs) const noexcept;
+        rbool operator!=(const std::optional<realm::uuid>& rhs) const noexcept;
     };
 
 } // namespace realm::experimental

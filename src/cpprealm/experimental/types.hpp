@@ -39,7 +39,7 @@ namespace realm {
 
 namespace realm::experimental {
 
-    static int64_t serialize(const int64_t& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static int64_t serialize(int64_t v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return v;
     }
     static int64_t deserialize(int64_t v) {
