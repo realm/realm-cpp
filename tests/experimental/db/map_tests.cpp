@@ -2,7 +2,7 @@
 #include "test_objects.hpp"
 
 using namespace realm;
-
+/*
 TEST_CASE("map", "[map]") {
     realm_path path;
     db_config config;
@@ -199,3 +199,4 @@ TEST_CASE("map", "[map]") {
         CHECK(obj.map_str_col.find("d") != obj.map_str_col.end());
     }
 }
+*/

@@ -97,7 +97,7 @@ TEST_CASE("beta_realm_is_populated_on_async_open", "[sync]") {
             CHECK(update_success == true);
 
             synced_realm.write([&synced_realm]() {
-                for (size_t i = 0; i < 1000; i++) {
+                for (int64_t i = 0; i < 1000; i++) {
                     experimental::AllTypesObject o;
                     o._id = i;
                     o.str_col = "foo";

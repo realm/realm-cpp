@@ -53,7 +53,7 @@ namespace realm::internal::bridge {
     }
 
     mixed::mixed(mixed&& other) {
-        if (other.type() == data_type::String) {
+        if (!other.is_null() && other.type() == data_type::String) {
             m_owned_string = std::move(other.m_owned_string);
         }
         new (&m_mixed) Mixed(std::move(*reinterpret_cast<Mixed*>(&other.m_mixed)));

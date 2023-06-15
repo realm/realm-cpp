@@ -31,6 +31,7 @@ namespace realm::internal::bridge {
         query(const table& table); //NOLINT(google-explicit-constructor)
         table get_table();
         query and_query(const query&);
+        query& negate();
 
         query(const Query&); //NOLINT(google-explicit-constructor)
         operator Query() const; //NOLINT(google-explicit-constructor)

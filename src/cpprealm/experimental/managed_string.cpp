@@ -72,9 +72,6 @@ namespace realm::experimental {
         val.push_back(c);
         set(val);
     }
-    bool managed_string::empty() const noexcept {
-        return get().empty();
-    }
     size_t managed_string::size() const noexcept {
         return get().size();
     }
@@ -96,14 +93,10 @@ namespace realm::experimental {
         return get();
     }
 
-    rbool managed_string::operator==(const std::string& rhs) const noexcept {
-        if (this->should_detect_usage_for_queries) {
-            auto query = internal::bridge::query(this->query->get_table());
-            query.equal(this->m_key, serialize(rhs));
-            return query;
-        }
-        return value() == rhs;
-    }
+    managed_string::operator std::string() const {
+        return value();
+    };
+
     rbool managed_string::operator==(const char* rhs) const noexcept {
         if (this->should_detect_usage_for_queries) {
             auto query = internal::bridge::query(this->query->get_table());
@@ -113,14 +106,6 @@ namespace realm::experimental {
         return value() == rhs;
     }
 
-    rbool managed_string::operator!=(const std::string& rhs) const noexcept {
-        if (this->should_detect_usage_for_queries) {
-            auto query = internal::bridge::query(this->query->get_table());
-            query.not_equal(this->m_key, serialize(rhs));
-            return query;
-        }
-        return value() != rhs;
-    }
     rbool managed_string::operator!=(const char* rhs) const noexcept {
         if (this->should_detect_usage_for_queries) {
             auto query = internal::bridge::query(this->query->get_table());
@@ -130,6 +115,30 @@ namespace realm::experimental {
         return value() != rhs;
     }
 
+    rbool managed_string::contains(const std::string &rhs) const noexcept {
+        if (this->should_detect_usage_for_queries) {
+            auto query = internal::bridge::query(this->query->get_table());
+            query.contains(this->m_key, std::string(rhs));
+            return query;
+        }
+        return value().find(rhs) != cpprealm::npos;
+    }
+
+    rbool managed_string::empty() const noexcept {
+        if (this->should_detect_usage_for_queries) {
+            auto query = internal::bridge::query(this->query->get_table());
+            query.equal(this->m_key, std::string());
+            return query;
+        } else {
+            return value().empty();
+        }
+    }
+
+    __cpprealm_build_experimental_query(==, equal, std::string)
+    __cpprealm_build_experimental_query(!=, not_equal, std::string)
+
+    __cpprealm_build_optional_experimental_query(==, equal, std::string)
+    __cpprealm_build_optional_experimental_query(!=, not_equal, std::string)
 #ifdef __cpp_lib_starts_ends_with
     bool managed_string::starts_with(std::string_view v) const noexcept {
         return get().starts_with(v);

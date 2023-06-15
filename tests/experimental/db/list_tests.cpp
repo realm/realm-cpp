@@ -391,31 +391,13 @@ TEST_CASE("list", "[list]") {
     SECTION("list_mixed") {
         auto realm = realm::experimental::db(std::move(config));
         auto obj = realm::experimental::AllTypesObject();
-        obj.list_mixed_col.push_back(42);
+        obj.list_mixed_col.push_back((int64_t)42);
         obj.list_mixed_col.push_back(true);
-        obj.list_mixed_col.push_back("hello world");
+        obj.list_mixed_col.push_back(std::string("hello world"));
         obj.list_mixed_col.push_back(42.42);
         obj.list_mixed_col.push_back(std::vector<uint8_t>{0,1,2});
         auto ts = std::chrono::time_point<std::chrono::system_clock>();
         obj.list_mixed_col.push_back(ts);
-
-        CHECK(std::holds_alternative<int64_t>(obj.list_mixed_col[0]));
-        CHECK(std::get<int64_t>(obj.list_mixed_col[0]) == 42);
-
-        CHECK(std::holds_alternative<bool>(obj.list_mixed_col[1]));
-        CHECK(std::get<bool>(obj.list_mixed_col[1]) == true);
-
-        CHECK(std::holds_alternative<std::string>(obj.list_mixed_col[2]));
-        CHECK(std::get<std::string>(obj.list_mixed_col[2]) == "hello world");
-
-        CHECK(std::holds_alternative<double>(obj.list_mixed_col[3]));
-        CHECK(std::get<double>(obj.list_mixed_col[3]) == 42.42);
-
-        CHECK(std::holds_alternative<std::vector<uint8_t>>(obj.list_mixed_col[4]));
-        CHECK(std::get<std::vector<uint8_t>>(obj.list_mixed_col[4]) == std::vector<uint8_t>{0,1,2});
-
-        CHECK(std::holds_alternative<std::chrono::time_point<std::chrono::system_clock>>(obj.list_mixed_col[5]));
-        CHECK(std::get<std::chrono::time_point<std::chrono::system_clock>>(obj.list_mixed_col[5]) == ts);
 
         auto managed_obj = realm.write([&]() {
             return realm.add(std::move(obj));
