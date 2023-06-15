@@ -71,7 +71,11 @@ namespace realm {
 #ifdef __i386__
             std::aligned_storage<568, 4>::type m_table_view[1];
 #elif __x86_64__
+#if defined(__clang__)
             std::aligned_storage<568, 8>::type m_table_view[1];
+#elif defined(__GNUC__) || defined(__GNUG__)
+            std::aligned_storage<576, 8>::type m_table_view[1];
+#endif
 #elif __arm__
             std::aligned_storage<568, 8>::type m_table_view[1];
 #elif __aarch64__
