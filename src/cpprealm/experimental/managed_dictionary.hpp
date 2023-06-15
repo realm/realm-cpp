@@ -69,11 +69,6 @@ namespace realm::experimental {
             return *this;
         }
 
-        void erase(const std::string &key) {
-            abort();
-//            m_backing_map.get().remove(m_key);
-        }
-
         bool operator==(const mapped_type &rhs) const {
             if constexpr (internal::type_info::is_optional<mapped_type>::value) {
                 auto v = m_backing_map.get(m_key);
@@ -220,41 +215,85 @@ namespace realm::experimental {
     struct box<object_id> : public box_base<object_id> {
         using box_base<object_id>::box_base;
         using box_base<object_id>::operator=;
+        object_id operator*() {
+            return this->m_backing_map.get(this->m_key).operator internal::bridge::object_id().operator ::realm::object_id();
+        }
     };
     template<>
     struct box<std::optional<object_id>> : public box_base<std::optional<object_id>> {
         using box_base<std::optional<object_id>>::box_base;
         using box_base<std::optional<object_id>>::operator=;
+        std::optional<object_id> operator*() {
+            auto v = this->m_backing_map.get(this->m_key);
+            if (v.is_null()) {
+                return std::nullopt;
+            } else {
+                return v.operator internal::bridge::object_id().operator ::realm::object_id();
+            };
+        }
     };
     template<>
     struct box<std::chrono::time_point<std::chrono::system_clock>> : public box_base<std::chrono::time_point<std::chrono::system_clock>> {
         using box_base<std::chrono::time_point<std::chrono::system_clock>>::box_base;
         using box_base<std::chrono::time_point<std::chrono::system_clock>>::operator=;
+        std::chrono::time_point<std::chrono::system_clock> operator*() {
+            return this->m_backing_map.get(this->m_key).operator internal::bridge::timestamp().operator std::chrono::time_point<std::chrono::system_clock>();
+        }
     };
     template<>
     struct box<std::optional<std::chrono::time_point<std::chrono::system_clock>>> : public box_base<std::optional<std::chrono::time_point<std::chrono::system_clock>>> {
         using box_base<std::optional<std::chrono::time_point<std::chrono::system_clock>>>::box_base;
         using box_base<std::optional<std::chrono::time_point<std::chrono::system_clock>>>::operator=;
+        std::optional<std::chrono::time_point<std::chrono::system_clock>> operator*() {
+            auto v = this->m_backing_map.get(this->m_key);
+            if (v.is_null()) {
+                return std::nullopt;
+            } else {
+                return this->m_backing_map.get(this->m_key).operator internal::bridge::timestamp().operator std::chrono::time_point<std::chrono::system_clock>();
+            };
+        }
     };
     template<>
     struct box<std::vector<uint8_t>> : public box_base<std::vector<uint8_t>> {
         using box_base<std::vector<uint8_t>>::box_base;
         using box_base<std::vector<uint8_t>>::operator=;
+        std::vector<uint8_t> operator*() {
+            return this->m_backing_map.get(this->m_key).operator internal::bridge::binary().operator std::vector<uint8_t>();
+        }
     };
     template<>
     struct box<std::optional<std::vector<uint8_t>>> : public box_base<std::optional<std::vector<uint8_t>>> {
         using box_base<std::optional<std::vector<uint8_t>>>::box_base;
         using box_base<std::optional<std::vector<uint8_t>>>::operator=;
+        std::optional<std::vector<uint8_t>> operator*() {
+            auto v = this->m_backing_map.get(this->m_key);
+            if (v.is_null()) {
+                return std::nullopt;
+            } else {
+                return this->m_backing_map.get(this->m_key).operator internal::bridge::binary().operator std::vector<uint8_t>();
+            };
+        }
     };
     template<>
     struct box<std::string> : public box_base<std::string> {
         using box_base<std::string>::box_base;
         using box_base<std::string>::operator=;
+        std::string operator*() {
+            return this->m_backing_map.get(this->m_key).operator std::string();
+        }
     };
     template<>
     struct box<std::optional<std::string>> : public box_base<std::optional<std::string>> {
         using box_base<std::optional<std::string>>::box_base;
         using box_base<std::optional<std::string>>::operator=;
+        std::optional<std::string> operator*() {
+            auto v = this->m_backing_map.get(this->m_key);
+            if (v.is_null()) {
+                return std::nullopt;
+            } else {
+                return this->m_backing_map.get(this->m_key).operator std::string();
+            };
+        }
     };
     template<typename V>
     struct box<std::optional<link<V>>> : public box_base<std::optional<link<V>>> {
@@ -310,7 +349,7 @@ namespace realm::experimental {
     struct managed<std::map<std::string, T>, void> : managed_base {
         [[nodiscard]] std::map<std::string, T> value() const {
             // unused
-            abort();
+            return std::map<std::string, T>();
         }
 
         class iterator {
@@ -382,18 +421,20 @@ namespace realm::experimental {
             }
         }
 
+        void erase(const std::string& key) {
+            m_obj->get_dictionary(m_key).erase(key);
+        }
+
         box<T> operator[](const std::string &a) {
             return box<T>(m_obj->get_dictionary(m_key), a, *m_realm);
         }
 
-        notification_token observe(std::function<void(realm::experimental::collection_change)>&& fn)
+        notification_token observe(std::function<void(realm::dictionary_collection_change)>&& fn)
         {
             auto o = internal::bridge::object(*m_realm, *m_obj);
             auto dict = std::make_shared<realm::internal::bridge::dictionary>(o.get_dictionary(m_key));
-
-            realm::notification_token token = dict->add_notification_callback(
-                    std::make_shared<realm::experimental::collection_callback_wrapper>(
-                            std::move(fn), false));
+            realm::notification_token token = dict->add_key_based_notification_callback(
+                                                std::make_shared<realm::dictionary_callback_wrapper>(std::move(fn), false));
             token.m_realm = *m_realm;
             token.m_dictionary = dict;
             return token;
