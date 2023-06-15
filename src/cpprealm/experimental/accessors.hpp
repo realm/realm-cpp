@@ -8,8 +8,6 @@
 
 namespace realm::experimental {
     template<typename>
-    struct link;
-    template<typename>
     struct primary_key;
     template<typename, typename>
     struct managed;
@@ -226,34 +224,33 @@ namespace realm::experimental {
         }
     };
     template <typename T>
-    struct accessor<std::vector<link<T>>> {
+    struct accessor<std::vector<T*>> {
         static inline void set(internal::bridge::obj& obj,
                                internal::bridge::col_key&& key,
-                               const std::vector<link<T>>& value) {
+                               const std::vector<T*>& value) {
             auto list = obj.get_linklist(key);
             for (size_t i = 0; i < value.size(); i++) {
                 auto& lnk = value[i];
-                if (lnk.is_managed) {
-                    list.add(lnk.m_managed.m_obj.get_key());
+                if (!lnk) {
+                    continue;
+                }
+                auto table = obj.get_target_table(key);
+                internal::bridge::obj m_obj;
+                if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
+                    auto pk = (*lnk).*(managed<T>::schema.primary_key().ptr);
+                    m_obj = table.create_object_with_primary_key(serialize(pk.value));
+                } else if (managed<T>::schema.is_embedded_experimental()) {
+                    m_obj = list.create_and_insert_linked_object(i);
                 } else {
-                    auto table = obj.get_target_table(key);
-                    internal::bridge::obj m_obj;
-                    if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
-                        auto pk = (*lnk.unmanaged).*(managed<T>::schema.primary_key().ptr);
-                        m_obj = table.create_object_with_primary_key(serialize(pk.value));
-                    } else if (managed<T>::schema.is_embedded_experimental()) {
-                        m_obj = list.create_and_insert_linked_object(i);
-                    } else {
-                        m_obj = table.create_object();
-                    }
-                    std::apply([&m_obj, &lnk](auto && ...p) {
-                        (accessor<typename std::decay_t<decltype(p)>::Result>::set(
-                                 m_obj, m_obj.get_table().get_column_key(p.name),
-                                 (*lnk.unmanaged).*(std::decay_t<decltype(p)>::ptr)), ...);
-                    }, managed<T, void>::schema.ps);
-                    if (!managed<T>::schema.is_embedded_experimental()) {
-                        list.add(m_obj.get_key());
-                    }
+                    m_obj = table.create_object();
+                }
+                std::apply([&m_obj, &lnk](auto && ...p) {
+                    (accessor<typename std::decay_t<decltype(p)>::Result>::set(
+                             m_obj, m_obj.get_table().get_column_key(p.name),
+                             (*lnk).*(std::decay_t<decltype(p)>::ptr)), ...);
+                }, managed<T, void>::schema.ps);
+                if (!managed<T>::schema.is_embedded_experimental()) {
+                    list.add(m_obj.get_key());
                 }
             }
         }
@@ -323,36 +320,6 @@ namespace realm::experimental {
         }
     };
     // MARK: - accessor link
-    template <typename T>
-    struct accessor<link<T>> {
-        static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
-                               const link<T>& value) {
-            if (value.is_managed) {
-                obj.set(key, value.m_managed.m_obj.get_key());
-            } else {
-                auto table = obj.get_target_table(key);
-                internal::bridge::obj m_obj;
-                if (value.unmanaged) {
-                    if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
-                        auto pk = (*value.unmanaged).*(managed<T>::schema.primary_key().ptr);
-                        m_obj = table.create_object_with_primary_key(serialize(pk.value));
-                        obj.set(key, m_obj.get_key());
-                    } else if (managed<T>::schema.is_embedded_experimental()) {
-                        m_obj = obj.create_and_set_linked_object(key);
-                    } else {
-                        m_obj = table.create_object();
-                        obj.set(key, m_obj.get_key());
-                    }
-                    std::apply([&m_obj, &value](auto && ...p) {
-                        (accessor<typename std::decay_t<decltype(p)>::Result>::set(
-                                 m_obj, m_obj.get_table().get_column_key(p.name),
-                                 (*value.unmanaged).*(std::decay_t<decltype(p)>::ptr)), ...);
-                    }, managed<T, void>::schema.ps);
-                }
-            }
-        }
-    };
 
     template <typename T>
     struct accessor<T*> {

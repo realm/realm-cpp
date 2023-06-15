@@ -314,9 +314,9 @@ namespace realm::experimental {
     };
 
     template <typename T>
-    inline std::ostream& operator<< (std::ostream& stream, const realm::experimental::link<T>& object)
+    inline std::ostream& operator<< (std::ostream& stream, const T*& object)
     {
-        stream << "link:" << object.is_managed << std::endl;
+        stream << "link:" << object << std::endl;
         return stream;
     }
 }

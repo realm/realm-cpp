@@ -66,7 +66,7 @@ namespace realm::experimental {
     struct managed<std::vector<T*>> : managed_base {
         [[nodiscard]] std::vector<T*> value() const {
             // unused
-            return std::vector<link<T>>();
+            return std::vector<T*>();
         }
 
         void pop_back() {

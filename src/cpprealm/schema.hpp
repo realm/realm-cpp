@@ -116,7 +116,7 @@ namespace realm {
                             property.set_object_link(Result::mapped_type::value_type::schema.name);
                             property.set_type(type | internal::bridge::property::type::Nullable);
                         } else if constexpr (internal::type_info::is_link<typename Result::mapped_type::value_type>::value) {
-                            property.set_object_link(experimental::managed<typename Result::mapped_type::value_type::value_type, void>::schema.name);
+                            property.set_object_link(experimental::managed<std::remove_pointer_t<typename Result::mapped_type::value_type>, void>::schema.name);
                             property.set_type(type | internal::bridge::property::type::Nullable);
                         }
                     }

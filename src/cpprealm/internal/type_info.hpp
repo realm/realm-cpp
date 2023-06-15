@@ -15,8 +15,6 @@
 #include <vector>
 
 namespace realm::experimental {
-    template <typename>
-    struct link;
     template <auto>
     struct linking_objects;
     template <typename>
@@ -111,14 +109,6 @@ namespace realm::internal::type_info {
                           std::is_constructible<std::string, const char*>>::value);
         }
     }
-
-    template <typename T>
-    struct type_info<experimental::link<T>> {
-        using internal_type = bridge::obj_key;
-        static constexpr bridge::property::type type() {
-            return bridge::property::type::Object;
-        }
-    };
     template <typename T>
     struct type_info<T*> {
         using internal_type = bridge::obj_key;
