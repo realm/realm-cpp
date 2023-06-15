@@ -24,6 +24,10 @@ namespace realm::internal::bridge {
 
     struct notification_token {
         notification_token();
+        notification_token(const notification_token &other) = delete;
+        notification_token &operator=(const notification_token &other) = delete;
+        notification_token(notification_token &&other);
+        notification_token &operator=(notification_token &&other);
         notification_token(NotificationToken&&);
         operator NotificationToken() const;
         void unregister();

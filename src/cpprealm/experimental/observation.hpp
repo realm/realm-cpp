@@ -69,8 +69,6 @@ namespace realm::experimental {
                                     const T *obj,
                                     std::shared_ptr<internal::bridge::object> internal_object)
                 : block(std::move(b)), object(obj), m_object(internal_object) {}
-
-        internal::bridge::notification_token token;
         std::function<void(object_change < T > )> block;
         const T *object;
         std::shared_ptr<internal::bridge::object> m_object;

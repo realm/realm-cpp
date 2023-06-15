@@ -29,6 +29,12 @@ namespace realm::internal::bridge {
 
     struct core_dictionary {
         core_dictionary();
+        core_dictionary(const core_dictionary &other);
+        core_dictionary &operator=(const core_dictionary &other);
+        core_dictionary(core_dictionary &&other);
+        core_dictionary &operator=(core_dictionary &&other);
+        ~core_dictionary();
+
         core_dictionary(const CoreDictionary& v); //NOLINT(google-explicit-constructor)
         operator CoreDictionary () const; //NOLINT(google-explicit-constructor)
         void insert(const std::string& key, const mixed& value);

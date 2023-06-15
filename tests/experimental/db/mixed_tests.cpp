@@ -9,15 +9,15 @@ TEST_CASE("mixed", "[mixed]") {
     config.set_path(path);
     SECTION("unmanaged_managed_mixed_get_set", "[mixed]") {
         auto obj = experimental::AllTypesObject();
-        obj.mixed_col = 42;
-        CHECK(obj.mixed_col == experimental::AllTypesObject::my_mixed(42));
+        obj.mixed_col = (int64_t)42;
+        CHECK(obj.mixed_col == experimental::AllTypesObject::my_mixed((int64_t)42));
         auto realm = experimental::db(std::move(config));
         auto managed_obj = realm.write([&realm, &obj] {
             return realm.add(std::move(obj));
         });
         CHECK(managed_obj.mixed_col == static_cast<int64_t>(42));
         realm.write([&managed_obj] {
-            managed_obj.mixed_col = "hello world";
+            managed_obj.mixed_col = std::string("hello world");
         });
         CHECK(managed_obj.mixed_col == std::string("hello world"));
         realm.write([&managed_obj] {

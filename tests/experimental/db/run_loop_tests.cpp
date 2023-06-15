@@ -377,7 +377,8 @@ inline void run_until(uv_loop_t *loop, std::function<bool()> predicate) {
 TEST_CASE("run loops", "[run loops]") {
     realm_path path;
 
-    SECTION("uv threads", "[run loops]") {
+    #ifndef _WIN32
+    SECTION("uv threads detached linux", "[run loops]") {
         realm::notification_token t1;
         realm::notification_token t2;
 
@@ -462,7 +463,7 @@ TEST_CASE("run loops", "[run loops]") {
         std::unique_lock<std::mutex> lock2(m2);
         v2.wait(lock2, [&] { return signal2; });
     }
-
+    #endif
     SECTION("uv main thread", "[run loops]") {
         realm::notification_token t1;
         realm::notification_token t2;
