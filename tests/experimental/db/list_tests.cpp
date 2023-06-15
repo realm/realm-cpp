@@ -48,7 +48,7 @@ TEST_CASE("list", "[list]") {
 
         realm::experimental::AllTypesObjectLink o1;
         o1.str_col = "Fido";
-        obj.list_obj_col.push_back(std::move(o1));
+        obj.list_obj_col.push_back(&o1);
         CHECK(obj.list_obj_col[0]->str_col == "Fido");
         CHECK(obj.list_int_col.size() == 1);
         for (auto &i: obj.list_int_col) {
@@ -57,7 +57,7 @@ TEST_CASE("list", "[list]") {
 
         realm::experimental::AllTypesObjectEmbedded o2;
         o2.str_col = "Fido";
-        obj.list_embedded_obj_col.push_back(std::move(o2));
+        obj.list_embedded_obj_col.push_back(&o2);
         CHECK(obj.list_embedded_obj_col[0]->str_col == "Fido");
         CHECK(obj.list_embedded_obj_col.size() == 1);
 
@@ -74,10 +74,10 @@ TEST_CASE("list", "[list]") {
             realm::experimental::AllTypesObjectLink o3;
             o3._id = 1;
             o3.str_col = "Rex";
-            obj.list_obj_col.push_back(std::move(o3));
+            obj.list_obj_col.push_back(&o3);
             realm::experimental::AllTypesObjectEmbedded e;
             e.str_col = "Rex";
-            obj.list_embedded_obj_col.push_back(std::move(e));
+            obj.list_embedded_obj_col.push_back(&e);
             return obj;
         });
         size_t idx = 0;
@@ -166,19 +166,19 @@ TEST_CASE("list", "[list]") {
         auto o6 = realm::experimental::AllTypesObjectLink();
 
         // unmanaged
-        obj.list_obj_col.push_back(o1);
-        obj.list_obj_col.push_back(o2);
-        obj.list_obj_col.push_back(o3);
+        obj.list_obj_col.push_back(&o1);
+        obj.list_obj_col.push_back(&o2);
+        obj.list_obj_col.push_back(&o3);
         CHECK(obj.list_obj_col.size() == 3);
 
         obj.list_obj_col.pop_back();
         CHECK(obj.list_obj_col.size() == 2);
         obj.list_obj_col.clear();
         CHECK(obj.list_obj_col.size() == 0);
-        obj.list_obj_col.push_back(o1);
-        obj.list_obj_col.push_back(o2);
-        obj.list_obj_col.push_back(o3);
-        obj.list_obj_col.push_back(o4);
+        obj.list_obj_col.push_back(&o1);
+        obj.list_obj_col.push_back(&o2);
+        obj.list_obj_col.push_back(&o3);
+        obj.list_obj_col.push_back(&o4);
 
         CHECK(obj.list_obj_col[3]->str_col == o4.str_col);
 
@@ -236,19 +236,19 @@ TEST_CASE("list", "[list]") {
         o5.str_col = "foo bar";
 
         // unmanaged
-        obj.list_embedded_obj_col.push_back(o1);
-        obj.list_embedded_obj_col.push_back(o2);
-        obj.list_embedded_obj_col.push_back(o3);
+        obj.list_embedded_obj_col.push_back(&o1);
+        obj.list_embedded_obj_col.push_back(&o2);
+        obj.list_embedded_obj_col.push_back(&o3);
         CHECK(obj.list_embedded_obj_col.size() == 3);
 
         obj.list_embedded_obj_col.pop_back();
         CHECK(obj.list_embedded_obj_col.size() == 2);
         obj.list_embedded_obj_col.clear();
         CHECK(obj.list_embedded_obj_col.size() == 0);
-        obj.list_embedded_obj_col.push_back(o1);
-        obj.list_embedded_obj_col.push_back(o2);
-        obj.list_embedded_obj_col.push_back(o3);
-        obj.list_embedded_obj_col.push_back(o4);
+        obj.list_embedded_obj_col.push_back(&o1);
+        obj.list_embedded_obj_col.push_back(&o2);
+        obj.list_embedded_obj_col.push_back(&o3);
+        obj.list_embedded_obj_col.push_back(&o4);
 
         auto realm = realm::experimental::db(std::move(config));
         auto managed_obj = realm.write([&realm, &obj] {

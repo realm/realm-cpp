@@ -56,7 +56,8 @@ namespace realm::internal::type_info {
     template <typename T>
     struct is_persisted<persisted<T>> : std::true_type {
     };
-
+    template <typename, typename>
+    struct managed;
     template <typename T, typename = void>
     struct type_info;
 
@@ -135,10 +136,17 @@ namespace realm::internal::type_info {
     template <typename T>
     struct is_link : std::false_type {
         static constexpr auto value = false;
+        static constexpr auto is_managed = false;
     };
     template <typename T>
-    struct is_link<experimental::link<T>> : std::true_type {
+    struct is_link<managed<T*, void>> : std::true_type {
         static constexpr auto value = true;
+        static constexpr auto is_managed = true;
+    };
+    template <typename T>
+    struct is_link<T*> : std::true_type {
+        static constexpr auto value = true;
+        static constexpr auto is_managed = false;
     };
 
     template <typename T>

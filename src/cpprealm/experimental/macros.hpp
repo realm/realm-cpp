@@ -289,7 +289,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
             return a.get_table() == b.get_table() \
                    && a.get_key() == b.get_key(); \
         }                      \
-        bool operator ==(const managed<link<cls>>& other) const {   \
+        bool operator ==(const managed<cls*>& other) const {   \
             auto& a = m_obj; \
             auto& b = other.m_obj; \
             \

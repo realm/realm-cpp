@@ -106,9 +106,9 @@ namespace realm {
                     if constexpr (std::is_base_of_v<object_base<typename Result::value_type>,
                                                     typename Result::value_type>) {
                         property.set_object_link(Result::value_type::schema.name);
-                    } else if constexpr (internal::type_info::is_link<typename Result::value_type>::value) {
+                    } else if constexpr (std::is_pointer_v<Result>) {
                         property.set_object_link(
-                                experimental::managed<typename Result::value_type::value_type, void>::schema.name);
+                                experimental::managed<std::remove_pointer_t<Result>, void>::schema.name);
                     }
                 } else if constexpr (realm::internal::type_info::is_map<Result>::value) {
                     if constexpr (internal::type_info::is_optional<typename Result::mapped_type>::value) {
@@ -125,10 +125,6 @@ namespace realm {
                         property.set_object_link(Result::value_type::schema.name);
                         property.set_type(type | internal::bridge::property::type::Nullable);
                     }
-                }
-                else if constexpr (internal::type_info::is_link<Result>::value) {
-                    property.set_object_link(experimental::managed<typename Result::value_type, void>::schema.name);
-                    property.set_type(type | internal::bridge::property::type::Nullable);
                 }
                 else if constexpr (std::is_pointer_v<Result>) {
                     property.set_object_link(experimental::managed<typename std::remove_pointer_t<Result>, void>::schema.name);

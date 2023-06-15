@@ -12,6 +12,7 @@
 #include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
 #include <cpprealm/internal/bridge/object_id.hpp>
+#include <cpprealm/internal/bridge/table.hpp>
 
 namespace realm {
     class Group;
@@ -38,7 +39,12 @@ namespace realm {
         template <typename, typename>
         struct type_info;
     }
-
+    namespace experimental {
+        template <typename, typename>
+        struct managed;
+        template <typename, typename>
+        struct accessor;
+    }
     template <typename, typename>
     struct persisted;
 }
@@ -177,7 +183,23 @@ namespace realm::internal::bridge {
         void set_list_values(const col_key& col_key, const std::vector<ValueType>& values) {
             std::vector<typename internal::type_info::type_info<ValueType, void>::internal_type> v2;
             for (auto v : values) {
-                v2.push_back(persisted<ValueType, void>::serialize(v));
+                if constexpr (std::is_pointer_v<ValueType>) {
+                    internal::bridge::obj m_obj;
+                    if constexpr (experimental::managed<std::remove_pointer_t<ValueType>, void>::schema.HasPrimaryKeyProperty) {
+                        auto pk = (*v).*(experimental::managed<std::remove_pointer_t<ValueType>, void>::schema.primary_key().ptr);
+                        m_obj = this->get_table().create_object_with_primary_key(pk.value);
+                    } else {
+                        m_obj = m_obj = this->get_table().create_object();
+                    }
+                    std::apply([&m_obj, &v](auto && ...p) {
+                        (experimental::accessor<typename std::decay_t<decltype(p)>::Result, void>::set(
+                                 m_obj, m_obj.get_table().get_column_key(p.name),
+                                 (*v).*(std::decay_t<decltype(p)>::ptr)), ...);
+                    }, experimental::managed<std::remove_pointer_t<ValueType>, void>::schema.ps);
+                    v2.push_back(m_obj.get_key());
+                } else {
+                    v2.push_back(persisted<ValueType, void>::serialize(v));
+                }
             }
             set_list_values(col_key, v2);
         }

@@ -53,8 +53,8 @@ namespace realm::experimental {
         obj.opt_object_id_col = object_id;
         obj.opt_binary_col = std::vector<uint8_t>({1});
 
-        obj.opt_obj_col = link1,
-        obj.opt_embedded_obj_col = embedded_obj1,
+        obj.opt_obj_col = &link1,
+        obj.opt_embedded_obj_col = &embedded_obj1,
 
         obj.list_int_col = std::vector<int64_t>({1});
         obj.list_double_col = std::vector<double>({1.23});
@@ -65,8 +65,8 @@ namespace realm::experimental {
         obj.list_binary_col = std::vector<std::vector<uint8_t>>({{1}});
         obj.list_date_col = std::vector<std::chrono::time_point<std::chrono::system_clock>>({date});
         obj.list_mixed_col = std::vector<realm::mixed>({realm::mixed("mixed str")});
-        obj.list_obj_col = std::vector<link<AllTypesObjectLink>>({std::move(link2)});
-        obj.list_embedded_obj_col = std::vector<link<AllTypesObjectEmbedded>>({embedded_obj2});
+        obj.list_obj_col = std::vector<AllTypesObjectLink*>({&link2});
+        obj.list_embedded_obj_col = std::vector<AllTypesObjectEmbedded*>({&embedded_obj2});
 
         obj.map_int_col = std::map<std::string, int64_t>({{"foo", 1}});
         obj.map_double_col = std::map<std::string, double>({{"foo", 1.23}});
@@ -78,8 +78,8 @@ namespace realm::experimental {
         obj.map_date_col = std::map<std::string, std::chrono::time_point<std::chrono::system_clock>>({{"foo", date}});
         obj.map_enum_col = std::map<std::string, AllTypesObject::Enum>({{"foo", AllTypesObject::Enum::one}});
         obj.map_mixed_col = std::map<std::string, realm::mixed>({{"foo", realm::mixed("bar")}});
-        obj.map_link_col = std::map<std::string, std::optional<link<AllTypesObjectLink>>>({{"foo", link3}});
-        obj.map_embedded_col = std::map<std::string, std::optional<link<AllTypesObjectEmbedded>>>({{"foo", embedded_obj3}});
+        obj.map_link_col = std::map<std::string, AllTypesObjectLink*>({{"foo", &link3}});
+        obj.map_embedded_col = std::map<std::string, AllTypesObjectEmbedded*>({{"foo", &embedded_obj3}});
 
         experimental::db db = experimental::open(path);
 
@@ -137,12 +137,12 @@ namespace realm::experimental {
         CHECK(managed_obj.map_date_col["foo"] == date);
         CHECK(managed_obj.map_uuid_col["foo"] == uuid);
         CHECK(managed_obj.map_mixed_col["foo"] == "bar");
-        CHECK((*managed_obj.map_link_col["foo"]).value()->str_col == "link object 3");
+        CHECK(managed_obj.map_link_col["foo"]->str_col == "link object 3");
         auto other_obj2 = db.objects<realm::experimental::AllTypesObjectLink>()[2];
         auto other_obj3 = db.objects<realm::experimental::AllTypesObject>()[0];
-        CHECK(*managed_obj.map_link_col["foo"] == other_obj2);
-        std::optional<link<AllTypesObjectEmbedded>> map_embedded_col = *other_obj3.map_embedded_col["foo"];
-        CHECK(*managed_obj.map_embedded_col["foo"] == map_embedded_col);
+        CHECK(managed_obj.map_link_col["foo"] == other_obj2);
+        auto map_embedded_col = other_obj3.map_embedded_col["foo"];
+        CHECK(managed_obj.map_embedded_col["foo"] == map_embedded_col);
 
         auto allTypeObjects = db.objects<AllTypesObject>();
 

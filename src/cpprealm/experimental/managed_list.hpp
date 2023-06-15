@@ -63,8 +63,8 @@ namespace realm::experimental {
     };
 
     template<typename T>
-    struct managed<std::vector<link<T>>> : managed_base {
-        [[nodiscard]] std::vector<link<T>> value() const {
+    struct managed<std::vector<T*>> : managed_base {
+        [[nodiscard]] std::vector<T*> value() const {
             // unused
             abort();
         }

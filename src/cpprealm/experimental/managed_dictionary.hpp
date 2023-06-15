@@ -20,10 +20,10 @@ namespace realm::experimental {
             return *this;
         }
         box_base &operator=(mapped_type &&o) {
-            if constexpr (internal::type_info::is_optional<mapped_type>::value) {
+            if constexpr (internal::type_info::is_link<mapped_type>::value) {
                 if (o) {
                     // TODO: remove repeated code
-                    if (o->is_managed) {
+                    if constexpr (o->is_managed) {
                         m_backing_map.insert(m_key, o->m_managed.m_obj.get_key());
                     } else {
                         internal::bridge::obj m_obj;
@@ -256,14 +256,16 @@ namespace realm::experimental {
         using box_base<std::optional<std::string>>::box_base;
         using box_base<std::optional<std::string>>::operator=;
     };
-    template<typename V>
-    struct box<std::optional<link<V>>> : public box_base<std::optional<link<V>>> {
-        using box_base<std::optional<link<V>>>::box_base;
-        using box_base<std::optional<link<V>>>::operator=;
-        using box_base<std::optional<link<V>>>::operator==;
 
-        bool operator==(const std::optional<link<V>>& rhs) const {
-            auto a = const_cast<box<std::optional<link<V>>> *>(this)->m_backing_map.get_object(this->m_key);
+    //MARK: - Boxed Link
+    template<typename V>
+    struct box<managed<V*>> : public box_base<managed<V*>> {
+        using box_base<managed<V*>>::box_base;
+        using box_base<managed<V*>>::operator=;
+        using box_base<managed<V*>>::operator==;
+
+        bool operator==(const V*& rhs) const {
+            auto a = const_cast<box<V*> *>(this)->m_backing_map.get_object(this->m_key);
             auto &b = rhs->m_managed.m_obj;
             if (this->m_realm != rhs->m_managed.m_realm) {
                 return false;
@@ -271,25 +273,23 @@ namespace realm::experimental {
             return a.get_table() == b.get_table() && a.get_key() == b.get_key();
         }
 
-        bool operator==(const managed<V, void> &rhs) const {
-            auto a = const_cast<box<std::optional<link<V>>> *>(this)->m_backing_map.get_object(this->m_key);
+        bool operator==(const managed<V*> &rhs) const {
+            auto a = const_cast<box<V*> *>(this)->m_backing_map.get_object(this->m_key);
             auto &b = rhs.m_obj;
             if (this->m_realm != rhs.m_realm) {
                 return false;
             }
             return a.get_table() == b.get_table() && a.get_key() == b.get_key();
         }
-
-        bool operator==(const V &rhs) const {
-            auto a = const_cast<box<link<V>> *>(this)->m_backing_map.get_object(this->m_key);
+        bool operator==(const managed<V> &rhs) const {
+            auto a = const_cast<box<managed<V*>> *>(this)->m_backing_map.get_object(this->m_key);
             auto &b = rhs.m_obj;
             if (this->m_realm != rhs.m_realm) {
                 return false;
             }
             return a.get_table() == b.get_table() && a.get_key() == b.get_key();
         }
-
-        std::optional<link<V>> operator*() {
+        typename managed<V*>::ref_type operator*() {
             auto obj = this->m_backing_map.get_object(this->m_key);
             if (!obj.is_valid()) {
                 return std::nullopt;
@@ -303,6 +303,62 @@ namespace realm::experimental {
             },
             managed<V, void>::managed_pointers());
             return m;
+        }
+
+        typename managed<V*>::ref_type operator->() {
+            auto obj = this->m_backing_map.get_object(this->m_key);
+            auto m = managed<V>(std::move(obj), this->m_realm);
+            std::apply([&m](auto &&...ptr) {
+                std::apply([&](auto &&...name) {
+                    ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
+                },
+                           managed<V, void>::managed_pointers_names);
+            },
+                       managed<V, void>::managed_pointers());
+            return {std::move(m)};
+        }
+
+        box operator=(V* o) {
+            internal::bridge::obj m_obj;
+            if constexpr (managed<V>::schema.HasPrimaryKeyProperty) {
+                auto pk = (*o).*(managed<V>::schema.primary_key().ptr);
+                m_obj = const_cast<box<managed<V*>> *>(this)->m_backing_map.create_and_insert_linked_object(const_cast<box<managed<V*>> *>(this)->m_key, pk.value);
+            } else {
+                m_obj = const_cast<box<managed<V*>> *>(this)->m_backing_map.create_and_insert_linked_object(const_cast<box<managed<V*>> *>(this)->m_key);
+            }
+
+            std::apply([&m_obj, &o](auto && ...p) {
+                (accessor<typename std::decay_t<decltype(p)>::Result>::set(
+                         m_obj, m_obj.get_table().get_column_key(p.name),
+                         (*o).*(std::decay_t<decltype(p)>::ptr)), ...);
+            }, managed<V>::schema.ps);
+            return *this;
+        }
+
+        bool operator==(const box<managed<V*>> &rhs) const {
+            auto a = const_cast<box<managed<V*>>*>(this)->m_backing_map.get_object(this->m_key);
+            auto &b = static_cast<box<managed<V*>>>(rhs)->m_obj;
+            if (this->m_realm != rhs.m_realm) {
+                return false;
+            }
+            return a.get_table() == b.get_table() && a.get_key() == b.get_key();
+        }
+        bool operator==(const V &rhs) const {
+            auto a = const_cast<box<managed<V*>> *>(this)->m_backing_map.get_object(this->m_key);
+            auto &b = rhs.m_obj;
+            if (this->m_realm != rhs.m_realm) {
+                return false;
+            }
+            return a.get_table() == b.get_table() && a.get_key() == b.get_key();
+        }
+
+        bool operator==(const box<V*> &rhs) {
+            auto a = const_cast<box<managed<V*>> *>(this)->m_backing_map.get_object(this->m_key);
+            auto &b = (&rhs)->m_obj;
+            if (this->m_realm != rhs.m_realm) {
+                return false;
+            }
+            return a.get_table() == b.get_table() && a.get_key() == b.get_key();
         }
     };
 
@@ -382,10 +438,13 @@ namespace realm::experimental {
             }
         }
 
-        box<T> operator[](const std::string &a) {
-            return box<T>(m_obj->get_dictionary(m_key), a, *m_realm);
+        box<std::conditional_t<std::is_pointer_v<T>, managed<T>, T>>  operator[](const std::string &a) {
+            if constexpr (std::is_pointer_v<T>) {
+                return box<managed<T>>(m_obj->get_dictionary(m_key), a, *m_realm);
+            } else {
+                return box<T>(m_obj->get_dictionary(m_key), a, *m_realm);
+            }
         }
-
         notification_token observe(std::function<void(realm::experimental::collection_change)>&& fn)
         {
             auto o = internal::bridge::object(*m_realm, *m_obj);

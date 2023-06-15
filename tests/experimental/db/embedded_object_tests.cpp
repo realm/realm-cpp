@@ -10,7 +10,7 @@ TEST_CASE("embedded_objects") {
         auto obj = realm::experimental::AllTypesObject();
         realm::experimental::AllTypesObjectEmbedded embedded;
         embedded.str_col = "foo";
-        obj.opt_embedded_obj_col = embedded;
+        obj.opt_embedded_obj_col = &embedded;
 
         auto managed_obj = realm.write([&obj, &realm]() {
             return realm.add(std::move(obj));
@@ -48,12 +48,12 @@ TEST_CASE("embedded_objects") {
 
         auto emb2 = realm::experimental::EmbeddedDepth2();
         emb2.str_col = "emb2";
-        emb2.embedded_link = emb3;
+        emb2.embedded_link = &emb3;
 
         auto emb1 = realm::experimental::EmbeddedDepth1();
         emb1.str_col = "emb1";
-        emb1.embedded_link = emb2;
-        obj.embedded_link = emb1;
+        emb1.embedded_link = &emb2;
+        obj.embedded_link = &emb1;
 
         auto managed_obj = realm.write([&obj, &realm]() {
             return realm.add(std::move(obj));
