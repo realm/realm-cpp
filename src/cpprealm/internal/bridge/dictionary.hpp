@@ -11,6 +11,61 @@ namespace realm::object_store {
 namespace realm {
     class Dictionary;
     using CoreDictionary = Dictionary;
+    struct dictionary_change_set {
+        dictionary_change_set(const dictionary_change_set&);
+        dictionary_change_set(dictionary_change_set&&) = default;
+        dictionary_change_set& operator=(const dictionary_change_set&);
+        dictionary_change_set& operator=(dictionary_change_set&&) = default;
+
+        // Keys which were removed from the _old_ dictionary
+        std::vector<std::string> deletions;
+
+        // Keys in the _new_ dictionary which are new insertions
+        std::vector<std::string> insertions;
+
+        // Keys of objects/values which were modified
+        std::vector<std::string> modifications;
+
+        bool collection_root_was_deleted = false;
+    };
+
+    struct dictionary_collection_change {
+        dictionary_collection_change() = default;
+
+
+        dictionary_collection_change(std::vector<std::string>&& i,
+                                     std::vector<std::string>&& m,
+                                     std::vector<std::string>&& d,
+                                     bool c)
+            : insertions(std::move(i)),
+              modifications(std::move(m)),
+              deletions(std::move(d)),
+              collection_root_was_deleted(c) {}
+
+        std::vector<std::string> insertions;
+        std::vector<std::string> modifications;
+        std::vector<std::string> deletions;
+        // This flag indicates whether the underlying object which is the source of this
+        // collection was deleted. This applies to lists, dictionaries and sets.
+        // This enables notifiers to report a change on empty collections that have been deleted.
+        bool collection_root_was_deleted = false;
+
+        [[nodiscard]] bool empty() const noexcept {
+            return deletions.empty() && insertions.empty() && modifications.empty() &&
+                   !collection_root_was_deleted;
+        }
+    };
+
+    struct dictionary_callback_wrapper {
+        std::function<void(dictionary_collection_change)> handler;
+        bool ignore_changes_in_initial_notification;
+
+        dictionary_callback_wrapper(std::function<void(dictionary_collection_change)> handler,
+                                    bool ignore_changes_in_initial_notification)
+            : handler(handler)
+              , ignore_changes_in_initial_notification(ignore_changes_in_initial_notification)
+        {}
+    };
 }
 
 namespace realm::internal::bridge {
@@ -42,6 +97,7 @@ namespace realm::internal::bridge {
         obj create_and_insert_linked_object(const std::string& key);
         obj create_and_insert_linked_object(const std::string& key, const internal::bridge::mixed& pk);
         mixed get(const std::string& key) const;
+        void erase(const std::string& key);
         obj get_object(const std::string& key);
         std::pair<mixed, mixed> get_pair(size_t ndx) const;
         size_t find_any_key(const std::string& value) const noexcept;
@@ -82,6 +138,7 @@ namespace realm::internal::bridge {
         [[nodiscard]] size_t find(const std::string&);
         obj insert_embedded(const std::string&);
         notification_token add_notification_callback(std::shared_ptr<collection_change_callback>&& cb);
+        notification_token add_key_based_notification_callback(std::shared_ptr<dictionary_callback_wrapper>&& cb);
     private:
         template <typename T>
         friend T get(dictionary&, const std::string&);

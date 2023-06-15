@@ -2,7 +2,7 @@
 #include "test_objects.hpp"
 
 using namespace realm;
-/*
+
 TEST_CASE("map", "[map]") {
     realm_path path;
     db_config config;
@@ -140,8 +140,8 @@ TEST_CASE("map", "[map]") {
         std::promise<bool> p;
         auto token = managed_obj.map_str_col.observe([&p](auto&& change) {
             if (!change.modifications.empty() && !change.insertions.empty()) {
-                CHECK(change.modifications[0] == 0);
-                CHECK(change.insertions[0] == 1);
+                CHECK(change.modifications[0] == "a");
+                CHECK(change.insertions[0] == "b");
                 p.set_value(true);
             }
         });
@@ -164,17 +164,8 @@ TEST_CASE("map", "[map]") {
         auto obj = experimental::AllTypesObject();
         obj.map_str_col = {
                 {"a", std::string("baz")},
-                {"b", std::string("food")}
+                {"b", std::string("foo")}
         };
-
-        // find
-        CHECK(obj.map_str_col.find("a") != obj.map_str_col.end());
-        CHECK(obj.map_str_col.find("foo") == obj.map_str_col.end());
-        // erase
-        obj.map_str_col.erase("a");
-        CHECK(obj.map_str_col.find("a") == obj.map_str_col.end());
-        obj.map_str_col.erase("foo");
-        CHECK(obj.map_str_col.find("foo") == obj.map_str_col.end());
 
         auto realm = experimental::db(std::move(config));
         auto managed_obj = realm.write([&realm, &obj] {
@@ -185,18 +176,19 @@ TEST_CASE("map", "[map]") {
 
         // find
         CHECK(managed_obj.map_str_col.find("baz") == managed_obj.map_str_col.end());
-        CHECK(managed_obj.map_str_col.find("foo") == managed_obj.map_str_col.end());
+        CHECK(managed_obj.map_str_col.find("food") == managed_obj.map_str_col.end());
         // erase
-        realm.write([&realm, &obj] {
+        realm.write([&realm, &managed_obj] {
             // should not throw if key does not exist.
-            obj.map_str_col.erase("a");
-            obj.map_str_col.erase("c");
-            obj.map_str_col.erase("foo");
+            managed_obj.map_str_col.erase("a");
+            managed_obj.map_str_col.erase("c");
         });
-        CHECK(obj.map_str_col.find("a") == obj.map_str_col.end());
-        CHECK(obj.map_str_col.find("foo") == obj.map_str_col.end());
-        CHECK(obj.map_str_col.find("c") == obj.map_str_col.end());
-        CHECK(obj.map_str_col.find("d") != obj.map_str_col.end());
+
+        CHECK_THROWS(realm.write([&realm, &managed_obj] { managed_obj.map_str_col.erase("food"); }));
+
+        CHECK(managed_obj.map_str_col.find("a") == managed_obj.map_str_col.end());
+        CHECK(managed_obj.map_str_col.find("foo") == managed_obj.map_str_col.end());
+        CHECK(managed_obj.map_str_col.find("c") == managed_obj.map_str_col.end());
+        CHECK(managed_obj.map_str_col.find("d") != managed_obj.map_str_col.end());
     }
 }
-*/
