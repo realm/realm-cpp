@@ -221,22 +221,23 @@ namespace realm::experimental {
         using Class = typename internal::ptr_type_extractor<ptr>::class_type;
 
         iterator begin() {
-            return iterator(0, results());
+            return iterator(0, get_results());
         }
 
         iterator end() {
-            return iterator(results().size(), results());
+            auto r = get_results();
+            return iterator(r.size(), r);
         }
 
         size_t size() {
-            return results().size();
+            return get_results().size();
         }
         managed<Class> operator[](size_t idx) {
-            return results()[idx];
+            return get_results()[idx];
         }
     private:
 
-        results<Class> results() {
+        results<Class> get_results() {
             auto table = m_obj->get_table();
             if (!table.is_valid(m_obj->get_key())) {
                 throw std::logic_error("Object has been deleted or invalidated.");
