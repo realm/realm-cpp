@@ -125,8 +125,10 @@
 #define DECLARE_PERSISTED(cls, property) managed<decltype(cls::property)> property;
 #define DECLARE_PROPERTY(cls, p) realm::property<&cls::p>(#p),
 #define DECLARE_MANAGED_PROPERTY(cls, p) &realm::experimental::managed<cls>::p,
+#define DECLARE_UNMANAGED_TO_MANAGED_PAIR(cls, p) std::pair {&cls::p, &realm::experimental::managed<cls>::p},
 #define DECLARE_MANAGED_PROPERTY_NAME(cls, p) #p,
 #define DECLARE_COND_PROPERTY_VALUE_FOR_NAME(cls, p) if (_name == #p) { auto ptr = &managed<cls>::p; return (*this.*ptr).value(); }
+#define DECLARE_COND_UNMANAGED_TO_MANAGED(cls, p) if constexpr (std::is_same_v<decltype(ptr), decltype(&cls::p)>) { return &managed<cls>::p; }
 
 #include <utility>
 
@@ -199,14 +201,17 @@ namespace realm::experimental {
     };
 
     template<typename T, typename = void>
-    struct managed : public managed_base {
-        managed() = default;
-        using value_type = T;
+    struct managed;
 
-        T value() const {
-            return m_obj->template get<T>(m_key);
-        }
-    };
+//    template<typename T>
+//    struct managed<primary_key<T>> : public managed_base {
+//        managed() = default;
+//        using value_type = T;
+//
+//        T value() const {
+//            return m_obj->template get<T>(m_key);
+//        }
+//    };
 }
 
 #define __cpprealm_build_experimental_query(op, name, type) \
@@ -250,6 +255,9 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         static constexpr auto schema = realm::schema(#cls, beta_object_type, std::tuple{ FOR_EACH(DECLARE_PROPERTY, cls, __VA_ARGS__) }  ); \
         static constexpr auto managed_pointers() { \
             return std::tuple{FOR_EACH(DECLARE_MANAGED_PROPERTY, cls, __VA_ARGS__)};  \
+        }                                                                                          \
+        template <typename PtrType> static constexpr auto unmanaged_to_managed_pointer(PtrType ptr) {         \
+           FOR_EACH(DECLARE_COND_UNMANAGED_TO_MANAGED, cls, __VA_ARGS__);  \
         } \
         static constexpr auto managed_pointers_names = std::tuple{FOR_EACH(DECLARE_MANAGED_PROPERTY_NAME, cls, __VA_ARGS__)}; \
         internal::bridge::obj m_obj;\

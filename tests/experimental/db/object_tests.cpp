@@ -484,10 +484,10 @@ namespace realm::experimental {
                         } else if (prop_change.name == "opt_binary_col" && prop_change.new_value) {
                             CHECK(std::get<std::optional<std::vector<uint8_t>>>(*prop_change.new_value) == std::vector<uint8_t>({1}));
                         } else if (prop_change.name == "opt_obj_col" && prop_change.new_value) {
-                            auto obj = std::get<AllTypesObjectLink*>(*prop_change.new_value);
+                            auto obj = std::get<managed<AllTypesObjectLink*>>(*prop_change.new_value);
                             CHECK((obj->str_col) == "link object");
                         } else if (prop_change.name == "opt_embedded_obj_col" && prop_change.new_value) {
-                            auto obj = std::get<AllTypesObjectEmbedded*>(*prop_change.new_value);
+                            auto obj = std::get<managed<AllTypesObjectEmbedded*>>(*prop_change.new_value);
                             CHECK((obj->str_col) == "embedded obj");
                         } else if (prop_change.name == "list_int_col" && prop_change.new_value) {
                             auto obj = std::get<std::vector<int64_t>>(*prop_change.new_value);

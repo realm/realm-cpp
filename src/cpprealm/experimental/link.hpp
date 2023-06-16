@@ -12,7 +12,7 @@ namespace realm {
 
         template<typename T>
         struct managed<T*> : managed_base {
-            T* value() const { return this->operator->().m_managed; }
+            managed<T*> value() const { return *this; }
             struct ref_type {
                 managed<T> m_managed;
                 managed<T>* operator ->() const {

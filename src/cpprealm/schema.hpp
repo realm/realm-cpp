@@ -82,6 +82,9 @@ namespace realm {
         template <auto Ptr, bool IsPrimaryKey = false>
         struct property {
             using Result = typename internal::persisted_type_extractor<typename internal::ptr_type_extractor<Ptr>::member_type>::Result;
+            using VariantResult =
+                    std::conditional_t<std::is_pointer_v<Result>, experimental::managed<Result>, Result>;
+
             using Class = typename internal::ptr_type_extractor<Ptr>::class_type;
             static constexpr auto ptr = Ptr;
             static constexpr bool is_primary_key = IsPrimaryKey || internal::type_info::is_experimental_primary_key<Result>::value;
@@ -162,7 +165,7 @@ namespace realm {
             const char *primary_key_name = "";
 
             static constexpr std::tuple<Properties...> properties{};
-            using variant_t = typename unique_variant<std::variant<>, typename Properties::Result...>::type;
+            using variant_t = typename unique_variant<std::variant<>, typename Properties::VariantResult...>::type;
 
             template<size_t N, typename P>
             constexpr auto apply_name(const std::tuple<Properties...> &tup, P &&prop) {
@@ -286,7 +289,26 @@ namespace realm {
                     return property_value_for_name<N + 1>(property_name, cls, std::get<N + 1>(properties));
                 }
             }
-
+            template<size_t N, typename P>
+            constexpr variant_t
+            property_value_for_name(std::string_view property_name, const experimental::managed<Class, void> &cls, P &property) const {
+                if constexpr (N + 1 == sizeof...(Properties)) {
+                    if (property_name == std::string_view(names[N])) {
+                        auto ptr = experimental::managed<Class, void>::template unmanaged_to_managed_pointer(property.ptr);
+                        return (cls.*ptr).value();
+                    }
+                    return variant_t{};
+                } else {
+                    if (property_name == std::string_view(names[N])) {
+                        auto ptr = experimental::managed<Class, void>::template unmanaged_to_managed_pointer(property.ptr);
+                        return (cls.*ptr).value();
+                    }
+                    return property_value_for_name<N + 1>(property_name, cls, std::get<N + 1>(properties));
+                }
+            }
+            constexpr auto property_value_for_name(std::string_view property_name, const experimental::managed<Class, void> &cls) const {
+                return property_value_for_name<0>(property_name, cls, std::get<0>(properties));
+            }
             constexpr auto property_value_for_name(std::string_view property_name, const Class &cls) const {
                 return property_value_for_name<0>(property_name, cls, std::get<0>(properties));
             }
