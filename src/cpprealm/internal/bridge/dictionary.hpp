@@ -3,6 +3,8 @@
 
 #include <memory>
 #include <string>
+#include <vector>
+#include <functional>
 
 namespace realm::object_store {
     class Dictionary;

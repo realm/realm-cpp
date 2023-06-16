@@ -350,14 +350,17 @@ namespace realm::experimental {
             std::apply([&m](auto &&...ptr) {
                 std::apply([&](auto &&...name) {
                     ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
-                },
-                           managed<V, void>::managed_pointers_names);
-            },
-                       managed<V, void>::managed_pointers());
+                }, managed<V, void>::managed_pointers_names);
+            }, managed<V, void>::managed_pointers());
             return {std::move(m)};
         }
 
         box operator=(V* o) {
+            if (!o) {
+                // Insert null link for key.
+                this->m_backing_map.insert(this->m_key, realm::internal::bridge::mixed());
+                return *this;
+            }
             internal::bridge::obj m_obj;
             if constexpr (managed<V>::schema.HasPrimaryKeyProperty) {
                 auto pk = (*o).*(managed<V>::schema.primary_key().ptr);
