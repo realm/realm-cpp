@@ -95,6 +95,10 @@ namespace realm::internal::bridge {
         return reinterpret_cast<const CoreDictionary*>(&m_dictionary)->get(key);
     }
 
+    void core_dictionary::erase(const std::string& key) {
+        reinterpret_cast<CoreDictionary*>(&m_dictionary)->erase(key);
+    }
+
     obj core_dictionary::get_object(const std::string& key) {
         return reinterpret_cast<CoreDictionary*>(&m_dictionary)->get_object(key);
     }
@@ -242,6 +246,36 @@ namespace realm::internal::bridge {
             }
         } ccb(std::move(cb));
         return reinterpret_cast<Dictionary*>(&m_dictionary)->add_notification_callback(ccb);
+    }
+
+    notification_token dictionary::add_key_based_notification_callback(std::shared_ptr<dictionary_callback_wrapper>&& cb) {
+        struct wrapper {
+            std::shared_ptr<dictionary_callback_wrapper> m_cb;
+            explicit wrapper(std::shared_ptr<dictionary_callback_wrapper>&& c) : m_cb(std::move(c)) {}
+
+            void operator()(DictionaryChangeSet const& changes) {
+                if (changes.deletions.empty() && changes.insertions.empty() && changes.modifications.empty()) {
+                    m_cb->handler.operator()(dictionary_collection_change());
+                }
+                else {
+                    std::vector<std::string> insertions;
+                    insertions.reserve(changes.insertions.size());
+                    std::transform(changes.insertions.begin(), changes.insertions.end(), std::back_inserter(insertions), [](const Mixed& v) { return v.get_string(); });
+                    std::vector<std::string> modifications;
+                    modifications.reserve(changes.modifications.size());
+                    std::transform(changes.modifications.begin(), changes.modifications.end(), std::back_inserter(modifications), [](const Mixed& v) { return v.get_string(); });
+                    std::vector<std::string> deletions;
+                    deletions.reserve(changes.deletions.size());
+                    std::transform(changes.deletions.begin(), changes.deletions.end(), std::back_inserter(deletions), [](const Mixed& v) { return v.get_string(); });
+                    m_cb->handler.operator()(dictionary_collection_change(std::move(insertions),
+                                                                          std::move(modifications),
+                                                                          std::move(deletions),
+                                                                          changes.collection_root_was_deleted));
+                }
+            }
+        } wrapper(std::move(cb));
+
+        return reinterpret_cast<Dictionary*>(&m_dictionary)->add_key_based_notification_callback(wrapper);
     }
 
     obj dictionary::insert_embedded(const std::string &v) {
