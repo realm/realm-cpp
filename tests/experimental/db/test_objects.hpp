@@ -78,8 +78,8 @@ namespace realm::experimental {
         std::optional<realm::uuid> opt_uuid_col;
         std::optional<realm::object_id> opt_object_id_col;
         std::optional<std::vector<uint8_t>> opt_binary_col;
-        AllTypesObjectLink* opt_obj_col;
-        AllTypesObjectEmbedded* opt_embedded_obj_col;
+        AllTypesObjectLink* opt_obj_col = nullptr;
+        AllTypesObjectEmbedded* opt_embedded_obj_col = nullptr;
 
         std::vector<int64_t> list_int_col;
         std::vector<double> list_double_col;

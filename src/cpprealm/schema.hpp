@@ -106,9 +106,9 @@ namespace realm {
                     if constexpr (std::is_base_of_v<object_base<typename Result::value_type>,
                                                     typename Result::value_type>) {
                         property.set_object_link(Result::value_type::schema.name);
-                    } else if constexpr (std::is_pointer_v<Result>) {
+                    } else if constexpr (std::is_pointer_v<typename Result::value_type>) {
                         property.set_object_link(
-                                experimental::managed<std::remove_pointer_t<Result>, void>::schema.name);
+                                experimental::managed<std::remove_pointer_t<typename Result::value_type>, void>::schema.name);
                     }
                 } else if constexpr (realm::internal::type_info::is_map<Result>::value) {
                     if constexpr (internal::type_info::is_optional<typename Result::mapped_type>::value) {
@@ -119,6 +119,10 @@ namespace realm {
                             property.set_object_link(experimental::managed<std::remove_pointer_t<typename Result::mapped_type::value_type>, void>::schema.name);
                             property.set_type(type | internal::bridge::property::type::Nullable);
                         }
+                    } else if constexpr (std::is_pointer_v<typename Result::mapped_type>) {
+                        property.set_object_link(
+                                experimental::managed<std::remove_pointer_t<typename Result::mapped_type>, void>::schema.name);
+                        property.set_type(type | internal::bridge::property::type::Nullable);
                     }
                 } else if constexpr (internal::type_info::is_optional<Result>::value) {
                     if constexpr (std::is_base_of_v<object_base<typename Result::value_type>, typename Result::value_type>) {
@@ -131,9 +135,6 @@ namespace realm {
                     property.set_type(type | internal::bridge::property::type::Nullable);
                 } else if constexpr (internal::type_info::is_backlink<Result>::value) {
                     return internal::bridge::property{};
-//                    property.set_object_link(experimental::managed<typename Result::Class, void>::schema.name);
-//                    property.set_type(internal::bridge::property::type::LinkingObjects | internal::bridge::property::type::Array);
-//                    property.set_origin_property_name(experimental::managed<typename Result::Class, void>::schema.template name_for_property(Result::Ptr));
                 }
 
                 return property;
