@@ -61,27 +61,26 @@ TEST_CASE("list", "[list]") {
         CHECK(obj.list_embedded_obj_col[0]->str_col == "Fido");
         CHECK(obj.list_embedded_obj_col.size() == 1);
 
-        realm.write([&realm, &obj]() {
-            realm.add(std::move(obj));
+        auto managed_obj = realm.write([&realm, &obj]() {
+            return realm.add(std::move(obj));
         });
 
-        CHECK(obj.list_int_col[0] == 42);
-        CHECK(obj.list_obj_col[0]->str_col == "Fido");
-        CHECK(obj.list_embedded_obj_col[0]->str_col == "Fido");
+        CHECK(managed_obj.list_int_col[0] == 42);
+        CHECK(managed_obj.list_obj_col[0]->str_col == "Fido");
+        CHECK(managed_obj.list_embedded_obj_col[0]->str_col == "Fido");
 
-        auto managed_obj = realm.write([&obj]() {
-            obj.list_int_col.push_back(84);
+        realm.write([&managed_obj]() {
+            managed_obj.list_int_col.push_back(84);
             realm::experimental::AllTypesObjectLink o3;
             o3._id = 1;
             o3.str_col = "Rex";
-            obj.list_obj_col.push_back(&o3);
+            managed_obj.list_obj_col.push_back(&o3);
             realm::experimental::AllTypesObjectEmbedded e;
             e.str_col = "Rex";
-            obj.list_embedded_obj_col.push_back(&e);
-            return obj;
+            managed_obj.list_embedded_obj_col.push_back(&e);
         });
         size_t idx = 0;
-        for (auto &i: managed_obj.list_int_col) {
+        for (auto i : managed_obj.list_int_col) {
             CHECK(i == managed_obj.list_int_col[idx]);
             ++idx;
         }
@@ -190,10 +189,10 @@ TEST_CASE("list", "[list]") {
         // ensure values exist
         CHECK(managed_obj.list_obj_col.size() == 4);
 
-        CHECK_THROWS(managed_obj.list_obj_col.push_back(o5));
+        CHECK_THROWS(managed_obj.list_obj_col.push_back(&o5));
 
         realm.write([&managed_obj, &o5] {
-            managed_obj.list_obj_col.push_back(o5);
+            managed_obj.list_obj_col.push_back(&o5);
         });
 
         CHECK(managed_obj.list_obj_col.size() == 5);
@@ -258,10 +257,10 @@ TEST_CASE("list", "[list]") {
         // ensure values exist
         CHECK(managed_obj.list_embedded_obj_col.size() == 4);
 
-        CHECK_THROWS(managed_obj.list_embedded_obj_col.push_back(o5));
+        CHECK_THROWS(managed_obj.list_embedded_obj_col.push_back(&o5));
 
         realm.write([&managed_obj, &o5] {
-            managed_obj.list_embedded_obj_col.push_back(std::move(o5));
+            managed_obj.list_embedded_obj_col.push_back(&o5);
         });
 
         auto managed_o5 = managed_obj.list_embedded_obj_col[4];

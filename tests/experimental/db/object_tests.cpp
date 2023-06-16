@@ -356,13 +356,13 @@ namespace realm::experimental {
             CHECK(managed_obj.list_mixed_col[0] == realm::mixed("mixed str"));
             auto other_obj = db.objects<realm::experimental::AllTypesObjectLink>()[1];
             CHECK(managed_obj.opt_obj_col->str_col == "link object");
-            auto a = managed_obj.list_obj_col[0].str_col.value();
-            CHECK(managed_obj.list_obj_col[0].str_col == "link object 2");
+            auto a = managed_obj.list_obj_col[0]->str_col.value();
+            CHECK(managed_obj.list_obj_col[0]->str_col == "link object 2");
             CHECK(managed_obj.list_obj_col[0] == other_obj);
-            auto b = managed_obj.list_embedded_obj_col[0].str_col.value();
+            auto b = managed_obj.list_embedded_obj_col[0]->str_col.value();
             auto c = managed_obj.opt_embedded_obj_col->str_col.value();
 
-            CHECK(managed_obj.list_embedded_obj_col[0].str_col == "embedded obj2");
+            CHECK(managed_obj.list_embedded_obj_col[0]->str_col == "embedded obj2");
             CHECK(managed_obj.opt_embedded_obj_col->str_col == "embedded obj1");
             CHECK(managed_obj.list_embedded_obj_col[0] == managed_obj.list_embedded_obj_col[0]);
 
@@ -556,9 +556,9 @@ namespace realm::experimental {
                 managed_foo.list_mixed_col.push_back("mixed str");
                 o2._id = 2;
                 o2.str_col = "link object 2";
-                managed_foo.list_obj_col.push_back(o2);
+                managed_foo.list_obj_col.push_back(&o2);
                 o4.str_col = "embedded obj 2";
-                managed_foo.list_embedded_obj_col.push_back(o4);
+                managed_foo.list_embedded_obj_col.push_back(&o4);
             });
             realm.refresh();
             realm.write([&managed_foo, &realm] {
