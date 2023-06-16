@@ -20,6 +20,9 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<80, sizeof(Dictionary)>{});
     static_assert(SizeCheck<8, alignof(Dictionary)>{});
+#elif _WIN32
+    static_assert(SizeCheck<80, sizeof(Dictionary)>{});
+    static_assert(SizeCheck<8, alignof(Dictionary)>{});
 #endif
 
 #ifdef __i386__
@@ -274,8 +277,7 @@ namespace realm::internal::bridge {
                 }
             }
         } wrapper(std::move(cb));
-
-        return reinterpret_cast<Dictionary*>(&m_dictionary)->add_key_based_notification_callback(wrapper);
+        return reinterpret_cast<Dictionary *>(&m_dictionary)->add_key_based_notification_callback(wrapper);
     }
 
     obj dictionary::insert_embedded(const std::string &v) {
