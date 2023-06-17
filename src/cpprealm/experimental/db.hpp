@@ -118,13 +118,8 @@ namespace realm::experimental {
     public:
         template <typename ...Ts>
         std::tuple<managed<Ts>...> insert(const Ts&... v) {
-//            static_assert(sizeof...(managed<Ts>), "Must declare schema for T");
             std::tuple<> tpl;
             return v_add<0>(tpl, std::make_tuple(v...));
-//            return std::make_tuple((add(v), ...));
-//            for (auto& obj : v) {
-//                add(obj);
-//            }
         }
         template <typename T>
         results<T> objects()

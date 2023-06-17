@@ -296,11 +296,6 @@ namespace realm::experimental {
             auto d = obj.get_dictionary(key);
             for (auto& [k, v] : value) {
                 if (v) {
-//                    if (v->is_managed) {
-//                    d.insert(k, v->m_obj.get_key());
-//                    } if (!v->unmanaged) {
-//                        d.insert(k, internal::bridge::mixed());
-//                    } else {
                     internal::bridge::obj m_obj;
                     if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
                         auto pk = (*v).*(managed<T>::schema.primary_key().ptr);
@@ -314,7 +309,8 @@ namespace realm::experimental {
                                  o.*(std::decay_t<decltype(p)>::ptr)), ...);
                     }, managed<T, void>::schema.ps);
                     d.insert(k, m_obj.get_key());
-//                    }
+                } else {
+                    d.insert(k, internal::bridge::mixed());
                 }
             }
         }
