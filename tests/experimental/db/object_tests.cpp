@@ -291,8 +291,8 @@ namespace realm::experimental {
             obj.opt_object_id_col = object_id;
             obj.opt_binary_col = std::vector<uint8_t>({1});
 
-            obj.opt_obj_col = link1,
-            obj.opt_embedded_obj_col = embedded_obj1,
+            obj.opt_obj_col = &link1,
+            obj.opt_embedded_obj_col = &embedded_obj1,
 
             obj.list_int_col = std::vector<int64_t>({1});
             obj.list_double_col = std::vector<double>({1.23});
@@ -303,8 +303,8 @@ namespace realm::experimental {
             obj.list_binary_col = std::vector<std::vector<uint8_t>>({{1}});
             obj.list_date_col = std::vector<std::chrono::time_point<std::chrono::system_clock>>({date});
             obj.list_mixed_col = std::vector<realm::mixed>({realm::mixed("mixed str")});
-            obj.list_obj_col = std::vector<link<AllTypesObjectLink>>({std::move(link2)});
-            obj.list_embedded_obj_col = std::vector<link<AllTypesObjectEmbedded>>({embedded_obj2});
+            obj.list_obj_col = std::vector<AllTypesObjectLink*>({&link2});
+            obj.list_embedded_obj_col = std::vector<AllTypesObjectEmbedded*>({&embedded_obj2});
 
             obj.map_int_col = std::map<std::string, int64_t>({{"foo", 1}});
             obj.map_double_col = std::map<std::string, double>({{"foo", 1.23}});
@@ -316,8 +316,8 @@ namespace realm::experimental {
             obj.map_date_col = std::map<std::string, std::chrono::time_point<std::chrono::system_clock>>({{"foo", date}});
             obj.map_enum_col = std::map<std::string, AllTypesObject::Enum>({{"foo", AllTypesObject::Enum::one}});
             obj.map_mixed_col = std::map<std::string, realm::mixed>({{"foo", realm::mixed("bar")}});
-            obj.map_link_col = std::map<std::string, std::optional<link<AllTypesObjectLink>>>({{"foo", link3}});
-            obj.map_embedded_col = std::map<std::string, std::optional<link<AllTypesObjectEmbedded>>>({{"foo", embedded_obj3}});
+            obj.map_link_col = std::map<std::string, AllTypesObjectLink*>({{"foo", &link3}});
+            obj.map_embedded_col = std::map<std::string, AllTypesObjectEmbedded*>({{"foo", &embedded_obj3}});
 
             experimental::db db = experimental::open(path);
             auto managed_obj = db.write([&obj, &db]() {
@@ -356,13 +356,13 @@ namespace realm::experimental {
             CHECK(managed_obj.list_mixed_col[0] == realm::mixed("mixed str"));
             auto other_obj = db.objects<realm::experimental::AllTypesObjectLink>()[1];
             CHECK(managed_obj.opt_obj_col->str_col == "link object");
-            auto a = managed_obj.list_obj_col[0].str_col.value();
-            CHECK(managed_obj.list_obj_col[0].str_col == "link object 2");
+            auto a = managed_obj.list_obj_col[0]->str_col.value();
+            CHECK(managed_obj.list_obj_col[0]->str_col == "link object 2");
             CHECK(managed_obj.list_obj_col[0] == other_obj);
-            auto b = managed_obj.list_embedded_obj_col[0].str_col.value();
+            auto b = managed_obj.list_embedded_obj_col[0]->str_col.value();
             auto c = managed_obj.opt_embedded_obj_col->str_col.value();
 
-            CHECK(managed_obj.list_embedded_obj_col[0].str_col == "embedded obj2");
+            CHECK(managed_obj.list_embedded_obj_col[0]->str_col == "embedded obj2");
             CHECK(managed_obj.opt_embedded_obj_col->str_col == "embedded obj1");
             CHECK(managed_obj.list_embedded_obj_col[0] == managed_obj.list_embedded_obj_col[0]);
 
@@ -374,12 +374,12 @@ namespace realm::experimental {
             CHECK(managed_obj.map_date_col["foo"] == date);
             CHECK(managed_obj.map_uuid_col["foo"] == uuid);
             CHECK(managed_obj.map_mixed_col["foo"] == "bar");
-            CHECK((*managed_obj.map_link_col["foo"]).value()->str_col == "link object 3");
+            CHECK(managed_obj.map_link_col["foo"]->str_col == "link object 3");
             auto other_obj2 = db.objects<realm::experimental::AllTypesObjectLink>()[2];
             auto other_obj3 = db.objects<realm::experimental::AllTypesObject>()[0];
-            CHECK(*managed_obj.map_link_col["foo"] == other_obj2);
-            std::optional<link<AllTypesObjectEmbedded>> map_embedded_col = *other_obj3.map_embedded_col["foo"];
-            CHECK(*managed_obj.map_embedded_col["foo"] == map_embedded_col);
+            CHECK(managed_obj.map_link_col["foo"] == other_obj2);
+            auto map_embedded_col = other_obj3.map_embedded_col["foo"];
+            CHECK(managed_obj.map_embedded_col["foo"] == map_embedded_col);
 
             auto allTypeObjects = db.objects<AllTypesObject>();
             managed<AllTypesObjectLink> allTypeObjectLink = db.objects<AllTypesObjectLink>().where([](auto& o) {
@@ -484,10 +484,10 @@ namespace realm::experimental {
                         } else if (prop_change.name == "opt_binary_col" && prop_change.new_value) {
                             CHECK(std::get<std::optional<std::vector<uint8_t>>>(*prop_change.new_value) == std::vector<uint8_t>({1}));
                         } else if (prop_change.name == "opt_obj_col" && prop_change.new_value) {
-                            auto obj = std::get<link<AllTypesObjectLink>>(*prop_change.new_value);
+                            auto obj = std::get<managed<AllTypesObjectLink*>>(*prop_change.new_value);
                             CHECK((obj->str_col) == "link object");
                         } else if (prop_change.name == "opt_embedded_obj_col" && prop_change.new_value) {
-                            auto obj = std::get<link<AllTypesObjectEmbedded>>(*prop_change.new_value);
+                            auto obj = std::get<managed<AllTypesObjectEmbedded*>>(*prop_change.new_value);
                             CHECK((obj->str_col) == "embedded obj");
                         } else if (prop_change.name == "list_int_col" && prop_change.new_value) {
                             auto obj = std::get<std::vector<int64_t>>(*prop_change.new_value);
@@ -512,10 +512,10 @@ namespace realm::experimental {
                             auto obj = std::get<std::vector<realm::mixed>>(*prop_change.new_value);
                             CHECK(obj.size() == 0);
                         } else if (prop_change.name == "list_obj_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<link<AllTypesObjectLink>>>(*prop_change.new_value);
+                            auto obj = std::get<std::vector<AllTypesObjectLink*>>(*prop_change.new_value);
                             CHECK(obj.size() == 0);
                         } else if (prop_change.name == "list_embedded_obj_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<link<AllTypesObjectEmbedded>>>(*prop_change.new_value);
+                            auto obj = std::get<std::vector<AllTypesObjectEmbedded*>>(*prop_change.new_value);
                             CHECK(obj.size() == 0);
                         }
                     }
@@ -543,9 +543,9 @@ namespace realm::experimental {
                 managed_foo.opt_binary_col = std::vector<uint8_t>({1});
                 o._id = 1;
                 o.str_col = "link object";
-                managed_foo.opt_obj_col = std::move(o);
+                managed_foo.opt_obj_col = &o;
                 o3.str_col = "embedded obj";
-                managed_foo.opt_embedded_obj_col = std::move(o3);
+                managed_foo.opt_embedded_obj_col = &o3;
 
                 managed_foo.list_int_col.push_back(1);
                 managed_foo.list_bool_col.push_back(true);
@@ -556,9 +556,9 @@ namespace realm::experimental {
                 managed_foo.list_mixed_col.push_back("mixed str");
                 o2._id = 2;
                 o2.str_col = "link object 2";
-                managed_foo.list_obj_col.push_back(o2);
+                managed_foo.list_obj_col.push_back(&o2);
                 o4.str_col = "embedded obj 2";
-                managed_foo.list_embedded_obj_col.push_back(o4);
+                managed_foo.list_embedded_obj_col.push_back(&o4);
             });
             realm.refresh();
             realm.write([&managed_foo, &realm] {
@@ -577,8 +577,8 @@ namespace realm::experimental {
             o.str_col = "bar";
             AllTypesObjectEmbedded o2;
             o2.str_col = "embedded bar";
-            foo.opt_obj_col = o;
-            foo.opt_embedded_obj_col = o2;
+            foo.opt_obj_col = &o;
+            foo.opt_embedded_obj_col = &o2;
 
             auto managed_obj = realm.write([&foo, &realm] {
                 return realm.add(std::move(foo));

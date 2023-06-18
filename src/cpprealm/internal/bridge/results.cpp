@@ -101,4 +101,8 @@ namespace realm::internal::bridge {
         } ccb(std::move(cb));
         return reinterpret_cast<Results*>(&m_results)->add_notification_callback(ccb);
     }
+
+    results::results(const realm &realm, const table_view &tv) {
+        new (&m_results) Results(realm, tv);
+    }
 }

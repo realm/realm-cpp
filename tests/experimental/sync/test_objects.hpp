@@ -56,8 +56,8 @@ namespace realm::experimental {
         std::optional<realm::uuid> opt_uuid_col;
         std::optional<realm::object_id> opt_object_id_col;
         std::optional<std::vector<uint8_t>> opt_binary_col;
-        link<AllTypesObjectLink> opt_obj_col;
-        link<AllTypesObjectEmbedded> opt_embedded_obj_col;
+        AllTypesObjectLink* opt_obj_col;
+        AllTypesObjectEmbedded* opt_embedded_obj_col;
 
         std::vector<int64_t> list_int_col;
         std::vector<double> list_double_col;
@@ -68,8 +68,8 @@ namespace realm::experimental {
         std::vector<std::vector<std::uint8_t>> list_binary_col;
         std::vector<std::chrono::time_point<std::chrono::system_clock>> list_date_col;
         std::vector<realm::mixed> list_mixed_col;
-        std::vector<link<AllTypesObjectLink>> list_obj_col;
-        std::vector<link<AllTypesObjectEmbedded>> list_embedded_obj_col;
+        std::vector<AllTypesObjectLink*> list_obj_col;
+        std::vector<AllTypesObjectEmbedded*> list_embedded_obj_col;
 
         std::map<std::string, int64_t> map_int_col;
         std::map<std::string, double> map_double_col;
@@ -82,8 +82,8 @@ namespace realm::experimental {
         std::map<std::string, Enum> map_enum_col;
         std::map<std::string, realm::mixed> map_mixed_col;
 
-        std::map<std::string, std::optional<link<AllTypesObjectLink>>> map_link_col;
-        std::map<std::string, std::optional<link<AllTypesObjectEmbedded>>> map_embedded_col;
+        std::map<std::string, AllTypesObjectLink*> map_link_col;
+        std::map<std::string, AllTypesObjectEmbedded*> map_embedded_col;
     };
 
     REALM_SCHEMA(AllTypesObject,
@@ -139,7 +139,7 @@ namespace realm::experimental {
         std::optional<realm::uuid> opt_uuid_col;
         std::optional<realm::object_id> opt_object_id_col;
         std::optional<std::vector<uint8_t>> opt_binary_col;
-        link<EmbeddedFoo> opt_embedded_obj_col;
+        EmbeddedFoo* opt_embedded_obj_col;
 
         std::vector<int64_t> list_int_col;
         std::vector<double> list_double_col;
@@ -150,7 +150,7 @@ namespace realm::experimental {
         std::vector<std::vector<std::uint8_t>> list_binary_col;
         std::vector<std::chrono::time_point<std::chrono::system_clock>> list_date_col;
         std::vector<realm::mixed> list_mixed_col;
-        std::vector<link<EmbeddedFoo>> list_embedded_obj_col;
+        std::vector<EmbeddedFoo*> list_embedded_obj_col;
 
         std::map<std::string, int64_t> map_int_col;
         std::map<std::string, double> map_double_col;
@@ -163,7 +163,7 @@ namespace realm::experimental {
         std::map<std::string, Enum> map_enum_col;
         std::map<std::string, realm::mixed> map_mixed_col;
 
-        std::map<std::string, std::optional<link<EmbeddedFoo>>> map_embedded_col;
+        std::map<std::string, EmbeddedFoo*> map_embedded_col;
     };
 
     REALM_ASYMMETRIC_SCHEMA(AllTypesAsymmetricObject,

@@ -24,6 +24,7 @@ namespace realm::internal::bridge {
         ~results();
 
         results(const Results&); //NOLINT(google-explicit-constructor)
+        results(const realm&, const table_view&);
         size_t size();
         [[nodiscard]] realm get_realm() const;
         [[nodiscard]] table get_table() const;

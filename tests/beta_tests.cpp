@@ -1,155 +1,186 @@
-//#include "main.hpp"
-//#include <cpprealm/experimental/db.hpp>
-//#include <cpprealm/experimental/observation.hpp>
-//#include "admin_utils.hpp"
-//#include "sync_test_utils.hpp"
-//
-//using namespace realm;
-//
-//namespace realm::experimental {
-//
-//    struct Dog {
-//        primary_key<int64_t> _id;
-//        std::string name;
-//        std::string name2;
-//        std::string name3;
-//        int64_t foo2 = 0;
-//        std::string name4;
-//
-//        int64_t age = 0;
-//    };
-//    REALM_SCHEMA(Dog,
-//                 _id,
-//                 name,
-//                 name2,
-//                 name3,
-//                 foo2,
-//                 name4,
-//                 age)
-//
-//    struct Person {
-//        primary_key<int64_t> _id;
-//        std::string name;
-//        int64_t age = 0;
-//        link<Dog> dog;
-//
-//    };
-//    REALM_SCHEMA(Person, _id, name, age, dog)
-//
-//    struct AllTypesObjectEmbedded {
-//        int64_t _id;
-//        std::string str_col;
-//    };
-//    REALM_EMBEDDED_SCHEMA(AllTypesObjectEmbedded, _id, str_col)
-//    struct AllTypesObjectLink {
-//        primary_key<int64_t> _id;
-//        std::string str_col;
-//    };
-//    REALM_SCHEMA(AllTypesObjectLink, _id, str_col)
-//
-//    struct AllTypes {
-//        enum class Enum {
-//            one, two
-//        };
-//
-//        primary_key<int64_t> _id;
-//        double double_col;
-//        bool bool_col;
-//        std::string str_col;
-//        std::string str_col2;
-//
-//        Enum enum_col = Enum::one;
-//        std::chrono::time_point<std::chrono::system_clock> date_col;
-//        realm::uuid uuid_col;
-//        realm::object_id object_id_col;
-//        std::vector<std::uint8_t> binary_col;
-//        using my_mixed = std::variant<
-//                std::monostate,
-//                int64_t,
-//                bool,
-//                std::string,
-//                double,
-//                std::chrono::time_point<std::chrono::system_clock>,
-//                realm::uuid,
-//                realm::object_id,
-//                std::vector<uint8_t>
-//                >;
-//        my_mixed mixed_col;
-//
-//        std::optional<int64_t> opt_int_col;
-//        std::optional<double> opt_double_col;
-//        std::optional<std::string> opt_str_col;
-//        std::optional<bool> opt_bool_col;
-//        std::optional<Enum> opt_enum_col;
-//        std::optional<std::chrono::time_point<std::chrono::system_clock>> opt_date_col;
-//        std::optional<realm::uuid> opt_uuid_col;
-//        std::optional<realm::object_id> opt_object_id_col;
-//        std::optional<std::vector<uint8_t>> opt_binary_col;
-//        link<AllTypesObjectLink> opt_obj_col;
-//        link<AllTypesObjectEmbedded> opt_embedded_obj_col;
-//
-//        std::vector<int64_t> list_int_col;
-//        std::vector<double> list_double_col;
-//        std::vector<bool> list_bool_col;
-//        std::vector<std::string> list_str_col;
-//        std::vector<realm::uuid> list_uuid_col;
-//        std::vector<realm::object_id> list_object_id_col;
-//        std::vector<std::vector<std::uint8_t>> list_binary_col;
-//        std::vector<std::chrono::time_point<std::chrono::system_clock>> list_date_col;
-//        std::vector<realm::mixed> list_mixed_col;
-//        std::vector<link<AllTypesObjectLink>> list_obj_col;
-//        std::vector<link<AllTypesObjectEmbedded>> list_embedded_obj_col;
-//
-////        std::vector<std::optional<int64_t>> list_opt_int_col;
-////        std::vector<std::optional<double>> list_opt_double_col;
-////        std::vector<std::optional<bool>> list_opt_bool_col;
-////        std::vector<std::optional<std::string>> list_opt_str_col;
-////        std::vector<std::optional<realm::uuid>> list_opt_uuid_col;
-////        std::vector<std::optional<realm::object_id>> list_opt_object_id_col;
-////        std::vector<std::optional<std::vector<std::uint8_t>>> list_opt_binary_col;
-////        std::vector<std::optional<std::chrono::time_point<std::chrono::system_clock>>> list_opt_date_col;
-//
-//        std::map<std::string, int64_t> map_int_col;
-//        std::map<std::string, double> map_double_col;
-//        std::map<std::string, bool> map_bool_col;
-//        std::map<std::string, std::string> map_str_col;
-//        std::map<std::string, realm::uuid> map_uuid_col;
-//        std::map<std::string, realm::object_id> map_object_id_col;
-//        std::map<std::string, std::vector<std::uint8_t>> map_binary_col;
-//        std::map<std::string, std::chrono::time_point<std::chrono::system_clock>> map_date_col;
-//        std::map<std::string, Enum> map_enum_col;
-//        std::map<std::string, realm::mixed> map_mixed_col;
-//
-////        std::map<std::string, std::optional<int64_t>> map_opt_int_col;
-////        std::map<std::string, std::optional<double>> map_opt_double_col;
-////        std::map<std::string, std::optional<bool>> map_opt_bool_col;
-////        std::map<std::string, std::optional<std::string>> map_opt_str_col;
-////        std::map<std::string, std::optional<realm::uuid>> map_opt_uuid_col;
-////        std::map<std::string, std::optional<realm::object_id>> map_opt_object_id_col;
-////        std::map<std::string, std::optional<std::vector<uint8_t>>> map_opt_binary_col;
-////        std::map<std::string, std::optional<std::chrono::time_point<std::chrono::system_clock>>> map_opt_date_col;
-////        std::map<std::string, std::optional<Enum>> map_opt_enum_col;
-//
-//        std::map<std::string, std::optional<link<AllTypesObjectLink>>> map_link_col;
-//        std::map<std::string, std::optional<link<AllTypesObjectEmbedded>>> map_embedded_col;
-//    };
-//
-//    REALM_SCHEMA(AllTypes,
-//                 _id, double_col, bool_col, str_col, enum_col, date_col, uuid_col, object_id_col, binary_col, mixed_col,
-//                 opt_int_col, opt_double_col, opt_str_col, opt_bool_col, opt_enum_col,
-//                 opt_date_col, opt_uuid_col, opt_object_id_col, opt_binary_col, opt_obj_col, opt_embedded_obj_col,
-//                 list_int_col, list_double_col, list_bool_col, list_str_col, list_uuid_col, list_object_id_col, list_binary_col,
-//                 list_date_col, list_mixed_col, list_obj_col, list_embedded_obj_col,
-////                 list_opt_int_col, list_opt_double_col, list_opt_bool_col, list_opt_str_col,
-////                 list_opt_uuid_col, list_opt_object_id_col, list_opt_binary_col, list_opt_date_col,
-//                 map_int_col, map_double_col, map_bool_col, map_str_col, map_uuid_col, map_object_id_col, map_binary_col,
-//                 map_date_col, map_enum_col, map_mixed_col, map_link_col, map_embedded_col
-//
-////                 map_opt_int_col, map_opt_double_col, map_opt_bool_col, map_opt_str_col, map_opt_uuid_col,
-////                 map_opt_object_id_col, map_opt_binary_col, map_opt_date_col, map_opt_enum_col
-//                 )
-//}
-//
+#include "main.hpp"
+#include <cpprealm/experimental/db.hpp>
+#include <cpprealm/experimental/observation.hpp>
+#include "admin_utils.hpp"
+#include "sync_test_utils.hpp"
+
+using namespace realm;
+
+namespace realm::experimental {
+    struct Dog;
+    struct Person {
+        primary_key<int64_t> _id;
+        std::string name;
+        int64_t age = 0;
+        Dog* dog;
+    };
+    REALM_SCHEMA(Person, _id, name, age, dog)
+    struct Dog {
+        primary_key<int64_t> _id;
+        std::string name;
+        std::string name2;
+        std::string name3;
+        int64_t foo2 = 0;
+        std::string name4;
+
+        int64_t age = 0;
+        linking_objects<&Person::dog> owners;
+    };
+    REALM_SCHEMA(Dog,
+                 _id,
+                 name,
+                 name2,
+                 name3,
+                 foo2,
+                 name4,
+                 age,
+                 owners)
+
+    struct AllTypesObjectEmbedded {
+        int64_t _id;
+        std::string str_col;
+    };
+    REALM_EMBEDDED_SCHEMA(AllTypesObjectEmbedded, _id, str_col)
+    struct AllTypesObjectLink {
+        primary_key<int64_t> _id;
+        std::string str_col;
+    };
+    REALM_SCHEMA(AllTypesObjectLink, _id, str_col)
+
+    struct AllTypes {
+        enum class Enum {
+            one, two
+        };
+
+        primary_key<int64_t> _id;
+        double double_col;
+        bool bool_col;
+        std::string str_col;
+        std::string str_col2;
+
+        Enum enum_col = Enum::one;
+        std::chrono::time_point<std::chrono::system_clock> date_col;
+        realm::uuid uuid_col;
+        realm::object_id object_id_col;
+        std::vector<std::uint8_t> binary_col;
+        using my_mixed = std::variant<
+                std::monostate,
+                int64_t,
+                bool,
+                std::string,
+                double,
+                std::chrono::time_point<std::chrono::system_clock>,
+                realm::uuid,
+                realm::object_id,
+                std::vector<uint8_t>
+                >;
+        my_mixed mixed_col;
+
+        std::optional<int64_t> opt_int_col;
+        std::optional<double> opt_double_col;
+        std::optional<std::string> opt_str_col;
+        std::optional<bool> opt_bool_col;
+        std::optional<Enum> opt_enum_col;
+        std::optional<std::chrono::time_point<std::chrono::system_clock>> opt_date_col;
+        std::optional<realm::uuid> opt_uuid_col;
+        std::optional<realm::object_id> opt_object_id_col;
+        std::optional<std::vector<uint8_t>> opt_binary_col;
+        AllTypesObjectLink* opt_obj_col;
+        AllTypesObjectEmbedded* opt_embedded_obj_col;
+
+        std::vector<int64_t> list_int_col;
+        std::vector<double> list_double_col;
+        std::vector<bool> list_bool_col;
+        std::vector<std::string> list_str_col;
+        std::vector<realm::uuid> list_uuid_col;
+        std::vector<realm::object_id> list_object_id_col;
+        std::vector<std::vector<std::uint8_t>> list_binary_col;
+        std::vector<std::chrono::time_point<std::chrono::system_clock>> list_date_col;
+        std::vector<realm::mixed> list_mixed_col;
+        std::vector<AllTypesObjectLink*> list_obj_col;
+        std::vector<AllTypesObjectEmbedded*> list_embedded_obj_col;
+
+//        std::vector<std::optional<int64_t>> list_opt_int_col;
+//        std::vector<std::optional<double>> list_opt_double_col;
+//        std::vector<std::optional<bool>> list_opt_bool_col;
+//        std::vector<std::optional<std::string>> list_opt_str_col;
+//        std::vector<std::optional<realm::uuid>> list_opt_uuid_col;
+//        std::vector<std::optional<realm::object_id>> list_opt_object_id_col;
+//        std::vector<std::optional<std::vector<std::uint8_t>>> list_opt_binary_col;
+//        std::vector<std::optional<std::chrono::time_point<std::chrono::system_clock>>> list_opt_date_col;
+
+        std::map<std::string, int64_t> map_int_col;
+        std::map<std::string, double> map_double_col;
+        std::map<std::string, bool> map_bool_col;
+        std::map<std::string, std::string> map_str_col;
+        std::map<std::string, realm::uuid> map_uuid_col;
+        std::map<std::string, realm::object_id> map_object_id_col;
+        std::map<std::string, std::vector<std::uint8_t>> map_binary_col;
+        std::map<std::string, std::chrono::time_point<std::chrono::system_clock>> map_date_col;
+        std::map<std::string, Enum> map_enum_col;
+        std::map<std::string, realm::mixed> map_mixed_col;
+
+//        std::map<std::string, std::optional<int64_t>> map_opt_int_col;
+//        std::map<std::string, std::optional<double>> map_opt_double_col;
+//        std::map<std::string, std::optional<bool>> map_opt_bool_col;
+//        std::map<std::string, std::optional<std::string>> map_opt_str_col;
+//        std::map<std::string, std::optional<realm::uuid>> map_opt_uuid_col;
+//        std::map<std::string, std::optional<realm::object_id>> map_opt_object_id_col;
+//        std::map<std::string, std::optional<std::vector<uint8_t>>> map_opt_binary_col;
+//        std::map<std::string, std::optional<std::chrono::time_point<std::chrono::system_clock>>> map_opt_date_col;
+//        std::map<std::string, std::optional<Enum>> map_opt_enum_col;
+
+        std::map<std::string, AllTypesObjectLink*> map_link_col;
+        std::map<std::string, AllTypesObjectEmbedded*> map_embedded_col;
+    };
+
+    REALM_SCHEMA(AllTypes,
+                 _id, double_col, bool_col, str_col, enum_col, date_col, uuid_col, object_id_col, binary_col, mixed_col,
+                 opt_int_col, opt_double_col, opt_str_col, opt_bool_col, opt_enum_col,
+                 opt_date_col, opt_uuid_col, opt_object_id_col, opt_binary_col, opt_obj_col, opt_embedded_obj_col,
+                 list_int_col, list_double_col, list_bool_col, list_str_col, list_uuid_col, list_object_id_col, list_binary_col,
+                 list_date_col, list_mixed_col, list_obj_col, list_embedded_obj_col,
+//                 list_opt_int_col, list_opt_double_col, list_opt_bool_col, list_opt_str_col,
+//                 list_opt_uuid_col, list_opt_object_id_col, list_opt_binary_col, list_opt_date_col,
+                 map_int_col, map_double_col, map_bool_col, map_str_col, map_uuid_col, map_object_id_col, map_binary_col,
+                 map_date_col, map_enum_col, map_mixed_col, map_link_col, map_embedded_col
+
+//                 map_opt_int_col, map_opt_double_col, map_opt_bool_col, map_opt_str_col, map_opt_uuid_col,
+//                 map_opt_object_id_col, map_opt_binary_col, map_opt_date_col, map_opt_enum_col
+                 )
+}
+
+TEST_CASE("experimental", "[experimental]") {
+    SECTION("write return multiple") {
+        realm_path path;
+        experimental::db db = experimental::open(path);
+        experimental::managed<experimental::Person> managed_person = db.write([&db]() {
+            experimental::Person person;
+            person.name = "Jack";
+            person.age = 27;
+            experimental::Dog dog;
+            dog.name = "fido";
+            person.dog = &dog;
+
+            return db.add(std::move(person));
+        });
+        auto blah = std::string();
+        db.write([&managed_person] {
+            managed_person.name = "Jim";
+        });
+        CHECK(managed_person.name.value() == "Jim");
+
+        db.write([&managed_person] {
+            managed_person.name = "Meghna";
+        });
+
+        CHECK(managed_person.name.value() == "Meghna");
+        CHECK(managed_person.dog->name == "fido");
+        CHECK(managed_person.dog->owners[0].name == "Meghna");
+        CHECK(managed_person.dog->owners.size() == 1);
+    }
+}
+
 //TEST_CASE("experimental", "[experimental]") {
 //    SECTION("write return multiple") {
 //        realm_path path;
@@ -346,6 +377,76 @@
 //        CHECK(objs.size() == 2);
 //
 //    }
+
+TEST_CASE("links") {
+    realm_path path;
+    experimental::db db = experimental::open(path);
+    SECTION("null check") {
+        experimental::Dog dog;
+        dog.name = "fido";
+
+        experimental::managed<experimental::Person> managed_person = db.write([&db]() {
+            experimental::Person person;
+            person.name = "Jack";
+            person.age = 27;
+            person.dog = nullptr;
+            return db.add(std::move(person));
+        });
+
+        CHECK(managed_person.dog == nullptr);
+        db.write([&managed_person, &dog]() {
+           managed_person.dog = &dog;
+        });
+        CHECK(managed_person.dog->name == "fido");
+        db.write([&managed_person]() {
+            managed_person.dog = nullptr;
+        });
+        CHECK(managed_person.dog == nullptr);
+    }
+}
+
+TEST_CASE("backlinks") {
+    realm_path path;
+    experimental::db db = experimental::open(path);
+    SECTION("size check") {
+        experimental::Dog dog;
+        dog.name = "fido";
+
+        auto [jack, jill] = db.write([&db]() {
+            experimental::Person person;
+            person.name = "Jack";
+            person.age = 27;
+            person.dog = nullptr;
+            experimental::Person person2;
+            person2.name = "Jill";
+            person2.age = 28;
+            person2.dog = nullptr;
+            return db.insert(person, person2);
+        });
+        CHECK(jack.dog == nullptr);
+        db.write([&dog, jack = &jack]() {
+            jack->dog = &dog;
+        });
+        CHECK(jack.dog->name == "fido");
+        CHECK(jack.dog->owners.size() == 1);
+        db.write([&dog, jill = &jill]() {
+            jill->dog = &dog;
+        });
+        CHECK(jill.dog->name == "fido");
+        CHECK(jill.dog->owners.size() == 2);
+        CHECK(jack.dog->owners.size() == 2);
+        db.write([jack = &jack]() {
+            jack->dog = nullptr;
+        });
+        CHECK(jack.dog == nullptr);
+        CHECK(jill.dog->owners.size() == 1);
+        db.write([jill = &jill]() {
+            jill->dog = nullptr;
+        });
+        CHECK(db.objects<experimental::Dog>()[0].owners.size() == 0);
+    }
+}
+
 //}
 //
 //TEST_CASE("object_initialization_beta") {

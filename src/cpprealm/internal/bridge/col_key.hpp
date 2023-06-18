@@ -18,6 +18,7 @@ namespace realm::internal::bridge {
         col_key(int64_t); //NOLINT(google-explicit-constructor)
         col_key(const ColKey&); //NOLINT(google-explicit-constructor)
         operator ColKey() const; //NOLINT(google-explicit-constructor)
+        operator bool() const;
         [[nodiscard]] int64_t value() const;
     private:
 #ifdef __i386__

@@ -10,6 +10,56 @@ namespace realm::experimental {
 
     template<typename T>
     struct managed<std::vector<T>, std::enable_if_t<internal::type_info::is_primitive<T>::value>> : managed_base {
+        class iterator {
+        public:
+            using iterator_category = std::input_iterator_tag;
+
+            bool operator!=(const iterator& other) const
+            {
+                return !(*this == other);
+            }
+
+            bool operator==(const iterator& other) const
+            {
+                return (m_parent == other.m_parent) && (m_i == other.m_i);
+            }
+
+            T operator*() const noexcept
+            {
+                return (*m_parent)[m_i];
+            }
+
+            iterator& operator++()
+            {
+                this->m_i++;
+                return *this;
+            }
+
+            const iterator& operator++(int i)
+            {
+                this->m_i += i;
+                return *this;
+            }
+        private:
+            template<typename, typename>
+            friend struct managed;
+
+            iterator(size_t i, managed<std::vector<T>>* parent)
+                : m_i(i), m_parent(parent)
+            {
+            }
+            size_t m_i;
+            managed<std::vector<T>>* m_parent;
+        };
+        iterator begin()
+        {
+            return iterator(0, this);
+        }
+
+        iterator end()
+        {
+            return iterator(size(), this);
+        }
         [[nodiscard]] std::vector<T> value() const {
             // unused
             return std::vector<T>();
@@ -63,10 +113,10 @@ namespace realm::experimental {
     };
 
     template<typename T>
-    struct managed<std::vector<link<T>>> : managed_base {
-        [[nodiscard]] std::vector<link<T>> value() const {
+    struct managed<std::vector<T*>> : managed_base {
+        [[nodiscard]] std::vector<T*> value() const {
             // unused
-            return std::vector<link<T>>();
+            return std::vector<T*>();
         }
 
         void pop_back() {
@@ -78,13 +128,13 @@ namespace realm::experimental {
         void clear() {
             internal::bridge::list(*m_realm, *m_obj, m_key).remove_all();
         }
-        void push_back(const T& value)
+        void push_back(T* value)
         {
             auto list = internal::bridge::list(*m_realm, *m_obj, m_key);
             auto table = m_obj->get_target_table(m_key);
             internal::bridge::obj m_obj;
             if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
-                auto pk = value.*(managed<T>::schema.primary_key().ptr);
+                auto pk = (*value).*(managed<T>::schema.primary_key().ptr);
                 m_obj = table.create_object_with_primary_key(serialize(pk.value));
             } else if (managed<T>::schema.is_embedded_experimental()) {
                 m_obj = list.add_embedded();
@@ -94,12 +144,22 @@ namespace realm::experimental {
             std::apply([&m_obj, &value](auto && ...p) {
                 (accessor<typename std::decay_t<decltype(p)>::Result>::set(
                          m_obj, m_obj.get_table().get_column_key(p.name),
-                         value.*(std::decay_t<decltype(p)>::ptr)), ...);
+                         (*value).*(std::decay_t<decltype(p)>::ptr)), ...);
             }, managed<T, void>::schema.ps);
             if (!managed<T>::schema.is_embedded_experimental()) {
                 list.add(m_obj.get_key());
             }
         }
+        void push_back(const managed<T>& value)
+        {
+            auto list = internal::bridge::list(*m_realm, *m_obj, m_key);
+            if (!managed<T>::schema.is_embedded_experimental()) {
+                list.add(value.m_obj.get_key());
+            } else {
+                throw std::logic_error("Cannot add existing embedded object to managed list.");
+            }
+        }
+
         size_t size()
         {
             return internal::bridge::list(*m_realm, *m_obj, m_key).size();
@@ -107,8 +167,10 @@ namespace realm::experimental {
         size_t find(const managed<T>& a) {
             return internal::bridge::list(*m_realm, *m_obj, m_key).find(a.m_obj.get_key());
         }
-
-        managed<T> operator[](size_t idx) const {
+        size_t find(const typename managed<T*>::ref_type& a) const {
+            return internal::bridge::list(*m_realm, *m_obj, m_key).find(a->m_obj.get_key());
+        }
+        typename managed<T*>::ref_type operator[](size_t idx) const {
             auto list = realm::internal::bridge::list(*m_realm, *m_obj, m_key);
             managed<T> m(realm::internal::bridge::get<realm::internal::bridge::obj>(list, idx), *m_realm);
             std::apply([&m](auto &&...ptr) {
@@ -116,7 +178,7 @@ namespace realm::experimental {
                     ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
                 }, managed<T>::managed_pointers_names);
             }, managed<T>::managed_pointers());
-            return m;
+            return {std::move(m)};
         }
     };
 } // namespace realm::experimental

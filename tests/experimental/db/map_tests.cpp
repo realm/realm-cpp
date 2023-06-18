@@ -35,10 +35,10 @@ TEST_CASE("map", "[map]") {
                 {"a", std::chrono::system_clock::now()}
         };
         obj.map_link_col = {
-                {"a", link}
+                {"a", &link}
         };
         obj.map_embedded_col = {
-                {"a", embedded}
+                {"a", &embedded}
         };
         CHECK(obj.map_int_col["a"] == 42);
         CHECK(obj.map_str_col["a"] == "foo");
@@ -59,11 +59,11 @@ TEST_CASE("map", "[map]") {
         auto managed_link = realm.objects<experimental::AllTypesObjectLink>()[0];
         auto res = realm.objects<experimental::AllTypesObject>()[0];
         CHECK(managed_obj.map_link_col["a"] == managed_link);
-        CHECK(managed_obj.map_embedded_col["a"] == *res.map_embedded_col["a"]);
+        CHECK(managed_obj.map_embedded_col["a"] == res.map_embedded_col["a"]);
 
 
-        CHECK((*(*managed_obj.map_link_col["a"]))->str_col == "foo");
-        CHECK((*(*managed_obj.map_embedded_col["a"]))->str_col == "bar");
+        CHECK(managed_obj.map_link_col["a"]->str_col == "foo");
+        CHECK(managed_obj.map_embedded_col["a"]->str_col == "bar");
 
         auto link2 = experimental::AllTypesObjectLink();
         link2.str_col = "foo";
@@ -77,8 +77,8 @@ TEST_CASE("map", "[map]") {
             managed_obj.map_enum_col["b"] = experimental::AllTypesObject::Enum::two;
             managed_obj.map_uuid_col["b"] = realm::uuid();
             managed_obj.map_binary_col["b"] = std::vector<uint8_t>{3,4,5};
-            managed_obj.map_link_col["b"] = link2;
-            managed_obj.map_embedded_col["b"] = embedded2;
+            managed_obj.map_link_col["b"] = &link2;
+            managed_obj.map_embedded_col["b"] = &embedded2;
         });
         CHECK(managed_obj.map_int_col["a"] == 42);
         CHECK(managed_obj.map_int_col["b"] == 84);
@@ -96,16 +96,16 @@ TEST_CASE("map", "[map]") {
 //        CHECK(managed_obj.map_embedded_col["a"] == embedded);
 //        CHECK(managed_obj.map_link_col["b"] == link2);
 //        CHECK(managed_obj.map_embedded_col["b"] == embedded2);
-        CHECK((*(*managed_obj.map_link_col["b"]))->str_col == "foo");
-        CHECK((*(*managed_obj.map_embedded_col["b"]))->str_col == "bar");
+        CHECK(managed_obj.map_link_col["b"]->str_col == "foo");
+        CHECK(managed_obj.map_embedded_col["b"]->str_col == "bar");
 
         realm.write([&managed_obj] {
-            managed_obj.map_link_col["b"] = std::nullopt;
-            managed_obj.map_embedded_col["b"] = std::nullopt;
+            managed_obj.map_link_col["b"] = nullptr;
+            managed_obj.map_embedded_col["b"] = nullptr;
         });
 
-        CHECK(obj.map_link_col["b"] == std::nullopt);
-        CHECK(obj.map_embedded_col["b"] == std::nullopt);
+        CHECK(obj.map_link_col["b"] == nullptr);
+        CHECK(obj.map_embedded_col["b"] == nullptr);
     }
 
     SECTION("unmanaged_managed_map_iter", "[mixed]") {

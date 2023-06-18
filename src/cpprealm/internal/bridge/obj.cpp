@@ -2,7 +2,7 @@
 
 #include <realm/dictionary.hpp>
 #include <realm/list.hpp>
-//#include <realm/obj.hpp>
+#include <realm/table_view.hpp>
 
 #include <realm/object-store/object_store.hpp>
 #include <realm/object-store/shared_realm.hpp>
@@ -349,7 +349,9 @@ namespace realm::internal::bridge {
     obj obj::create_and_set_linked_object(const col_key &v) {
         return reinterpret_cast<Obj*>(&m_obj)->create_and_set_linked_object(v);
     }
-    
+    table_view obj::get_backlink_view(table table, col_key col_key) {
+        return reinterpret_cast<Obj*>(&m_obj)->get_backlink_view(table, col_key);
+    }
 }
 
 std::string realm::internal::bridge::table_name_for_object_type(const std::string &v) {

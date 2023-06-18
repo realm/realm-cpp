@@ -9,6 +9,7 @@ namespace realm {
     class TableRef;
     class ConstTableRef;
     class Mixed;
+    class TableView;
 
     namespace internal::bridge {
         struct obj;
@@ -41,6 +42,8 @@ namespace realm {
             struct query query(const std::string &, const std::vector <mixed>&) const;
 
             void remove_object(const obj_key &) const;
+            obj get_object(const obj_key&) const;
+            bool is_valid(const obj_key&) const;
             using underlying = TableRef;
 #ifdef __i386__
          std::aligned_storage<12, 4>::type m_table[1];
@@ -52,6 +55,37 @@ namespace realm {
         std::aligned_storage<16, 8>::type m_table[1];
 #elif _WIN32
         std::aligned_storage<16, 8>::type m_table[1];
+#endif
+        };
+
+        struct table_view {
+            table_view();
+            table_view(const table_view& other) ;
+            table_view& operator=(const table_view& other) ;
+            table_view(table_view&& other);
+            table_view& operator=(table_view&& other);
+            ~table_view();
+            table_view(const TableView &);
+            operator TableView() const;
+            using underlying = TableView;
+#ifdef __i386__
+            std::aligned_storage<568, 4>::type m_table_view[1];
+#elif __x86_64__
+#if defined(__clang__)
+            std::aligned_storage<568, 8>::type m_table_view[1];
+#elif defined(__GNUC__) || defined(__GNUG__)
+            std::aligned_storage<576, 8>::type m_table_view[1];
+#endif
+#elif __arm__
+            std::aligned_storage<568, 8>::type m_table_view[1];
+#elif __aarch64__
+#if defined(__clang__)
+            std::aligned_storage<568, 8>::type m_table_view[1];
+#elif defined(__GNUC__) || defined(__GNUG__)
+            std::aligned_storage<624, 8>::type m_table_view[1];
+#endif
+#elif _WIN32
+            std::aligned_storage<568, 8>::type m_table_view[1];
 #endif
         };
 

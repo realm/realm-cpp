@@ -54,7 +54,9 @@ namespace realm::internal::bridge {
                  const std::string& object_name);
         operator Property() const; //NOLINT(google-explicit-constructor)
         void set_object_link(const std::string&);
+        void set_origin_property_name(const std::string&);
         void set_type(type);
+        void set_is_computed(bool);
         void set_primary_key(bool);
         bool is_primary() const;
         std::string name() const;

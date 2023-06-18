@@ -320,4 +320,7 @@ namespace realm::internal::bridge {
         return std::nullopt;
     }
 
+    table realm::get_table(const uint32_t &key) {
+        return m_realm->read_group().get_table(TableKey(key));
+    }
 }

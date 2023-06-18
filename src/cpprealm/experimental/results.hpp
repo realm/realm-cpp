@@ -6,6 +6,7 @@
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/results.hpp>
 #include <cpprealm/experimental/macros.hpp>
+#include <cpprealm/schema.hpp>
 
 #include <cpprealm/persisted.hpp>
 
@@ -113,6 +114,8 @@ namespace realm::experimental {
             results<T> *m_parent;
             T value;
 
+            template<auto>
+            friend struct linking_objects;
             template<typename>
             friend struct results;
         };
@@ -202,6 +205,58 @@ namespace realm::experimental {
 
     protected:
         internal::bridge::results m_parent;
+        template <auto> friend struct linking_objects;
+    };
+
+    template <auto ptr>
+    struct linking_objects {
+        static inline auto Ptr = ptr;
+        using Class = typename internal::ptr_type_extractor<ptr>::class_type;
+
+        static_assert(sizeof(managed<typename internal::ptr_type_extractor<ptr>::class_type>), "Type is not managed by the Realm");
+    };
+
+    template <auto ptr> struct managed<linking_objects<ptr>> : managed_base {
+        using iterator = typename results<typename internal::ptr_type_extractor<ptr>::class_type>::iterator;
+        using Class = typename internal::ptr_type_extractor<ptr>::class_type;
+
+        linking_objects<ptr> value() const {
+            return {};
+        }
+
+        iterator begin() {
+            return iterator(0, get_results());
+        }
+
+        iterator end() {
+            auto r = get_results();
+            return iterator(r.size(), r);
+        }
+
+        size_t size() {
+            return get_results().size();
+        }
+        managed<Class> operator[](size_t idx) {
+            return get_results()[idx];
+        }
+    private:
+
+        results<Class> get_results() {
+            auto table = m_obj->get_table();
+            if (!table.is_valid(m_obj->get_key())) {
+                throw std::logic_error("Object has been deleted or invalidated.");
+            }
+
+            internal::bridge::obj* obj = m_obj;
+            auto schema = m_realm->schema().find(managed<Class>::schema.name);
+            auto linking_property = schema.property_for_name(managed<Class>::schema.template name_for_property<ptr>());
+            if (!linking_property.column_key()) {
+                throw std::logic_error("Invalid column key for origin property.");
+            }
+
+            internal::bridge::results results(*m_realm, obj->get_backlink_view(m_realm->get_table(schema.table_key()), linking_property.column_key()));
+            return ::realm::experimental::results<Class>(std::move(results));
+        }
     };
 }
 

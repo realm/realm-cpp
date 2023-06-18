@@ -11,12 +11,12 @@
 #include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/object_id.hpp>
 
-#include <vector>
 #include <map>
+#include <vector>
 
 namespace realm::experimental {
-    template <typename>
-    struct link;
+    template <auto>
+    struct linking_objects;
     template <typename>
     struct primary_key;
 }
@@ -54,7 +54,8 @@ namespace realm::internal::type_info {
     template <typename T>
     struct is_persisted<persisted<T>> : std::true_type {
     };
-
+    template <typename, typename>
+    struct managed;
     template <typename T, typename = void>
     struct type_info;
 
@@ -108,24 +109,48 @@ namespace realm::internal::type_info {
                           std::is_constructible<std::string, const char*>>::value);
         }
     }
-
     template <typename T>
-    struct type_info<experimental::link<T>> {
+    struct type_info<T*> {
         using internal_type = bridge::obj_key;
         static constexpr bridge::property::type type() {
             return bridge::property::type::Object;
         }
     };
-
+    template <auto T>
+    struct type_info<experimental::linking_objects<T>> {
+        using internal_type = bridge::obj_key;
+        static constexpr bridge::property::type type() {
+            return bridge::property::type::LinkingObjects | bridge::property::type::Array;
+        }
+    };
     template <typename T>
     struct is_link : std::false_type {
         static constexpr auto value = false;
+        static constexpr auto is_managed = false;
     };
     template <typename T>
-    struct is_link<experimental::link<T>> : std::true_type {
+    struct is_link<managed<T*, void>> : std::true_type {
         static constexpr auto value = true;
+        static constexpr auto is_managed = true;
+    };
+    template <typename T>
+    struct is_link<T*> : std::true_type {
+        static constexpr auto value = true;
+        static constexpr auto is_managed = false;
     };
 
+    template <typename T>
+    struct is_backlink : std::false_type {
+        static constexpr auto value = false;
+    };
+    template <auto T>
+    struct is_backlink<experimental::linking_objects<T>> : std::true_type {
+        static constexpr auto value = true;
+    };
+//    template <typename T>
+//    struct is_link<T*> : std::true_type {
+//        static constexpr auto value = true;
+//    };
     template <>
     struct type_info<std::monostate> {
         using internal_type = std::monostate;

@@ -244,6 +244,22 @@ namespace realm::experimental {
             rbool operator!=(const realm::object_id& rhs) const noexcept;
         };
 
+        template<typename T>
+        struct managed<primary_key<T>, std::enable_if_t<std::is_enum_v<T>>> : managed_base {
+            using managed<primary_key<realm::object_id>>::managed_base::operator=;
+
+            primary_key<T> value() const {
+                return operator T();
+            }
+
+            operator T() const {
+                return static_cast<T>(m_obj->template get<int64_t>(m_key));
+            }
+
+            rbool operator==(const T& rhs) const noexcept;
+            rbool operator!=(const T& rhs) const noexcept;
+        };
+
         template<>
         struct managed<primary_key<std::optional<int64_t>>> : managed_base {
             using managed<primary_key<std::optional<int64_t>>>::managed_base::operator=;

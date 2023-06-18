@@ -41,7 +41,7 @@ namespace realm::experimental {
         obj._id = 1;
         AllTypesObjectLink obj_link;
         obj_link.str_col = "Fido";
-        obj.opt_obj_col = obj_link;
+        obj.opt_obj_col = &obj_link;
 
         auto managed_obj = realm.write([&realm, &obj] {
             return realm.add(std::move(obj));
