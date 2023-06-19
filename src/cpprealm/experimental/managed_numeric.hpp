@@ -5,11 +5,13 @@
 #include <cpprealm/persisted.hpp>
 
 namespace realm::experimental {
-
 #define CPP_REALM_MANAGED_NUMERIC(type) \
     template<> \
     struct managed<type> : managed_base { \
-        using managed<type>::managed_base::operator=; \
+        managed_base& operator =(const type& v) { \
+            this->m_obj->template set<type>(m_key, v); \
+            return *this; \
+        } \
                                         \
         [[nodiscard]] type value() const { \
             return m_obj->template get<type>(m_key); \

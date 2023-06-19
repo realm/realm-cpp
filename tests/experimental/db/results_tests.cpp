@@ -159,5 +159,43 @@ namespace realm::experimental {
             CHECK(change.deletions.size() == 0);
             CHECK(did_run);
         }
+
+        managed<AllTypesObject> test_obj;
+
+        SECTION("results_subscript") {
+            auto realm = db(std::move(config));
+
+            AllTypesObject obj;
+            obj.str_col = "John";
+            obj._id = 1;
+            obj.double_col = 1;
+            auto managed_obj = realm.write([&realm, &obj]() {
+                return realm.add(std::move(obj));
+            });
+            auto results = realm.objects<AllTypesObject>();
+            {
+                auto results1 = realm.objects<AllTypesObject>();
+                test_obj = results1[0];
+            }
+            auto o = results[0];
+            CHECK(o.str_col == "John");
+            CHECK(o.list_obj_col.size() == 0);
+            auto copy_o = o;
+            CHECK(copy_o.str_col == "John");
+            CHECK(copy_o.list_obj_col.size() == 0);
+            auto moved_o = std::move(o);
+            CHECK(moved_o.str_col == "John");
+            CHECK(moved_o.list_obj_col.size() == 0);
+
+            auto token = o.observe([](auto&&){
+
+            });
+            realm.refresh();
+
+            realm.write([&](){
+                test_obj.double_col = 123.456;
+            });
+            CHECK(copy_o.double_col == 123.456);
+        }
     }
 }

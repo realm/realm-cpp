@@ -26,14 +26,14 @@ namespace realm::internal::bridge {
 #endif
 
 #ifdef __i386__
-    static_assert(SizeCheck<40, sizeof(CoreDictionary)>{});
+    static_assert(SizeCheck<96, sizeof(CoreDictionary)>{});
     static_assert(SizeCheck<4, alignof(CoreDictionary)>{});
 #elif __x86_64__
     static_assert(SizeCheck<144, sizeof(CoreDictionary)>{});
     static_assert(SizeCheck<8, alignof(CoreDictionary)>{});
 #elif __arm__
-    static_assert(SizeCheck<40, sizeof(CoreDictionary)>{});
-    static_assert(SizeCheck<4, alignof(CoreDictionary)>{});
+    static_assert(SizeCheck<112, sizeof(CoreDictionary)>{});
+    static_assert(SizeCheck<8, alignof(CoreDictionary)>{});
 #elif __aarch64__
     static_assert(SizeCheck<144, sizeof(CoreDictionary)>{});
     static_assert(SizeCheck<8, alignof(CoreDictionary)>{});

@@ -202,16 +202,6 @@ namespace realm::experimental {
 
     template<typename T, typename = void>
     struct managed;
-
-//    template<typename T>
-//    struct managed<primary_key<T>> : public managed_base {
-//        managed() = default;
-//        using value_type = T;
-//
-//        T value() const {
-//            return m_obj->template get<T>(m_key);
-//        }
-//    };
 }
 
 #define __cpprealm_build_experimental_query(op, name, type) \
@@ -273,11 +263,12 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
                 }, managed_pointers_names); \
             }, managed_pointers()); \
         }                       \
-        managed(const managed& other) : m_obj(other.m_obj) {   \
-            m_realm = other.m_realm;                   \
-            std::apply([this, &other](auto && ...ptr) {               \
-                ((*this.*ptr).assign(&m_obj, &m_realm, ((other.*ptr)).m_key), ...);   \
-            }, managed_pointers());                      \
+        managed(const managed& other) : m_obj(other.m_obj), m_realm(other.m_realm) {   \
+            std::apply([&](auto && ...ptr) { \
+                std::apply([&](auto&& ..._name) { \
+                ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
+                }, managed_pointers_names); \
+            }, managed_pointers()); \
         } \
         auto observe(std::function<void(realm::experimental::object_change<managed>&&)>&& fn) { \
             auto m_object = std::make_shared<internal::bridge::object>(m_realm, m_obj);                   \

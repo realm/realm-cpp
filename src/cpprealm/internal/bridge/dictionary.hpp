@@ -107,11 +107,11 @@ namespace realm::internal::bridge {
         size_t size() const;
     private:
 #ifdef __i386__
-        std::aligned_storage<144, 4>::type m_dictionary[1];
+        std::aligned_storage<96, 4>::type m_dictionary[1];
 #elif __x86_64__
         std::aligned_storage<144, 8>::type m_dictionary[1];
 #elif __arm__
-        std::aligned_storage<144, 4>::type m_dictionary[1];
+        std::aligned_storage<112, 8>::type m_dictionary[1];
 #elif __aarch64__
         std::aligned_storage<144, 8>::type m_dictionary[1];
 #elif _WIN32

@@ -180,6 +180,17 @@ namespace realm::experimental {
             }, managed<T>::managed_pointers());
             return {std::move(m)};
         }
+
+        realm::notification_token observe(std::function<void(realm::experimental::collection_change)>&& fn) {
+            auto list = std::make_shared<realm::internal::bridge::list>(*m_realm, *m_obj, m_key);
+            realm::notification_token token = list->add_notification_callback(
+                    std::make_shared<realm::experimental::collection_callback_wrapper>(
+                            std::move(fn),
+                            false));
+            token.m_realm = *m_realm;
+            token.m_list = list;
+            return token;
+        }
     };
 } // namespace realm::experimental
 

@@ -24,7 +24,7 @@ struct Person: realm::object<Person> {
 
 int main() {
     auto app = realm::App("YOUR_APP_ID");
-    auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
+    auto user = app.login(realm::App::credentials::anonymous()).get();
     auto config = user.flexible_sync_configuration();
 
     auto realm = realm::open<Person>(std::move(config));
@@ -32,7 +32,7 @@ int main() {
         if (!subs.find("all_people")) {
             subs.add<Person>("all_people");
         }
-    }).get_future().get();
+    }).get();
 
     auto results = realm.objects<Person>();
     auto token = results.observe([](realm::results_change<Person> change) {

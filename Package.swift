@@ -40,7 +40,7 @@ let cppSdkTarget: Target = .target(
     path: "src/",
     exclude: [
         "cpprealm/internal/curl",
-        "cpprealm/internal/android"
+        "cpprealm/internal/network"
     ],
     publicHeadersPath: ".",
     cxxSettings: cxxSettings,
@@ -92,9 +92,18 @@ let package = Package(
                 .define("CATCH_CONFIG_NO_POSIX_SIGNALS", .when(platforms: [.tvOS])),
             ] + cxxSettings) as [CXXSetting]),
         .executableTarget(
-            name: "realm-cpp-sdkTests",
+            name: "realm-beta-tests",
             dependencies: ["realm-cpp-sdk", "Catch2"],
             path: "tests",
+            exclude: [
+                "experimental/sync",
+                "experimental/alpha",
+            ],
+            sources: [
+                "experimental",
+                "main.hpp",
+                "main.cpp",
+            ],
             resources: [
                 .copy("setup_baas.rb"),
                 .copy("dependencies.list"),
