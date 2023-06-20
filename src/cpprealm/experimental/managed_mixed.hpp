@@ -18,6 +18,12 @@ namespace realm::experimental {
             return *this;
         }
 
+        template<typename U>
+        managed& operator =(const U& v) {
+            m_obj->set(m_key, internal::bridge::mixed(v));
+            return *this;
+        }
+
         [[nodiscard]] T value() const {
             return deserialize<T>(m_obj->get<realm::internal::bridge::mixed>(m_key));
         }

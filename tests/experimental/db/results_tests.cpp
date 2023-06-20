@@ -187,15 +187,11 @@ namespace realm::experimental {
             CHECK(moved_o.str_col == "John");
             CHECK(moved_o.list_obj_col.size() == 0);
 
-            auto token = o.observe([](auto&&){
-
-            });
-            realm.refresh();
-
             realm.write([&](){
                 test_obj.double_col = 123.456;
             });
             CHECK(copy_o.double_col == 123.456);
+            CHECK(moved_o.double_col == 123.456);
         }
     }
 }

@@ -23,8 +23,10 @@ TEST_CASE("flexible_sync_beta", "[sync]") {
                                                          subs.add<experimental::AllTypesObject>("foo-strings", [](auto &obj) {
                                                              return obj.str_col == "foo";
                                                          });
+                                                         subs.add<experimental::AllTypesObjectLink>("foo-link");
                                                      }).get();
         CHECK(update_success == true);
+        CHECK(synced_realm.subscriptions().size() == 2);
 
         auto sub = *synced_realm.subscriptions().find("foo-strings");
         CHECK(sub.name == "foo-strings");

@@ -167,7 +167,7 @@ struct user {
      */
     void log_out(std::function<void(std::optional<app_error>)>&& callback) const;
 
-    [[nodiscard]] std::promise<void> log_out() const;
+    [[nodiscard]] std::future<void> log_out() const;
 
     /**
      The custom data of the user.

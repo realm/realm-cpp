@@ -39,11 +39,6 @@ namespace realm {
             };
             ref_type operator ->() const {
                 managed<T> m(m_obj->get_linked_object(m_key), *m_realm);
-                std::apply([&m](auto && ...ptr) {
-                    std::apply([&](auto&&...name) {
-                        ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
-                    }, managed<T>::managed_pointers_names);
-                }, managed<T>::managed_pointers());
                 return {std::move(m)};
             }
             operator bool() {
@@ -89,6 +84,16 @@ namespace realm {
 
             bool operator ==(const std::nullptr_t) const {
                 return !m_obj->get_linked_object(m_key).is_valid();
+            }
+            bool operator ==(const managed<T>& rhs) const {
+                if (*this->m_realm != rhs.m_realm)
+                    return false;
+                if (this->m_obj->get_table() != rhs.m_obj.get_table())
+                    return false;
+                if (this->m_obj->get_key() == rhs.m_obj.get_key())
+                    return false;
+
+                return true;
             }
         };
     }

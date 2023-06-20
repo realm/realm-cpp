@@ -4,6 +4,34 @@
 #include <cpprealm/experimental/sdk.hpp>
 
 namespace realm::experimental {
+    struct Dog;
+    struct Person {
+        primary_key<int64_t> _id;
+        std::string name;
+        int64_t age = 0;
+        Dog* dog;
+    };
+    REALM_SCHEMA(Person, _id, name, age, dog)
+    struct Dog {
+        primary_key<int64_t> _id;
+        std::string name;
+        std::string name2;
+        std::string name3;
+        int64_t foo2 = 0;
+        std::string name4;
+
+        int64_t age = 0;
+        linking_objects<&Person::dog> owners;
+    };
+    REALM_SCHEMA(Dog,
+                 _id,
+                 name,
+                 name2,
+                 name3,
+                 foo2,
+                 name4,
+                 age,
+                 owners)
 
     struct EmbeddedDepth3 {
         std::string str_col;

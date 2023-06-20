@@ -18,7 +18,8 @@ TEST_CASE("embedded_objects") {
         CHECK(managed_obj.opt_embedded_obj_col->str_col == "foo");
 
         int run_count = 0;
-        auto token = managed_obj.opt_embedded_obj_col->observe([&run_count](auto change) {
+        auto opt_embedded_obj_col = managed_obj.opt_embedded_obj_col;
+        auto token = opt_embedded_obj_col->observe([&run_count](auto change) {
             run_count++;
             if (change.is_deleted) return;
             CHECK(change.object->str_col == "123");
@@ -27,8 +28,8 @@ TEST_CASE("embedded_objects") {
             managed_obj.str_col = "abc";
         });
         realm.refresh();
-        realm.write([&managed_obj]() {
-            managed_obj.opt_embedded_obj_col->str_col  = "123";
+        realm.write([&opt_embedded_obj_col]() {
+            opt_embedded_obj_col->str_col  = "123";
         });
         realm.refresh();
         CHECK(run_count == 1);

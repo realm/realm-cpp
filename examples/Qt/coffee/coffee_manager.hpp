@@ -54,7 +54,7 @@ signals:
 
 private:
     realm::user mUser;
-    std::unique_ptr<realm::experimental::managed<realm::experimental::CoffeeMachine>> mCoffeeMachine;
+    realm::experimental::managed<realm::experimental::CoffeeMachine> mCoffeeMachine;
     QScopedPointer<DrinkSelectionModel> mDrinksTableModel;
     realm::notification_token mToken;
 };

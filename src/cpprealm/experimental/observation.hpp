@@ -68,9 +68,11 @@ namespace realm::experimental {
         ObjectChangeCallbackWrapper(std::function<void(object_change < T > )> &&b,
                                     const T *obj,
                                     std::shared_ptr<internal::bridge::object> internal_object)
-                : block(std::move(b)), object(obj), m_object(internal_object) {}
+                : block(std::move(b)), object(*obj), m_object(internal_object) {
+            static_cast<void>(obj);
+        }
         std::function<void(object_change < T > )> block;
-        const T *object;
+        const T object;
         std::shared_ptr<internal::bridge::object> m_object;
 
         std::optional<std::vector<std::string>> property_names = std::nullopt;
@@ -117,7 +119,7 @@ namespace realm::experimental {
 
             std::vector<typename decltype(T::schema)::variant_t> values;
             for (auto &name: *property_names) {
-                auto value = T::schema.property_value_for_name(name, *object);
+                auto value = T::schema.property_value_for_name(name, object);
                 values.push_back(value);
             }
             return values;
@@ -132,7 +134,7 @@ namespace realm::experimental {
             if (deleted) {
                 forward_change(nullptr, {}, {}, {}, nullptr);
             } else if (new_values) {
-                forward_change(object,
+                forward_change(&object,
                                *property_names,
                                old_values ? *old_values : std::vector<typename decltype(T::schema)::variant_t>{},
                                *new_values,

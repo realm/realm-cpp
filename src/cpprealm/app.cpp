@@ -171,14 +171,15 @@ namespace realm {
         });
     }
 
-    std::promise<void> user::log_out() const
+    std::future<void> user::log_out() const
     {
         std::promise<void> p;
-        m_user->sync_manager()->app().lock()->log_out(m_user, [&p](auto err){
+        std::future<void> f = p.get_future();
+        m_user->sync_manager()->app().lock()->log_out(m_user, [p = std::move(p)](auto err) mutable {
             if (err) p.set_exception(std::make_exception_ptr(*err));
             else p.set_value();
         });
-        return p;
+        return f;
     }
 
     /**

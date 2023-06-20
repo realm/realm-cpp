@@ -59,9 +59,9 @@ CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
     }
     realm.get_sync_session()->wait_for_upload_completion().get();
 
-    mCoffeeMachine = std::make_unique<realm::experimental::managed<realm::experimental::CoffeeMachine>>(coffeeMachines[0]);
+    mCoffeeMachine = coffeeMachines[0];
 
-    mToken = mCoffeeMachine->observe([&](auto&& change) {
+    mToken = mCoffeeMachine.observe([&](auto&& change) {
         for (auto& change : change.property_changes) {
             if (change.name == "state") {
                 auto oldVal = std::get<realm::experimental::CoffeeMachine::State>(change.old_value.value());
@@ -80,7 +80,7 @@ CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
         }
     });
 
-    mDrinksTableModel.reset(new DrinkSelectionModel(*mCoffeeMachine));
+    mDrinksTableModel.reset(new DrinkSelectionModel(mCoffeeMachine));
 }
 
 void CoffeeMachineManager::prepareForBrew(const QString &)
@@ -92,9 +92,9 @@ void CoffeeMachineManager::startBrew(const QString&, int64_t milkQty, int64_t es
 {
     auto realm = realm::experimental::db(mUser.flexible_sync_configuration());
     realm.write([&]() {
-        mCoffeeMachine->espressoQty -= espressoQty;
-        mCoffeeMachine->milkQty -= milkQty;
-        mCoffeeMachine->sugarQty -= sugarQty;
+        mCoffeeMachine.espressoQty -= espressoQty;
+        mCoffeeMachine.milkQty -= milkQty;
+        mCoffeeMachine.sugarQty -= sugarQty;
     });
 }
 

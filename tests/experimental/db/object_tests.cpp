@@ -592,5 +592,44 @@ namespace realm::experimental {
 //            CHECK(foo.opt_obj_col == std::nullopt);
 //            CHECK(foo.opt_embedded_obj_col == std::nullopt);
         }
+
+        SECTION("backlinks") {
+            auto realm = db(std::move(config));
+            experimental::Dog dog;
+            dog.name = "fido";
+
+            auto [jack, jill] = realm.write([&realm]() {
+                experimental::Person person;
+                person.name = "Jack";
+                person.age = 27;
+                person.dog = nullptr;
+                experimental::Person person2;
+                person2.name = "Jill";
+                person2.age = 28;
+                person2.dog = nullptr;
+                return realm.insert(person, person2);
+            });
+            CHECK(jack.dog == nullptr);
+            realm.write([&dog, jack = &jack]() {
+                jack->dog = &dog;
+            });
+            CHECK(jack.dog->name == "fido");
+            CHECK(jack.dog->owners.size() == 1);
+            realm.write([&dog, jill = &jill]() {
+                jill->dog = &dog;
+            });
+            CHECK(jill.dog->name == "fido");
+            CHECK(jill.dog->owners.size() == 2);
+            CHECK(jack.dog->owners.size() == 2);
+            realm.write([jack = &jack]() {
+                jack->dog = nullptr;
+            });
+            CHECK(jack.dog == nullptr);
+            CHECK(jill.dog->owners.size() == 1);
+            realm.write([jill = &jill]() {
+                jill->dog = nullptr;
+            });
+            CHECK(realm.objects<experimental::Dog>()[0].owners.size() == 0);
+        }
     }
 }
