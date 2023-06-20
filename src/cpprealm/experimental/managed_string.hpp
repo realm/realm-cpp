@@ -47,6 +47,8 @@ namespace realm::experimental {
 
     //MARK: - managed string
     template <> struct managed<std::string> : managed_base {
+        using managed<std::string>::managed_base::operator=;
+
         [[nodiscard]] std::string value() const;
 
         using reference = char_reference;
@@ -123,6 +125,7 @@ namespace realm::experimental {
     };
 
     template <> struct managed<std::optional<std::string>> : public managed<std::string> {
+        using managed<std::optional<std::string>>::managed_base::operator=;
         managed& operator =(std::optional<std::string>&& v) { set(std::move(v)); return *this; }
         managed& operator =(const std::optional<std::string>& v) { set(v); return *this; }
         managed& operator =(const char* v) { set(v); return *this; }

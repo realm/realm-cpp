@@ -8,6 +8,8 @@
 namespace realm::experimental {
     template <typename T>
     struct managed<T, std::enable_if_t<realm::internal::type_info::MixedPersistableConcept<T>::value>> : public managed_base {
+        using managed<T>::managed_base::operator=;
+
         managed& operator =(const T& v) {
             m_obj->set(m_key, std::visit([](auto&& arg) {
                            using M = typename internal::type_info::type_info<std::decay_t<decltype(arg)>>::internal_type;

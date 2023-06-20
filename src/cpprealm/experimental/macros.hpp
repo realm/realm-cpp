@@ -159,10 +159,55 @@ constexpr constant_index< acc > counter_crumb( id, constant_index< rank >, const
 namespace realm::experimental {
     struct managed_base {
         managed_base() = default;
+        managed_base(const managed_base& other) {
+            m_obj = other.m_obj;
+            m_realm = other.m_realm;
+            m_key = other.m_key;
+            // MARK: Queries
+            should_detect_usage_for_queries = other.should_detect_usage_for_queries;
+            query = other.query;
+        }
+        managed_base& operator=(const managed_base& other) {
+            m_obj = other.m_obj;
+            m_realm = other.m_realm;
+            m_key = other.m_key;
+            // MARK: Queries
+            should_detect_usage_for_queries = other.should_detect_usage_for_queries;
+            query = other.query;
+            return *this;
+        }
+        managed_base(managed_base&& other) {
+            m_obj = std::move(other.m_obj);
+            m_realm = std::move(other.m_realm);
+            m_key = std::move(other.m_key);
+            // MARK: Queries
+            should_detect_usage_for_queries = std::move(other.should_detect_usage_for_queries);
+            query = std::move(other.query);
+        }
+        managed_base& operator=(managed_base&& other) {
+            m_obj = std::move(other.m_obj);
+            m_realm = std::move(other.m_realm);
+            m_key = std::move(other.m_key);
+            // MARK: Queries
+            should_detect_usage_for_queries = std::move(other.should_detect_usage_for_queries);
+            query = std::move(other.query);
+            return *this;
+        }
+        ~managed_base() {
+            m_obj = nullptr;
+            m_realm = nullptr;
+            m_key.~col_key();
+            should_detect_usage_for_queries = false;
+            query = nullptr;
+        }
+
         static constexpr bool is_object = false;
         internal::bridge::obj *m_obj = nullptr;
         internal::bridge::realm *m_realm = nullptr;
         internal::bridge::col_key m_key;
+        // MARK: Queries
+        bool should_detect_usage_for_queries = false;
+        internal::bridge::query* query = nullptr;
 
         void assign(internal::bridge::obj *obj,
                     internal::bridge::realm* realm,
@@ -189,10 +234,6 @@ namespace realm::experimental {
             }
             return *this;
         }
-
-        // MARK: Queries
-        bool should_detect_usage_for_queries = false;
-        internal::bridge::query* query = nullptr;
 
         void prepare_for_query(internal::bridge::query& query_builder) {
             should_detect_usage_for_queries = true;
@@ -262,13 +303,44 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
                 ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
                 }, managed_pointers_names); \
             }, managed_pointers()); \
-        }                       \
-        managed(const managed& other) : m_obj(other.m_obj), m_realm(other.m_realm) {   \
+        }                                                                                          \
+        managed(const managed& other) { \
+            m_obj = other.m_obj; \
+            m_realm = other.m_realm;                                                               \
             std::apply([&](auto && ...ptr) { \
                 std::apply([&](auto&& ..._name) { \
                 ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
                 }, managed_pointers_names); \
             }, managed_pointers()); \
+        } \
+        managed& operator=(const managed& other) { \
+            m_obj = other.m_obj; \
+            m_realm = other.m_realm;                                                               \
+            std::apply([&](auto && ...ptr) { \
+                std::apply([&](auto&& ..._name) { \
+                ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
+                }, managed_pointers_names); \
+            }, managed_pointers()); \
+            return *this; \
+        } \
+        managed(managed&& other) { \
+            m_obj = std::move(other.m_obj); \
+            m_realm = std::move(other.m_realm);                                                    \
+            std::apply([&](auto && ...ptr) { \
+                std::apply([&](auto&& ..._name) { \
+                ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
+                }, managed_pointers_names); \
+            }, managed_pointers()); \
+        } \
+        managed& operator=(managed&& other) { \
+             m_obj = std::move(other.m_obj); \
+             m_realm = std::move(other.m_realm);                                                   \
+            std::apply([&](auto && ...ptr) { \
+                std::apply([&](auto&& ..._name) { \
+                ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
+                }, managed_pointers_names); \
+            }, managed_pointers()); \
+             return *this;\
         } \
         auto observe(std::function<void(realm::experimental::object_change<managed>&&)>&& fn) { \
             auto m_object = std::make_shared<internal::bridge::object>(m_realm, m_obj);                   \

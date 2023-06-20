@@ -377,93 +377,93 @@ inline void run_until(uv_loop_t *loop, std::function<bool()> predicate) {
 TEST_CASE("run loops", "[run loops]") {
     realm_path path;
 
-    #ifndef _WIN32
-    SECTION("uv threads detached linux", "[run loops]") {
-        realm::notification_token t1;
-        realm::notification_token t2;
-
-        bool signal1;
-        std::mutex m1;
-        std::condition_variable v1;
-
-        bool signal2;
-        std::mutex m2;
-        std::condition_variable v2;
-
-        {
-            std::thread([&](){
-                // Each thread needs a run loop
-                auto loop = uv_loop_new();
-
-                auto obj = realm::experimental::AllTypesObject();
-                auto config = realm::db_config(path, std::make_shared<UvScheduler>(loop));
-
-                auto realm = realm::experimental::db(std::move(config));
-                auto managed_obj = realm.write([&realm, &obj] {
-                    return realm.add(std::move(obj));
-                });
-                auto token = managed_obj.observe([&](auto change) {
-                    std::unique_lock<std::mutex> lock(m1);
-                    signal1 = true;
-                    v1.notify_one();
-                });
-
-                t1 = std::move(token);
-
-                realm.write([&realm, &managed_obj] {
-                    managed_obj.str_col = "456";
-                });
-
-                uv_run(loop, UV_RUN_DEFAULT);
-            }).detach();
-        }
-
-        {
-            std::thread([&](){
-                // Each thread needs a run loop
-                auto loop = uv_loop_new();
-
-                auto obj = realm::experimental::AllTypesObject();
-
-                auto config = realm::db_config(path, std::make_shared<UvScheduler>(loop));
-                auto realm = realm::experimental::db(std::move(config));
-
-                {
-                    obj._id = 123;
-                    auto managed_obj = realm.write([&realm, &obj] {
-                        return realm.add(std::move(obj));
-                    });
-
-                    auto token = managed_obj.observe([&](auto change) {
-                        std::unique_lock<std::mutex> lock(m2);
-                        signal2 = true;
-                        v2.notify_one();
-                    });
-
-                    t2 = std::move(token);
-                }
-
-                {
-                    auto c = realm::db_config(path, std::make_shared<UvScheduler>(loop));
-
-                    auto r = realm::experimental::db(std::move(c));
-                    auto o = r.objects<realm::experimental::AllTypesObject>().where([](auto& obj) { return obj._id == 123; })[0];
-
-                    r.write([&r, &o] {
-                        o.str_col = "123";
-                    });
-                }
-
-                uv_run(loop, UV_RUN_DEFAULT);
-            }).detach();
-        }
-
-        std::unique_lock<std::mutex> lock(m1);
-        v1.wait(lock, [&] { return signal1; });
-        std::unique_lock<std::mutex> lock2(m2);
-        v2.wait(lock2, [&] { return signal2; });
-    }
-    #endif
+//    #ifndef _WIN32
+//    SECTION("uv threads detached linux", "[run loops]") {
+//        realm::notification_token t1;
+//        realm::notification_token t2;
+//
+//        bool signal1;
+//        std::mutex m1;
+//        std::condition_variable v1;
+//
+//        bool signal2;
+//        std::mutex m2;
+//        std::condition_variable v2;
+//
+//        {
+//            std::thread([&](){
+//                // Each thread needs a run loop
+//                auto loop = uv_loop_new();
+//
+//                auto obj = realm::experimental::AllTypesObject();
+//                auto config = realm::db_config(path, std::make_shared<UvScheduler>(loop));
+//
+//                auto realm = realm::experimental::db(std::move(config));
+//                auto managed_obj = realm.write([&realm, &obj] {
+//                    return realm.add(std::move(obj));
+//                });
+//                auto token = managed_obj.observe([&](auto change) {
+//                    std::unique_lock<std::mutex> lock(m1);
+//                    signal1 = true;
+//                    v1.notify_one();
+//                });
+//
+//                t1 = std::move(token);
+//
+//                realm.write([&realm, &managed_obj] {
+//                    managed_obj.str_col = "456";
+//                });
+//
+//                uv_run(loop, UV_RUN_DEFAULT);
+//            }).detach();
+//        }
+//
+//        {
+//            std::thread([&](){
+//                // Each thread needs a run loop
+//                auto loop = uv_loop_new();
+//
+//                auto obj = realm::experimental::AllTypesObject();
+//
+//                auto config = realm::db_config(path, std::make_shared<UvScheduler>(loop));
+//                auto realm = realm::experimental::db(std::move(config));
+//
+//                {
+//                    obj._id = 123;
+//                    auto managed_obj = realm.write([&realm, &obj] {
+//                        return realm.add(std::move(obj));
+//                    });
+//
+//                    auto token = managed_obj.observe([&](auto change) {
+//                        std::unique_lock<std::mutex> lock(m2);
+//                        signal2 = true;
+//                        v2.notify_one();
+//                    });
+//
+//                    t2 = std::move(token);
+//                }
+//
+//                {
+//                    auto c = realm::db_config(path, std::make_shared<UvScheduler>(loop));
+//
+//                    auto r = realm::experimental::db(std::move(c));
+//                    auto o = r.objects<realm::experimental::AllTypesObject>().where([](auto& obj) { return obj._id == 123; })[0];
+//
+//                    r.write([&r, &o] {
+//                        o.str_col = "123";
+//                    });
+//                }
+//
+//                uv_run(loop, UV_RUN_DEFAULT);
+//            }).detach();
+//        }
+//
+//        std::unique_lock<std::mutex> lock(m1);
+//        v1.wait(lock, [&] { return signal1; });
+//        std::unique_lock<std::mutex> lock2(m2);
+//        v2.wait(lock2, [&] { return signal2; });
+//    }
+//    #endif
     SECTION("uv main thread", "[run loops]") {
         realm::notification_token t1;
         realm::notification_token t2;

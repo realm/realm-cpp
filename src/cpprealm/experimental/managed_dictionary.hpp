@@ -406,6 +406,8 @@ namespace realm::experimental {
 
     template<typename T>
     struct managed<std::map<std::string, T>, void> : managed_base {
+        using managed<std::map<std::string, T>>::managed_base::operator=;
+
         [[nodiscard]] std::map<std::string, T> value() const {
             // unused
             return std::map<std::string, T>();

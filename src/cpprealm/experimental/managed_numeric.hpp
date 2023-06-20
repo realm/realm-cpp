@@ -5,51 +5,98 @@
 #include <cpprealm/persisted.hpp>
 
 namespace realm::experimental {
-#define CPP_REALM_MANAGED_NUMERIC(type) \
-    template<> \
-    struct managed<type> : managed_base { \
-        managed_base& operator =(const type& v) { \
-            this->m_obj->template set<type>(m_key, v); \
-            return *this; \
-        } \
-                                        \
-        [[nodiscard]] type value() const { \
-            return m_obj->template get<type>(m_key); \
-        } \
-\
-        type operator *() const { \
-            return value(); \
-        } \
-        rbool operator==(const type& rhs) const noexcept; \
-        rbool operator!=(const type& rhs) const noexcept; \
-        rbool operator>(const type& rhs) const noexcept; \
-        rbool operator<(const type& rhs) const noexcept;  \
-        rbool operator>=(const type& rhs) const noexcept; \
-        rbool operator<=(const type& rhs) const noexcept; \
-        void operator+=(const type& o) { \
-            auto old_val = m_obj->template get<type>(m_key); \
-            m_obj->template set<type>(this->m_key, old_val + o); \
-        } \
-        void operator++() { \
-            auto old_val = m_obj->template get<type>(m_key); \
-            m_obj->template set<type>(this->m_key, old_val++); \
-        } \
-        void operator-=(const type& o) { \
-            auto old_val = m_obj->template get<type>(m_key); \
-            m_obj->template set<type>(this->m_key, old_val - o); \
-        } \
-        void operator--() { \
-            auto old_val = m_obj->template get<type>(m_key); \
-            m_obj->template set<type>(this->m_key, old_val--); \
-        } \
-        void operator*=(const type& o) { \
-            auto old_val = m_obj->template get<type>(m_key); \
-            m_obj->template set<type>(this->m_key, old_val * o); \
-        } \
-    }; \
+    template<>
+    struct managed<int64_t> : managed_base {
+        using managed<int64_t>::managed_base::operator=;
 
-CPP_REALM_MANAGED_NUMERIC(int64_t);
-CPP_REALM_MANAGED_NUMERIC(double);
+        managed_base& operator =(const int64_t& v) {
+            this->m_obj->template set<int64_t>(m_key, v);
+            return *this;
+        }
+
+        [[nodiscard]] int64_t value() const {
+            return m_obj->template get<int64_t>(m_key);
+        }
+
+        int64_t operator *() const {
+            return value();
+        }
+        rbool operator==(const int64_t& rhs) const noexcept;
+        rbool operator!=(const int64_t& rhs) const noexcept;
+        rbool operator>(const int64_t& rhs) const noexcept;
+        rbool operator<(const int64_t& rhs) const noexcept;
+        rbool operator>=(const int64_t& rhs) const noexcept;
+        rbool operator<=(const int64_t& rhs) const noexcept;
+        void operator+=(const int64_t& o) {
+            auto old_val = m_obj->template get<int64_t>(m_key);
+            m_obj->template set<int64_t>(this->m_key, old_val + o);
+        }
+        void operator++() {
+            auto old_val = m_obj->template get<int64_t>(m_key);
+            m_obj->template set<int64_t>(this->m_key, old_val++);
+        }
+        void operator-=(const int64_t& o) {
+            auto old_val = m_obj->template get<int64_t>(m_key);
+            m_obj->template set<int64_t>(this->m_key, old_val - o);
+        }
+        void operator--() {
+            auto old_val = m_obj->template get<int64_t>(m_key);
+            m_obj->template set<int64_t>(this->m_key, old_val--);
+        }
+        void operator*=(const int64_t& o) {
+            auto old_val = m_obj->template get<int64_t>(m_key);
+            m_obj->template set<int64_t>(this->m_key, old_val * o);
+        }
+    };
+
+    template<>
+    struct managed<double> : managed_base {
+        using managed<double>::managed_base::operator=;
+
+        managed_base& operator =(const double& v) {
+            this->m_obj->template set<double>(m_key, v);
+            return *this;
+        }
+
+        managed_base& operator =(const int& v) {
+            this->m_obj->template set<double>(m_key, (double)v);
+            return *this;
+        }
+
+        [[nodiscard]] double value() const {
+            return m_obj->template get<double>(m_key);
+        }
+
+        double operator *() const {
+            return value();
+        }
+        rbool operator==(const double& rhs) const noexcept;
+        rbool operator!=(const double& rhs) const noexcept;
+        rbool operator>(const double& rhs) const noexcept;
+        rbool operator<(const double& rhs) const noexcept;
+        rbool operator>=(const double& rhs) const noexcept;
+        rbool operator<=(const double& rhs) const noexcept;
+        void operator+=(const double& o) {
+            auto old_val = m_obj->template get<double>(m_key);
+            m_obj->template set<double>(this->m_key, old_val + o);
+        }
+        void operator++() {
+            auto old_val = m_obj->template get<double>(m_key);
+            m_obj->template set<double>(this->m_key, old_val++);
+        }
+        void operator-=(const double& o) {
+            auto old_val = m_obj->template get<double>(m_key);
+            m_obj->template set<double>(this->m_key, old_val - o);
+        }
+        void operator--() {
+            auto old_val = m_obj->template get<double>(m_key);
+            m_obj->template set<double>(this->m_key, old_val--);
+        }
+        void operator*=(const double& o) {
+            auto old_val = m_obj->template get<double>(m_key);
+            m_obj->template set<double>(this->m_key, old_val * o);
+        }
+    };
 
     template<>
     struct managed<bool> : managed_base {

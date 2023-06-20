@@ -10,6 +10,8 @@ namespace realm::experimental {
 
     template<typename T>
     struct managed<std::vector<T>, std::enable_if_t<internal::type_info::is_primitive<T>::value>> : managed_base {
+        using managed<std::vector<T>>::managed_base::operator=;
+
         class iterator {
         public:
             using iterator_category = std::input_iterator_tag;
