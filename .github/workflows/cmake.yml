@@ -94,8 +94,8 @@ jobs:
         run: cmake --build --preset ${{ matrix.preset }} --config ${{ matrix.configuration }}
 
       - name: Test
-        working-directory: .build/cmake-preset-${{ matrix.preset }}
-        run: ./${{ matrix.configuration }}/cpprealm_exe_tests
+        working-directory: .build/cmake-preset-${{ matrix.preset }}/tests/${{ matrix.configuration }}/
+        run: ./cpprealm_alpha_tests
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
@@ -159,8 +159,8 @@ jobs:
         run: cmake --build --preset ${{ matrix.preset }} --config ${{ matrix.configuration }}
 
       - name: Test
-        working-directory: .build/cmake-preset-${{ matrix.preset }}
-        run: ./${{ matrix.configuration }}/cpprealm_db_tests
+        working-directory: .build/cmake-preset-${{ matrix.preset }}/tests/${{ matrix.configuration }}/
+        run: ./cpprealm_db_tests
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
@@ -178,7 +178,7 @@ jobs:
 
   build-macos-sync:
     runs-on: macos-12
-    name: macOS ${{ matrix.configuration }} (preset ${{ matrix.preset }}, Xcode ${{ matrix.xcode }})
+    name: macOS Sync ${{ matrix.configuration }} (preset ${{ matrix.preset }}, Xcode ${{ matrix.xcode }})
     strategy:
       fail-fast: false
       matrix:
@@ -224,8 +224,8 @@ jobs:
         run: cmake --build --preset ${{ matrix.preset }} --config ${{ matrix.configuration }}
 
       - name: Test
-        working-directory: .build/cmake-preset-${{ matrix.preset }}
-        run: ./${{ matrix.configuration }}/cpprealm_sync_tests
+        working-directory: .build/cmake-preset-${{ matrix.preset }}/tests/${{ matrix.configuration }}/
+        run: ./cpprealm_sync_tests
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
@@ -243,7 +243,7 @@ jobs:
 
   build-linux-alpha:
     runs-on: ubuntu-22.04
-    name: Linux ${{ matrix.configuration }} (${{ matrix.compiler.name }} ${{ matrix.compiler.version }})
+    name: Linux Alpha ${{ matrix.configuration }} (${{ matrix.compiler.name }} ${{ matrix.compiler.version }})
     strategy:
       fail-fast: false
       matrix:
@@ -298,8 +298,8 @@ jobs:
         run: cmake --build --preset linux --config ${{ matrix.configuration }}
 
       - name: Test
-        working-directory: .build/cmake-preset-linux
-        run: ./${{ matrix.configuration }}/cpprealm_exe_tests
+        working-directory: .build/cmake-preset-linux/tests/${{ matrix.configuration }}/
+        run: ./cpprealm_alpha_tests
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
@@ -372,8 +372,8 @@ jobs:
         run: cmake --build --preset linux --config ${{ matrix.configuration }}
 
       - name: Test
-        working-directory: .build/cmake-preset-linux
-        run: ./${{ matrix.configuration }}/cpprealm_db_tests
+        working-directory: .build/cmake-preset-linux/tests/${{ matrix.configuration }}/
+        run: ./cpprealm_db_tests
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
@@ -391,7 +391,7 @@ jobs:
 
   build-linux-sync:
     runs-on: ubuntu-22.04
-    name: Linux ${{ matrix.configuration }} (${{ matrix.compiler.name }} ${{ matrix.compiler.version }})
+    name: Linux Sync ${{ matrix.configuration }} (${{ matrix.compiler.name }} ${{ matrix.compiler.version }})
     strategy:
       fail-fast: false
       matrix:
@@ -446,8 +446,8 @@ jobs:
         run: cmake --build --preset linux --config ${{ matrix.configuration }}
 
       - name: Test
-        working-directory: .build/cmake-preset-linux
-        run: ./${{ matrix.configuration }}/cpprealm_sync_tests
+        working-directory: .build/cmake-preset-linux/tests/${{ matrix.configuration }}/
+        run: ./cpprealm_sync_tests
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
@@ -499,8 +499,8 @@ jobs:
           timeout-minutes: 15
 
       - name: Test
-        working-directory: .build/cmake-preset-windows-x64
-        run: ./${{ matrix.configuration }}/cpprealm_db_tests
+        working-directory: .build/cmake-preset-windows-x64/tests/${{ matrix.configuration }}/
+        run: ./cpprealm_db_tests
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3

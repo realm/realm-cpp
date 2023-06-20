@@ -112,7 +112,7 @@ target_link_libraries(cpprealm_sync_tests cpprealm Catch2::Catch2)
 target_link_libraries(cpprealm_db_tests cpprealm Catch2::Catch2)
 
 file(COPY ../realm-core/evergreen DESTINATION .)
-file(MAKE_DIRECTORY tests/baas)
+file(MAKE_DIRECTORY baas)
 
 add_test(cpprealm_tests cpprealm_sync_tests cpprealm_db_tests)
 enable_testing()
