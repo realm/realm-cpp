@@ -2,7 +2,7 @@
 =============================================================
 
 ### Enhancements
-This beta preview introduces a new way to declare your object model, bringing you closer to feeling like you're interfacing with POCO's.
+This preview introduces a new way to declare your object model, bringing you closer to feeling like you're interfacing with POCO's.
 ```
 namespace realm::experimental {
     struct Address {
@@ -66,7 +66,7 @@ New API usage is as follows:
   ```
 - Primary keys of `int64_t`, `std::string` and `realm::uuid` and their optional counterparts are now supported.
 
-Usage of Realm under this namespace is also compatible with Windows (MSVC 19.36 and greater).
+Usage of Realm under this namespace is also compatible with Windows (MSVC 19.30 and greater).
 
 ### Breaking Changes
 The following functions now return `std::future` instead of `std::promise`

@@ -117,7 +117,7 @@ namespace realm::experimental {
         }
     public:
         template <typename ...Ts>
-        std::tuple<managed<Ts>...> insert(const Ts&... v) {
+        std::tuple<managed<Ts>...> insert(Ts&&... v) {
             std::tuple<> tpl;
             return v_add<0>(tpl, std::make_tuple(v...));
         }

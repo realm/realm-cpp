@@ -584,30 +584,33 @@ namespace realm::experimental {
                 return realm.add(std::move(foo));
             });
 
-//            realm.write([&] {
-//                foo.opt_obj_col = std::nullopt;
-//                foo.opt_embedded_obj_col = std::nullopt;
-//            });
-//
-//            CHECK(foo.opt_obj_col == std::nullopt);
-//            CHECK(foo.opt_embedded_obj_col == std::nullopt);
+            realm.write([&] {
+                managed_obj.opt_obj_col = nullptr;
+                managed_obj.opt_embedded_obj_col = nullptr;
+            });
+
+            CHECK(managed_obj.opt_obj_col == nullptr);
+            CHECK(managed_obj.opt_embedded_obj_col == nullptr);
         }
 
         SECTION("backlinks") {
             auto realm = db(std::move(config));
             experimental::Dog dog;
+            dog._id = 0;
             dog.name = "fido";
 
             auto [jack, jill] = realm.write([&realm]() {
                 experimental::Person person;
+                person._id = 0;
                 person.name = "Jack";
                 person.age = 27;
                 person.dog = nullptr;
                 experimental::Person person2;
+                person2._id = 1;
                 person2.name = "Jill";
                 person2.age = 28;
                 person2.dog = nullptr;
-                return realm.insert(person, person2);
+                return realm.insert(std::move(person), std::move(person2));
             });
             CHECK(jack.dog == nullptr);
             realm.write([&dog, jack = &jack]() {
