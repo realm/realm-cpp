@@ -213,14 +213,15 @@ namespace realm {
      @param callback The completion handler to call when the function call is complete.
      This handler is executed on the thread the method was called from.
      */
-    std::promise<std::optional<bson::Bson>> user::call_function(const std::string& name, const realm::bson::BsonArray& arguments) const
+    std::future<std::optional<bson::Bson>> user::call_function(const std::string& name, const realm::bson::BsonArray& arguments) const
     {
         std::promise<std::optional<bson::Bson>> p;
-        m_user->sync_manager()->app().lock()->call_function(name, arguments, [&p](std::optional<bson::Bson>&& bson, std::optional<app_error> err) {
+        std::future<std::optional<bson::Bson>> f = p.get_future();
+        m_user->sync_manager()->app().lock()->call_function(name, arguments, [p = std::move(p)](std::optional<bson::Bson>&& bson, std::optional<app_error> err) mutable {
             if (err) p.set_exception(std::make_exception_ptr(*err));
             else p.set_value(std::move(bson));
         });
-        return p;
+        return f;
     }
 
     /**
@@ -234,14 +235,15 @@ namespace realm {
     /**
      Refresh a user's custom data. This will, in effect, refresh the user's auth session.
      */
-    [[nodiscard]] std::promise<void> user::refresh_custom_user_data() const
+    [[nodiscard]] std::future<void> user::refresh_custom_user_data() const
     {
         std::promise<void> p;
-        m_user->refresh_custom_data([&p](auto err){
+        std::future<void> f = p.get_future();
+        m_user->refresh_custom_data([p = std::move(p)](auto err) mutable {
             if (err) p.set_exception(std::make_exception_ptr(*err));
             else p.set_value();
         });
-        return p;
+        return f;
     }
 
     internal::bridge::sync_manager user::sync_manager() const {

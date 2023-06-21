@@ -194,8 +194,8 @@ struct user {
     @param callback The completion handler to call when the function call is complete.
     This handler is executed on the thread the method was called from.
     */
-    [[nodiscard]] std::promise<std::optional<bson::Bson>> call_function(const std::string& name,
-                                                                        const realm::bson::BsonArray& arguments) const;
+    [[nodiscard]] std::future<std::optional<bson::Bson>> call_function(const std::string& name,
+                                                                       const realm::bson::BsonArray& arguments) const;
 
     /**
      Refresh a user's custom data. This will, in effect, refresh the user's auth session.
@@ -205,7 +205,7 @@ struct user {
     /**
      Refresh a user's custom data. This will, in effect, refresh the user's auth session.
      */
-    [[nodiscard]] std::promise<void> refresh_custom_user_data() const;
+    [[nodiscard]] std::future<void> refresh_custom_user_data() const;
 
     std::shared_ptr<SyncUser> m_user;
 };

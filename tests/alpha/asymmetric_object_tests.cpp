@@ -24,7 +24,7 @@ TEST_CASE("asymmetric object", "[sync]") {
         test::wait_for_sync_uploads(user).get();
         test::wait_for_sync_downloads(user).get();
 
-        auto result = user.call_function("asymmetricSyncData", bson::BsonArray({bson::BsonDocument{{"_id", oid.to_string()}}})).get_future().get();
+        auto result = user.call_function("asymmetricSyncData", bson::BsonArray({bson::BsonDocument{{"_id", oid.to_string()}}})).get();
         CHECK(result);
         auto arr = bson::BsonArray (*result);
         CHECK(arr.size() == 1);

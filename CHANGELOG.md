@@ -1,4 +1,4 @@
-0.2.0 Technical Preview Release notes (2023-06-21)
+0.2.0 Preview Release notes (2023-06-21)
 =============================================================
 
 ### Enhancements

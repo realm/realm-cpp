@@ -97,7 +97,7 @@ TEST_CASE("app", "[app]") {
         CHECK(!user.access_token().empty());
         CHECK(user.state() == realm::user::state::logged_in);
 
-        user.log_out().get_future().get();
+        user.log_out().get();
         CHECK(user.state() == realm::user::state::removed);
     }
 
@@ -108,7 +108,7 @@ TEST_CASE("app", "[app]") {
         CHECK(!user.access_token().empty());
         CHECK(user.state() == realm::user::state::logged_in);
 
-        user.log_out().get_future().get();
+        user.log_out().get();
         CHECK(user.state() == realm::user::state::logged_out);
     }
 
@@ -130,10 +130,10 @@ TEST_CASE("app", "[app]") {
         app.register_user("function_and_custom_user_data@mongodb.com", "foobar").get();
         auto user = app.login(
                            realm::App::credentials::username_password("function_and_custom_user_data@mongodb.com", "foobar")).get();
-        auto result = user.call_function("updateUserData", {realm::bson::BsonDocument({{"name", "john"}})}).get_future().get();
+        auto result = user.call_function("updateUserData", {realm::bson::BsonDocument({{"name", "john"}})}).get();
         CHECK(result);
 
-        user.refresh_custom_user_data().get_future().get();
+        user.refresh_custom_user_data().get();
         CHECK((*user.custom_data())["name"] == "john");
         std::promise<std::optional<realm::bson::Bson>> function_promise;
         user.call_function("updateUserData", {realm::bson::BsonDocument({{"name", "jane"}})}, [&function_promise](auto result, auto err) {
