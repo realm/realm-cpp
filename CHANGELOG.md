@@ -80,6 +80,11 @@ The following functions now return `std::future` instead of `std::promise`
 ### Compatibility
 * Fileformat: Generates files with format v22.
 
+### Internals
+* Upgraded to Core v13.15.1
+
+----------------------------------------------
+
 0.1.1 Release notes (2023-04-28)
 =============================================================
 

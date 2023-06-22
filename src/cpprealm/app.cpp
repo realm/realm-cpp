@@ -293,7 +293,7 @@ namespace realm {
     }
     App::credentials App::credentials::api_key(const std::string& key)
     {
-        return credentials(app::AppCredentials::user_api_key(key));
+        return credentials(app::AppCredentials::api_key(key));
     }
     App::credentials App::credentials::facebook(const std::string& access_token)
     {
@@ -359,7 +359,7 @@ namespace realm {
         app_config.base_url = base_url ? base_url : util::Optional<std::string>();
         auto device_info = app::App::Config::DeviceInfo();
 
-        device_info.platform = "Realm Cpp",
+        device_info.framework_name = "Realm Cpp",
         device_info.platform_version = "?",
         device_info.sdk_version = "0.0.1",
         device_info.sdk = "Realm Cpp";
