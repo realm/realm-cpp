@@ -90,7 +90,7 @@ namespace realm::internal::bridge {
                        const std::vector<mixed>& b) const {
         std::vector<Mixed> v2;
         for (auto& v : b) {
-            v2.push_back(static_cast<Mixed>(v));
+            v2.push_back(v.operator ::realm::Mixed());
         }
         return static_cast<TableRef>(*this)->query(a, v2);
     }
@@ -112,7 +112,7 @@ namespace realm::internal::bridge {
     }
 
     obj table::create_object_with_primary_key(const bridge::mixed& key) const {
-        return static_cast<TableRef>(*this)->create_object_with_primary_key(static_cast<const Mixed>(key));
+        return static_cast<TableRef>(*this)->create_object_with_primary_key(key.operator ::realm::Mixed());
     }
     bool table::is_valid(const obj_key &key) const {
         return static_cast<TableRef>(*this)->is_valid(key);

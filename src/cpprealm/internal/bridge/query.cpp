@@ -23,7 +23,7 @@
 
 #define __generate_query_operator_mixed(op) \
     query &query::op(col_key column_key, mixed value, bool) { \
-        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->op(column_key, static_cast<Mixed>(value)); \
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->op(column_key, value.operator ::realm::Mixed()); \
         return *this; \
     }
 namespace realm::internal::bridge {

@@ -159,7 +159,7 @@ namespace realm::internal::bridge {
     }
 
     void dictionary::insert(const std::string &key, const mixed &value) {
-        reinterpret_cast<Dictionary*>(&m_dictionary)->insert_any(key, static_cast<Mixed>(value));
+        reinterpret_cast<Dictionary*>(&m_dictionary)->insert_any(key, static_cast<Mixed>(value.operator ::realm::Mixed()));
     }
 
     void dictionary::insert(const std::string &key, const std::string &value) {

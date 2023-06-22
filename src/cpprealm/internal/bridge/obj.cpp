@@ -179,7 +179,7 @@ namespace realm::internal::bridge {
                                                Mixed(ObjLink(reinterpret_cast<Obj *>(&m_obj)->get_table()->get_key(),
                                                               value.operator bridge::obj_key())));
         } else {
-            reinterpret_cast<Obj*>(&m_obj)->set(col_key, static_cast<Mixed>(value));
+            reinterpret_cast<Obj*>(&m_obj)->set(col_key, value.operator ::realm::Mixed());
         }
     }
     void obj::set(const col_key &col_key, const timestamp &value) {

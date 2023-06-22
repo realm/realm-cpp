@@ -2,6 +2,7 @@
 
 #include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
+#include <cpprealm/internal/bridge/mixed.hpp>
 
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/type_info.hpp>
@@ -106,7 +107,7 @@ namespace realm::internal::bridge {
         reinterpret_cast<List *>(&m_list)->add(static_cast<ObjectId>(v));
     }
     void list::add(const mixed &v) {
-        reinterpret_cast<List *>(&m_list)->add(static_cast<Mixed>(v));
+        reinterpret_cast<List *>(&m_list)->add(v.operator ::realm::Mixed());
     }
     void list::add(const obj_key &v) {
         reinterpret_cast<List *>(&m_list)->add(static_cast<ObjKey>(v));
@@ -216,7 +217,7 @@ namespace realm::internal::bridge {
     void list::set(size_t pos, const double &v) { reinterpret_cast<List *>(m_list)->set(pos, v); }
     void list::set(size_t pos, const uuid &v) { reinterpret_cast<List *>(m_list)->set(pos, static_cast<UUID>(v)); }
     void list::set(size_t pos, const object_id &v) { reinterpret_cast<List *>(m_list)->set(pos, static_cast<ObjectId>(v)); }
-    void list::set(size_t pos, const mixed &v) { reinterpret_cast<List *>(m_list)->set(pos, static_cast<Mixed>(v)); }
+    void list::set(size_t pos, const mixed &v) { reinterpret_cast<List *>(m_list)->set(pos, v.operator ::realm::Mixed()); }
     void list::set(size_t pos, const binary &v) { reinterpret_cast<List *>(m_list)->set(pos, static_cast<BinaryData>(v)); }
     void list::set(size_t pos, const timestamp &v) { reinterpret_cast<List *>(m_list)->set(pos, static_cast<Timestamp>(v)); }
 
@@ -226,7 +227,7 @@ namespace realm::internal::bridge {
     size_t list::find(const std::string &v) { return reinterpret_cast<List *>(&m_list)->find(StringData(v)); }
     size_t list::find(const uuid &v) { return reinterpret_cast<List *>(&m_list)->find(static_cast<UUID>(v)); }
     size_t list::find(const object_id &v) { return reinterpret_cast<List *>(&m_list)->find(static_cast<ObjectId>(v)); }
-    size_t list::find(const mixed &v) { return reinterpret_cast<List *>(&m_list)->find(static_cast<Mixed>(v)); }
+    size_t list::find(const mixed &v) { return reinterpret_cast<List *>(&m_list)->find(v.operator ::realm::Mixed()); }
     size_t list::find(const timestamp &v) { return reinterpret_cast<List *>(&m_list)->find(static_cast<Timestamp>(v)); }
     size_t list::find(const binary& v) {
         auto v_actual = v.operator BinaryData();
