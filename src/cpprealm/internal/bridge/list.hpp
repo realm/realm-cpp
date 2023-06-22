@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <string>
 #include <memory>
+#include <optional>
 
 namespace realm {
     class List;
@@ -62,7 +63,7 @@ namespace realm::internal::bridge {
         }
         obj add_embedded();
 
-        [[nodiscard]] realm get_realm() const;
+       // [[nodiscard]] realm get_realm() const;
 
         void set(size_t pos, const int64_t &);
         void set(size_t pos, const double &);
@@ -104,6 +105,8 @@ namespace realm::internal::bridge {
         std::aligned_storage<40, 4>::type m_list[1];
 #elif __aarch64__
         std::aligned_storage<80, 8>::type m_list[1];
+#elif _WIN32
+        std::aligned_storage<80, 8>::type m_list[1];
 #endif
     };
 
@@ -125,6 +128,23 @@ namespace realm::internal::bridge {
     [[nodiscard]] mixed get(const list&, size_t idx);
     template <>
     [[nodiscard]] obj get(const list&, size_t idx);
+
+    template <>
+    [[nodiscard]] std::optional<int64_t> get(const list& lst, size_t idx);
+    template <>
+    [[nodiscard]] std::optional<double> get(const list& lst, size_t idx);
+    template <>
+    [[nodiscard]] std::optional<bool> get(const list& lst, size_t idx);
+    template <>
+    [[nodiscard]] std::optional<uuid> get(const list& lst, size_t idx);
+    template <>
+    [[nodiscard]] std::optional<object_id> get(const list& lst, size_t idx);
+    template <>
+    [[nodiscard]] std::optional<std::string> get(const list& lst, size_t idx);
+    template <>
+    [[nodiscard]] std::optional<binary> get(const list& lst, size_t idx);
+    template <>
+    [[nodiscard]] std::optional<timestamp> get(const list& lst, size_t idx);
 }
 
 #endif //CPP_REALM_BRIDGE_LIST_HPP

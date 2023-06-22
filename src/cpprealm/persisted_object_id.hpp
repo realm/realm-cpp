@@ -3,24 +3,9 @@
 
 #include <string>
 #include <cpprealm/persisted.hpp>
-
+#include <cpprealm/experimental/types.hpp>
 namespace realm {
-    struct object_id {
-        explicit object_id(const std::string &);
-        object_id() = default;
-        [[nodiscard]] static object_id generate();
-        [[nodiscard]] std::string to_string() const;
-    private:
-        object_id(const internal::bridge::object_id&); //NOLINT(google-explicit-constructor)
-        internal::bridge::object_id m_object_id;
-        friend object_id generate();
-        friend struct internal::bridge::object_id;
-        template <typename mapped_type>
-        friend struct box_base;
-        friend inline bool operator ==(const object_id& lhs, const object_id& rhs);
-        friend inline bool operator !=(const object_id& lhs, const object_id& rhs);
-        __cpp_realm_friends
-    };
+
 
     inline std::ostream& operator<< (std::ostream& stream, const object_id& value)
     {

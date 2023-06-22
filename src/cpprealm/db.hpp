@@ -116,8 +116,7 @@ struct db {
     template <typename T>
     results<T, void> objects()
     {
-        return results<T, void>(internal::bridge::results(m_realm,
-                                                    m_realm.read_group().get_table(T::schema.name)));
+        return results<T, void>(internal::bridge::results(m_realm, m_realm.read_group().get_table(T::schema.name)));
     }
 
     template <typename T>
@@ -162,7 +161,7 @@ private:
 };
 
 template <typename ...Ts>
-static db<Ts...> open(db_config&& config = {std::nullopt, std::nullopt})
+static db<Ts...> open(db_config&& config)
 {
     return db<Ts...>(std::move(config));
 }

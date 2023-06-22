@@ -21,9 +21,14 @@
 
 #include <cpprealm/internal/type_info.hpp>
 #include <cpprealm/internal/bridge/query.hpp>
-
+#include <cpprealm/internal/bridge/object.hpp>
+#include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/schema.hpp>
 
+namespace realm::experimental {
+    template<typename>
+    struct box_base;
+}
 #define __friend_rbool_operators__(type, op) \
         friend rbool operator op(const persisted<type>& a, const type& b); \
 
@@ -53,6 +58,8 @@
     friend std::enable_if_t<std::is_enum_v<TT>, rbool> operator op(const persisted<TT>& a, const VV& b);
 
 #define __cpp_realm_friends \
+        template <typename> \
+        friend struct realm::experimental::box_base; \
         template <typename ...> \
         friend struct db;                    \
         template <typename, typename ...> \
@@ -147,7 +154,7 @@
     template <typename TT> \
     friend inline typename std::enable_if<std::is_base_of<realm::object_base<TT>, TT>::value, std::ostream>::type& \
     operator<< (std::ostream& stream, const TT& object); \
-    template <typename, typename> friend struct thead_safe_reference;
+    template <typename, typename> friend struct thead_safe_reference;                      \
 
 #define __cpp_realm_generate_operator(type, op, name) \
     inline rbool operator op(const persisted<type>& a, const type& b) { \
@@ -161,7 +168,7 @@
     } \
     inline rbool operator op(const persisted<type>& a, const persisted<type>& b) { \
         return a op *b; \
-    }
+    } \
 
 namespace realm {
     namespace cpprealm {
@@ -261,7 +268,7 @@ protected:
 
         persisted_primitive_base& operator=(T&& o) noexcept {
             if (this->is_managed()) {
-                this->m_object->get_obj().set(managed, o);
+                this->m_object->get_obj().set(managed, experimental::serialize(o, this->m_object->get_realm()));
             } else {
                 new (&unmanaged) T(std::move(o));
             }
@@ -343,6 +350,13 @@ public:
     operator bool() const {
         return b;
     }
+    rbool operator !() const {
+        if (is_for_queries) {
+            new (&q) internal::bridge::query(q.negate());
+            return *this;
+        }
+        return !b;
+    }
     union {
         bool b;
         mutable internal::bridge::query q;
@@ -380,21 +394,17 @@ inline rbool operator ||(const rbool& lhs, const rbool& rhs) {
 template <typename T>
 inline std::ostream& operator<< (std::ostream& stream, const persisted_primitive_base<T>& value)
 {
-    return stream << *value;
+    return stream << value;
 }
 
 template <typename T>
 inline typename std::enable_if<std::is_base_of<realm::object_base<T>, T>::value, std::ostream>::type&
 operator<< (std::ostream& stream, const T& object)
 {
-    if (object.m_object) {
-        return stream << object.m_object->get_obj();
-    }
-
     std::apply([&stream, &object](auto&&... props) {
-        stream << "{\n";
-        ((stream << "\t" << props.name << ": " << *(object.*props.ptr) << "\n"), ...);
-        stream << "}";
+        stream << std::string("{\n");
+        ((stream << std::string("\t") << props.name << ": " << *(object.*props.ptr) << "\n"), ...);
+        stream << std::string("}");
     }, T::schema.ps);
 
     return stream;

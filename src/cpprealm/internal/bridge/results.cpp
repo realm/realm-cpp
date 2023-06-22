@@ -4,6 +4,7 @@
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/query.hpp>
 #include <realm/object-store/results.hpp>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm::internal::bridge {
 #ifdef __i386__
@@ -25,6 +26,9 @@ namespace realm::internal::bridge {
 #elif defined(__GNUC__) || defined(__GNUG__)
     static_assert(SizeCheck<912, sizeof(Results)>{});
 #endif
+    static_assert(SizeCheck<8, alignof(Results)>{});
+#elif _WIN32
+    static_assert(SizeCheck<1008, sizeof(Results)>{});
     static_assert(SizeCheck<8, alignof(Results)>{});
 #endif
 
@@ -80,7 +84,7 @@ namespace realm::internal::bridge {
 
     template <>
     obj get(results& res, size_t v) {
-        return reinterpret_cast<Results*>(&res.m_results)-> template get(v);
+        return reinterpret_cast<Results*>(&res.m_results)->get(v);
     }
 
     notification_token results::add_notification_callback(std::shared_ptr<collection_change_callback> &&cb) {
@@ -96,5 +100,9 @@ namespace realm::internal::bridge {
             }
         } ccb(std::move(cb));
         return reinterpret_cast<Results*>(&m_results)->add_notification_callback(ccb);
+    }
+
+    results::results(const realm &realm, const table_view &tv) {
+        new (&m_results) Results(realm, tv);
     }
 }

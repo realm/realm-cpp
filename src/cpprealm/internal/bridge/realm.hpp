@@ -9,10 +9,10 @@
 
 namespace realm {
     class Realm;
-    class RealmConfig;
-    class SyncConfig;
+    struct RealmConfig;
+    struct SyncConfig;
     struct scheduler;
-    struct SyncUser;
+    class SyncUser;
 }
 
 namespace realm::internal::bridge {
@@ -45,18 +45,9 @@ namespace realm::internal::bridge {
             RecoverOrDiscard,
         };
 
-        struct sync_config {
-            struct flx_sync_enabled {};
+        struct sync_config;
 
-            sync_config(const std::shared_ptr<SyncUser>& user);
-            sync_config(const std::shared_ptr<SyncConfig> &); //NOLINT(google-explicit-constructor)
-            operator std::shared_ptr<SyncConfig>() const; //NOLINT(google-explicit-constructor)
-            void set_client_resync_mode(client_resync_mode&&);
-            void set_stop_policy(sync_session_stop_policy&&);
-            void set_error_handler(std::function<void(const sync_session&, const sync_error&)>&& fn);
-        private:
-            std::shared_ptr<SyncConfig> m_config;
-        };
+
 
         struct config {
             config();
@@ -66,8 +57,8 @@ namespace realm::internal::bridge {
             config& operator=(config&& other);
             ~config();
             config(const RealmConfig&); //NOLINT(google-explicit-constructor)
-            config(const std::optional<std::string>& path = std::nullopt,
-                   const std::optional<std::shared_ptr<scheduler>>& scheduler = std::nullopt);
+            config(const std::string& path,
+                   const std::shared_ptr<struct scheduler>& scheduler);
             [[nodiscard]] std::string path() const;
             [[nodiscard]] struct sync_config sync_config() const;
             [[nodiscard]] std::shared_ptr<struct scheduler> scheduler();
@@ -95,8 +86,25 @@ namespace realm::internal::bridge {
     #elif defined(__GNUC__) || defined(__GNUG__)
         std::aligned_storage<328, 8>::type m_config[1];
     #endif
+#elif _WIN32
+            std::aligned_storage<456, 8>::type m_config[1];
 #endif
         };
+
+        struct sync_config {
+            struct flx_sync_enabled {};
+            sync_config() {}
+            sync_config(const std::shared_ptr<SyncUser> &user);
+            sync_config(const std::shared_ptr<SyncConfig> &);//NOLINT(google-explicit-constructor)
+            operator std::shared_ptr<SyncConfig>() const;    //NOLINT(google-explicit-constructor)
+            void set_client_resync_mode(client_resync_mode &&);
+            void set_stop_policy(sync_session_stop_policy &&);
+            void set_error_handler(std::function<void(const sync_session &, const sync_error &)> &&fn);
+
+        private:
+            std::shared_ptr<SyncConfig> m_config;
+        };
+
         realm();
         realm(const config&); //NOLINT(google-explicit-constructor)
         realm(std::shared_ptr<Realm>); //NOLINT(google-explicit-constructor)
@@ -108,6 +116,7 @@ namespace realm::internal::bridge {
         void begin_transaction() const;
         void commit_transaction() const;
         table table_for_object_type(const std::string& object_type);
+        table get_table(const uint32_t &);
         [[nodiscard]] std::shared_ptr<struct scheduler> scheduler() const;
         static async_open_task get_synchronized_realm(const config&);
         bool refresh();

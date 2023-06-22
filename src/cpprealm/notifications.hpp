@@ -22,6 +22,7 @@
 #include <cpprealm/persisted.hpp>
 #include <cpprealm/thread_safe_reference.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
+#include <cpprealm/internal/bridge/list.hpp>
 
 #include <any>
 #include <future>
@@ -37,18 +38,21 @@ struct ObjectChange;
  A token which is returned from methods which subscribe to changes to a `realm::object`.
  */
 struct notification_token {
+    notification_token(const notification_token &nt) noexcept = delete;
+    notification_token &operator=(const notification_token &) = delete;
     notification_token(notification_token&& nt) noexcept = default;
-    notification_token& operator=(notification_token&&) = default;
+    notification_token &operator=(notification_token &&other) = default;
     notification_token() = default;
 
     notification_token(internal::bridge::notification_token&& token)
-            : m_token(token) {}
+            : m_token(std::move(token)) {}
     void unregister() {
         m_token.unregister();
     }
 
     internal::bridge::notification_token m_token;
-    internal::bridge::dictionary m_dictionary;
+    std::shared_ptr<internal::bridge::dictionary> m_dictionary;
+    std::shared_ptr<internal::bridge::list> m_list;
     internal::bridge::realm m_realm;
 };
 
@@ -114,7 +118,6 @@ private:
         return vector;
     };
 };
-
 
 // MARK: PropertyChange
 /**

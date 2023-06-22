@@ -1,4 +1,5 @@
 #include <realm/object_id.hpp>
+#include <realm/string_data.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/persisted_object_id.hpp>
 
@@ -13,6 +14,9 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<12, sizeof(::realm::ObjectId)>{});
     static_assert(SizeCheck<1, alignof(::realm::ObjectId)>{});
 #elif __aarch64__
+    static_assert(SizeCheck<12, sizeof(::realm::ObjectId)>{});
+    static_assert(SizeCheck<1, alignof(::realm::ObjectId)>{});
+#elif _WIN32
     static_assert(SizeCheck<12, sizeof(::realm::ObjectId)>{});
     static_assert(SizeCheck<1, alignof(::realm::ObjectId)>{});
 #endif

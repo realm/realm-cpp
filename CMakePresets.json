@@ -15,6 +15,36 @@
       }
     },
     {
+      "name": "windows",
+      "hidden": true,
+      "inherits": "default",
+      "generator": "Visual Studio 17 2022",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "$env{vcpkg_arch}-windows"
+      },
+      "condition": {
+        "lhs": "${hostSystemName}",
+        "type": "equals",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "windows-x64",
+      "displayName": "Windows x64",
+      "inherits": "windows",
+      "environment": {
+        "vcpkg_arch": "x64"
+      }
+    },
+    {
+      "name": "windows-arm64",
+      "displayName": "Windows ARM64",
+      "inherits": "windows",
+      "environment": {
+        "vcpkg_arch": "arm64"
+      }
+    },
+    {
       "name": "linux",
       "displayName": "Linux",
       "inherits": "default",
@@ -119,6 +149,12 @@
       "name": "android-x86",
       "configurePreset": "android-x86",
       "displayName": "x86",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-x64",
+      "configurePreset": "windows-x64",
+      "displayName": "x64",
       "configuration": "Debug"
     },
     {

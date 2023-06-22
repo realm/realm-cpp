@@ -1,4 +1,4 @@
-// swift-tools-version:5.5
+// swift-tools-version:5.6
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -40,7 +40,7 @@ let cppSdkTarget: Target = .target(
     path: "src/",
     exclude: [
         "cpprealm/internal/curl",
-        "cpprealm/internal/android"
+        "cpprealm/internal/network"
     ],
     publicHeadersPath: ".",
     cxxSettings: cxxSettings,
@@ -65,7 +65,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/realm/realm-core.git", revision: "b2ed3201a306b1b00f5fb1cc4d64d84e7e603c3f")
+        .package(url: "https://github.com/realm/realm-core.git", revision: "f1434caadda443b4ed2261b91ea4f43ab1ee2aa5")
     ],
     targets: [
         cppSdkTarget,
@@ -92,9 +92,18 @@ let package = Package(
                 .define("CATCH_CONFIG_NO_POSIX_SIGNALS", .when(platforms: [.tvOS])),
             ] + cxxSettings) as [CXXSetting]),
         .executableTarget(
-            name: "realm-cpp-sdkTests",
+            name: "realm-beta-tests",
             dependencies: ["realm-cpp-sdk", "Catch2"],
             path: "tests",
+            exclude: [
+                "experimental/sync",
+                "experimental/alpha",
+            ],
+            sources: [
+                "experimental",
+                "main.hpp",
+                "main.cpp",
+            ],
             resources: [
                 .copy("setup_baas.rb"),
                 .copy("dependencies.list"),

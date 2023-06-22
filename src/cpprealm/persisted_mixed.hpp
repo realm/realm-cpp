@@ -20,9 +20,10 @@
 #define REALM_PERSISTED_MIXED_HPP
 
 #include <cpprealm/persisted.hpp>
-#include <cpprealm/persisted_uuid.hpp>
-#include <cpprealm/persisted_object_id.hpp>
-#include <cpprealm/persisted_custom.hpp>
+//#include <cpprealm/persisted_uuid.hpp>
+//#include <cpprealm/persisted_object_id.hpp>
+//#include <cpprealm/persisted_custom.hpp>
+#include <cpprealm/experimental/types.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
 
 namespace realm {
@@ -61,7 +62,6 @@ namespace realm {
                     internal::bridge::object(this->m_object->get_realm(), val.operator internal::bridge::obj_link()));
             return o;
         }
-    protected:
         static internal::bridge::mixed serialize(const T& value, const std::optional<internal::bridge::realm>& realm = std::nullopt) {
             return std::visit([&realm](auto&& arg) {
                 using M = std::decay_t<decltype(arg)>;
@@ -77,6 +77,7 @@ namespace realm {
                 }
             }, value);
         }
+    protected:
         static T deserialize(const internal::bridge::mixed& value) {
             if (value.is_null()) {
                 return std::monostate();
@@ -162,8 +163,6 @@ namespace realm {
                 stream << " }";
             } else if constexpr (std::is_same_v<M, std::monostate>) {
                 stream << "null";
-            } else {
-                stream << static_cast<M>(arg);
             }
         }, *value);
         return stream;

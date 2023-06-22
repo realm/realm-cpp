@@ -20,15 +20,15 @@
 #include <external/json/json.hpp>
 
 #if __APPLE__ || __MACH__
-#include <sys/socket.h>
-#include <sys/sysctl.h>
+#include <CommonCrypto/CommonDigest.h>
 #include <net/if.h>
 #include <net/if_dl.h>
-#include <CommonCrypto/CommonDigest.h>
+#include <sys/socket.h>
+#include <sys/sysctl.h>
 #elif __linux__
+#include <fcntl.h>
 #include <ifaddrs.h>
 #include <iomanip>
-#include <fcntl.h>
 #include <netpacket/packet.h>
 #include <sys/utsname.h>
 #include <unistd.h>
@@ -44,8 +44,7 @@
 namespace realm {
 #if __APPLE__ || __MACH__
     // Wrapper for sysctl() that handles the memory management stuff
-    static auto do_sysctl(int *mib, u_int mib_size, size_t *buffer_size)
-    {
+    static auto do_sysctl(int *mib, u_int mib_size, size_t *buffer_size) {
         std::unique_ptr<void, decltype(&free)> buffer(nullptr, &free);
 
         int ret = sysctl(mib, mib_size, nullptr, buffer_size, nullptr, 0);
@@ -67,8 +66,7 @@ namespace realm {
     }
 
     // Hash the data in the given buffer and convert it to a hex-format string
-    static std::string hash_data(const void *bytes, size_t length)
-    {
+    static std::string hash_data(const void *bytes, size_t length) {
         unsigned char buffer[CC_SHA256_DIGEST_LENGTH];
         CC_SHA256(bytes, static_cast<CC_LONG>(length), buffer);
 
@@ -80,8 +78,7 @@ namespace realm {
         return formatted;
     }
 
-    std::string get_mac_address()
-    {
+    std::string get_mac_address() {
         int en0 = static_cast<int>(if_nametoindex("en0"));
         if (!en0) {
             return nil;
@@ -101,8 +98,7 @@ namespace realm {
         return hash_data(mac, 6);
     }
 
-    std::string get_host_os_verion()
-    {
+    std::string get_host_os_verion() {
         std::array<int, 2> mib = {{CTL_KERN, KERN_OSRELEASE}};
         size_t buffer_size;
         auto buffer = do_sysctl(&mib[0], mib.size(), &buffer_size);
@@ -110,21 +106,19 @@ namespace realm {
             return "unknown";
         }
 
-        return std::string(static_cast<const char*>(buffer.get()), buffer_size - 1);
+        return std::string(static_cast<const char *>(buffer.get()), buffer_size - 1);
     }
 
-    bool debugger_attached()
-    {
+    bool debugger_attached() {
         int name[] = {
                 CTL_KERN,
                 KERN_PROC,
                 KERN_PROC_PID,
-                getpid()
-        };
+                getpid()};
 
         struct kinfo_proc info;
         size_t info_size = sizeof(info);
-        if (sysctl(name, sizeof(name)/sizeof(name[0]), &info, &info_size, NULL, 0) == -1) {
+        if (sysctl(name, sizeof(name) / sizeof(name[0]), &info, &info_size, NULL, 0) == -1) {
             std::cout << util::format("sysctl() failed: %1", strerror(errno)) << std::endl;
             return false;
         }
@@ -132,8 +126,7 @@ namespace realm {
         return (info.kp_proc.p_flag & P_TRACED) != 0;
     }
 #elif __linux__
-    std::string print_hex(unsigned char* bs, unsigned int len)
-    {
+    std::string print_hex(unsigned char *bs, unsigned int len) {
         std::stringstream ss;
         for (size_t i = 0; i < len; i++) {
             ss << std::hex << static_cast<int>(bs[i]);
@@ -142,23 +135,20 @@ namespace realm {
         return ss.str();
     }
 
-    std::string get_mac_address()
-    {
-        struct ifaddrs *ifaddr=NULL;
+    std::string get_mac_address() {
+        struct ifaddrs *ifaddr = NULL;
         struct ifaddrs *ifa = NULL;
         std::string concatenated_mac_addresses = "";
 
-        if (getifaddrs(&ifaddr) == -1)
-        {
+        if (getifaddrs(&ifaddr) == -1) {
             return "unknown";
-        }
-        else {
+        } else {
             // concatenate all MAC addresses to try guarantee a more unique hash.
             // For example the first available MAC maybe all zero values and we want to
             // avoid that scenario.
             for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
                 if ((ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_PACKET)) {
-                    struct sockaddr_ll *s = (struct sockaddr_ll*)ifa->ifa_addr;
+                    struct sockaddr_ll *s = (struct sockaddr_ll *) ifa->ifa_addr;
                     concatenated_mac_addresses += print_hex(s->sll_addr, s->sll_halen);
                 }
             }
@@ -168,25 +158,22 @@ namespace realm {
         return std::to_string(std::hash<std::string>{}(concatenated_mac_addresses));
     }
 
-    std::string get_host_os_verion()
-    {
+    std::string get_host_os_verion() {
         struct utsname host_info;
         std::stringstream ss;
-        if (uname(&host_info) == 0){
+        if (uname(&host_info) == 0) {
             ss << "Operating system name: " << host_info.sysname << ", ";
             ss << "Node name: " << host_info.nodename << ", ";
             ss << "Operating system release: " << host_info.release << ", ";
             ss << "Operating system name: " << host_info.version << ", ";
             ss << "Hardware identifier: " << host_info.machine;
             return ss.str();
-        }
-        else {
+        } else {
             return "unknown";
         }
     }
 
-    bool debugger_attached()
-    {
+    bool debugger_attached() {
         char buf[4096];
 
         const int status_fd = ::open("/proc/self/status", O_RDONLY);
@@ -205,8 +192,7 @@ namespace realm {
         if (!tracer_pid_ptr)
             return false;
 
-        for (const char* character_ptr = tracer_pid_ptr + sizeof(tracer_pid_string) - 1; character_ptr <= buf + num_read; ++character_ptr)
-        {
+        for (const char *character_ptr = tracer_pid_ptr + sizeof(tracer_pid_string) - 1; character_ptr <= buf + num_read; ++character_ptr) {
             if (::isspace(*character_ptr))
                 continue;
             else
@@ -219,32 +205,27 @@ namespace realm {
     std::string get_mac_address() {
         return "unknown";
     }
-    std::string get_host_os_verion()
-    {
-        return "unknown"
+    std::string get_host_os_verion() {
+        return "unknown";
     }
-    bool debugger_attached()
-    {
+    bool debugger_attached() {
         return false;
     }
 #else
     std::string get_mac_address() {
         return "unknown";
     }
-    std::string get_host_os_verion()
-    {
+    std::string get_host_os_verion() {
         return "unknown"
     }
-    bool debugger_attached()
-    {
+    bool debugger_attached() {
         return false;
     }
 #endif
 
-    void realm_analytics::send()
-    {
+    void realm_analytics::send() {
 #ifdef __ANDROID__
-        return; // TODO: Implement metrics for Android.
+        return;// TODO: Implement metrics for Android.
 #endif
         if (!debugger_attached() || getenv("REALM_DISABLE_ANALYTICS"))
             return;
@@ -266,32 +247,25 @@ namespace realm {
 #endif
 
         auto mac_address = get_mac_address();
-        nlohmann::json post_data {
+        nlohmann::json post_data{
                 {"event", "Run"},
-                {"properties", {
-                    {"token", "ce0fac19508f6c8f20066d345d360fd0"},
-                    {"distinct_id", mac_address},
-                    {"Anonymized MAC Address", mac_address},
-                    {"Anonymized Bundle ID", "unknown"},
-                    {"Binding", "cpp"},
+                {"properties", {{"token", "ce0fac19508f6c8f20066d345d360fd0"}, {"distinct_id", mac_address}, {"Anonymized MAC Address", mac_address}, {"Anonymized Bundle ID", "unknown"}, {"Binding", "cpp"},
 #if __cplusplus >= 202002L
-                    {"Language", "cpp20"},
+                                {"Language", "cpp20"},
 #else
-                    {"Language", "cpp17"},
+                                {"Language", "cpp17"},
 #endif
-                    {"Realm Version", "0.0.0"},
-                    {"Target OS Type", "unknown"},
+                                {"Realm Version", "0.0.0"},
+                                {"Target OS Type", "unknown"},
 #if defined(__clang__)
-                    {"Clang Version", __clang_version__},
-                    {"Clang Major Version", __clang_major__},
+                                {"Clang Version", __clang_version__},
+                                {"Clang Major Version", __clang_major__},
 #elif defined(__GNUC__) || defined(__GNUG__)
-                    {"GCC Version", __GNUC__},
-                    {"GCC Minor Version", __GNUC_MINOR__},
+                                {"GCC Version", __GNUC__},
+                                {"GCC Minor Version", __GNUC_MINOR__},
 #endif
-                    {"Host OS Type", os_name},
-                    {"Host OS Version", get_host_os_verion()}
-                }}
-        };
+                                {"Host OS Type", os_name},
+                                {"Host OS Version", get_host_os_verion()}}}};
 
         std::stringstream json_ss;
         json_ss << post_data;
@@ -304,19 +278,18 @@ namespace realm {
                                    buffer.data(), buffer.size());
 
         size_t s = 0;
-        while(buffer[s] != '\0') {
+        while (buffer[s] != '\0') {
             s++;
         }
         buffer.resize(s);
 
         auto base64_str = std::string(buffer.begin(), buffer.end());
-        transport->send_request_to_server({
-                                        .method = realm::app::HttpMethod::get,
-                                        .url = util::format("https://data.mongodb-api.com/app/realmsdkmetrics-zmhtm/endpoint/metric_webhook/metric?data=%1", base64_str),
-        }, [](auto) {
-            // noop
-        });
+        app::Request request;
+        request.method = realm::app::HttpMethod::get;
+        request.url = util::format("https://data.mongodb-api.com/app/realmsdkmetrics-zmhtm/endpoint/metric_webhook/metric?data=%1", base64_str);
+        transport->send_request_to_server(std::move(request), [](auto) {
+                                              // noop
+                                          });
     }
 
-} // namespace realm
-
+}// namespace realm

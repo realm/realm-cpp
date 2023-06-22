@@ -20,6 +20,7 @@
 #define flex_sync_hpp
 
 #include <future>
+#include <type_traits>
 
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/query.hpp>
@@ -27,6 +28,8 @@
 #include <cpprealm/internal/bridge/obj.hpp>
 
 #include <cpprealm/results.hpp>
+#include <cpprealm/experimental/macros.hpp>
+#include <cpprealm/experimental/results.hpp>
 
 namespace realm {
     template <typename>
@@ -95,6 +98,29 @@ namespace realm {
             }
         }
 
+        // Inserts a new subscription into the set if one does not exist already.
+        // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
+        // for the templated class type.
+        template<typename T>
+        std::enable_if_t<!std::is_base_of_v<object<T>, T>>
+        add(const std::string &name ,
+            std::optional<std::function<rbool(experimental::managed<T> &)>> &&query_fn = std::nullopt) {
+            static_assert(sizeof(experimental::managed<T>), "Must declare schema for T");
+
+            auto schema = m_realm.get().schema().find(experimental::managed<T>::schema.name);
+            auto group = m_realm.get().read_group();
+            auto table_ref = group.get_table(schema.table_key());
+            auto builder = internal::bridge::query(table_ref);
+
+            if (query_fn) {
+                auto q = realm::experimental::query<experimental::managed<T>>(builder, std::move(schema));
+                auto full_query = (*query_fn)(q).q;
+                insert_or_assign(name, full_query);
+            } else {
+                insert_or_assign(name, builder);
+            }
+        }
+
         // Removes a subscription for a given name. Will throw if subscription does
         // not exist.
         void remove(const std::string& name);
@@ -110,6 +136,18 @@ namespace realm {
         template <typename T>
         std::enable_if_t<std::is_base_of_v<object<T>, T>>
         update_subscription(const std::string& name, std::optional<std::function<rbool(T&)>>&& query_fn = std::nullopt) {
+            remove(name);
+            add(name, std::move(query_fn));
+        }
+
+        // Updates a subscription for a given name.
+        // Will throw if subscription does not exist.
+        // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
+        // for the templated class type.
+        template <typename T>
+        std::enable_if_t<!std::is_base_of_v<object<T>, T>>
+        update_subscription(const std::string& name,
+                            std::optional<std::function<rbool(experimental::managed<T>&)>>&& query_fn = std::nullopt) {
             remove(name);
             add(name, std::move(query_fn));
         }
@@ -135,6 +173,8 @@ namespace realm {
 #elif defined(__GNUC__) || defined(__GNUG__)
         std::aligned_storage<192, 8>::type m_subscription_set[1];
 #endif
+#elif _WIN32
+        std::aligned_storage<208, 8>::type m_subscription_set[1];
 #endif
         std::reference_wrapper<internal::bridge::realm> m_realm;
         friend struct sync_subscription_set;
@@ -157,7 +197,7 @@ namespace realm {
         // not exist.
         std::optional<sync_subscription> find(const std::string& name);
 
-        std::promise<bool> update(std::function<void(mutable_sync_subscription_set&)>&& fn);
+        std::future<bool> update(std::function<void(mutable_sync_subscription_set&)>&& fn);
 
         explicit sync_subscription_set(internal::bridge::realm& realm);
     private:
@@ -179,6 +219,8 @@ namespace realm {
 #elif defined(__GNUC__) || defined(__GNUG__)
         std::aligned_storage<104, 8>::type m_subscription_set[1];
 #endif
+#elif _WIN32
+        std::aligned_storage<120, 8>::type m_subscription_set[1];
 #endif
         std::reference_wrapper<internal::bridge::realm> m_realm;
     };

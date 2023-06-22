@@ -23,7 +23,7 @@
 
 #define __generate_query_operator_mixed(op) \
     query &query::op(col_key column_key, mixed value, bool) { \
-        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->op(column_key, static_cast<Mixed>(value)); \
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->op(column_key, value.operator ::realm::Mixed()); \
         return *this; \
     }
 namespace realm::internal::bridge {
@@ -46,6 +46,9 @@ namespace realm::internal::bridge {
 #elif defined(__GNUC__) || defined(__GNUG__)
     static_assert(SizeCheck<136, sizeof(Query)>{});
 #endif
+    static_assert(SizeCheck<8, alignof(Query)>{});
+#elif _WIN32
+    static_assert(SizeCheck<160, sizeof(Query)>{});
     static_assert(SizeCheck<8, alignof(Query)>{});
 #endif
 
@@ -141,6 +144,11 @@ namespace realm::internal::bridge {
     }
     query& query::not_equal(col_key column_key, std::nullopt_t) {
         *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->not_equal(column_key, realm::null{});
+        return *this;
+    }
+
+    query& query::negate() {
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->Not();
         return *this;
     }
 

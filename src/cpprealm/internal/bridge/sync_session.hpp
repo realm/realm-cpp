@@ -7,7 +7,7 @@
 #include <future>
 
 namespace realm {
-    struct SyncSession;
+    class SyncSession;
     namespace internal::bridge {
         struct sync_session {
             enum class state {
@@ -30,9 +30,9 @@ namespace realm {
             // Register a callback that will be called when all pending uploads have completed.
             // The callback is run asynchronously, and upon whatever thread the underlying sync client
             // chooses to run it on.
-            std::promise<void> wait_for_upload_completion();
+            std::future<void> wait_for_upload_completion();
             // Register a callback that will be called when all pending downloads have been completed.
-            std::promise<void> wait_for_download_completion();
+            std::future<void> wait_for_download_completion();
         private:
             std::weak_ptr<SyncSession> m_session;
         };

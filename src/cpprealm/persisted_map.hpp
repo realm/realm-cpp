@@ -22,6 +22,7 @@
 #include <cpprealm/persisted.hpp>
 #include <cpprealm/notifications.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
+#include <cpprealm/internal/bridge/mixed.hpp>
 
 #include <string>
 #include <utility>
@@ -260,7 +261,6 @@ namespace realm {
                         *static_cast<persisted<T>*>(this),
                         false)
         );
-        token.m_dictionary = managed;
         return token;
     }
 
@@ -301,7 +301,7 @@ namespace realm {
                             (*o).manage(internal::bridge::object(m_object.get_realm(), m_backing_map.get().insert_embedded(m_key)));
                         }
                     } else {
-                        m_backing_map.get().insert(m_key, internal::bridge::mixed(std::nullopt));
+                        m_backing_map.get().insert(m_key, internal::bridge::mixed());
                     }
                 } else {
                     m_backing_map.get().insert(m_key,

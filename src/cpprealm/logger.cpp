@@ -1,5 +1,9 @@
-#include "logger.hpp"
-#include "realm/util/logger.hpp"
+#if !defined(WIN32_LEAN_AND_MEAN) && _WIN32
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#include <cpprealm/logger.hpp>
+#include <realm/util/logger.hpp>
 
 namespace realm {
     static_assert((int)util::Logger::Level::off == (int)logger::level::off);

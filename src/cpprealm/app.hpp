@@ -21,26 +21,29 @@
 
 #include <cpprealm/task.hpp>
 #include <cpprealm/db.hpp>
-#include <cpprealm/internal/generic_network_transport.hpp>
 #include <cpprealm/internal/bridge/sync_session.hpp>
 #include <cpprealm/internal/bridge/sync_error.hpp>
 #include <cpprealm/internal/bridge/sync_manager.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
 
 #include <realm/object-store/util/bson/bson.hpp>
-#include <realm/object-store/util/tagged_string.hpp>
+#include <realm/object-store/sync/app_credentials.hpp>
 
 #include <utility>
 #include <future>
 
 namespace realm {
     using sync_session = internal::bridge::sync_session;
-    using sync_error = internal::bridge::sync_error;
+    class SyncUser;
 
     namespace app {
+        class App;
         struct AppError;
-        struct AppCredentials;
+    }// namespace app
+    namespace internal::bridge {
+        struct sync_error;
     }
+
 // MARK: User
 
 // Represents an error state from the server.
@@ -69,6 +72,8 @@ struct app_error {
 private:
 #ifdef __i386__
     std::aligned_storage<28, 4>::type m_error[1];
+#elif _WIN32
+    std::aligned_storage<80, 8>::type m_error[1];
 #elif __x86_64__
     #if defined(__clang__)
 std::aligned_storage<48, 8>::type m_error[1];
@@ -101,10 +106,7 @@ struct user {
     user(user&&) = default;
     user& operator=(const user&) = default;
     user& operator=(user&&) = default;
-    explicit user(std::shared_ptr<SyncUser> user)
-    : m_user(std::move(user))
-    {
-    }
+    explicit user(std::shared_ptr<SyncUser> user);
 
     /**
      The state of the user object.
@@ -146,9 +148,9 @@ struct user {
 
     [[nodiscard]] db_config flexible_sync_configuration() const
     {
-        db_config config = {std::nullopt, std::nullopt};
+        db_config config;
         config.set_sync_config(sync_config(m_user));
-        config.sync_config().set_error_handler([](const sync_session& session, const sync_error& error) {
+        config.sync_config().set_error_handler([](const sync_session& session, const internal::bridge::sync_error& error) {
             std::cerr<<"sync error: "<<error.message()<<std::endl;
         });
         config.set_path(sync_manager().path_for_realm(config.sync_config()));
@@ -166,7 +168,7 @@ struct user {
      */
     void log_out(std::function<void(std::optional<app_error>)>&& callback) const;
 
-    [[nodiscard]] std::promise<void> log_out() const;
+    [[nodiscard]] std::future<void> log_out() const;
 
     /**
      The custom data of the user.
@@ -193,8 +195,8 @@ struct user {
     @param callback The completion handler to call when the function call is complete.
     This handler is executed on the thread the method was called from.
     */
-    [[nodiscard]] std::promise<std::optional<bson::Bson>> call_function(const std::string& name,
-                                                                        const realm::bson::BsonArray& arguments) const;
+    [[nodiscard]] std::future<std::optional<bson::Bson>> call_function(const std::string& name,
+                                                                       const realm::bson::BsonArray& arguments) const;
 
     /**
      Refresh a user's custom data. This will, in effect, refresh the user's auth session.
@@ -204,7 +206,7 @@ struct user {
     /**
      Refresh a user's custom data. This will, in effect, refresh the user's auth session.
      */
-    [[nodiscard]] std::promise<void> refresh_custom_user_data() const;
+    [[nodiscard]] std::future<void> refresh_custom_user_data() const;
 
     std::shared_ptr<SyncUser> m_user;
 };
@@ -240,6 +242,8 @@ public:
 
 #ifdef __i386__
     std::aligned_storage<8, 4>::type m_credentials[1];
+#elif _WIN32
+    std::aligned_storage<16, 8>::type m_credentials[1];
 #elif __x86_64__
     std::aligned_storage<16, 8>::type m_credentials[1];
 #elif __arm__
@@ -249,8 +253,8 @@ public:
 #endif
     };
 
-    std::promise<void> register_user(const std::string& username, const std::string& password);
-    std::promise<user> login(const credentials& credentials);
+    std::future<void> register_user(const std::string& username, const std::string& password);
+    std::future<user> login(const credentials &credentials);
     void login(const credentials& credentials, std::function<void(user, std::optional<app_error>)>&& callback);
     [[nodiscard]] internal::bridge::sync_manager get_sync_manager() const;
 private:

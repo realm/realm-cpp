@@ -1,13 +1,14 @@
 #include <cpprealm/app.hpp>
-#include <cpprealm/internal/bridge/utils.hpp>
+#include <cpprealm/internal/generic_network_transport.hpp>
 
 #include <realm/object-store/sync/app.hpp>
-#include <realm/object-store/sync/app_credentials.hpp>
 #include <realm/object-store/sync/sync_user.hpp>
+#include <realm/object-store/sync/sync_manager.hpp>
 
 #include <utility>
 
 namespace realm {
+
 #ifdef __i386__
     static_assert(internal::bridge::SizeCheck<8, sizeof(realm::app::AppCredentials)>{});
     static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppCredentials)>{});
@@ -36,6 +37,11 @@ namespace realm {
 #elif defined(__GNUC__) || defined(__GNUG__)
     static_assert(internal::bridge::SizeCheck<56, sizeof(realm::app::AppError)>{});
 #endif
+    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
+#elif _WIN32
+    static_assert(internal::bridge::SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
+    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppCredentials)>{});
+    static_assert(internal::bridge::SizeCheck<80, sizeof(realm::app::AppError)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
 #endif
 
@@ -75,7 +81,7 @@ namespace realm {
 
     std::string_view app_error::mesage() const
     {
-        return reinterpret_cast<const app::AppError*>(&m_error)->reason();
+        return reinterpret_cast<const app::AppError *>(&m_error)->reason();
     }
 
     std::string_view app_error::link_to_server_logs() const
@@ -106,6 +112,10 @@ namespace realm {
     bool app_error::is_client_error() const
     {
         return reinterpret_cast<const app::AppError*>(&m_error)->is_client_error();
+    }
+
+    user::user(std::shared_ptr<SyncUser> user) : m_user(std::move(user))
+    {
     }
 
     /**
@@ -161,14 +171,15 @@ namespace realm {
         });
     }
 
-    std::promise<void> user::log_out() const
+    std::future<void> user::log_out() const
     {
         std::promise<void> p;
-        m_user->sync_manager()->app().lock()->log_out(m_user, [&p](auto err){
+        std::future<void> f = p.get_future();
+        m_user->sync_manager()->app().lock()->log_out(m_user, [p = std::move(p)](auto err) mutable {
             if (err) p.set_exception(std::make_exception_ptr(*err));
             else p.set_value();
         });
-        return p;
+        return f;
     }
 
     /**
@@ -202,14 +213,15 @@ namespace realm {
      @param callback The completion handler to call when the function call is complete.
      This handler is executed on the thread the method was called from.
      */
-    std::promise<std::optional<bson::Bson>> user::call_function(const std::string& name, const realm::bson::BsonArray& arguments) const
+    std::future<std::optional<bson::Bson>> user::call_function(const std::string& name, const realm::bson::BsonArray& arguments) const
     {
         std::promise<std::optional<bson::Bson>> p;
-        m_user->sync_manager()->app().lock()->call_function(name, arguments, [&p](std::optional<bson::Bson>&& bson, std::optional<app_error> err) {
+        std::future<std::optional<bson::Bson>> f = p.get_future();
+        m_user->sync_manager()->app().lock()->call_function(name, arguments, [p = std::move(p)](std::optional<bson::Bson>&& bson, std::optional<app_error> err) mutable {
             if (err) p.set_exception(std::make_exception_ptr(*err));
             else p.set_value(std::move(bson));
         });
-        return p;
+        return f;
     }
 
     /**
@@ -223,14 +235,15 @@ namespace realm {
     /**
      Refresh a user's custom data. This will, in effect, refresh the user's auth session.
      */
-    [[nodiscard]] std::promise<void> user::refresh_custom_user_data() const
+    [[nodiscard]] std::future<void> user::refresh_custom_user_data() const
     {
         std::promise<void> p;
-        m_user->refresh_custom_data([&p](auto err){
+        std::future<void> f = p.get_future();
+        m_user->refresh_custom_data([p = std::move(p)](auto err) mutable {
             if (err) p.set_exception(std::make_exception_ptr(*err));
             else p.set_value();
         });
-        return p;
+        return f;
     }
 
     internal::bridge::sync_manager user::sync_manager() const {
@@ -280,7 +293,7 @@ namespace realm {
     }
     App::credentials App::credentials::api_key(const std::string& key)
     {
-        return credentials(app::AppCredentials::user_api_key(key));
+        return credentials(app::AppCredentials::api_key(key));
     }
     App::credentials App::credentials::facebook(const std::string& access_token)
     {
@@ -331,45 +344,50 @@ namespace realm {
         }
         config.base_file_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
 #else
-        if (path)
+        if (path) {
             config.base_file_path = *path;
-        else
-            config.base_file_path = std::filesystem::current_path();
+        } else {
+            config.base_file_path = std::filesystem::current_path().make_preferred().generic_string();
+        }
 #endif
         config.user_agent_binding_info = "RealmCpp/0.0.1";
         config.user_agent_application_info = app_id;
 
-        m_app = app::App::get_shared_app(app::App::Config{
-                                                 .app_id = app_id,
-                                                 .transport = std::make_shared<internal::DefaultTransport>(),
-                                                 .base_url = base_url ? base_url : util::Optional<std::string>(),
-                                                 .device_info = {
-                                                         .platform = "Realm Cpp",
-                                                         .platform_version = "?",
-                                                         .sdk_version = "0.0.1",
-                                                         .sdk = "Realm Cpp"
-                                                 }},
-                                         config);
+        auto app_config = app::App::Config();
+        app_config.app_id = app_id;
+        app_config.transport = std::make_shared<internal::DefaultTransport>();
+        app_config.base_url = base_url ? base_url : util::Optional<std::string>();
+        auto device_info = app::App::Config::DeviceInfo();
+
+        device_info.framework_name = "Realm Cpp",
+        device_info.platform_version = "?",
+        device_info.sdk_version = "0.0.1",
+        device_info.sdk = "Realm Cpp";
+        app_config.device_info = std::move(device_info);
+
+        m_app = app::App::get_shared_app(std::move(app_config), config);
     }
 
 
-    std::promise<void> App::register_user(const std::string& username, const std::string& password) {
+    std::future<void> App::register_user(const std::string &username, const std::string &password) {
         std::promise<void> p;
+        std::future<void> f = p.get_future();
         m_app->template provider_client<app::App::UsernamePasswordProviderClient>().register_email(username,
                                                                                                    password,
-                                                                                                   [&p](auto err){
+                                                                                                   [p = std::move(p)](auto err) mutable {
                                                                                                        if (err) p.set_exception(std::make_exception_ptr(*err));
                                                                                                        else p.set_value();
                                                                                                    });
-        return p;
+        return f;
     }
-    std::promise<user> App::login(const credentials& credentials) {
+    std::future<user> App::login(const credentials& credentials) {
         std::promise<user> p;
-        m_app->log_in_with_credentials(credentials, [&p](auto& u, auto err) {
+        std::future<user> f = p.get_future();
+        m_app->log_in_with_credentials(credentials, [p = std::move(p)](auto& u, auto err) mutable {
             if (err) p.set_exception(std::make_exception_ptr(*err));
             else p.set_value(user{std::move(u)});
         });
-        return p;
+        return f;
     }
 
     void App::login(const credentials& credentials, std::function<void(user, std::optional<app_error>)>&& callback) {

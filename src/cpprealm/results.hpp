@@ -130,7 +130,7 @@ namespace realm {
             results<T, T> *m_parent;
             T value;
 
-            template<typename>
+            template<typename, typename>
             friend
             class results;
         };

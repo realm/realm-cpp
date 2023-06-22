@@ -1,6 +1,6 @@
-#include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/property.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
+#include <cpprealm/internal/bridge/col_key.hpp>
 
 #include <realm/object-store/property.hpp>
 
@@ -25,6 +25,9 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<152, sizeof(Property)>{});
 #endif
     static_assert(SizeCheck<8, alignof(Property)>{});
+#elif _WIN32
+    static_assert(SizeCheck<184, sizeof(Property)>{});
+    static_assert(SizeCheck<8, alignof(Property)>{});
 #endif
 
 
@@ -43,11 +46,11 @@ namespace realm::internal::bridge {
         return *this;
     }
 
-    property::property(property&& other) {
+    property::property(property&& other) noexcept {
         new (&m_property) Property(std::move(*reinterpret_cast<Property*>(&other.m_property)));
     }
 
-    property& property::operator=(property&& other) {
+    property& property::operator=(property&& other) noexcept {
         if (this != &other) {
             *reinterpret_cast<Property*>(&m_property) = std::move(*reinterpret_cast<Property*>(&other.m_property));
         }
@@ -72,6 +75,11 @@ namespace realm::internal::bridge {
     void property::set_object_link(const std::string & v) {
         reinterpret_cast<Property*>(&m_property)->object_type = v;
     }
+    void property::set_is_computed(bool b) {
+    }
+    void property::set_origin_property_name(const std::string & v) {
+        reinterpret_cast<Property*>(&m_property)->link_origin_property_name = v;
+    }
     col_key property::column_key() const {
         return reinterpret_cast<const Property*>(&m_property)->column_key;
     }
@@ -82,5 +90,17 @@ namespace realm::internal::bridge {
 
     void property::set_type(realm::internal::bridge::property::type t) {
         reinterpret_cast<Property*>(&m_property)->type = static_cast<PropertyType>(t);
+    }
+
+    void property::set_primary_key(bool v) {
+        reinterpret_cast<Property*>(&m_property)->is_primary = v;
+    }
+
+    bool property::is_primary() const {
+        return reinterpret_cast<const Property*>(&m_property)->is_primary;
+    }
+
+    std::string property::name() const {
+        return reinterpret_cast<const Property*>(&m_property)->name;
     }
 }

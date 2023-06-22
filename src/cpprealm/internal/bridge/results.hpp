@@ -24,6 +24,7 @@ namespace realm::internal::bridge {
         ~results();
 
         results(const Results&); //NOLINT(google-explicit-constructor)
+        results(const realm&, const table_view&);
         size_t size();
         [[nodiscard]] realm get_realm() const;
         [[nodiscard]] table get_table() const;
@@ -48,6 +49,8 @@ namespace realm::internal::bridge {
 #elif defined(__GNUC__) || defined(__GNUG__)
         std::aligned_storage<912, 8>::type m_results[1];
 #endif
+#elif _WIN32
+        std::aligned_storage<1008, 8>::type m_results[1];
 #endif
     };
 

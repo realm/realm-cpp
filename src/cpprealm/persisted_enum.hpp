@@ -27,6 +27,14 @@ namespace realm {
         using persisted_primitive_base<T>::persisted_primitive_base;
         using persisted_primitive_base<T>::operator=;
 
+        persisted& operator=(T&& o) noexcept {
+            if (this->is_managed()) {
+                this->m_object->get_obj().set(this->managed, static_cast<int64_t>(std::move(o)));
+            } else {
+                new (&this->unmanaged) T(std::move(o));
+            }
+            return *this;
+        }
     protected:
         static int64_t serialize(const T& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
             return static_cast<int64_t>(v);

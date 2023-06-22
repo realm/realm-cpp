@@ -31,6 +31,7 @@ namespace realm::internal::bridge {
         query(const table& table); //NOLINT(google-explicit-constructor)
         table get_table();
         query and_query(const query&);
+        query& negate();
 
         query(const Query&); //NOLINT(google-explicit-constructor)
         operator Query() const; //NOLINT(google-explicit-constructor)
@@ -129,6 +130,8 @@ namespace realm::internal::bridge {
 #elif defined(__GNUC__) || defined(__GNUG__)
         std::aligned_storage<136, 8>::type m_query[1];
 #endif
+#elif _WIN32
+        std::aligned_storage<160, 8>::type m_query[1];
 #endif
 
     };

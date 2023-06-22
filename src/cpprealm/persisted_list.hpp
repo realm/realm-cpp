@@ -4,6 +4,7 @@
 #include <cpprealm/persisted.hpp>
 #include <cpprealm/object.hpp>
 #include <cpprealm/persisted_string.hpp>
+#include <cpprealm/internal/bridge/list.hpp>
 
 namespace realm {
     namespace internal {
@@ -113,6 +114,7 @@ namespace realm {
             }
             persisted_list_base() {
                 new (&unmanaged) std::vector<T>();
+                this->unmanaged.resize(0);
             }
             ~persisted_list_base() {
                 if (this->m_object) {
@@ -223,7 +225,7 @@ namespace realm {
             if (this->m_object) {
                 if (!a.m_object) {
                     a.manage(this->m_list.get_table(),
-                             this->m_list.get_realm());
+                             this->m_object->get_realm());
                 }
                 this->m_list.add(a.m_object->get_obj().get_key());
             } else {
@@ -234,7 +236,7 @@ namespace realm {
             if (this->is_managed()) {
                 if (!a.m_object) {
                     a.manage(this->m_list.get_table(),
-                             this->m_list.get_realm());
+                             this->m_object->get_realm());
                 }
                 this->m_list.add(a.m_object->get_obj().get_key());
             } else {
@@ -272,7 +274,7 @@ namespace realm {
         T operator[](size_t idx) const override {
             if (this->m_object) {
                 T cls;
-                cls.assign_accessors(internal::bridge::object(this->m_list.get_realm(), internal::bridge::get<internal::bridge::obj>(this->m_list, idx)));
+                cls.assign_accessors(internal::bridge::object(this->m_object->get_realm(), internal::bridge::get<internal::bridge::obj>(this->m_list, idx)));
                 return cls;
             } else {
                 return this->unmanaged[idx];
@@ -315,7 +317,7 @@ namespace realm {
         void push_back(T& a) {
             if (this->m_object) {
                 if (!a.m_object) {
-                    a.manage(internal::bridge::object(this->m_list.get_realm(),
+                    a.manage(internal::bridge::object(this->m_object->get_realm(),
                                                       this->m_list.add_embedded()));
                 }
             } else {
@@ -325,7 +327,7 @@ namespace realm {
         void push_back(T&& a) {
             if (this->m_object) {
                 if (!a.m_object) {
-                    a.manage(internal::bridge::object(this->m_list.get_realm(),
+                    a.manage(internal::bridge::object(this->m_object->get_realm(),
                                                       this->m_list.add_embedded()));
                 }
             } else {
@@ -363,7 +365,7 @@ namespace realm {
         T operator[](size_t idx) const override {
             if (this->m_object) {
                 T cls;
-                cls.assign_accessors(internal::bridge::object(this->m_list.get_realm(), internal::bridge::get<internal::bridge::obj>(this->m_list, idx)));
+                cls.assign_accessors(internal::bridge::object(this->m_object->get_realm(), internal::bridge::get<internal::bridge::obj>(this->m_list, idx)));
                 return cls;
             } else {
                 return this->unmanaged[idx];

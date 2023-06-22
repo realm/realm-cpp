@@ -26,7 +26,6 @@ jobs:
           - tvOS
           - tvOS Simulator
         xcode:
-          - '13.2.1'
           - '14.0'
         configuration:
           - Debug
@@ -75,7 +74,7 @@ jobs:
           # Xcode 13 can't build executable targets for non-macOS platforms
           scheme=realm-cpp-sdk
           if [[ "${{ matrix.platform }}" == macOS* ]] || [[ "${{ matrix.xcode }}" != 13.* ]]; then
-            scheme=realm-cpp-sdkTests
+            scheme=realm-beta-tests
           fi
           xcodebuild -scheme $scheme -destination "generic/platform=${{ matrix.platform }}" -configuration ${{ matrix.configuration }} -derivedDataPath .build/derivedData
 

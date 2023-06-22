@@ -8,7 +8,11 @@ endif()
 
 # Project-wide build flags
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:preprocessor /bigobj")
+else ()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+endif()
 
 set(REALM_BUILD_LIB_ONLY ON)
 add_subdirectory(realm-core)
@@ -84,37 +88,27 @@ target_link_libraries(cpprealm PUBLIC Realm::ObjectStore)
 set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
 
 if (APPLE)
-    target_sources(cpprealm PRIVATE
-        src/cpprealm/internal/apple/network_transport.mm
-    )
+    target_sources(cpprealm PRIVATE src/cpprealm/internal/apple/network_transport.mm)
 elseif(ANDROID)
     set(REALM_ANDROID)
-    target_sources(cpprealm PUBLIC
-        src/cpprealm/internal/android/network_transport.cpp)
+    target_sources(cpprealm PUBLIC src/cpprealm/internal/network/network_transport.cpp)
+elseif(MSVC)
+    target_sources(cpprealm PUBLIC src/cpprealm/internal/network/network_transport.cpp)
 else()
     find_package(CURL REQUIRED)
     target_link_libraries(cpprealm PUBLIC
-        CURL::libcurl
-    )
-    target_sources(cpprealm PRIVATE
-        src/cpprealm/internal/curl/network_transport.cpp
-    )
+            CURL::libcurl
+            )
+    target_sources(cpprealm PRIVATE src/cpprealm/internal/curl/network_transport.cpp)
+endif()
+
+if(MSVC)
+    set_property(TARGET cpprealm PROPERTY
+      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set_property(TARGET uv_a PROPERTY
+      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
 if (NOT REALM_CPP_NO_TESTS)
-Include(FetchContent)
-FetchContent_Declare(
-        Catch2
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG        v3.0.1 # or a later release
-)
-FetchContent_MakeAvailable(Catch2)
-
-add_executable(cpprealm_exe_tests tests/str_tests.cpp tests/list_tests.cpp tests/query_tests.cpp tests/main.hpp tests/sync_test_utils.hpp tests/test_objects.hpp tests/main.cpp tests/admin_utils.hpp tests/admin_utils.cpp tests/date_tests.cpp tests/mixed_tests.cpp tests/results_tests.cpp tests/binary_tests.cpp tests/flx_sync_tests.cpp tests/app_tests.cpp tests/embedded_object_tests.cpp tests/opt_tests.cpp tests/run_loop_tests.cpp tests/map_tests.cpp tests/perf_tests.cpp tests/object_tests.cpp tests/object_id_tests.cpp tests/asymmetric_object_tests.cpp tests/realm_tests.cpp)
-target_link_libraries(cpprealm_exe_tests cpprealm Catch2::Catch2)
-file(COPY realm-core/evergreen DESTINATION ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE})
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/baas)
-
-add_test(cpprealm_tests cpprealm_exe_tests)
-enable_testing()
+    add_subdirectory(tests)
 endif()

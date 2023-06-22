@@ -1,15 +1,23 @@
-#include "obj.hpp"
-#include "realm/object-store/shared_realm.hpp"
-#include "realm/obj.hpp"
-#include <realm/object-store/object_store.hpp>
+#include <cpprealm/internal/bridge/obj.hpp>
+
+#include <realm/dictionary.hpp>
 #include <realm/list.hpp>
+#include <realm/table_view.hpp>
+
+#include <realm/object-store/object_store.hpp>
+#include <realm/object-store/shared_realm.hpp>
+
+#include <cpprealm/object.hpp>
+#include <cpprealm/internal/type_info.hpp>
+
+#include <cpprealm/internal/bridge/dictionary.hpp>
+#include <cpprealm/internal/bridge/lnklst.hpp>
+#include <cpprealm/internal/bridge/obj_key.hpp>
+#include <cpprealm/internal/bridge/timestamp.hpp>
+#include <cpprealm/internal/bridge/uuid.hpp>
 
 #include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
-#include <cpprealm/internal/bridge/dictionary.hpp>
-#include <cpprealm/internal/type_info.hpp>
-#include <cpprealm/internal/bridge/lnklst.hpp>
-#include <cpprealm/object.hpp>
 
 namespace realm::internal::bridge {
 #ifdef __i386__
@@ -22,6 +30,9 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<56, sizeof(Obj)>{});
     static_assert(SizeCheck<8, alignof(Obj)>{});
 #elif __aarch64__
+    static_assert(SizeCheck<64, sizeof(Obj)>{});
+    static_assert(SizeCheck<8, alignof(Obj)>{});
+#elif _WIN32
     static_assert(SizeCheck<64, sizeof(Obj)>{});
     static_assert(SizeCheck<8, alignof(Obj)>{});
 #endif
@@ -55,7 +66,7 @@ namespace realm::internal::bridge {
     obj::~obj() {
         reinterpret_cast<Obj*>(&m_obj)->~Obj();
     }
-
+    
     group::group(realm& val)
     : m_realm(val)
     {
@@ -72,7 +83,7 @@ namespace realm::internal::bridge {
     obj::operator Obj() const {
         return *reinterpret_cast<const Obj*>(&m_obj);
     }
-
+    
     obj_key obj::get_key() const {
         return reinterpret_cast<const Obj*>(&m_obj)->get_key();
     }
@@ -85,6 +96,7 @@ namespace realm::internal::bridge {
     table obj::get_target_table(col_key key) const noexcept {
         return reinterpret_cast<const Obj*>(&m_obj)->get_target_table(key);
     }
+    
     obj obj::get_linked_object(const col_key &col_key) {
         return reinterpret_cast<Obj*>(&m_obj)->get_linked_object(col_key);
     }
@@ -130,6 +142,11 @@ namespace realm::internal::bridge {
     timestamp get(const obj& o, const col_key& col_key) {
         return reinterpret_cast<const Obj*>(&o.m_obj)->get<Timestamp>(col_key);
     }
+    template <>
+    core_dictionary get(const obj& o, const col_key& col_key) {
+        return reinterpret_cast<const Obj*>(o.m_obj)->get_dictionary(col_key);
+    }
+
     void obj::set(const col_key &col_key, const std::string &value) {
         reinterpret_cast<Obj*>(&m_obj)->set<StringData>(col_key, value);
     }
@@ -155,21 +172,27 @@ namespace realm::internal::bridge {
         reinterpret_cast<Obj*>(&m_obj)->set<ObjKey>(col_key, value);
     }
     void obj::set(const col_key &col_key, const mixed &value) {
-        if (value.is_null()) {
-            reinterpret_cast<Obj*>(&m_obj)->set(col_key, Mixed());
-        } else if (value.type() == data_type::Link) {
-            reinterpret_cast<Obj *>(&m_obj)->set(col_key,
-                                                Mixed(ObjLink(reinterpret_cast<Obj *>(&m_obj)->get_table()->get_key(),
+      if (value.is_null()) {
+           reinterpret_cast<Obj*>(&m_obj)->set(col_key, Mixed());
+       } else if (value.type() == data_type::Link) {
+           reinterpret_cast<Obj *>(&m_obj)->set(col_key,
+                                               Mixed(ObjLink(reinterpret_cast<Obj *>(&m_obj)->get_table()->get_key(),
                                                               value.operator bridge::obj_key())));
         } else {
-            reinterpret_cast<Obj*>(&m_obj)->set(col_key, static_cast<Mixed>(value));
+            reinterpret_cast<Obj*>(&m_obj)->set(col_key, value.operator ::realm::Mixed());
         }
     }
     void obj::set(const col_key &col_key, const timestamp &value) {
         reinterpret_cast<Obj*>(&m_obj)->set<Timestamp>(col_key, value);
     }
+    void obj::set(const col_key& col_key, const std::chrono::time_point<std::chrono::system_clock>& value) {
+        reinterpret_cast<Obj*>(m_obj)->set<Timestamp>(col_key, value);
+    }
     lnklst obj::get_linklist(const col_key &col_key) {
         return reinterpret_cast<Obj*>(&m_obj)->get_linklist(col_key);
+    }
+    core_dictionary obj::get_dictionary(const col_key& col_key) {
+        return reinterpret_cast<Obj*>(m_obj)->get_dictionary(col_key);
     }
 
     void obj::set_list_values(const col_key &col_key, const std::vector<obj_key> &values) {
@@ -179,8 +202,13 @@ namespace realm::internal::bridge {
         }
         reinterpret_cast<Obj*>(&m_obj)->set_list_values(col_key, v);
     }
-    void obj::set_list_values(const col_key &col_key, const std::vector<bool> &values) {
-        reinterpret_cast<Obj*>(&m_obj)->set_list_values(col_key, values);
+    void obj::set_list_values(const col_key &col_key, const std::vector<bool>& values) {
+        if (values.empty())
+            return;
+        auto list = reinterpret_cast<Obj*>(m_obj)->get_list<bool>(col_key);
+        for (size_t i = 0; i < values.size(); ++i) {
+            list.add(values[i]);
+        }
     }
     void obj::set_list_values(const col_key &col_key, const std::vector<int64_t> &values) {
         reinterpret_cast<Obj*>(&m_obj)->set_list_values(col_key, values);
@@ -224,11 +252,87 @@ namespace realm::internal::bridge {
         reinterpret_cast<Obj*>(&m_obj)->set_list_values(col_key, v);
     }
     void obj::set_list_values(const col_key &col_key, const std::vector<mixed> &values) {
-        std::vector<Mixed> v;
-        for (auto& v2 : values) {
-            v.emplace_back(v2);
+       auto list = reinterpret_cast<Obj*>(m_obj)->get_list<Mixed>(col_key);
+        auto size = values.size();
+        for (size_t i = 0; i < size; ++i) {
+            list.insert(i, values[i].operator Mixed());
         }
-        reinterpret_cast<Obj*>(&m_obj)->set_list_values(col_key, v);
+    }
+
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<int64_t>> &values) {
+        reinterpret_cast<Obj*>(m_obj)->set_list_values(col_key, values);
+    }
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<bool>> &values) {
+        reinterpret_cast<Obj*>(m_obj)->set_list_values(col_key, values);
+    }
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<double>> &values) {
+        reinterpret_cast<Obj*>(m_obj)->set_list_values(col_key, values);
+    }
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<std::string>> &values) {
+        auto list = reinterpret_cast<Obj*>(m_obj)->get_list<StringData>(col_key);
+        auto size = values.size();
+        for (size_t i = 0; i < size; ++i) {
+            if (values[i]) {
+                list.insert(i, *values[i]);
+            } else {
+                list.insert_null(i);
+            }
+        }
+    }
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<obj_key>> &values) {
+        auto list = reinterpret_cast<Obj*>(m_obj)->get_list<ObjKey>(col_key);
+        auto size = values.size();
+        for (size_t i = 0; i < size; ++i) {
+            if (values[i]) {
+                list.insert(i, *values[i]);
+            } else {
+                list.insert_null(i);
+            }
+        }
+    }
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<internal::bridge::uuid>> &values) {
+        auto list = reinterpret_cast<Obj*>(m_obj)->get_list<std::optional<UUID>>(col_key);
+        auto size = values.size();
+        for (size_t i = 0; i < size; ++i) {
+            if (values[i]) {
+                list.insert(i, *values[i]);
+            } else {
+                list.insert_null(i);
+            }
+        }
+    }
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<internal::bridge::object_id>> &values) {
+        auto list = reinterpret_cast<Obj*>(m_obj)->get_list<std::optional<ObjectId>>(col_key);
+        auto size = values.size();
+        for (size_t i = 0; i < size; ++i) {
+            if (values[i]) {
+                list.insert(i, *values[i]);
+            } else {
+                list.insert_null(i);
+            }
+        }
+   }
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<internal::bridge::binary>> &values) {
+        auto list = reinterpret_cast<Obj*>(m_obj)->get_list<Binary>(col_key);
+        auto size = values.size();
+        for (size_t i = 0; i < size; ++i) {
+            if (values[i]) {
+                list.insert(i, *values[i]);
+            } else {
+                list.insert_null(i);
+           }
+        }
+    }
+    void obj::set_list_values(const col_key &col_key, const std::vector<std::optional<timestamp>> &values) {
+        auto list = reinterpret_cast<Obj*>(m_obj)->get_list<Timestamp>(col_key);
+        auto size = values.size();
+        for (size_t i = 0; i < size; ++i) {
+            if (values[i]) {
+                list.insert(i, *values[i]);
+            } else {
+                list.insert_null(i);
+            }
+        }
     }
 
     void obj::set_null(const col_key &v) {
@@ -244,6 +348,9 @@ namespace realm::internal::bridge {
 
     obj obj::create_and_set_linked_object(const col_key &v) {
         return reinterpret_cast<Obj*>(&m_obj)->create_and_set_linked_object(v);
+    }
+    table_view obj::get_backlink_view(table table, col_key col_key) {
+        return reinterpret_cast<Obj*>(&m_obj)->get_backlink_view(table, col_key);
     }
 }
 

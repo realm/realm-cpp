@@ -15,6 +15,9 @@ namespace realm::internal::bridge {
 #elif __aarch64__
     static_assert(SizeCheck<16, sizeof(Timestamp)>{});
     static_assert(SizeCheck<8, alignof(Timestamp)>{});
+#elif _WIN32
+    static_assert(SizeCheck<16, sizeof(Timestamp)>{});
+    static_assert(SizeCheck<8, alignof(Timestamp)>{});
 #endif
 
     timestamp::timestamp() {
