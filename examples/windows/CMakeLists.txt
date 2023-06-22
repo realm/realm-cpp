@@ -16,7 +16,7 @@ Include(FetchContent)
 FetchContent_Declare(
   cpprealm
   GIT_REPOSITORY https://github.com/realm/realm-cpp.git
-  GIT_TAG        8969e8c947b8fdc8ede4660b1d22ee676a45fbf4
+  GIT_TAG        b6c2b8be5b620c92eaa8ba76d96d2d16ea73501a
 
 )
 

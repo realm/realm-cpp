@@ -1,7 +1,7 @@
 ![Realm](./logo.png)
 
 Realm is a mobile database that runs directly inside phones, tablets or wearables.
-This repository holds the source code for the C++ SDK Prototype.
+This repository holds the source code for the C++ SDK Preview.
 
 ## Why Use Realm
 
@@ -17,38 +17,40 @@ Realm was built for mobile developers, with simplicity in mind. The idiomatic, o
 ```cpp
 #include <cpprealm/sdk.hpp>
 
+using namespace realm::experimental;
+
 // Define your models like regular structs.
-struct Dog: realm::object {
-    realm::persisted<std::string> name;
-    realm::persisted<int> age;
-
-    static constexpr auto schema = realm::schema("Dog",
-                                                 realm::property<&Dog::name>("name"),
-                                                 realm::property<&Dog::age>("age"));
+struct Dog {
+    std::string name;
+    int64_t age;
 };
 
-struct Person: realm::object {
-    realm::persisted<std::string> _id;
-    realm::persisted<std::string> name;
-    realm::persisted<int> age;
+REALM_SCHEMA(Dog, name, age)
+
+struct Person {
+    primary_key<std::string> _id;
+    std::string name;
+    int64_t age;
     // Create relationships by pointing an Object field to another Class
-    realm::persisted<std::optional<Dog>> dog;
-
-    static constexpr auto schema = realm::schema("Person",
-                                                 realm::property<&Person::_id, true>("_id"), // primary key
-                                                 realm::property<&Person::name>("name"),
-                                                 realm::property<&Person::age>("age"),
-                                                 realm::property<&Person::dog>("dog"));
+    Dog* dog;
 };
+
+REALM_SCHEMA(Person, _id, name, age, dog)
+
 // Use them like regular objects.
 auto dog = Dog { .name = "Rex", .age = 1 };
-std::cout<<"name of dog: "<<dog.name<<std::endl;
+std::cout << "name of dog: " << dog.name << std::endl;
+auto person = Person();
+person._id = "something unique";
+person.name = "John";
+person.dog = &dog;
 
-// Get the default Realm with compile time schema checking.
-auto realm = realm::open<Person, Dog>();
+// Get the default Realm with automatic schema discovery.
+realm::db_config config;
+auto realm = db(std::move(config));
 // Persist your data easily with a write transaction 
-realm.write([&realm, &dog] {
-    realm.add(dog);
+auto managed_person = realm.write([&realm, &person] {
+    return realm.add(std::move(person));
 });
 
 // Query with type safety.
@@ -61,31 +63,32 @@ auto adult_dogs = dogs.where([](auto& d) {
 Realm’s live objects mean data updated anywhere is automatically updated everywhere.
 ```cpp
 // Open the default realm.
-auto realm = realm::open<Person, Dog>();
+realm::db_config config;
+auto realm = db(std::move(config));
 
 realm::notification_token token;
 
 auto dog = Dog { .name = "Max" };
 
 // Create a dog in the realm.
-realm.write([&realm, &dog] {
-    realm.add(dog);
+auto managed_dog = realm.write([&realm, &dog] {
+    return realm.add(std::move(dog));
 });
 
 //  Set up the listener & observe object notifications.
-token = dog.observe<Dog>([](auto&& change) {
+token = managed_dog.observe([](auto&& change) {
     if (change.error) {
         std::cout<<"An error occurred: "<<error<<std::endl;
     } else if (change.is_deleted) {
         std::cout<<"The object was deleted."<<std::endl;
     } else {
-        std::cout<<"Property "<<property.name<<" changed to "<<property.new_value<<std::endl;
+        std::cout << "Property " << property.name << " changed to " << property.new_value << std::endl;
     }
 }
 
 // Update the dog's name to see the effect.
-realm.write([&dog] {
-    dog.name = "Wolfie"
+realm.write([&managed_dog] {
+    managed_dog.name = "Wolfie"
 });
 ```
 
@@ -93,9 +96,8 @@ realm.write([&dog] {
 The [Atlas Device Sync](https://www.mongodb.com/atlas/app-services/device-sync) makes it simple to keep data in sync across users, devices, and your backend in real-time.
 ```cpp
 auto app = realm::App("<app-id>");
-auto user = app.login(realm::App::credentials::anonymous()).get_future().get();
-auto synced_realm_ref = user.realm<Car>("foo").get_future().get();
-auto realm = synced_realm_ref.resolve();
+auto user = app.login(realm::App::credentials::anonymous()).get();
+auto realm = db(user.flexible_sync_configuration());
 
 auto cars = realm.results<Car>();
 realm.write([&cars](){
@@ -111,23 +113,9 @@ See the detailed instructions in our [docs](https://www.mongodb.com/docs/realm/s
 
 The API reference is located [here](https://www.mongodb.com/docs/realm-sdks/cpp/latest/).
 
-## Building Realm
-
-In case you don't want to use the precompiled version, you can build Realm yourself from source.
-
-### MacOS
-
-Prerequisites:
-
-* Building Realm requires Xcode 11.x or newer.
-```sh
-git submodule update --init --recursive
-open Package.swift
-```
-
 ## Installing Realm
 
-### MacOS / Linux
+### MacOS / Linux / Windows
 
 Prerequisites:
 
@@ -142,5 +130,11 @@ sudo cmake --build . --target install
 ```
 
 You can then link to your library with `-lcpprealm`.
+
+<b>Note:</b> If your target is Windows make sure to add the `MSVC_RUNTIME_LIBRARY` property to your target like so:
+```
+set_property(TARGET My_Target PROPERTY
+      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+```
  
 <img style="width: 0px; height: 0px;" src="https://3eaz4mshcd.execute-api.us-east-1.amazonaws.com/prod?s=https://github.com/realm/realm-cocoa#README.md">
