@@ -1,10 +1,10 @@
-#ifndef CPP_REALM_ACCESSORS_HPP
-#define CPP_REALM_ACCESSORS_HPP
+#ifndef CPPREALM_ACCESSORS_HPP
+#define CPPREALM_ACCESSORS_HPP
 
 #include <cpprealm/experimental/types.hpp>
+#include <cpprealm/internal/bridge/lnklst.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
-#include <cpprealm/internal/bridge/lnklst.hpp>
 
 namespace realm::experimental {
     template<typename>
@@ -366,5 +366,5 @@ namespace realm::experimental {
         }
     };
 } // realm::experimental
-#endif//CPP_REALM_ACCESSORS_HPP
+#endif//CPPREALM_ACCESSORS_HPP
 

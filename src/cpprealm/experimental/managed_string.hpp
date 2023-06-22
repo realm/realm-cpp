@@ -1,5 +1,5 @@
-#ifndef CPP_REALM_MANAGED_STRING_HPP
-#define CPP_REALM_MANAGED_STRING_HPP
+#ifndef CPPREALM_MANAGED_STRING_HPP
+#define CPPREALM_MANAGED_STRING_HPP
 
 #include <cpprealm/experimental/macros.hpp>
 
@@ -150,4 +150,4 @@ namespace realm::experimental {
     };
 }
 
-#endif //CPP_REALM_MANAGED_STRING_HPP
+#endif //CPPREALM_MANAGED_STRING_HPP

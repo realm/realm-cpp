@@ -1,5 +1,5 @@
-#ifndef REALM_MANAGED_BINARY_HPP
-#define REALM_MANAGED_BINARY_HPP
+#ifndef CPPREALM_MANAGED_BINARY_HPP
+#define CPPREALM_MANAGED_BINARY_HPP
 
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/experimental/types.hpp>
@@ -60,4 +60,4 @@ namespace realm::experimental {
 }
 
 
-#endif//REALM_MANAGED_BINARY_HPP
+#endif//CPPREALM_MANAGED_BINARY_HPP

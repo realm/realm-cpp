@@ -1,5 +1,5 @@
-#ifndef REALM_MANAGED_DICTIONARY_HPP
-#define REALM_MANAGED_DICTIONARY_HPP
+#ifndef CPPREALM_MANAGED_DICTIONARY_HPP
+#define CPPREALM_MANAGED_DICTIONARY_HPP
 
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/experimental/accessors.hpp>
@@ -22,7 +22,6 @@ namespace realm::experimental {
         box_base &operator=(mapped_type &&o) {
             if constexpr (internal::type_info::is_link<mapped_type>::value) {
                 if (o) {
-                    // TODO: remove repeated code
                     if constexpr (o->is_managed) {
                         m_backing_map.insert(m_key, o->m_managed.m_obj.get_key());
                     } else {
@@ -509,4 +508,4 @@ namespace realm::experimental {
 
 } // namespace realm::experimental
 
-#endif//REALM_MANAGED_DICTIONARY_HPP
+#endif//CPPREALM_MANAGED_DICTIONARY_HPP

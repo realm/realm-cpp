@@ -1,31 +1,23 @@
-#ifndef CPP_REALM_EXPERIMENTAL_DB_HPP
-#define CPP_REALM_EXPERIMENTAL_DB_HPP
+#ifndef CPPREALM_EXPERIMENTAL_DB_HPP
+#define CPPREALM_EXPERIMENTAL_DB_HPP
 
 #include <cpprealm/experimental/accessors.hpp>
+
 #include <realm/db.hpp>
 #include <realm/transaction.hpp>
+#include <realm/object-store/property.hpp>
+
 #include <cpprealm/db.hpp>
 #include <cpprealm/persisted.hpp>
-#include <cpprealm/experimental/macros.hpp>
-
 #include <cpprealm/schema.hpp>
-#include <optional>
-#include <realm/object-store/property.hpp>
-#include <string>
-#include <utility>
 
-#include <cpprealm/experimental/managed_string.hpp>
-#include <cpprealm/experimental/managed_numeric.hpp>
-#include <cpprealm/experimental/managed_timestamp.hpp>
-#include <cpprealm/experimental/managed_uuid.hpp>
-#include <cpprealm/experimental/managed_objectid.hpp>
-#include <cpprealm/experimental/managed_binary.hpp>
-#include <cpprealm/experimental/managed_list.hpp>
-#include <cpprealm/experimental/managed_dictionary.hpp>
-#include <cpprealm/experimental/managed_mixed.hpp>
-
+#include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/experimental/results.hpp>
 #include <cpprealm/experimental/types.hpp>
+
+#include <optional>
+#include <string>
+#include <utility>
 
 namespace realm::experimental {
 
@@ -361,4 +353,4 @@ namespace realm {
 }
 
 
-#endif //CPP_REALM_EXPERIMENTAL_DB_HPP
+#endif //CPPREALM_EXPERIMENTAL_DB_HPP

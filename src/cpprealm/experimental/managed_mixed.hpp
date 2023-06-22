@@ -1,5 +1,5 @@
-#ifndef REALM_MANAGED_MIXED_HPP
-#define REALM_MANAGED_MIXED_HPP
+#ifndef CPPREALM_MANAGED_MIXED_HPP
+#define CPPREALM_MANAGED_MIXED_HPP
 
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/experimental/types.hpp>
@@ -71,4 +71,4 @@ namespace realm::experimental {
     };
 }
 
-#endif//REALM_MANAGED_MIXED_HPP
+#endif//CPPREALM_MANAGED_MIXED_HPP

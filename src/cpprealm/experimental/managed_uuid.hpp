@@ -1,5 +1,5 @@
-#ifndef REALM_MANAGED_UUID_HPP
-#define REALM_MANAGED_UUID_HPP
+#ifndef CPPREALM_MANAGED_UUID_HPP
+#define CPPREALM_MANAGED_UUID_HPP
 
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/experimental/types.hpp>
@@ -59,4 +59,4 @@ namespace realm::experimental {
 } // namespace realm::experimental
 
 
-#endif//REALM_MANAGED_UUID_HPP
+#endif//CPPREALM_MANAGED_UUID_HPP

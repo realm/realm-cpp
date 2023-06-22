@@ -42,12 +42,8 @@ set(SOURCES
     cpprealm/experimental/managed_numeric.cpp
     cpprealm/experimental/managed_uuid.cpp
     cpprealm/experimental/managed_objectid.cpp
-    cpprealm/experimental/results.cpp
-    cpprealm/experimental/managed_binary.cpp
-    cpprealm/experimental/managed_list.cpp
-    cpprealm/experimental/managed_dictionary.cpp
-    cpprealm/experimental/managed_mixed.cpp
-    cpprealm/experimental/managed_primary_key.cpp) # REALM_SOURCES
+        cpprealm/experimental/managed_binary.cpp
+        cpprealm/experimental/managed_primary_key.cpp) # REALM_SOURCES
 
 set(HEADERS
     cpprealm/sdk.hpp

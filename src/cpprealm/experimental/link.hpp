@@ -1,5 +1,5 @@
-#ifndef CPP_REALM_BRIDGE_LINK_HPP
-#define CPP_REALM_BRIDGE_LINK_HPP
+#ifndef CPPREALM_BRIDGE_LINK_HPP
+#define CPPREALM_BRIDGE_LINK_HPP
 
 #include <cpprealm/internal/type_info.hpp>
 #include <cpprealm/experimental/macros.hpp>
@@ -98,4 +98,4 @@ namespace realm {
         };
     }
 }
-#endif //CPP_REALM_BRIDGE_LINK_HPP
+#endif //CPPREALM_BRIDGE_LINK_HPP

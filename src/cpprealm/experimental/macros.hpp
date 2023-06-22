@@ -1,5 +1,5 @@
-#ifndef CPP_REALM_MACROS_HPP
-#define CPP_REALM_MACROS_HPP
+#ifndef CPPREALM_MACROS_HPP
+#define CPPREALM_MACROS_HPP
 
 #define FE_0(WHAT, cls)
 #define FE_1(WHAT, cls, X) WHAT(cls, X)
@@ -382,4 +382,4 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
     }; \
     static inline meta_schema_##cls _meta_schema_##cls{};
 
-#endif //CPP_REALM_MACROS_HPP
+#endif //CPPREALM_MACROS_HPP

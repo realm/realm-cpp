@@ -43,7 +43,8 @@ namespace realm {
     namespace internal::bridge {
         struct sync_error;
     }
-    // MARK: User
+
+// MARK: User
 
 // Represents an error state from the server.
 struct app_error {

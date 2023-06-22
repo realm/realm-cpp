@@ -1,5 +1,5 @@
-#ifndef REALM_MANAGED_NUMERIC_HPP
-#define REALM_MANAGED_NUMERIC_HPP
+#ifndef CPPREALM_MANAGED_NUMERIC_HPP
+#define CPPREALM_MANAGED_NUMERIC_HPP
 
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/persisted.hpp>
@@ -340,4 +340,4 @@ CPP_REALM_MANAGED_OPTIONAL_NUMERIC(double);
     };
 } // namespace realm::experimental
 
-#endif//REALM_MANAGED_NUMERIC_HPP
+#endif//CPPREALM_MANAGED_NUMERIC_HPP

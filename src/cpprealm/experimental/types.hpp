@@ -1,14 +1,13 @@
-#ifndef REALM_TYPES_HPP
-#define REALM_TYPES_HPP
+#ifndef CPPREALM_TYPES_HPP
+#define CPPREALM_TYPES_HPP
 
-#include <cstdint>
+#include <array>
 #include <optional>
+
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
 #include <cpprealm/internal/type_info.hpp>
-
-#include <array>
 
 namespace realm {
     struct uuid {
@@ -275,4 +274,4 @@ namespace realm::experimental {
 } // namespace realm::experimental
 
 
-#endif//REALM_TYPES_HPP
+#endif//CPPREALM_TYPES_HPP

@@ -1,5 +1,5 @@
-#ifndef REALM_MANAGED_OBJECTID_HPP
-#define REALM_MANAGED_OBJECTID_HPP
+#ifndef CPPREALM_MANAGED_OBJECTID_HPP
+#define CPPREALM_MANAGED_OBJECTID_HPP
 
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/experimental/types.hpp>
@@ -59,4 +59,4 @@ namespace realm::experimental {
 
 } // namespace realm::experimental
 
-#endif//REALM_MANAGED_OBJECTID_HPP
+#endif//CPPREALM_MANAGED_OBJECTID_HPP

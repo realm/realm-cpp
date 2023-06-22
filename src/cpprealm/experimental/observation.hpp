@@ -1,5 +1,5 @@
-#ifndef CPP_REALM_CORO_OBSERVATION_HPP
-#define CPP_REALM_CORO_OBSERVATION_HPP
+#ifndef CPPREALM_OBSERVATION_HPP
+#define CPPREALM_OBSERVATION_HPP
 
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
@@ -586,4 +586,4 @@ inline std::ostream& operator<< (std::ostream& stream, const realm::experimental
     return stream;
 }
 
-#endif //CPP_REALM_CORO_OBSERVATION_HPP
+#endif //CPPREALM_OBSERVATION_HPP

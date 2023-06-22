@@ -1,5 +1,5 @@
-#ifndef REALM_MANAGED_LIST_HPP
-#define REALM_MANAGED_LIST_HPP
+#ifndef CPPREALM_MANAGED_LIST_HPP
+#define CPPREALM_MANAGED_LIST_HPP
 
 #include <cpprealm/notifications.hpp>
 #include <cpprealm/experimental/macros.hpp>
@@ -196,4 +196,4 @@ namespace realm::experimental {
     };
 } // namespace realm::experimental
 
-#endif//REALM_MANAGED_LIST_HPP
+#endif//CPPREALM_MANAGED_LIST_HPP
