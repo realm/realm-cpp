@@ -1,4 +1,4 @@
-// swift-tools-version:5.5
+// swift-tools-version:5.6
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -65,7 +65,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/realm/realm-core.git", revision: "b2ed3201a306b1b00f5fb1cc4d64d84e7e603c3f")
+        .package(url: "https://github.com/realm/realm-core.git", revision: "f1434caadda443b4ed2261b91ea4f43ab1ee2aa5")
     ],
     targets: [
         cppSdkTarget,
