@@ -162,18 +162,22 @@ namespace realm::experimental {
     };
 
     template <typename ...Ts>
-    inline db open(const std::string& path, const std::shared_ptr<scheduler>& scheduler = scheduler::make_default()) {
-        auto config = db_config(path, scheduler);
+    inline db open(const db_config& config) {
+        auto config_copy = config;
         if constexpr (sizeof...(Ts) == 0) {
-            config.set_schema(db::schemas);
+            config_copy.set_schema(db::schemas);
         } else {
             std::vector<internal::bridge::object_schema> schema;
             (schema.push_back(managed<Ts>::schema.to_core_schema()), ...);
-            config.set_schema(schema);
+            config_copy.set_schema(schema);
         }
         return db(config);
     }
-
+    template <typename ...Ts>
+    inline db open(const std::string& path, const std::shared_ptr<scheduler>& scheduler = scheduler::make_default()) {
+        return open<Ts...>(db_config(path, scheduler));
+    }
+    
     struct dump_db {
         realm::DBRef m_db;
         explicit dump_db(std::string&& path)
