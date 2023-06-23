@@ -27,7 +27,11 @@ namespace realm::internal::bridge {
 #endif
     static_assert(SizeCheck<8, alignof(ObjectSchema)>{});
 #elif _WIN32
+    #if _DEBUG
     static_assert(SizeCheck<192, sizeof(ObjectSchema)>{});
+    #else
+    static_assert(SizeCheck<152, sizeof(ObjectSchema)>{});
+    #endif
     static_assert(SizeCheck<8, alignof(ObjectSchema)>{});
 #endif
 

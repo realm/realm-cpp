@@ -151,7 +151,11 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(TableView)>{});
 #endif
 #elif _WIN32
+    #if _DEBUG
     static_assert(SizeCheck<624, sizeof(TableView)>{});
+    #else
+    static_assert(SizeCheck<576, sizeof(TableView)>{});
+    #endif
     static_assert(SizeCheck<8, alignof(TableView)>{});
 #endif
 

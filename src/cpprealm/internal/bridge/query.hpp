@@ -131,7 +131,11 @@ namespace realm::internal::bridge {
         std::aligned_storage<136, 8>::type m_query[1];
 #endif
 #elif _WIN32
+        #if _DEBUG
         std::aligned_storage<160, 8>::type m_query[1];
+        #else
+        std::aligned_storage<136, 8>::type m_query[1];
+        #endif
 #endif
 
     };

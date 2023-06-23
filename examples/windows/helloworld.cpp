@@ -2,7 +2,7 @@
 #include <cpprealm/sdk.hpp>
 #include <cpprealm/experimental/sdk.hpp>
 
-#if REALM_HAVE_UV
+#if _WIN32
 #include <uv.h>
 #elif REALM_PLATFORM_APPLE
 #include <realm/util/cf_ptr.hpp>
@@ -68,7 +68,7 @@ int main() {
     // time to push the changes. If you prefer a synchronous approach you can do
     // `synced_realm.get_sync_session()->wait_for_upload_completion().get();`
 
-#if REALM_HAVE_UV
+#if _WIN32
     uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 #elif REALM_PLATFORM_APPLE
     CFRunLoopRun();

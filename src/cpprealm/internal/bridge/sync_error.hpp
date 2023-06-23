@@ -50,7 +50,11 @@ namespace realm::internal::bridge {
         std::aligned_storage<144, 8>::type m_error[1];
 #endif
 #elif _WIN32
+        #if _DEBUG
         std::aligned_storage<192, 8>::type m_error[1];
+        #else
+        std::aligned_storage<168, 8>::type m_error[1];
+        #endif
 #endif
     };
 }

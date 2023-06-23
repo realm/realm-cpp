@@ -19,7 +19,11 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<24, sizeof(Schema)>{});
     static_assert(SizeCheck<8, alignof(Schema)>{});
 #elif _WIN32
+    #if _DEBUG
     static_assert(SizeCheck<32, sizeof(Schema)>{});
+    #else
+    static_assert(SizeCheck<24, sizeof(Schema)>{});
+    #endif
     static_assert(SizeCheck<8, alignof(Schema)>{});
 #endif
 

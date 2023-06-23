@@ -85,7 +85,11 @@ namespace realm {
             std::aligned_storage<624, 8>::type m_table_view[1];
 #endif
 #elif _WIN32
-            std::aligned_storage<568, 8>::type m_table_view[1];
+            #if _DEBUG
+            std::aligned_storage<624, 8>::type m_table_view[1];
+            #else
+            std::aligned_storage<576, 8>::type m_table_view[1];
+            #endif
 #endif
         };
 

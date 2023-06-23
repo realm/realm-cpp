@@ -26,8 +26,12 @@ namespace realm::internal::bridge {
 #endif
     static_assert(SizeCheck<8, alignof(Property)>{});
 #elif _WIN32
-    static_assert(SizeCheck<184, sizeof(Property)>{});
     static_assert(SizeCheck<8, alignof(Property)>{});
+    #if _DEBUG
+    static_assert(SizeCheck<184, sizeof(Property)>{});
+    #else
+    static_assert(SizeCheck<152, sizeof(Property)>{});
+    #endif
 #endif
 
 
