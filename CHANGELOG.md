@@ -1,4 +1,4 @@
-0.2.0 Preview Release notes (2023-06-21)
+x.y.z Release notes (yyyy-MM-dd)
 =============================================================
 
 ### Fixed
