@@ -26,7 +26,6 @@
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/type_info.hpp>
 #include <cpprealm/experimental/link.hpp>
-#include <cpprealm/experimental/managed_primary_key.hpp>
 
 #include <type_traits>
 #include <iostream>

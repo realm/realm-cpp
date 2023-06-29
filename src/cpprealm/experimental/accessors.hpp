@@ -154,6 +154,27 @@ namespace realm::experimental {
     };
 
     template <>
+    struct accessor<decimal128> {
+        static inline void set(internal::bridge::obj& obj,
+                               const internal::bridge::col_key& key,
+                               const decimal128& value) {
+            obj.set(key, value);
+        }
+    };
+    template <>
+    struct accessor<std::optional<decimal128>> {
+        static inline void set(internal::bridge::obj& obj,
+                               const internal::bridge::col_key& key,
+                               const std::optional<decimal128>& value) {
+            if (value) {
+                obj.set(key, *value);
+            } else {
+                obj.set_null(key);
+            }
+        }
+    };
+
+    template <>
     struct accessor<std::chrono::time_point<std::chrono::system_clock>> {
         static inline void set(internal::bridge::obj& obj,
                                const internal::bridge::col_key& key,

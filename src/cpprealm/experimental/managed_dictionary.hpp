@@ -232,6 +232,27 @@ namespace realm::experimental {
         }
     };
     template<>
+    struct box<decimal128> : public box_base<decimal128> {
+        using box_base<decimal128>::box_base;
+        using box_base<decimal128>::operator=;
+        decimal128 operator*() {
+            return this->m_backing_map.get(this->m_key).operator internal::bridge::decimal128().operator ::realm::decimal128();
+        }
+    };
+    template<>
+    struct box<std::optional<decimal128>> : public box_base<std::optional<decimal128>> {
+        using box_base<std::optional<decimal128>>::box_base;
+        using box_base<std::optional<decimal128>>::operator=;
+        std::optional<decimal128> operator*() {
+            auto v = this->m_backing_map.get(this->m_key);
+            if (v.is_null()) {
+                return std::nullopt;
+            } else {
+                return v.operator internal::bridge::decimal128().operator ::realm::decimal128();
+            };
+        }
+    };
+    template<>
     struct box<std::chrono::time_point<std::chrono::system_clock>> : public box_base<std::chrono::time_point<std::chrono::system_clock>> {
         using box_base<std::chrono::time_point<std::chrono::system_clock>>::box_base;
         using box_base<std::chrono::time_point<std::chrono::system_clock>>::operator=;

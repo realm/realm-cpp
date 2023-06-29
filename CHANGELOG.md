@@ -6,10 +6,7 @@ x.y.z Release notes (yyyy-MM-dd)
   incorrectly set.
 
 ### Enhancements
-* None
-
-### Other API enhancements:
-* None
+* Add support for the Decimal128 data type (`realm::decimal128`).
 
 ### Breaking Changes
 * None

@@ -10,6 +10,7 @@
 #include <cpprealm/internal/bridge/list.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/object_id.hpp>
+#include <cpprealm/internal/bridge/decimal128.hpp>
 
 #include <map>
 #include <vector>
@@ -212,6 +213,13 @@ namespace realm::internal::type_info {
         using internal_type = bridge::object_id;
         static constexpr bridge::property::type type() {
             return bridge::property::type::ObjectId;
+        }
+    };
+    template <>
+    struct type_info<decimal128> {
+        using internal_type = bridge::decimal128;
+        static constexpr bridge::property::type type() {
+            return bridge::property::type::Decimal;
         }
     };
     template <>

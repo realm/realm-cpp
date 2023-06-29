@@ -24,6 +24,7 @@ namespace realm::internal::bridge {
     struct binary;
     struct uuid;
     struct object_id;
+    struct decimal128;
     struct col_key;
     struct timestamp;
     struct table;
@@ -54,6 +55,7 @@ namespace realm::internal::bridge {
         void add(const binary &);
         void add(const uuid &);
         void add(const object_id &);
+        void add(const decimal128 &);
         void add(const mixed &);
         void add(const obj_key &);
         void add(const timestamp &);
@@ -71,6 +73,7 @@ namespace realm::internal::bridge {
         void set(size_t pos, const std::string &);
         void set(size_t pos, const uuid &);
         void set(size_t pos, const object_id &);
+        void set(size_t pos, const decimal128 &);
         void set(size_t pos, const mixed &);
         void set(size_t pos, const timestamp &);
         void set(size_t pos, const binary &);
@@ -85,6 +88,7 @@ namespace realm::internal::bridge {
         size_t find(const std::string &);
         size_t find(const uuid &);
         size_t find(const object_id &);
+        size_t find(const decimal128 &);
         size_t find(const mixed &);
         size_t find(const timestamp &);
         size_t find(const binary&);
@@ -124,6 +128,8 @@ namespace realm::internal::bridge {
     [[nodiscard]] uuid get(const list&, size_t idx);
     template <>
     [[nodiscard]] object_id get(const list&, size_t idx);
+    template <>
+    [[nodiscard]] decimal128 get(const list&, size_t idx);
     template <>
     [[nodiscard]] mixed get(const list&, size_t idx);
     template <>
