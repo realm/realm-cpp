@@ -238,7 +238,7 @@ namespace realm::experimental {
                 internal::bridge::obj m_obj;
                 if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
                     auto pk = (*lnk).*(managed<T>::schema.primary_key().ptr);
-                    m_obj = table.create_object_with_primary_key(serialize(pk.value));
+                    m_obj = table.create_object_with_primary_key(realm::internal::bridge::mixed(serialize(pk.value)));
                 } else if (managed<T>::schema.is_embedded_experimental()) {
                     m_obj = list.create_and_insert_linked_object(i);
                 } else {
@@ -329,7 +329,7 @@ namespace realm::experimental {
             internal::bridge::obj m_obj;
             if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
                 auto pk = (*value).*(managed<T>::schema.primary_key().ptr);
-                m_obj = table.create_object_with_primary_key(serialize(pk.value));
+                m_obj = table.create_object_with_primary_key(realm::internal::bridge::mixed(serialize(pk.value)));
                 obj.set(key, m_obj.get_key());
             } else if (managed<T>::schema.is_embedded_experimental()) {
                 m_obj = obj.create_and_set_linked_object(key);

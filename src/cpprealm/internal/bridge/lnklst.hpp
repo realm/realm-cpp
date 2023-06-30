@@ -32,7 +32,11 @@ namespace realm::internal::bridge {
 #elif __aarch64__
         std::aligned_storage<160, 8>::type m_lnk_lst[1];
 #elif _WIN32
+        #if _DEBUG
         std::aligned_storage<168, 8>::type m_lnk_lst[1];
+        #else
+        std::aligned_storage<160, 8>::type m_lnk_lst[1];
+        #endif
 #endif
     };
 

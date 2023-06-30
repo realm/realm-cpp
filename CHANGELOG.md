@@ -1,3 +1,27 @@
+x.y.z Release notes (yyyy-MM-dd)
+=============================================================
+
+### Fixed
+* Windows would not compile under Release build configuration as `aligned_storage` parameters were
+  incorrectly set.
+
+### Enhancements
+* None
+
+### Other API enhancements:
+* None
+
+### Breaking Changes
+* None
+
+### Compatibility
+* Fileformat: Generates files with format v22.
+
+### Internals
+* None
+
+----------------------------------------------
+
 0.2.0 Preview Release notes (2023-06-21)
 =============================================================
 

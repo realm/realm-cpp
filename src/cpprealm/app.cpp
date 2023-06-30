@@ -39,9 +39,14 @@ namespace realm {
 #endif
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
 #elif _WIN32
+    #if _DEBUG
+    static_assert(internal::bridge::SizeCheck<80, sizeof(realm::app::AppError)>{});
+    #else
+    static_assert(internal::bridge::SizeCheck<72, sizeof(realm::app::AppError)>{});
+    #endif
     static_assert(internal::bridge::SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppCredentials)>{});
-    static_assert(internal::bridge::SizeCheck<80, sizeof(realm::app::AppError)>{});
+    
     static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
 #endif
 

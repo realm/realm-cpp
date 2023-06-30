@@ -25,7 +25,11 @@ namespace realm::internal::bridge {
 #endif
     static_assert(SizeCheck<8, alignof(SyncError)>{});
 #elif _WIN32
+    #if _DEBUG
     static_assert(SizeCheck<192, sizeof(SyncError)>{});
+    #else
+    static_assert(SizeCheck<168, sizeof(SyncError)>{});
+    #endif
     static_assert(SizeCheck<8, alignof(SyncError)>{});
 #endif
 

@@ -87,7 +87,11 @@ namespace realm::internal::bridge {
         std::aligned_storage<328, 8>::type m_config[1];
     #endif
 #elif _WIN32
-            std::aligned_storage<456, 8>::type m_config[1];
+        #if _DEBUG
+        std::aligned_storage<456, 8>::type m_config[1];
+        #else
+        std::aligned_storage<424, 8>::type m_config[1];
+        #endif
 #endif
         };
 

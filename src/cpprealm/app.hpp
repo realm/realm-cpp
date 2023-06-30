@@ -73,7 +73,11 @@ private:
 #ifdef __i386__
     std::aligned_storage<28, 4>::type m_error[1];
 #elif _WIN32
+    #if _DEBUG
     std::aligned_storage<80, 8>::type m_error[1];
+    #else
+    std::aligned_storage<72, 8>::type m_error[1];
+    #endif   
 #elif __x86_64__
     #if defined(__clang__)
 std::aligned_storage<48, 8>::type m_error[1];

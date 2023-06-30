@@ -79,7 +79,11 @@ namespace realm::internal::bridge {
         std::aligned_storage<152, 8>::type m_property[1];
 #endif
 #elif _WIN32
+        #if _DEBUG
         std::aligned_storage<184, 8>::type m_property[1];
+        #else
+        std::aligned_storage<152, 8>::type m_property[1];
+        #endif
 #endif
     };
 

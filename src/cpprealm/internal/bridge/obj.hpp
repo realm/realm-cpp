@@ -187,7 +187,7 @@ namespace realm::internal::bridge {
                     internal::bridge::obj m_obj;
                     if constexpr (experimental::managed<std::remove_pointer_t<ValueType>, void>::schema.HasPrimaryKeyProperty) {
                         auto pk = (*v).*(experimental::managed<std::remove_pointer_t<ValueType>, void>::schema.primary_key().ptr);
-                        m_obj = this->get_table().create_object_with_primary_key(pk.value);
+                        m_obj = this->get_table().create_object_with_primary_key(internal::bridge::mixed(serialize(pk.value)));
                     } else {
                         m_obj = m_obj = this->get_table().create_object();
                     }

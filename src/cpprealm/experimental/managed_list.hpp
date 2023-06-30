@@ -137,7 +137,7 @@ namespace realm::experimental {
             internal::bridge::obj m_obj;
             if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
                 auto pk = (*value).*(managed<T>::schema.primary_key().ptr);
-                m_obj = table.create_object_with_primary_key(serialize(pk.value));
+                m_obj = table.create_object_with_primary_key(realm::internal::bridge::mixed(serialize(pk.value)));
             } else if (managed<T>::schema.is_embedded_experimental()) {
                 m_obj = list.add_embedded();
             } else {

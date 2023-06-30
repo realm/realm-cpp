@@ -28,8 +28,12 @@ namespace realm::internal::bridge {
 #endif
     static_assert(SizeCheck<8, alignof(Results)>{});
 #elif _WIN32
-    static_assert(SizeCheck<1008, sizeof(Results)>{});
     static_assert(SizeCheck<8, alignof(Results)>{});
+    #if _DEBUG
+    static_assert(SizeCheck<1008, sizeof(Results)>{});
+    #else
+    static_assert(SizeCheck<912, sizeof(Results)>{});
+    #endif
 #endif
 
     results::results() {

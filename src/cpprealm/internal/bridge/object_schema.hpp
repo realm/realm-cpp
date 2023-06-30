@@ -55,7 +55,11 @@ namespace realm::internal::bridge {
         std::aligned_storage<152, 8>::type m_schema[1];
 #endif
 #elif _WIN32
+        #if _DEBUG
         std::aligned_storage<192, 8>::type m_schema[1];
+        #else
+        std::aligned_storage<152, 8>::type m_schema[1];
+        #endif
 #endif
     };
 }

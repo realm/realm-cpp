@@ -472,8 +472,6 @@ jobs:
         configuration:
           - Debug
           - Release
-        exclude:
-          - configuration: ${{ (github.event_name == 'pull_request' && 'Release') || 'none' }}
     needs:
       - deploy-cluster
     env:

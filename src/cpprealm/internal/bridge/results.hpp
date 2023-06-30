@@ -50,7 +50,11 @@ namespace realm::internal::bridge {
         std::aligned_storage<912, 8>::type m_results[1];
 #endif
 #elif _WIN32
+#if _DEBUG
         std::aligned_storage<1008, 8>::type m_results[1];
+#else
+        std::aligned_storage<912, 8>::type m_results[1];
+#endif
 #endif
     };
 

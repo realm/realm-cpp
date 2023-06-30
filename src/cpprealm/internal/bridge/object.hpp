@@ -83,7 +83,11 @@ namespace realm::internal::bridge {
 #elif __aarch64__
             std::aligned_storage<32, 8>::type m_iterator[1];
 #elif _WIN32
+            #if _DEBUG
             std::aligned_storage<64, 8>::type m_iterator[1];
+            #else
+            std::aligned_storage<32, 8>::type m_iterator[1];
+            #endif
 #endif
         };
 
@@ -123,7 +127,11 @@ namespace realm::internal::bridge {
 #elif __aarch64__
         std::aligned_storage<24, 8>::type m_idx_set[1];
 #elif _WIN32
+        #if _DEBUG
         std::aligned_storage<32, 8>::type m_idx_set[1];
+        #else
+        std::aligned_storage<24, 8>::type m_idx_set[1];
+        #endif
 #endif
     };
     struct collection_change_set {
@@ -159,7 +167,11 @@ namespace realm::internal::bridge {
         std::aligned_storage<184, 8>::type m_change_set[1];
 #endif
 #elif _WIN32
+        #if _DEBUG
         std::aligned_storage<248, 8>::type m_change_set[1];
+        #else
+        std::aligned_storage<192, 8>::type m_change_set[1];
+        #endif
 #endif
     };
     struct collection_change_callback {

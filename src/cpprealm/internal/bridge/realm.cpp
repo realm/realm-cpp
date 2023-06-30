@@ -57,7 +57,11 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(Realm::Config)>{});
     #endif
 #elif _WIN32
+    #if _DEBUG
     static_assert(SizeCheck<456, sizeof(Realm::Config)>{});
+    #else
+    static_assert(SizeCheck<424, sizeof(Realm::Config)>{});
+    #endif
     static_assert(SizeCheck<8, alignof(Realm::Config)>{});
 #endif
 

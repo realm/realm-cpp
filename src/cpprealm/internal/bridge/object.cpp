@@ -75,13 +75,20 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<24, sizeof(NotificationToken)>{});
     static_assert(SizeCheck<8, alignof(NotificationToken)>{});
 #elif _WIN32
+    #if _DEBUG
+    static_assert(SizeCheck<32, sizeof(IndexSet)>{});
+    static_assert(SizeCheck<248, sizeof(CollectionChangeSet)>{});
+    static_assert(SizeCheck<64, sizeof(IndexSet::IndexIterator)>{});
+    #else
+    static_assert(SizeCheck<24, sizeof(IndexSet)>{});
+    static_assert(SizeCheck<192, sizeof(CollectionChangeSet)>{});
+    static_assert(SizeCheck<32, sizeof(IndexSet::IndexIterator)>{});
+    #endif
+
     static_assert(SizeCheck<104, sizeof(Object)>{});
     static_assert(SizeCheck<8, alignof(Object)>{});
-    static_assert(SizeCheck<32, sizeof(IndexSet)>{});
     static_assert(SizeCheck<8, alignof(IndexSet)>{});
-    static_assert(SizeCheck<248, sizeof(CollectionChangeSet)>{});
     static_assert(SizeCheck<8, alignof(CollectionChangeSet)>{});
-    static_assert(SizeCheck<64, sizeof(IndexSet::IndexIterator)>{});
     static_assert(SizeCheck<8, alignof(IndexSet::IndexIterator)>{});
     static_assert(SizeCheck<8, sizeof(IndexSet::IndexIteratableAdaptor)>{});
     static_assert(SizeCheck<8, alignof(IndexSet::IndexIteratableAdaptor)>{});
