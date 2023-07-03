@@ -171,7 +171,7 @@ namespace realm::experimental {
             (schema.push_back(managed<Ts>::schema.to_core_schema()), ...);
             config_copy.set_schema(schema);
         }
-        return db(config);
+        return db(config_copy);
     }
     template <typename ...Ts>
     inline db open(const std::string& path, const std::shared_ptr<scheduler>& scheduler = scheduler::make_default()) {
