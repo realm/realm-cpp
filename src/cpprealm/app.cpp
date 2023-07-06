@@ -343,7 +343,10 @@ namespace realm {
         return credentials(app::AppCredentials::function(payload));
     }
 
-    App::App(const std::string &app_id, const std::optional<std::string> &base_url, const std::optional<std::string> &path) {
+    App::App(const std::string &app_id,
+             const std::optional<std::string> &base_url,
+             const std::optional<std::string> &path,
+             const std::optional<std::map<std::string, std::string>> &custom_http_headers) {
 #if QT_CORE_LIB
         util::Scheduler::set_default_factory(util::make_qt);
 #endif
@@ -372,7 +375,7 @@ namespace realm {
 
         auto app_config = app::App::Config();
         app_config.app_id = app_id;
-        app_config.transport = std::make_shared<internal::DefaultTransport>();
+        app_config.transport = std::make_shared<internal::DefaultTransport>(custom_http_headers);
         app_config.base_url = base_url ? base_url : util::Optional<std::string>();
         auto device_info = app::App::Config::DeviceInfo();
 
@@ -384,7 +387,6 @@ namespace realm {
 
         m_app = app::App::get_shared_app(std::move(app_config), config);
     }
-
 
     std::future<void> App::register_user(const std::string &username, const std::string &password) {
         std::promise<void> p;

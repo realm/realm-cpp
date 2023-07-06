@@ -21,13 +21,18 @@
 
 #include <realm/object-store/sync/impl/sync_client.hpp>
 #include <realm/object-store/sync/generic_network_transport.hpp>
+#include <map>
+#include <optional>
 
 namespace realm::internal {
 
 class DefaultTransport : public app::GenericNetworkTransport {
 public:
+    DefaultTransport(const std::optional<std::map<std::string, std::string>>& custom_http_headers = std::nullopt) : m_custom_http_headers(custom_http_headers) {}
     void send_request_to_server(const app::Request& request,
                                 util::UniqueFunction<void(const app::Response&)>&& completion);
+private:
+    std::optional<std::map<std::string, std::string>> m_custom_http_headers;
 };
 
 } // namespace realm
