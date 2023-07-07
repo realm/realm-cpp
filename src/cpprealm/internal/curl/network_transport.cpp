@@ -135,12 +135,6 @@ namespace realm::internal {
                 auto header_str = util::format("%1: %2", header.first, header.second);
                 list = curl_slist_append(list, header_str.c_str());
             }
-            if (m_custom_http_headers) {
-                for (auto& header : *m_custom_http_headers) {
-                    auto header_str = util::format("%1: %2", header.first, header.second);
-                    list = curl_slist_append(list, header_str.c_str());
-                }
-            }
             curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_cb);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
@@ -166,6 +160,12 @@ namespace realm::internal {
     void DefaultTransport::send_request_to_server(const app::Request& request,
                                                   util::UniqueFunction<void(const app::Response&)>&& completion_block)
     {
+        if (m_custom_http_headers) {
+            auto req_copy = request;
+            req_copy.headers.insert(m_custom_http_headers->begin(), m_custom_http_headers->end());
+            completion_block(do_http_request(req_copy));
+            return;
+        }
         completion_block(do_http_request(request));
     }
 
