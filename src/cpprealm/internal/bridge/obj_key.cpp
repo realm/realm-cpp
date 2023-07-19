@@ -68,7 +68,7 @@ namespace realm::internal::bridge {
     }
 
     bool operator!=(obj_key const &lhs, obj_key const &rhs) {
-        return static_cast<ObjKey>(lhs) == static_cast<ObjKey>(rhs);
+        return static_cast<ObjKey>(lhs) != static_cast<ObjKey>(rhs);
     }
 
 #ifdef __i386__

@@ -277,9 +277,15 @@ namespace realm::experimental {
         SECTION("object_initialization_beta") {
             auto date = std::chrono::time_point<std::chrono::system_clock>();
             auto uuid = realm::uuid();
+
+            auto str_obj_link = StringObject();
+            str_obj_link._id = 1;
+            str_obj_link.str_col = "string col link";
+
             auto link1 = AllTypesObjectLink();
             link1._id = 1;
             link1.str_col = "link object";
+            link1.str_link_col = &str_obj_link;
 
             auto link2 = AllTypesObjectLink();
             link2._id = 2;
@@ -358,6 +364,16 @@ namespace realm::experimental {
                 return db.add(std::move(obj));
             });
 
+            managed<AllTypesObject> AllTypesObject_res = db.objects<AllTypesObject>()[0];
+
+            managed<AllTypesObjectLink> allTypeObjectLink = db.objects<AllTypesObjectLink>().where([](auto& o) {
+                return o._id == 1;
+            })[0];
+
+            managed<AllTypesObjectLink> allTypeObjectLink2 = db.objects<AllTypesObjectLink>().where([](auto& o) {
+                return o._id == 2;
+            })[0];
+
             CHECK(managed_obj._id == (int64_t)123);
             CHECK(managed_obj.double_col == 12.34);
             CHECK(managed_obj.str_col == "foo");
@@ -393,17 +409,19 @@ namespace realm::experimental {
             CHECK(managed_obj.list_date_col[0] == date);
             CHECK(managed_obj.list_uuid_col[0] == uuid);
             CHECK(managed_obj.list_mixed_col[0] == realm::mixed("mixed str"));
-            auto other_obj = db.objects<realm::experimental::AllTypesObjectLink>()[1];
+
+            CHECK(managed_obj.opt_obj_col == allTypeObjectLink);
+            CHECK(managed_obj.opt_obj_col != allTypeObjectLink2);
+
             CHECK(managed_obj.opt_obj_col->str_col == "link object");
-            auto a = managed_obj.list_obj_col[0]->str_col.value();
             CHECK(managed_obj.list_obj_col[0]->str_col == "link object 2");
-            CHECK(managed_obj.list_obj_col[0] == other_obj);
-            auto b = managed_obj.list_embedded_obj_col[0]->str_col.value();
-            auto c = managed_obj.opt_embedded_obj_col->str_col.value();
+            CHECK(managed_obj.list_obj_col[0] == allTypeObjectLink2);
+            CHECK(managed_obj.list_obj_col[0] != allTypeObjectLink);
 
             CHECK(managed_obj.list_embedded_obj_col[0]->str_col == "embedded obj2");
             CHECK(managed_obj.opt_embedded_obj_col->str_col == "embedded obj1");
             CHECK(managed_obj.list_embedded_obj_col[0] == managed_obj.list_embedded_obj_col[0]);
+            CHECK(managed_obj.list_embedded_obj_col[0] != managed_obj.opt_embedded_obj_col);
 
             CHECK(managed_obj.map_int_col["foo"] == 1);
             CHECK(managed_obj.map_double_col["foo"] == 1.23);
@@ -419,11 +437,9 @@ namespace realm::experimental {
             CHECK(managed_obj.map_link_col["foo"] == other_obj2);
             auto map_embedded_col = other_obj3.map_embedded_col["foo"];
             CHECK(managed_obj.map_embedded_col["foo"] == map_embedded_col);
+            CHECK(managed_obj.map_embedded_col["foo"] != managed_obj.opt_embedded_obj_col);
 
             auto allTypeObjects = db.objects<AllTypesObject>();
-            managed<AllTypesObjectLink> allTypeObjectLink = db.objects<AllTypesObjectLink>().where([](auto& o) {
-                return o._id == 1;
-            })[0];
 
             auto results_obj = allTypeObjects[0];
             CHECK(results_obj._id == (int64_t)123);
@@ -449,8 +465,11 @@ namespace realm::experimental {
             CHECK(results_obj.opt_object_id_col == object_id);
             CHECK(results_obj.opt_decimal_col == decimal);
 
-//            CHECK(results_obj.opt_obj_col == allTypeObjectLink);
-//            CHECK(*results_obj.opt_embedded_obj_col == embedded_obj);
+            CHECK(results_obj.opt_obj_col == allTypeObjectLink);
+            CHECK(results_obj.opt_obj_col != allTypeObjectLink2);
+
+            CHECK(results_obj.opt_embedded_obj_col == AllTypesObject_res.opt_embedded_obj_col);
+            CHECK(!(results_obj.opt_embedded_obj_col != managed_obj.opt_embedded_obj_col));
 
             CHECK(results_obj.list_int_col[0] == 1);
             CHECK(results_obj.list_double_col[0] == 1.23);
@@ -462,8 +481,11 @@ namespace realm::experimental {
             CHECK(results_obj.list_object_id_col[0] == object_id);
             CHECK(results_obj.list_decimal_col[0] == decimal);
             CHECK(results_obj.list_mixed_col[0] == realm::mixed("mixed str"));
-//            CHECK(results_obj.list_obj_col[0] == allTypeObjectLink);
-//            CHECK(results_obj.list_embedded_obj_col[0] == embedded_obj);
+            CHECK(results_obj.list_obj_col[0]->str_col == "link object 2");
+            CHECK(results_obj.list_obj_col[0] == allTypeObjectLink2);
+            CHECK(results_obj.opt_obj_col->str_link_col->str_col == "string col link");
+            CHECK(results_obj.list_embedded_obj_col[0] == AllTypesObject_res.list_embedded_obj_col[0]);
+            CHECK(results_obj.list_embedded_obj_col[0] != managed_obj.opt_embedded_obj_col);
 
             CHECK(results_obj.map_int_col["foo"] == 1);
             CHECK(results_obj.map_double_col["foo"] == 1.23);
@@ -475,8 +497,9 @@ namespace realm::experimental {
             CHECK(results_obj.map_object_id_col["foo"] == object_id);
             CHECK(results_obj.map_decimal_col["foo"] == decimal);
             CHECK(results_obj.map_mixed_col["foo"] == realm::mixed("bar"));
-//            CHECK(results_obj.map_link_col["foo"] == allTypeObjectLink);
-//            CHECK(results_obj.map_embedded_col["foo"] == embedded_obj);
+            CHECK(results_obj.map_link_col["foo"] == other_obj2);
+            CHECK(results_obj.map_embedded_col["foo"] == AllTypesObject_res.map_embedded_col["foo"]);
+            CHECK(results_obj.map_embedded_col["foo"] != managed_obj.opt_embedded_obj_col);
         }
 
         SECTION("object_notifications_beta") {
@@ -678,6 +701,21 @@ namespace realm::experimental {
                 jill->dog = nullptr;
             });
             CHECK(realm.objects<experimental::Dog>()[0].owners.size() == 0);
+        }
+
+        SECTION("assign link") {
+            AllTypesObject obj;
+            AllTypesObjectLink link;
+            link.str_col = "link";
+
+            experimental::db db = experimental::open(path);
+            auto managed_obj = db.write([&]() {
+                auto managed_link = db.add(std::move(link));
+                auto o = db.add(std::move(obj));
+                o.opt_obj_col = managed_link;
+                return o;
+            });
+            CHECK(managed_obj.opt_obj_col->str_col == "link");
         }
     }
 }

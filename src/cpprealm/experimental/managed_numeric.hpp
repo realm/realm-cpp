@@ -18,34 +18,96 @@ namespace realm::experimental {
             return m_obj->template get<int64_t>(m_key);
         }
 
-        int64_t operator *() const {
+        [[nodiscard]] int64_t operator *() const {
             return value();
         }
-        rbool operator==(const int64_t& rhs) const noexcept;
-        rbool operator!=(const int64_t& rhs) const noexcept;
-        rbool operator>(const int64_t& rhs) const noexcept;
-        rbool operator<(const int64_t& rhs) const noexcept;
-        rbool operator>=(const int64_t& rhs) const noexcept;
-        rbool operator<=(const int64_t& rhs) const noexcept;
-        void operator+=(const int64_t& o) {
+
+        [[nodiscard]] operator int64_t() const {
+            return value();
+        }
+
+        template<typename T>
+        std::enable_if_t<std::is_integral_v<T>, rbool> operator==(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.equal(this->m_key, (int64_t)rhs);
+                return rbool(std::move(query));
+            }
+            return serialize(value()) == rhs;
+        }
+
+        template<typename T>
+        std::enable_if_t<std::is_integral_v<T>, rbool> operator!=(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.not_equal(this->m_key, (int64_t)rhs);
+                return rbool(std::move(query));
+            }
+            return serialize(value()) != rhs;
+        }
+
+        template<typename T>
+        std::enable_if_t<std::is_integral_v<T>, rbool> operator>(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.greater(this->m_key, (int64_t)rhs);
+                return rbool(std::move(query));
+            }
+            return serialize(value()) > rhs;
+        }
+
+        template<typename T>
+        std::enable_if_t<std::is_integral_v<T>, rbool> operator<(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.less(this->m_key, (int64_t)rhs);
+                return rbool(std::move(query));
+            }
+            return serialize(value()) < rhs;
+        }
+
+        template<typename T>
+        std::enable_if_t<std::is_integral_v<T>, rbool> operator>=(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.greater_equal(this->m_key, (int64_t)rhs);
+                return rbool(std::move(query));
+            }
+            return serialize(value()) >= rhs;
+        }
+
+        template<typename T>
+        std::enable_if_t<std::is_integral_v<T>, rbool> operator<=(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.less_equal(this->m_key, (int64_t)rhs);
+                return rbool(std::move(query));
+            }
+            return serialize(value()) <= rhs;
+        }
+
+        managed& operator+=(const int64_t& o) {
             auto old_val = m_obj->template get<int64_t>(m_key);
             m_obj->template set<int64_t>(this->m_key, old_val + o);
+            return *this;
         }
-        void operator++() {
+        void operator++(int) {
             auto old_val = m_obj->template get<int64_t>(m_key);
-            m_obj->template set<int64_t>(this->m_key, old_val++);
+            m_obj->template set<int64_t>(this->m_key, old_val + 1);
         }
-        void operator-=(const int64_t& o) {
+        managed& operator-=(const int64_t& o) {
             auto old_val = m_obj->template get<int64_t>(m_key);
             m_obj->template set<int64_t>(this->m_key, old_val - o);
+            return *this;
         }
-        void operator--() {
+        void operator--(int) {
             auto old_val = m_obj->template get<int64_t>(m_key);
-            m_obj->template set<int64_t>(this->m_key, old_val--);
+            m_obj->template set<int64_t>(this->m_key, old_val - 1);
         }
-        void operator*=(const int64_t& o) {
+        managed& operator*=(const int64_t& o) {
             auto old_val = m_obj->template get<int64_t>(m_key);
             m_obj->template set<int64_t>(this->m_key, old_val * o);
+            return *this;
         }
     };
 
@@ -70,6 +132,9 @@ namespace realm::experimental {
         double operator *() const {
             return value();
         }
+        [[nodiscard]] operator double() const {
+            return value();
+        }
         rbool operator==(const double& rhs) const noexcept;
         rbool operator!=(const double& rhs) const noexcept;
         rbool operator>(const double& rhs) const noexcept;
@@ -80,17 +145,17 @@ namespace realm::experimental {
             auto old_val = m_obj->template get<double>(m_key);
             m_obj->template set<double>(this->m_key, old_val + o);
         }
-        void operator++() {
+        void operator++(int) {
             auto old_val = m_obj->template get<double>(m_key);
-            m_obj->template set<double>(this->m_key, old_val++);
+            m_obj->template set<double>(this->m_key, old_val + 1.0);
         }
         void operator-=(const double& o) {
             auto old_val = m_obj->template get<double>(m_key);
             m_obj->template set<double>(this->m_key, old_val - o);
         }
-        void operator--() {
+        void operator--(int) {
             auto old_val = m_obj->template get<double>(m_key);
-            m_obj->template set<double>(this->m_key, old_val--);
+            m_obj->template set<double>(this->m_key, old_val - 1.0);
         }
         void operator*=(const double& o) {
             auto old_val = m_obj->template get<double>(m_key);
@@ -105,7 +170,9 @@ namespace realm::experimental {
         [[nodiscard]] bool value() const {
             return m_obj->template get<bool>(m_key);
         }
-
+        [[nodiscard]] operator bool() const {
+            return value();
+        }
         bool operator *() const {
             return value();
         }
@@ -125,7 +192,9 @@ namespace realm::experimental {
         [[nodiscard]] std::optional<type> operator *() const { \
             return value(); \
         } \
-\
+        [[nodiscard]] operator std::optional<type>() const { \
+            return value(); \
+        } \
         rbool operator==(const std::optional<type>& rhs) const noexcept; \
         rbool operator!=(const std::optional<type>& rhs) const noexcept; \
         void operator+=(const type& o) { \
@@ -135,12 +204,12 @@ namespace realm::experimental {
             } \
             m_obj->template set<type>(this->m_key, (*old_val) + o); \
         } \
-        void operator++() { \
+        void operator++(int) { \
             auto old_val = m_obj->get_optional<type>(m_key);    \
             if (!old_val) { \
                 throw std::runtime_error("Cannot perform arithmetic on null value."); \
             } \
-            m_obj->template set<type>(this->m_key, (*old_val)++); \
+            m_obj->template set<type>(this->m_key, (*old_val) + 1); \
         } \
         void operator-=(const type& o) { \
             auto old_val = m_obj->get_optional<type>(m_key);    \
@@ -149,12 +218,12 @@ namespace realm::experimental {
             } \
             m_obj->template set<type>(this->m_key, (*old_val) - o); \
         } \
-        void operator--() { \
+        void operator--(int) { \
             auto old_val = m_obj->get_optional<type>(m_key);    \
             if (!old_val) { \
                 throw std::runtime_error("Cannot perform arithmetic on null value."); \
             } \
-            m_obj->template set<type>(this->m_key, (*old_val)--); \
+            m_obj->template set<type>(this->m_key, (*old_val) - 1); \
         } \
         void operator*=(const type& o) { \
             auto old_val = m_obj->get_optional<type>(m_key);    \
@@ -187,6 +256,10 @@ CPP_REALM_MANAGED_OPTIONAL_NUMERIC(double);
         using managed<std::optional<bool>>::managed_base::operator=;
 
         [[nodiscard]] std::optional<bool> value() const {
+            return m_obj->template get_optional<bool>(m_key);
+        }
+
+        [[nodiscard]] operator std::optional<bool>() const {
             return m_obj->template get_optional<bool>(m_key);
         }
 

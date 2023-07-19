@@ -81,6 +81,9 @@ namespace realm::experimental {
                 return m_backing_map.get(m_key) == internal::bridge::mixed(rhs);
             }
         }
+        bool operator!=(const mapped_type &rhs) const {
+            return !this->operator==(rhs);
+        }
         internal::bridge::core_dictionary m_backing_map;
         internal::bridge::realm m_realm;
         std::string m_key;
@@ -161,6 +164,9 @@ namespace realm::experimental {
         bool operator==(const V& rhs) const {
             return this->m_backing_map.get(this->m_key).operator int64_t() == static_cast<int64_t>(rhs);
         }
+        bool operator!=(const V& rhs) const {
+            return !this->operator==(rhs);
+        }
     };
     template<typename V>
     struct box<V, std::enable_if_t<std::is_enum_v<typename V::value_type>>> : public box_base<V> {
@@ -176,12 +182,15 @@ namespace realm::experimental {
             };
         }
 
-        bool operator==(const V &rhs) const {
+        bool operator==(const V& rhs) const {
             auto v = this->m_backing_map.get(this->m_key);
             if (v.is_null() && !rhs) {
                 return true;
             }
             return static_cast<typename V::value_type>(v.operator int64_t()) == rhs;
+        }
+        bool operator!=(const V& rhs) const {
+            return !this->operator==(rhs);
         }
     };
     template<>
@@ -331,23 +340,35 @@ namespace realm::experimental {
             }
             return a.get_table() == b.get_table() && a.get_key() == b.get_key();
         }
+        bool operator!=(const V*& rhs) const {
+            return !this->operator==(rhs);
+        }
 
         bool operator==(const managed<V*> &rhs) const {
-            auto a = const_cast<box<V*> *>(this)->m_backing_map.get_object(this->m_key);
+           // const realm::experimental::box<realm::experimental::managed<realm::experimental::AllTypesObjectEmbedded *>> *' to 'box<realm::experimental::AllTypesObjectEmbedded *> *'
+            auto a = const_cast<box<managed<V*>> *>(this)->m_backing_map.get_object(this->m_key);
             auto &b = rhs.m_obj;
-            if (this->m_realm != rhs.m_realm) {
+            if (this->m_realm != *rhs.m_realm) {
                 return false;
             }
-            return a.get_table() == b.get_table() && a.get_key() == b.get_key();
+            return a.get_key() == b->get_key();
         }
+        bool operator!=(const managed<V*> rhs) const {
+            return !this->operator==(rhs);
+        }
+
         bool operator==(const managed<V> &rhs) const {
             auto a = const_cast<box<managed<V*>> *>(this)->m_backing_map.get_object(this->m_key);
             auto &b = rhs.m_obj;
             if (this->m_realm != rhs.m_realm) {
                 return false;
             }
-            return a.get_table() == b.get_table() && a.get_key() == b.get_key();
+            return a.get_key() == b.get_key();
         }
+        bool operator!=(const managed<V> rhs) const {
+            return !this->operator==(rhs);
+        }
+
         typename managed<V*>::ref_type operator*() {
             auto obj = this->m_backing_map.get_object(this->m_key);
             if (!obj.is_valid()) {
@@ -403,24 +424,34 @@ namespace realm::experimental {
             if (this->m_realm != rhs.m_realm) {
                 return false;
             }
-            return a.get_table() == b.get_table() && a.get_key() == b.get_key();
+            return a.get_key() == b.get_key();
         }
-        bool operator==(const V &rhs) const {
+        bool operator!=(const box<managed<V*>> rhs) const {
+            return !this->operator==(rhs);
+        }
+
+        bool operator==(const V& rhs) const {
             auto a = const_cast<box<managed<V*>> *>(this)->m_backing_map.get_object(this->m_key);
             auto &b = rhs.m_obj;
             if (this->m_realm != rhs.m_realm) {
                 return false;
             }
-            return a.get_table() == b.get_table() && a.get_key() == b.get_key();
+            return a.get_key() == b.get_key();
+        }
+        bool operator!=(const V& rhs) const {
+            return !this->operator==(rhs);
         }
 
-        bool operator==(const box<V*> &rhs) {
+        bool operator==(const box<V*>& rhs) {
             auto a = const_cast<box<managed<V*>> *>(this)->m_backing_map.get_object(this->m_key);
             auto &b = (&rhs)->m_obj;
             if (this->m_realm != rhs.m_realm) {
                 return false;
             }
-            return a.get_table() == b.get_table() && a.get_key() == b.get_key();
+            return a.get_key() == b.get_key();
+        }
+        bool operator!=(const box<V*>& rhs) const {
+            return !this->operator==(rhs);
         }
     };
 

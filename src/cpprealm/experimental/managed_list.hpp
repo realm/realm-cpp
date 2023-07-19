@@ -78,6 +78,7 @@ namespace realm::experimental {
             return token;
         }
 
+        // TODO: emulate a reference to the value.
         T operator[](size_t idx) const {
             auto list = realm::internal::bridge::list(*m_realm, *m_obj, m_key);
             using U = typename internal::type_info::type_info<T>::internal_type;

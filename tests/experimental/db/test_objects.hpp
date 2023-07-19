@@ -61,11 +61,18 @@ namespace realm::experimental {
     };
     REALM_EMBEDDED_SCHEMA(AllTypesObjectEmbedded, _id, str_col)
 
-    struct AllTypesObjectLink {
+    struct StringObject {
         primary_key<int64_t> _id;
         std::string str_col;
     };
-    REALM_SCHEMA(AllTypesObjectLink, _id, str_col)
+    REALM_SCHEMA(StringObject, _id, str_col)
+
+    struct AllTypesObjectLink {
+        primary_key<int64_t> _id;
+        std::string str_col;
+        StringObject* str_link_col = nullptr;
+    };
+    REALM_SCHEMA(AllTypesObjectLink, _id, str_col, str_link_col)
 
     struct AllTypesObject {
         enum class Enum {
@@ -73,6 +80,7 @@ namespace realm::experimental {
         };
 
         primary_key<int64_t> _id;
+        int64_t int_col;
         double double_col;
         bool bool_col;
         std::string str_col;
@@ -142,7 +150,7 @@ namespace realm::experimental {
     };
 
     REALM_SCHEMA(AllTypesObject,
-                 _id, double_col, bool_col, str_col, enum_col, date_col, uuid_col, object_id_col, decimal_col, binary_col, mixed_col, my_mixed_col,
+                 _id, int_col, double_col, bool_col, str_col, enum_col, date_col, uuid_col, object_id_col, decimal_col, binary_col, mixed_col, my_mixed_col,
                  opt_int_col, opt_double_col, opt_str_col, opt_bool_col, opt_enum_col,
                  opt_date_col, opt_uuid_col, opt_object_id_col, opt_decimal_col, opt_binary_col, opt_obj_col, opt_embedded_obj_col,
                  list_int_col, list_double_col, list_bool_col, list_str_col, list_uuid_col, list_object_id_col, list_decimal_col, list_binary_col,

@@ -22,7 +22,7 @@ namespace realm::experimental {
             return value();
         }
 
-        [[nodiscard]] operator realm::object_id () const {
+        [[nodiscard]] operator realm::object_id() const {
             return value();
         }
 

@@ -71,7 +71,7 @@ namespace realm::experimental {
         class iterator {
         public:
             using difference_type = size_t;
-            using value_type = T;
+            using value_type = managed<T, void>;
             using pointer = std::unique_ptr<value_type>;
             using reference = value_type &;
             using iterator_category = std::input_iterator_tag;
@@ -85,8 +85,8 @@ namespace realm::experimental {
             }
 
             reference operator*() noexcept {
-                auto obj = internal::bridge::get<internal::bridge::obj>(*m_parent, m_idx);
-                value = std::move(T::schema.create(std::move(obj), m_parent->m_parent.get_realm()));
+                internal::bridge::obj obj = internal::bridge::get<internal::bridge::obj>(m_parent->m_parent, m_idx);
+                value = managed<T, void>(std::move(obj), this->m_parent->m_parent.get_realm());
                 return value;
             }
 
@@ -112,7 +112,7 @@ namespace realm::experimental {
 
             size_t m_idx;
             results<T> *m_parent;
-            T value;
+            managed<T, void> value;
 
             template<auto>
             friend struct linking_objects;

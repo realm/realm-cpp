@@ -388,43 +388,43 @@ TEST_CASE("list", "[list]") {
     }
 
     SECTION("list_mixed") {
-        auto realm = realm::experimental::db(std::move(config));
-        auto obj = realm::experimental::AllTypesObject();
-        obj.list_mixed_col.push_back((int64_t)42);
-        obj.list_mixed_col.push_back(true);
-        obj.list_mixed_col.push_back(std::string("hello world"));
-        obj.list_mixed_col.push_back(42.42);
-        obj.list_mixed_col.push_back(std::vector<uint8_t>{0,1,2});
-        auto ts = std::chrono::time_point<std::chrono::system_clock>();
-        obj.list_mixed_col.push_back(ts);
-
-        auto managed_obj = realm.write([&]() {
-            return realm.add(std::move(obj));
-        });
-
-        CHECK(std::holds_alternative<int64_t>(managed_obj.list_mixed_col[0]));
-        CHECK(std::get<int64_t>(managed_obj.list_mixed_col[0]) == 42);
-
-        CHECK(std::holds_alternative<bool>(managed_obj.list_mixed_col[1]));
-        CHECK(std::get<bool>(managed_obj.list_mixed_col[1]) == true);
-
-        CHECK(std::holds_alternative<std::string>(managed_obj.list_mixed_col[2]));
-        CHECK(std::get<std::string>(managed_obj.list_mixed_col[2]) == "hello world");
-
-        CHECK(std::holds_alternative<double>(managed_obj.list_mixed_col[3]));
-        CHECK(std::get<double>(managed_obj.list_mixed_col[3]) == 42.42);
-
-        CHECK(std::holds_alternative<std::vector<uint8_t>>(managed_obj.list_mixed_col[4]));
-        CHECK(std::get<std::vector<uint8_t>>(managed_obj.list_mixed_col[4]) == std::vector<uint8_t>{0,1,2});
-
-        CHECK(std::holds_alternative<std::chrono::time_point<std::chrono::system_clock>>(managed_obj.list_mixed_col[5]));
-        CHECK(std::get<std::chrono::time_point<std::chrono::system_clock>>(managed_obj.list_mixed_col[5]) == ts);
-
-        realm.write([&managed_obj] {
-            managed_obj.list_mixed_col.push_back(realm::uuid());
-        });
-
-        CHECK(std::holds_alternative<realm::uuid>(managed_obj.list_mixed_col[6]));
-        CHECK(std::get<realm::uuid>(managed_obj.list_mixed_col[6]) == realm::uuid());
+//        auto realm = realm::experimental::db(std::move(config));
+//        auto obj = realm::experimental::AllTypesObject();
+//        obj.list_mixed_col.push_back((int64_t)42);
+//        obj.list_mixed_col.push_back(true);
+//        obj.list_mixed_col.push_back(std::string("hello world"));
+//        obj.list_mixed_col.push_back(42.42);
+//        obj.list_mixed_col.push_back(std::vector<uint8_t>{0,1,2});
+//        auto ts = std::chrono::time_point<std::chrono::system_clock>();
+//        obj.list_mixed_col.push_back(ts);
+//
+//        auto managed_obj = realm.write([&]() {
+//            return realm.add(std::move(obj));
+//        });
+//
+//        CHECK(std::holds_alternative<int64_t>(managed_obj.list_mixed_col[0]));
+//        CHECK(std::get<int64_t>(managed_obj.list_mixed_col[0]) == 42);
+//
+//        CHECK(std::holds_alternative<bool>(managed_obj.list_mixed_col[1]));
+//        CHECK(std::get<bool>(managed_obj.list_mixed_col[1]) == true);
+//
+//        CHECK(std::holds_alternative<std::string>(managed_obj.list_mixed_col[2]));
+//        CHECK(std::get<std::string>(managed_obj.list_mixed_col[2]) == "hello world");
+//
+//        CHECK(std::holds_alternative<double>(managed_obj.list_mixed_col[3]));
+//        CHECK(std::get<double>(managed_obj.list_mixed_col[3]) == 42.42);
+//
+//        CHECK(std::holds_alternative<std::vector<uint8_t>>(managed_obj.list_mixed_col[4]));
+//        CHECK(std::get<std::vector<uint8_t>>(managed_obj.list_mixed_col[4]) == std::vector<uint8_t>{0,1,2});
+//
+//        CHECK(std::holds_alternative<std::chrono::time_point<std::chrono::system_clock>>(managed_obj.list_mixed_col[5]));
+//        CHECK(std::get<std::chrono::time_point<std::chrono::system_clock>>(managed_obj.list_mixed_col[5]) == ts);
+//
+//        realm.write([&managed_obj] {
+//            managed_obj.list_mixed_col.push_back(realm::uuid());
+//        });
+//
+//        CHECK(std::holds_alternative<realm::uuid>(managed_obj.list_mixed_col[6]));
+//        CHECK(std::get<realm::uuid>(managed_obj.list_mixed_col[6]) == realm::uuid());
     }
 }

@@ -108,5 +108,31 @@ TEST_CASE("date", "[date]") {
         });
         CHECK(results.size() == 0);
     }
+
+    SECTION("operator_time_since_epoch", "[date]") {
+        auto realm = realm::experimental::db(std::move(config));
+        auto ts = std::chrono::time_point<std::chrono::system_clock>();
+        realm::experimental::AllTypesObject object;
+        object.date_col = ts;
+        CHECK(object.date_col.time_since_epoch() == ts.time_since_epoch());
+        auto managed_obj = realm.write([&] {
+            return realm.add(std::move(object));
+        });
+        std::chrono::time_point<std::chrono::system_clock> val = managed_obj.date_col;
+        CHECK(val == ts);
+    }
+
+    SECTION("optional_operator_time_since_epoch", "[date]") {
+        auto realm = realm::experimental::db(std::move(config));
+        auto ts = std::chrono::time_point<std::chrono::system_clock>();
+        realm::experimental::AllTypesObject object;
+        object.opt_date_col = ts;
+        CHECK(object.opt_date_col->time_since_epoch() == ts.time_since_epoch());
+        auto managed_obj = realm.write([&] {
+            return realm.add(std::move(object));
+        });
+        std::optional<std::chrono::time_point<std::chrono::system_clock>> val = managed_obj.opt_date_col;
+        CHECK(val == ts);
+    }
 }
 

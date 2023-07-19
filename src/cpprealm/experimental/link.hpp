@@ -22,19 +22,33 @@ namespace realm {
                     return &m_managed;
                 }
 
+                bool operator ==(const managed<T*>& rhs) const {
+                    if (this->m_managed.m_realm != *rhs.m_realm) {
+                        return false;
+                    }
+                    return this->m_managed.m_obj.get_key() == rhs.m_obj->get_key();
+                }
                 bool operator ==(const managed<T>& rhs) const {
                     if (this->m_managed.m_realm != rhs.m_realm) {
                         return false;
                     }
-                    return this->m_managed.m_obj.get_table() == rhs.m_obj.get_table() &&
-                           this->m_managed.m_obj.get_key() == rhs.m_obj.get_key();
+                    return this->m_managed.m_obj.get_key() == rhs.m_obj.get_key();
+
                 }
                 bool operator ==(const ref_type& rhs) const {
                     if (this->m_managed.m_realm != rhs.m_managed.m_realm) {
                         return false;
                     }
-                    return this->m_managed.m_obj.get_table() == rhs.m_managed.m_obj.get_table()
-                           && this->m_managed.m_obj.get_key() == rhs.m_managed.m_obj.get_key();
+                    return this->m_managed.m_obj.get_key() == rhs.m_managed.m_obj.get_key();
+                }
+                bool operator !=(const managed<T*>& rhs) const {
+                    return !this->operator==(rhs);
+                }
+                bool operator !=(const managed<T>& rhs) const {
+                    return !this->operator==(rhs);
+                }
+                bool operator !=(const ref_type& rhs) const {
+                    return !this->operator==(rhs);
                 }
             };
             ref_type operator ->() const {
@@ -46,6 +60,10 @@ namespace realm {
                     return m_obj->is_null(m_key);
                 }
                 return false;
+            }
+            managed &operator=(const managed<T>& obj) {
+                m_obj->set(m_key, obj.m_obj.get_key());
+                return *this;
             }
             managed &operator=(std::nullptr_t) {
                 m_obj->set_null(m_key);
@@ -88,12 +106,24 @@ namespace realm {
             bool operator ==(const managed<T>& rhs) const {
                 if (*this->m_realm != rhs.m_realm)
                     return false;
-                if (this->m_obj->get_table() != rhs.m_obj.get_table())
-                    return false;
-                if (this->m_obj->get_key() == rhs.m_obj.get_key())
-                    return false;
+                return this->m_obj->get_key() == rhs.m_obj.get_key();
+            }
 
-                return true;
+            bool operator ==(const managed<T*>& rhs) const {
+                if (*this->m_realm != *rhs.m_realm)
+                    return false;
+                return this->m_obj->get_key() == rhs.m_obj->get_key();
+            }
+
+            bool operator !=(const std::nullptr_t) const {
+                return !this->operator==(nullptr);
+            }
+            bool operator !=(const managed<T>& rhs) const {
+                return !this->operator==(rhs);
+            }
+
+            bool operator !=(const managed<T*>& rhs) const {
+                return !this->operator==(rhs);
             }
         };
     }
