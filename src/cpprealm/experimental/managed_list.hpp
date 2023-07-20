@@ -162,6 +162,15 @@ namespace realm::experimental {
                 throw std::logic_error("Cannot add existing embedded object to managed list.");
             }
         }
+        void push_back(const managed<T*>& value)
+        {
+            if (!managed<T>::schema.is_embedded_experimental()) {
+                auto list = internal::bridge::list(*m_realm, *m_obj, m_key);
+                list.add(value.m_obj->get_key());
+            } else {
+                throw std::logic_error("Cannot add existing embedded object to managed list.");
+            }
+        }
 
         size_t size()
         {

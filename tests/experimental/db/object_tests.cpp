@@ -705,17 +705,47 @@ namespace realm::experimental {
 
         SECTION("assign link") {
             AllTypesObject obj;
+            obj._id = 1;
             AllTypesObjectLink link;
             link.str_col = "link";
 
             experimental::db db = experimental::open(path);
-            auto managed_obj = db.write([&]() {
+            auto [managed_obj, managed_link] = db.write([&]() -> std::tuple<managed<AllTypesObject>, managed<AllTypesObjectLink>> {
                 auto managed_link = db.add(std::move(link));
                 auto o = db.add(std::move(obj));
                 o.opt_obj_col = managed_link;
-                return o;
+                o.list_obj_col.push_back(managed_link);
+                o.map_link_col["foo"] = managed_link;
+
+                return {o, managed_link};
             });
             CHECK(managed_obj.opt_obj_col->str_col == "link");
+            CHECK(managed_obj.list_obj_col[0]->str_col == "link");
+            CHECK(managed_obj.map_link_col["foo"]->str_col == "link");
+
+            CHECK(managed_obj.opt_obj_col == managed_link);
+            CHECK(managed_obj.list_obj_col[0] == managed_link);
+            CHECK(managed_obj.map_link_col["foo"] == managed_link);
+
+            AllTypesObject obj2;
+            obj2._id = 2;
+
+            auto managed_obj2 = db.write([&db, &obj2, &managed_obj = managed_obj, &managed_link = managed_link]() {
+                auto o = db.add(std::move(obj2));
+                o.opt_obj_col = managed_obj.opt_obj_col;
+                o.list_obj_col.push_back(managed_obj.opt_obj_col);
+                o.list_obj_col.push_back(managed_link);
+                o.map_link_col["foo"] = managed_link;
+                return o;
+            });
+            CHECK(managed_obj2.opt_obj_col->str_col == "link");
+            CHECK(managed_obj2.list_obj_col[0]->str_col == "link");
+            CHECK(managed_obj2.list_obj_col[1]->str_col == "link");
+            CHECK(managed_obj2.map_link_col["foo"]->str_col == "link");
+
+            CHECK(managed_obj2.opt_obj_col == managed_link);
+            CHECK(managed_obj2.list_obj_col[0] == managed_link);
+            CHECK(managed_obj2.map_link_col["foo"] == managed_link);
         }
     }
 }

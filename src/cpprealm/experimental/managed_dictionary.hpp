@@ -396,7 +396,7 @@ namespace realm::experimental {
             return {std::move(m)};
         }
 
-        box operator=(V* o) {
+        box& operator=(V* o) {
             if (!o) {
                 // Insert null link for key.
                 this->m_backing_map.insert(this->m_key, realm::internal::bridge::mixed());
@@ -415,6 +415,16 @@ namespace realm::experimental {
                          m_obj, m_obj.get_table().get_column_key(p.name),
                          (*o).*(std::decay_t<decltype(p)>::ptr)), ...);
             }, managed<V>::schema.ps);
+            return *this;
+        }
+
+        box& operator=(const managed<V*>& o) {
+            this->m_backing_map.insert(this->m_key, o->m_obj->get_key());
+            return *this;
+        }
+
+        box& operator=(const managed<V>& o) {
+            this->m_backing_map.insert(this->m_key, o.m_obj.get_key());
             return *this;
         }
 
