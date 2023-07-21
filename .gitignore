@@ -8,5 +8,6 @@ DerivedData/
 Package.resolved
 # Qt demo apps
 examples/*.pro.user
-docs/
+docs/html
+docs/latex
 
