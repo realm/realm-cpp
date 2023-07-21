@@ -65,6 +65,10 @@ namespace realm {
                 m_obj->set(m_key, obj.m_obj.get_key());
                 return *this;
             }
+            managed &operator=(const managed<T*> &obj) {
+                m_obj->set(m_key, obj.m_obj->get_key());
+                return *this;
+            }
             managed &operator=(std::nullptr_t) {
                 m_obj->set_null(m_key);
                 return *this;
@@ -105,14 +109,14 @@ namespace realm {
             }
             bool operator ==(const managed<T>& rhs) const {
                 if (*this->m_realm != rhs.m_realm)
-                    return false;
-                return this->m_obj->get_key() == rhs.m_obj.get_key();
+                    return false;                
+                return m_obj->get_linked_object(m_key).get_key() == rhs.m_obj.get_key();
             }
 
             bool operator ==(const managed<T*>& rhs) const {
                 if (*this->m_realm != *rhs.m_realm)
                     return false;
-                return this->m_obj->get_key() == rhs.m_obj->get_key();
+                return m_obj->get_linked_object(m_key).get_key() == rhs.m_obj->get_key();
             }
 
             bool operator !=(const std::nullptr_t) const {

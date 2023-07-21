@@ -419,7 +419,7 @@ namespace realm::experimental {
         }
 
         box& operator=(const managed<V*>& o) {
-            this->m_backing_map.insert(this->m_key, o->m_obj->get_key());
+            this->m_backing_map.insert(this->m_key, o->m_obj.get_key());
             return *this;
         }
 

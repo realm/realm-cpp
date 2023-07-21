@@ -707,6 +707,7 @@ namespace realm::experimental {
             AllTypesObject obj;
             obj._id = 1;
             AllTypesObjectLink link;
+            link._id = 1;
             link.str_col = "link";
 
             experimental::db db = experimental::open(path);
@@ -727,6 +728,8 @@ namespace realm::experimental {
             CHECK(managed_obj.list_obj_col[0] == managed_link);
             CHECK(managed_obj.map_link_col["foo"] == managed_link);
 
+            CHECK(db.objects<AllTypesObjectLink>().size() == 1);
+
             AllTypesObject obj2;
             obj2._id = 2;
 
@@ -736,8 +739,10 @@ namespace realm::experimental {
                 o.list_obj_col.push_back(managed_obj.opt_obj_col);
                 o.list_obj_col.push_back(managed_link);
                 o.map_link_col["foo"] = managed_link;
+                o.map_link_col["bar"] = managed_obj.opt_obj_col;
                 return o;
             });
+
             CHECK(managed_obj2.opt_obj_col->str_col == "link");
             CHECK(managed_obj2.list_obj_col[0]->str_col == "link");
             CHECK(managed_obj2.list_obj_col[1]->str_col == "link");
@@ -745,7 +750,36 @@ namespace realm::experimental {
 
             CHECK(managed_obj2.opt_obj_col == managed_link);
             CHECK(managed_obj2.list_obj_col[0] == managed_link);
+            CHECK(managed_obj2.list_obj_col[1] == managed_link);
+
             CHECK(managed_obj2.map_link_col["foo"] == managed_link);
+            CHECK(managed_obj2.map_link_col["bar"] == managed_link);
+
+            AllTypesObjectLink link2;
+            link2._id = 2;
+            link2.str_col = "link2";
+
+            auto managed_link2 = db.write([&db, &obj2, &managed_obj = managed_obj, &link2]() {
+                auto o = db.add(std::move(link2));
+                managed_obj.opt_obj_col = o;
+                managed_obj.list_obj_col.push_back(o);
+                managed_obj.list_obj_col.push_back(o);
+                managed_obj.map_link_col["foo"] = o;
+                managed_obj.map_link_col["bar"] = o;
+                return o;
+            });
+
+            CHECK(managed_obj.opt_obj_col->str_col == "link2");
+            CHECK(managed_obj.list_obj_col[1]->str_col == "link2");
+            CHECK(managed_obj.list_obj_col[2]->str_col == "link2");
+            CHECK(managed_obj.map_link_col["foo"]->str_col == "link2");
+
+            CHECK(managed_obj.opt_obj_col == managed_link2);
+            CHECK(managed_obj.list_obj_col[1] == managed_link2);
+            CHECK(managed_obj.list_obj_col[2] == managed_link2);
+
+            CHECK(managed_obj.map_link_col["foo"] == managed_link2);
+            CHECK(managed_obj.map_link_col["bar"] == managed_link2);
         }
     }
 }
