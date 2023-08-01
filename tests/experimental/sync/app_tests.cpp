@@ -25,6 +25,7 @@ TEST_CASE("app", "[sync]") {
 
         user.log_out().get();
         user = app.login(realm::App::credentials::anonymous()).get();
+        user_from_app = app.get_current_user();
         CHECK(user == user_from_app);
     }
 }
