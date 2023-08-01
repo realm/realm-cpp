@@ -7,6 +7,8 @@ x.y.z Release notes (yyyy-MM-dd)
 
 ### Enhancements
 * Add support for the Decimal128 data type (`realm::decimal128`).
+* Add app::get_current_user()
+* Add user::is_logged_in()
 
 ### Breaking Changes
 * None

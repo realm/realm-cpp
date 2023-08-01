@@ -255,6 +255,18 @@ namespace realm {
         return m_user->sync_manager();
     }
 
+    bool user::is_logged_in() const {
+        return m_user->is_logged_in();
+    }
+
+    bool operator==(const user& lhs, const user& rhs) {
+        return lhs.m_user == rhs.m_user;
+    }
+
+    bool operator!=(const user& lhs, const user& rhs) {
+        return lhs.m_user != rhs.m_user;
+    }
+
     App::credentials::credentials() {
         new (&m_credentials) app::AppCredentials();
     }
@@ -407,4 +419,10 @@ namespace realm {
         return m_app->sync_manager();
     }
 
+    std::optional<user> App::get_current_user() const {
+        if (auto u = m_app->sync_manager()->get_current_user()) {
+            return user(u);
+        }
+        return std::nullopt;
+    }
 }

@@ -111,6 +111,7 @@ struct user {
     user& operator=(const user&) = default;
     user& operator=(user&&) = default;
     explicit user(std::shared_ptr<SyncUser> user);
+    bool is_logged_in() const;
 
     /**
      The state of the user object.
@@ -215,6 +216,8 @@ struct user {
     std::shared_ptr<SyncUser> m_user;
 };
 
+bool operator==(const user& lhs, const user& rhs);
+bool operator!=(const user& lhs, const user& rhs);
 
 class App {
 public:
@@ -261,6 +264,7 @@ public:
     std::future<user> login(const credentials &credentials);
     void login(const credentials& credentials, std::function<void(user, std::optional<app_error>)>&& callback);
     [[nodiscard]] internal::bridge::sync_manager get_sync_manager() const;
+    [[nodiscard]] std::optional<user> get_current_user() const;
 private:
     std::shared_ptr<app::App> m_app;
 };
