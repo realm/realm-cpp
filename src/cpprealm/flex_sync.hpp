@@ -113,7 +113,7 @@ namespace realm {
             auto builder = internal::bridge::query(table_ref);
 
             if (query_fn) {
-                auto q = realm::experimental::query<experimental::managed<T>>(builder, std::move(schema));
+                auto q = realm::experimental::query<experimental::managed<T>>(builder, std::move(schema), m_realm);
                 auto full_query = (*query_fn)(q).q;
                 insert_or_assign(name, full_query);
             } else {

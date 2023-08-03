@@ -427,4 +427,41 @@ TEST_CASE("list", "[list]") {
         CHECK(std::holds_alternative<realm::uuid>(managed_obj.list_mixed_col[6]));
         CHECK(std::get<realm::uuid>(managed_obj.list_mixed_col[6]) == realm::uuid());
     }
+
+    SECTION("list_value") {
+        auto realm = realm::experimental::db(std::move(config));
+        auto obj = realm::experimental::AllTypesObject();
+        obj.list_int_col.push_back((int64_t)1);
+        obj.list_int_col.push_back((int64_t)2);
+        obj.list_int_col.push_back((int64_t)3);
+
+        auto o1 = realm::experimental::AllTypesObjectLink();
+        o1._id = 1;
+        o1.str_col = "foo";
+        auto o2 = realm::experimental::AllTypesObjectLink();
+        o2._id = 2;
+        o2.str_col = "bar";
+        auto o3 = realm::experimental::AllTypesObjectLink();
+        o3._id = 3;
+        o3.str_col = "baz";
+        auto o4 = realm::experimental::AllTypesObjectLink();
+        o4._id = 4;
+        o4.str_col = "foo baz";
+        auto o5 = realm::experimental::AllTypesObjectLink();
+        o5._id = 5;
+        o5.str_col = "foo bar";
+        auto o6 = realm::experimental::AllTypesObjectLink();
+
+        // unmanaged
+        obj.list_obj_col.push_back(&o1);
+        obj.list_obj_col.push_back(&o2);
+        obj.list_obj_col.push_back(&o3);
+
+        auto managed_obj = realm.write([&]() {
+            return realm.add(std::move(obj));
+        });
+
+        std::vector<int64_t> as_value = managed_obj.list_int_col.value();
+        CHECK(as_value == std::vector<int64_t>{1, 2, 3});
+    }
 }

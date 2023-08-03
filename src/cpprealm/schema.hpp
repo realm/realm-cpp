@@ -164,7 +164,7 @@ namespace realm {
             const char *primary_key_name = "";
 
             static constexpr std::tuple<Properties...> properties{};
-            using variant_t = typename unique_variant<std::variant<>, typename Properties::VariantResult...>::type;
+            using variant_t = typename unique_variant<std::variant<>, std::monostate, typename Properties::VariantResult...>::type;
 
             template<size_t N, typename P>
             constexpr auto apply_name(const std::tuple<Properties...> &tup, P &&prop) {
@@ -290,7 +290,12 @@ namespace realm {
             }
             template<size_t N, typename P>
             constexpr variant_t
-            property_value_for_name(std::string_view property_name, const experimental::managed<Class, void> &cls, P &property) const {
+            property_value_for_name(std::string_view property_name, const experimental::managed<Class, void> &cls, P &property, bool excluding_collections = true) const {
+                if (excluding_collections &&
+                    (property.type == realm::internal::bridge::property::type::Array || property.type == realm::internal::bridge::property::type::Dictionary)) {
+                    return variant_t{std::monostate()};
+                }
+
                 if constexpr (N + 1 == sizeof...(Properties)) {
                     if (property_name == std::string_view(names[N])) {
                         auto ptr = experimental::managed<Class, void>::template unmanaged_to_managed_pointer(property.ptr);
@@ -305,8 +310,8 @@ namespace realm {
                     return property_value_for_name<N + 1>(property_name, cls, std::get<N + 1>(properties));
                 }
             }
-            constexpr auto property_value_for_name(std::string_view property_name, const experimental::managed<Class, void> &cls) const {
-                return property_value_for_name<0>(property_name, cls, std::get<0>(properties));
+            constexpr auto property_value_for_name(std::string_view property_name, const experimental::managed<Class, void> &cls, bool excluding_collections = true) const {
+                return property_value_for_name<0>(property_name, cls, std::get<0>(properties), excluding_collections);
             }
             constexpr auto property_value_for_name(std::string_view property_name, const Class &cls) const {
                 return property_value_for_name<0>(property_name, cls, std::get<0>(properties));

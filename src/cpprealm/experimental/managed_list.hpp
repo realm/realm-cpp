@@ -63,8 +63,24 @@ namespace realm::experimental {
             return iterator(size(), this);
         }
         [[nodiscard]] std::vector<T> value() const {
-            // unused
-            return std::vector<T>();
+            auto list = realm::internal::bridge::list(*m_realm, *m_obj, m_key);
+            using U = typename internal::type_info::type_info<T>::internal_type;
+
+            size_t count = list.size();
+            if (count == 0)
+                return std::vector<T>();
+
+            auto ret = std::vector<T>();
+            ret.reserve(count);
+            for(size_t i = 0; i < count; i++) {
+                if constexpr (internal::type_info::MixedPersistableConcept<T>::value) {
+                    ret.push_back(deserialize<T>(realm::internal::bridge::get<U>(list, i)));
+                } else {
+                    ret.push_back(deserialize(realm::internal::bridge::get<U>(list, i)));
+                }
+            }
+
+            return ret;
         }
 
         realm::notification_token observe(std::function<void(realm::experimental::collection_change)>&& fn) {
@@ -118,8 +134,7 @@ namespace realm::experimental {
     template<typename T>
     struct managed<std::vector<T*>> : managed_base {
         [[nodiscard]] std::vector<T*> value() const {
-            // unused
-            return std::vector<T*>();
+            throw std::runtime_error("value() is not available on collections of managed objects. Access each object via subscript instead.");
         }
 
         void pop_back() {

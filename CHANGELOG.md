@@ -9,6 +9,8 @@ x.y.z Release notes (yyyy-MM-dd)
 * The default schema mode was incorrectly set to Automatic and not AdditiveDiscovered when using a Synced Realm.
 * Fix iterator on `experimental::Results`
 * Fix issue where properties on a link column could not be queried.
+* `operator bool()` on link properties incorrectly returned true when the link was null.
+* The default schema mode was incorrectly set to Automatic and not AdditiveDiscovered when using a Synced Realm.
 
 ### Enhancements
 * Add support for the Decimal128 data type (`realm::decimal128`).

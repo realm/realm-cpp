@@ -191,4 +191,20 @@ TEST_CASE("map", "[map]") {
         CHECK(managed_obj.map_str_col.find("c") == managed_obj.map_str_col.end());
         CHECK(managed_obj.map_str_col.find("d") != managed_obj.map_str_col.end());
     }
+
+    SECTION("as_value") {
+        auto obj = experimental::AllTypesObject();
+        obj.map_str_col = {
+                {"a", std::string("baz")},
+                {"b", std::string("foo")}
+        };
+
+        auto realm = experimental::db(std::move(config));
+        auto managed_obj = realm.write([&realm, &obj] {
+            return realm.add(std::move(obj));
+        });
+
+        std::map<std::string, std::string> as_values = managed_obj.map_str_col.value();
+        CHECK(as_values == std::map<std::string, std::string>({{"a", std::string("baz")}, {"b", std::string("foo")}}));
+    }
 }

@@ -119,7 +119,7 @@ namespace realm::experimental {
 
             std::vector<typename decltype(T::schema)::variant_t> values;
             for (auto &name: *property_names) {
-                auto value = T::schema.property_value_for_name(name, object);
+                auto value = T::schema.property_value_for_name(name, object, true);
                 values.push_back(value);
             }
             return values;

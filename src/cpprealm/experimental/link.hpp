@@ -61,7 +61,7 @@ namespace realm {
             }
             operator bool() {
                 if (m_obj && m_key) {
-                    return m_obj->is_null(m_key);
+                    return !m_obj->is_null(m_key);
                 }
                 return false;
             }

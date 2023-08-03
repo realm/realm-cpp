@@ -16,7 +16,7 @@ namespace realm::experimental {
             : m_backing_map(std::move(backing_map)), m_key(key), m_realm(r) {}
 
         box_base &operator=(const mapped_type &o) {
-            m_backing_map.insert(m_key, std::move(o));
+            m_backing_map.insert(m_key, internal::bridge::mixed(std::move(o)));
             return *this;
         }
         box_base &operator=(mapped_type &&o) {
@@ -470,8 +470,22 @@ namespace realm::experimental {
         using managed<std::map<std::string, T>>::managed_base::operator=;
 
         [[nodiscard]] std::map<std::string, T> value() const {
-            // unused
-            return std::map<std::string, T>();
+            if constexpr (std::is_pointer_v<T>) {
+                throw std::runtime_error("value() is not available on collections of managed objects. Access each object via subscript instead.");
+            }
+            auto ret = std::map<std::string, T>();
+            for (auto [k, v] : *this) {
+                ret[k] = v;
+            }
+            return ret;
+        }
+
+        std::enable_if<std::is_pointer_v<T>, std::map<std::string, managed<T>>> to_map() const {
+            auto ret = std::map<std::string, T>();
+            for (auto [k, v] : *this) {
+                ret[k] = v;
+            }
+            return ret;
         }
 
         class iterator {
@@ -509,25 +523,25 @@ namespace realm::experimental {
             template<typename, typename>
             friend struct managed;
 
-            iterator(size_t i, managed<std::map<std::string, T>>* parent)
+            iterator(size_t i, const managed<std::map<std::string, T>>* parent)
                 : m_i(i), m_parent(parent)
             {
             }
             size_t m_i;
-            managed<std::map<std::string, T>>* m_parent;
+            const managed<std::map<std::string, T>>* m_parent;
         };
 
-        size_t size()
+        size_t size() const
         {
             return m_obj->get_dictionary(m_key).size();
         }
 
-        iterator begin()
+        iterator begin() const
         {
             return iterator(0, this);
         }
 
-        iterator end()
+        iterator end() const
         {
             return iterator(size(), this);
         }

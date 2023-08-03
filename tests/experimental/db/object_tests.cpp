@@ -522,7 +522,7 @@ namespace realm::experimental {
                 if (run_count == 1) {
                     CHECK(change.is_deleted);
                 } else {
-                    CHECK(change.property_changes.size() == 26);
+                    CHECK(change.property_changes.size() == 35);
                     for (auto& prop_change : change.property_changes) {
                         if (prop_change.name == "str_col" && prop_change.new_value) {
                             CHECK(std::get<std::string>(*prop_change.new_value) == "foo");
@@ -558,33 +558,43 @@ namespace realm::experimental {
                             auto obj = std::get<managed<AllTypesObjectEmbedded*>>(*prop_change.new_value);
                             CHECK((obj->str_col) == "embedded obj");
                         } else if (prop_change.name == "list_int_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<int64_t>>(*prop_change.new_value);
+                            std::get<std::monostate>(*prop_change.new_value);
                             // Cocoa does not populate collection changes for an object and neither should we for perforamnce reasons.
-                            CHECK(obj.size() == 0);
                         } else if (prop_change.name == "list_bool_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<bool>>(*prop_change.new_value);
-                            CHECK(obj.size() == 0);
+                            std::get<std::monostate>(*prop_change.new_value);
                         } else if (prop_change.name == "list_str_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<std::string>>(*prop_change.new_value);
-                            CHECK(obj.size() == 0);
+                            std::get<std::monostate>(*prop_change.new_value);
                         } else if (prop_change.name == "list_uuid_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<realm::uuid>>(*prop_change.new_value);
-                            CHECK(obj.size() == 0);
+                            std::get<std::monostate>(*prop_change.new_value);
                         } else if (prop_change.name == "list_binary_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<std::vector<uint8_t>>>(*prop_change.new_value);
-                            CHECK(obj.size() == 0);
+                            std::get<std::monostate>(*prop_change.new_value);
                         } else if (prop_change.name == "list_date_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<std::chrono::time_point<std::chrono::system_clock>>>(*prop_change.new_value);
-                            CHECK(obj.size() == 0);
+                            std::get<std::monostate>(*prop_change.new_value);
                         } else if (prop_change.name == "list_mixed_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<realm::mixed>>(*prop_change.new_value);
-                            CHECK(obj.size() == 0);
+                            std::get<std::monostate>(*prop_change.new_value);
                         } else if (prop_change.name == "list_obj_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<AllTypesObjectLink*>>(*prop_change.new_value);
-                            CHECK(obj.size() == 0);
+                            std::get<std::monostate>(*prop_change.new_value);
                         } else if (prop_change.name == "list_embedded_obj_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<AllTypesObjectEmbedded*>>(*prop_change.new_value);
-                            CHECK(obj.size() == 0);
+                            std::get<std::monostate>(*prop_change.new_value);
+                        } else if (prop_change.name == "map_int_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
+                            // Cocoa does not populate collection changes for an object and neither should we for perforamnce reasons.
+                        } else if (prop_change.name == "map_bool_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
+                        } else if (prop_change.name == "map_str_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
+                        } else if (prop_change.name == "map_uuid_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
+                        } else if (prop_change.name == "map_binary_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
+                        } else if (prop_change.name == "map_date_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
+                        } else if (prop_change.name == "map_mixed_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
+                        } else if (prop_change.name == "map_link_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
+                        } else if (prop_change.name == "map_embedded_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
                         }
                     }
                 }
@@ -627,6 +637,16 @@ namespace realm::experimental {
                 managed_foo.list_obj_col.push_back(&o2);
                 o4.str_col = "embedded obj 2";
                 managed_foo.list_embedded_obj_col.push_back(&o4);
+
+                managed_foo.map_int_col["foo"] = 1;
+                managed_foo.map_bool_col["foo"] = true;
+                managed_foo.map_str_col["foo"] = "bar";
+                managed_foo.map_uuid_col["foo"] = uuid;
+                managed_foo.map_binary_col["foo"] = std::vector<uint8_t>({1});
+                managed_foo.map_date_col["foo"] = date;
+                managed_foo.map_mixed_col["foo"] = "mixed str";
+                managed_foo.map_link_col["foo"] = &o2;
+                managed_foo.map_embedded_col["foo"] = &o4;
             });
             realm.refresh();
             realm.write([&managed_foo, &realm] {
@@ -780,6 +800,28 @@ namespace realm::experimental {
 
             CHECK(managed_obj.map_link_col["foo"] == managed_link2);
             CHECK(managed_obj.map_link_col["bar"] == managed_link2);
+        }
+
+        SECTION("null bool operator") {
+            AllTypesObject obj;
+            obj._id = 1;
+            AllTypesObjectLink link;
+            link._id = 1;
+
+            experimental::db db = experimental::open(path);
+            auto managed_obj = db.write([&]() {
+                return db.add(std::move(obj));
+            });
+
+            bool has_link = managed_obj.opt_obj_col;
+            CHECK(!has_link);
+
+            db.write([&]() {
+                managed_obj.opt_obj_col = &link;
+            });
+
+            has_link = managed_obj.opt_obj_col;
+            CHECK(has_link);
         }
     }
 }
