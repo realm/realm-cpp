@@ -135,6 +135,60 @@ TEST_CASE("numerics", "[numerics]") {
 
             managed_obj.double_col--;
             CHECK(managed_obj.double_col == 4.0);
+
+            managed_obj.double_col = 1;
+        });
+
+        CHECK(managed_obj.double_col == 1);
+        CHECK((managed_obj.double_col != 1) == false);
+        CHECK((managed_obj.double_col > 1) == false);
+        CHECK((managed_obj.double_col < 1) == false);
+        CHECK(((managed_obj.double_col <= 1) && (managed_obj.double_col <= 100)));
+        CHECK(((managed_obj.double_col >= 1) && (managed_obj.double_col >= 0)));
+
+        res = realm.objects<experimental::AllTypesObject>().where([](auto&& o) {
+            return o.double_col == 1;
+        });
+        CHECK(res.size() == 1);
+        res = realm.objects<experimental::AllTypesObject>().where([](auto&& o) {
+            return o.double_col != 1;
+        });
+        CHECK(res.size() == 0);
+        res = realm.objects<experimental::AllTypesObject>().where([](auto&& o) {
+            return o.double_col > 1;
+        });
+        CHECK(res.size() == 0);
+        res = realm.objects<experimental::AllTypesObject>().where([](auto&& o) {
+            return o.double_col < 1;
+        });
+        CHECK(res.size() == 0);
+        res = realm.objects<experimental::AllTypesObject>().where([](auto&& o) {
+            return (o.double_col <= 1) && (o.double_col <= 100);
+        });
+        CHECK(res.size() == 1);
+        res = realm.objects<experimental::AllTypesObject>().where([](auto&& o) {
+            return (o.double_col >= 1) && (o.double_col >= 0);
+        });
+        CHECK(res.size() == 1);
+
+        realm.write([&realm, &managed_obj] {
+            managed_obj.double_col = managed_obj.double_col + 1;
+            CHECK(managed_obj.double_col == 2);
+
+            managed_obj.double_col += 1;
+            CHECK(managed_obj.double_col == 3);
+
+            managed_obj.double_col -= 1;
+            CHECK(managed_obj.double_col == 2);
+
+            managed_obj.double_col *= 2;
+            CHECK(managed_obj.double_col == 4);
+
+            managed_obj.double_col++;
+            CHECK(managed_obj.double_col == 5);
+
+            managed_obj.double_col--;
+            CHECK(managed_obj.double_col == 4);
         });
 
         // Opt Int
@@ -201,6 +255,40 @@ TEST_CASE("numerics", "[numerics]") {
 
             managed_obj.opt_double_col--;
             CHECK(managed_obj.opt_double_col == 4.0);
+
+            managed_obj.opt_double_col = 1;
+        });
+
+        CHECK(managed_obj.opt_double_col == 1);
+        CHECK((managed_obj.opt_double_col != 1) == false);
+
+        res = realm.objects<experimental::AllTypesObject>().where([](auto&& o) {
+            return o.opt_double_col == 1;
+        });
+        CHECK(res.size() == 1);
+        res = realm.objects<experimental::AllTypesObject>().where([](auto&& o) {
+            return o.opt_double_col != 1;
+        });
+        CHECK(res.size() == 0);
+
+        realm.write([&realm, &managed_obj] {
+            managed_obj.opt_double_col = *managed_obj.opt_double_col.value() + 1;
+            CHECK(managed_obj.opt_double_col == 2);
+
+            managed_obj.opt_double_col += 1;
+            CHECK(managed_obj.opt_double_col == 3);
+
+            managed_obj.opt_double_col -= 1;
+            CHECK(managed_obj.opt_double_col == 2);
+
+            managed_obj.opt_double_col *= 2;
+            CHECK(managed_obj.opt_double_col == 4);
+
+            managed_obj.opt_double_col++;
+            CHECK(managed_obj.opt_double_col == 5);
+
+            managed_obj.opt_double_col--;
+            CHECK(managed_obj.opt_double_col == 4);
         });
 
         // Enum

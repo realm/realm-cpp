@@ -1,13 +1,6 @@
 #include <cpprealm/experimental/managed_numeric.hpp>
 
 namespace realm::experimental {
-    __cpprealm_build_experimental_query(==, equal, double)
-    __cpprealm_build_experimental_query(!=, not_equal, double)
-    __cpprealm_build_experimental_query(>, greater, double)
-    __cpprealm_build_experimental_query(>=, greater_equal, double)
-    __cpprealm_build_experimental_query(<, less, double)
-    __cpprealm_build_experimental_query(<=, less_equal, double)
-
     __cpprealm_build_experimental_query(==, equal, bool)
     __cpprealm_build_experimental_query(!=, not_equal, bool)
 

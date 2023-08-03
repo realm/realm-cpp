@@ -52,6 +52,10 @@ namespace realm {
                 }
             };
             ref_type operator ->() const {
+                if (should_detect_usage_for_queries) {
+                    managed<T> m = managed<T>::prepare_for_query(*m_realm);
+                    return {std::move(m)};
+                }
                 managed<T> m(m_obj->get_linked_object(m_key), *m_realm);
                 return {std::move(m)};
             }

@@ -135,12 +135,67 @@ namespace realm::experimental {
         [[nodiscard]] operator double() const {
             return value();
         }
-        rbool operator==(const double& rhs) const noexcept;
-        rbool operator!=(const double& rhs) const noexcept;
-        rbool operator>(const double& rhs) const noexcept;
-        rbool operator<(const double& rhs) const noexcept;
-        rbool operator>=(const double& rhs) const noexcept;
-        rbool operator<=(const double& rhs) const noexcept;
+
+        template<typename T>
+        std::enable_if_t< std::disjunction_v<std::is_integral<T>, std::is_floating_point<T>>, rbool> operator==(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.equal(this->m_key, (double)rhs);
+                return rbool(std::move(query));
+            }
+            return serialize(value()) == rhs;
+        }
+
+        template<typename T>
+        std::enable_if_t< std::disjunction_v<std::is_integral<T>, std::is_floating_point<T>>, rbool> operator!=(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.not_equal(this->m_key, (double)rhs);
+                return rbool(std::move(query));
+            }
+            return serialize(value()) != rhs;
+        }
+
+        template<typename T>
+        std::enable_if_t< std::disjunction_v<std::is_integral<T>, std::is_floating_point<T>>, rbool> operator>(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.greater(this->m_key, (double)rhs);
+                return rbool(std::move(query));
+            }
+            return serialize(value()) > rhs;
+        }
+
+        template<typename T>
+        std::enable_if_t< std::disjunction_v<std::is_integral<T>, std::is_floating_point<T>>, rbool> operator<(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.less(this->m_key, (double)rhs);
+                return rbool(std::move(query));
+            }
+            return serialize(value()) < rhs;
+        }
+
+        template<typename T>
+        std::enable_if_t< std::disjunction_v<std::is_integral<T>, std::is_floating_point<T>>, rbool> operator>=(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.greater_equal(this->m_key, (double)rhs);
+                return rbool(std::move(query));
+            }
+            return serialize(value()) >= rhs;
+        }
+
+        template<typename T>
+        std::enable_if_t< std::disjunction_v<std::is_integral<T>, std::is_floating_point<T>>, rbool> operator<=(const T& rhs) const noexcept {
+            if (this->should_detect_usage_for_queries) {
+                auto query = internal::bridge::query(this->query->get_table());
+                query.less_equal(this->m_key, (double)rhs);
+                return rbool(std::move(query));
+            }
+            return serialize(value()) <= rhs;
+        }
+
         void operator+=(const double& o) {
             auto old_val = m_obj->template get<double>(m_key);
             m_obj->template set<double>(this->m_key, old_val + o);
@@ -185,6 +240,17 @@ namespace realm::experimental {
     template<> \
     struct managed<std::optional<type>> : managed_base { \
         using managed<std::optional<type>>::managed_base::operator=; \
+                                                 \
+        managed<std::optional<type>>& operator =(const double& v) { \
+            this->m_obj->template set<type>(m_key, v); \
+            return *this; \
+        } \
+        \
+        managed<std::optional<type>>& operator =(const int& v) { \
+            this->m_obj->template set<type>(m_key, (double)v); \
+            return *this; \
+        } \
+                                                 \
         [[nodiscard]] std::optional<type> value() const { \
             return m_obj->get_optional<type>(m_key); \
         } \
