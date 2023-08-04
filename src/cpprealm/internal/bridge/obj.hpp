@@ -9,9 +9,11 @@
 #include <string>
 #include <cpprealm/internal/bridge/binary.hpp>
 #include <cpprealm/internal/bridge/col_key.hpp>
+#include <cpprealm/internal/bridge/decimal128.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
 #include <cpprealm/internal/bridge/object_id.hpp>
+#include <cpprealm/internal/bridge/decimal128.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
 
 namespace realm {
@@ -63,6 +65,7 @@ namespace realm::internal::bridge {
     struct dictionary;
     struct uuid;
     struct object_id;
+    struct decimal128;
     struct list;
     struct row;
     struct table_view;
@@ -87,6 +90,8 @@ namespace realm::internal::bridge {
     [[nodiscard]] uuid get(const obj&, const col_key& col_key);
     template <>
     [[nodiscard]] object_id get(const obj&, const col_key& col_key);
+    template <>
+    [[nodiscard]] decimal128 get(const obj&, const col_key& col_key);
     template <>
     [[nodiscard]] binary get(const obj&, const col_key& col_key);
     template <>
@@ -147,8 +152,13 @@ namespace realm::internal::bridge {
         void set(const col_key& col_key, const binary& value);
         void set(const col_key& col_key, const uuid& value);
         void set(const col_key& col_key, const object_id& value);
+        void set(const col_key& col_key, const decimal128& value);
         void set(const col_key& col_key, const obj_key& value);
         void set(const col_key& col_key, const std::chrono::time_point<std::chrono::system_clock>& value);
+        template<typename T>
+        std::enable_if_t<std::is_enum_v<T>> set(const col_key& col_key, const T& value) {
+            set<int64_t>(col_key, static_cast<int64_t>(value));
+        }
         template<typename T>
         void set(const col_key& col_key, const std::optional<T>& value) {
             if (value) {
@@ -165,6 +175,7 @@ namespace realm::internal::bridge {
         void set_list_values(const col_key& col_key, const std::vector<double>& values);
         void set_list_values(const col_key& col_key, const std::vector<internal::bridge::uuid>& values);
         void set_list_values(const col_key& col_key, const std::vector<internal::bridge::object_id>& values);
+        void set_list_values(const col_key& col_key, const std::vector<internal::bridge::decimal128>& values);
         void set_list_values(const col_key& col_key, const std::vector<binary>& values);
         void set_list_values(const col_key& col_key, const std::vector<mixed>& values);
         void set_list_values(const col_key& col_key, const std::vector<timestamp>& values);

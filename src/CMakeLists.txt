@@ -35,15 +35,19 @@ set(SOURCES
     cpprealm/internal/bridge/async_open_task.cpp
     cpprealm/persisted_double.cpp
     cpprealm/internal/bridge/object_id.cpp
+    cpprealm/internal/bridge/decimal128.cpp
     cpprealm/persisted_object_id.cpp
+    cpprealm/persisted_decimal128.cpp
     cpprealm/experimental/managed_string.cpp
     cpprealm/experimental/observation.cpp
     cpprealm/experimental/managed_timestamp.cpp
     cpprealm/experimental/managed_numeric.cpp
     cpprealm/experimental/managed_uuid.cpp
     cpprealm/experimental/managed_objectid.cpp
-        cpprealm/experimental/managed_binary.cpp
-        cpprealm/experimental/managed_primary_key.cpp) # REALM_SOURCES
+    cpprealm/experimental/managed_binary.cpp
+    cpprealm/experimental/managed_primary_key.cpp
+    cpprealm/experimental/managed_decimal.cpp
+    cpprealm/experimental/types.cpp) # REALM_SOURCES
 
 set(HEADERS
     cpprealm/sdk.hpp
@@ -117,11 +121,14 @@ set(HEADERS
     cpprealm/experimental/managed_list.hpp
     cpprealm/experimental/managed_dictionary.hpp
     cpprealm/experimental/managed_mixed.hpp
-    cpprealm/experimental/accessors.hpp 
-    cpprealm/experimental/types.cpp 
+    cpprealm/experimental/accessors.hpp
     cpprealm/experimental/types.hpp
     cpprealm/rbool.hpp
-    cpprealm/experimental/managed_primary_key.hpp cpprealm/experimental/sdk.hpp) # REALM_INSTALL_HEADERS
+    cpprealm/experimental/managed_primary_key.hpp
+    cpprealm/experimental/sdk.hpp
+    cpprealm/internal/bridge/decimal128.hpp
+    cpprealm/experimental/managed_decimal.hpp
+    cpprealm/persisted_decimal128.hpp) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm STATIC ${SOURCES} ${HEADERS})
 include(GNUInstallDirs)

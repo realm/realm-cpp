@@ -106,6 +106,9 @@ namespace realm::internal::bridge {
     void list::add(const object_id &v) {
         reinterpret_cast<List *>(&m_list)->add(static_cast<ObjectId>(v));
     }
+    void list::add(const decimal128 &v) {
+        reinterpret_cast<List *>(&m_list)->add(static_cast<Decimal128>(v));
+    }
     void list::add(const mixed &v) {
         reinterpret_cast<List *>(&m_list)->add(v.operator ::realm::Mixed());
     }
@@ -147,6 +150,10 @@ namespace realm::internal::bridge {
         return reinterpret_cast<const List *>(&lst.m_list)->get<ObjectId>(idx);
     }
     template <>
+    decimal128 get(const list& lst, size_t idx) {
+        return reinterpret_cast<const List *>(&lst.m_list)->get<Decimal128>(idx);
+    }
+    template <>
     mixed get(const list& lst, size_t idx) {
         return reinterpret_cast<const List *>(&lst.m_list)->get<Mixed>(idx);
     }
@@ -184,6 +191,15 @@ namespace realm::internal::bridge {
         return reinterpret_cast<const List *>(lst.m_list)->get<std::optional<ObjectId>>(idx);
     }
     template <>
+    std::optional<decimal128> get(const list& lst, size_t idx) {
+        auto v = reinterpret_cast<const List *>(lst.m_list)->get<Decimal128>(idx);
+        if (v.is_null()) {
+            return std::nullopt;
+        } else {
+            return v;
+        }
+    }
+    template <>
     std::optional<timestamp> get(const list& lst, size_t idx) {
         auto v = reinterpret_cast<const List *>(lst.m_list)->get<Timestamp>(idx);
         if (v.is_null()) {
@@ -217,6 +233,7 @@ namespace realm::internal::bridge {
     void list::set(size_t pos, const double &v) { reinterpret_cast<List *>(m_list)->set(pos, v); }
     void list::set(size_t pos, const uuid &v) { reinterpret_cast<List *>(m_list)->set(pos, static_cast<UUID>(v)); }
     void list::set(size_t pos, const object_id &v) { reinterpret_cast<List *>(m_list)->set(pos, static_cast<ObjectId>(v)); }
+    void list::set(size_t pos, const decimal128 &v) { reinterpret_cast<List *>(m_list)->set(pos, static_cast<Decimal128>(v)); }
     void list::set(size_t pos, const mixed &v) { reinterpret_cast<List *>(m_list)->set(pos, v.operator ::realm::Mixed()); }
     void list::set(size_t pos, const binary &v) { reinterpret_cast<List *>(m_list)->set(pos, static_cast<BinaryData>(v)); }
     void list::set(size_t pos, const timestamp &v) { reinterpret_cast<List *>(m_list)->set(pos, static_cast<Timestamp>(v)); }
@@ -227,6 +244,7 @@ namespace realm::internal::bridge {
     size_t list::find(const std::string &v) { return reinterpret_cast<List *>(&m_list)->find(StringData(v)); }
     size_t list::find(const uuid &v) { return reinterpret_cast<List *>(&m_list)->find(static_cast<UUID>(v)); }
     size_t list::find(const object_id &v) { return reinterpret_cast<List *>(&m_list)->find(static_cast<ObjectId>(v)); }
+    size_t list::find(const decimal128 &v) { return reinterpret_cast<List *>(&m_list)->find(static_cast<Decimal128>(v)); }
     size_t list::find(const mixed &v) { return reinterpret_cast<List *>(&m_list)->find(v.operator ::realm::Mixed()); }
     size_t list::find(const timestamp &v) { return reinterpret_cast<List *>(&m_list)->find(static_cast<Timestamp>(v)); }
     size_t list::find(const binary& v) {

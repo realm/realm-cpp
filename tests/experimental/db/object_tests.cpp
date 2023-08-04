@@ -54,6 +54,11 @@ namespace realm::experimental {
         std::string str_col;
     };
     REALM_SCHEMA(PK4_opt, _id, str_col)
+    struct PK5_opt {
+        primary_key<std::optional<PrimaryKeyEnum>> _id;
+        std::string str_col;
+    };
+    REALM_SCHEMA(PK5_opt, _id, str_col)
 
     TEST_CASE("all_primary_key_types") {
         realm_path path;
@@ -93,6 +98,13 @@ namespace realm::experimental {
                 return realm.add(std::move(pk4));
             });
 
+            PK5 pk5;
+            pk5._id = PrimaryKeyEnum::one;
+            pk5.str_col = "pk5";
+            auto managed_pk5 = realm.write([&] {
+                return realm.add(std::move(pk5));
+            });
+
             CHECK(managed_pk1._id == 123);
             CHECK(managed_pk1._id != 321);
             CHECK(managed_pk1._id > 100);
@@ -116,6 +128,9 @@ namespace realm::experimental {
             CHECK(managed_pk4._id == realm::uuid("68b696d7-320b-4402-a412-d9cee10fc6a3"));
             CHECK(managed_pk4._id != realm::uuid("68b696d7-320b-4402-a412-d9cee10fc6a4"));
 
+            CHECK(managed_pk5._id == PrimaryKeyEnum::one);
+            CHECK(managed_pk5._id != PrimaryKeyEnum::two);
+
             CHECK(realm.objects<PK1>().where([](auto& o) { return o._id == 123; }).size() == 1);
             CHECK(realm.objects<PK1>().where([](auto& o) { return o._id != 123; }).size() == 0);
             CHECK(realm.objects<PK2>().where([&](auto& o) { return o._id == obj_id; }).size() == 1);
@@ -124,6 +139,8 @@ namespace realm::experimental {
             CHECK(realm.objects<PK3>().where([](auto& o) { return o._id != "primary_key"; }).size() == 0);
             CHECK(realm.objects<PK4>().where([](auto& o) { return o._id == realm::uuid("68b696d7-320b-4402-a412-d9cee10fc6a3"); }).size() == 1);
             CHECK(realm.objects<PK4>().where([](auto& o) { return o._id != realm::uuid("68b696d7-320b-4402-a412-d9cee10fc6a3"); }).size() == 0);
+            CHECK(realm.objects<PK5>().where([](auto& o) { return o._id == PrimaryKeyEnum::one; }).size() == 1);
+            CHECK(realm.objects<PK5>().where([](auto& o) { return o._id != PrimaryKeyEnum::one; }).size() == 0);
         }
 
         SECTION("optional_primary_keys") {
@@ -158,6 +175,13 @@ namespace realm::experimental {
                 return realm.add(std::move(pk4));
             });
 
+            PK5_opt pk5;
+            pk5._id = std::optional<PrimaryKeyEnum>(PrimaryKeyEnum::one);
+            pk5.str_col = "pk4";
+            auto managed_pk5 = realm.write([&] {
+                return realm.add(std::move(pk5));
+            });
+
             CHECK(managed_pk1._id == 123);
             CHECK(managed_pk1._id != 321);
             CHECK(managed_pk1._id > 100);
@@ -181,6 +205,9 @@ namespace realm::experimental {
             CHECK(managed_pk4._id == realm::uuid("68b696d7-320b-4402-a412-d9cee10fc6a3"));
             CHECK(managed_pk4._id != realm::uuid("68b696d7-320b-4402-a412-d9cee10fc6a4"));
 
+            CHECK(managed_pk5._id == PrimaryKeyEnum::one);
+            CHECK(managed_pk5._id != PrimaryKeyEnum::two);
+
             CHECK(realm.objects<PK1_opt>().where([](auto& o) { return o._id == std::nullopt; }).size() == 0);
             CHECK(realm.objects<PK1_opt>().where([](auto& o) { return o._id != std::nullopt; }).size() == 1);
             CHECK(realm.objects<PK2_opt>().where([](auto& o) { return o._id == std::nullopt; }).size() == 0);
@@ -189,6 +216,8 @@ namespace realm::experimental {
             CHECK(realm.objects<PK3_opt>().where([](auto& o) { return o._id != std::nullopt; }).size() == 1);
             CHECK(realm.objects<PK4_opt>().where([](auto& o) { return o._id == std::nullopt; }).size() == 0);
             CHECK(realm.objects<PK4_opt>().where([](auto& o) { return o._id != std::nullopt; }).size() == 1);
+            CHECK(realm.objects<PK5_opt>().where([](auto& o) { return o._id == std::nullopt; }).size() == 0);
+            CHECK(realm.objects<PK5_opt>().where([](auto& o) { return o._id != std::nullopt; }).size() == 1);
         }
 
         SECTION("optional_primary_keys_null_initialized") {
@@ -268,6 +297,7 @@ namespace realm::experimental {
             embedded_obj3.str_col = "embedded obj3";
 
             auto object_id = realm::object_id::generate();
+            auto decimal = realm::decimal128(123.456);
 
             AllTypesObject obj;
             obj._id = 123;
@@ -279,6 +309,7 @@ namespace realm::experimental {
             obj.uuid_col = uuid;
             obj.object_id_col = object_id;
             obj.binary_col = std::vector<uint8_t>({1});
+            obj.decimal_col = decimal;
             obj.mixed_col = AllTypesObject::my_mixed("mixed");
 
             obj.opt_int_col = 2;
@@ -289,6 +320,7 @@ namespace realm::experimental {
             obj.opt_date_col = date;
             obj.opt_uuid_col = uuid;
             obj.opt_object_id_col = object_id;
+            obj.opt_decimal_col = decimal;
             obj.opt_binary_col = std::vector<uint8_t>({1});
 
             obj.opt_obj_col = &link1,
@@ -300,6 +332,7 @@ namespace realm::experimental {
             obj.list_str_col = std::vector<std::string>({"bar"});
             obj.list_uuid_col = std::vector<realm::uuid>({uuid});
             obj.list_object_id_col = std::vector<realm::object_id>({object_id});
+            obj.list_decimal_col = std::vector<realm::decimal128>({decimal});
             obj.list_binary_col = std::vector<std::vector<uint8_t>>({{1}});
             obj.list_date_col = std::vector<std::chrono::time_point<std::chrono::system_clock>>({date});
             obj.list_mixed_col = std::vector<realm::mixed>({realm::mixed("mixed str")});
@@ -312,6 +345,7 @@ namespace realm::experimental {
             obj.map_str_col = std::map<std::string, std::string>({{"foo", "bar"}});
             obj.map_uuid_col = std::map<std::string, realm::uuid>({{"foo", uuid}});
             obj.map_object_id_col = std::map<std::string, realm::object_id>({{"foo", object_id}});
+            obj.map_decimal_col = std::map<std::string, realm::decimal128>({{"foo", decimal}});
             obj.map_binary_col = std::map<std::string, std::vector<std::uint8_t>>({{"foo", {1}}});
             obj.map_date_col = std::map<std::string, std::chrono::time_point<std::chrono::system_clock>>({{"foo", date}});
             obj.map_enum_col = std::map<std::string, AllTypesObject::Enum>({{"foo", AllTypesObject::Enum::one}});
@@ -331,6 +365,8 @@ namespace realm::experimental {
             CHECK(managed_obj.enum_col == AllTypesObject::Enum::two);
             CHECK(managed_obj.date_col == date);
             CHECK(managed_obj.uuid_col.value() == uuid);
+            CHECK(managed_obj.object_id_col == object_id);
+            CHECK(managed_obj.decimal_col == decimal);
             CHECK(managed_obj.binary_col.value() == std::vector<uint8_t>({1}));
             CHECK(managed_obj.mixed_col.value() == AllTypesObject::my_mixed("mixed"));
 
@@ -345,12 +381,15 @@ namespace realm::experimental {
             CHECK(managed_obj.opt_uuid_col == uuid);
             CHECK(managed_obj.opt_binary_col.value() == std::vector<uint8_t>({1}));
             CHECK(managed_obj.opt_object_id_col == object_id);
+            CHECK(managed_obj.opt_decimal_col == decimal);
 
             CHECK(managed_obj.list_int_col[0] == 1);
             CHECK(managed_obj.list_double_col[0] == 1.23);
             CHECK(managed_obj.list_bool_col[0] == true);
             CHECK(managed_obj.list_str_col[0] == "bar");
             CHECK(managed_obj.list_uuid_col[0] == uuid);
+            CHECK(managed_obj.list_object_id_col[0] == object_id);
+            CHECK(managed_obj.list_decimal_col[0] == decimal);
             CHECK(managed_obj.list_date_col[0] == date);
             CHECK(managed_obj.list_uuid_col[0] == uuid);
             CHECK(managed_obj.list_mixed_col[0] == realm::mixed("mixed str"));
@@ -397,6 +436,7 @@ namespace realm::experimental {
             CHECK(results_obj.binary_col == std::vector<uint8_t>({1}));
             CHECK(results_obj.mixed_col == "mixed");
             CHECK(results_obj.object_id_col == object_id);
+            CHECK(results_obj.decimal_col == decimal);
 
             CHECK(results_obj.opt_int_col == 2);
             CHECK(results_obj.opt_double_col == 2.34);
@@ -407,6 +447,7 @@ namespace realm::experimental {
             CHECK(results_obj.opt_uuid_col == uuid);
             CHECK(results_obj.opt_binary_col == std::vector<uint8_t>({1}));
             CHECK(results_obj.opt_object_id_col == object_id);
+            CHECK(results_obj.opt_decimal_col == decimal);
 
 //            CHECK(results_obj.opt_obj_col == allTypeObjectLink);
 //            CHECK(*results_obj.opt_embedded_obj_col == embedded_obj);
@@ -418,6 +459,8 @@ namespace realm::experimental {
             CHECK(results_obj.list_uuid_col[0] == uuid);
             CHECK(results_obj.list_date_col[0] == date);
             CHECK(results_obj.list_uuid_col[0] == uuid);
+            CHECK(results_obj.list_object_id_col[0] == object_id);
+            CHECK(results_obj.list_decimal_col[0] == decimal);
             CHECK(results_obj.list_mixed_col[0] == realm::mixed("mixed str"));
 //            CHECK(results_obj.list_obj_col[0] == allTypeObjectLink);
 //            CHECK(results_obj.list_embedded_obj_col[0] == embedded_obj);
@@ -429,6 +472,8 @@ namespace realm::experimental {
             CHECK(results_obj.map_uuid_col["foo"] == uuid);
             CHECK(results_obj.map_date_col["foo"] == date);
             CHECK(results_obj.map_uuid_col["foo"] == uuid);
+            CHECK(results_obj.map_object_id_col["foo"] == object_id);
+            CHECK(results_obj.map_decimal_col["foo"] == decimal);
             CHECK(results_obj.map_mixed_col["foo"] == realm::mixed("bar"));
 //            CHECK(results_obj.map_link_col["foo"] == allTypeObjectLink);
 //            CHECK(results_obj.map_embedded_col["foo"] == embedded_obj);

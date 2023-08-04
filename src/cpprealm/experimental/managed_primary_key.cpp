@@ -1,5 +1,4 @@
 #include <cpprealm/experimental/managed_primary_key.hpp>
-#include <cpprealm/persisted.hpp>
 
 namespace realm::experimental {
 

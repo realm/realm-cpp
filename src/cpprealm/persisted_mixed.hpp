@@ -20,9 +20,6 @@
 #define REALM_PERSISTED_MIXED_HPP
 
 #include <cpprealm/persisted.hpp>
-//#include <cpprealm/persisted_uuid.hpp>
-//#include <cpprealm/persisted_object_id.hpp>
-//#include <cpprealm/persisted_custom.hpp>
 #include <cpprealm/experimental/types.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
 
@@ -95,6 +92,8 @@ namespace realm {
                     return static_cast<uuid>(static_cast<internal::bridge::uuid>(value));
                 case internal::bridge::data_type::ObjectId:
                     return static_cast<object_id>(static_cast<internal::bridge::object_id>(value));
+                case internal::bridge::data_type::Decimal:
+                    return static_cast<decimal128>(static_cast<internal::bridge::decimal128>(value));
                 case internal::bridge::data_type::TypedLink:
                     REALM_TERMINATE("Objects stored in mixed properties must be accessed via `get_object_value()`");
                 default: abort();
@@ -104,27 +103,44 @@ namespace realm {
     };
 
 #define __cpp_realm_generate_mixed_operator(op) \
-    template <template <typename ...> typename Variant, typename ...Ts, typename V> \
-    std::enable_if_t<internal::type_info::is_variant_t<Variant<Ts...>>::value, rbool> \
-    operator op(const persisted<Variant<Ts...>>& a, V&& b) \
-    { \
-        if (a.should_detect_usage_for_queries) { \
-            auto query = internal::bridge::query(a.query->get_table()); \
-            query.equal(a.managed, internal::bridge::mixed(persisted<std::decay_t<V>>::serialize(b))); \
-            return query; \
-        } \
-        return std::visit([&b](auto&& arg) { \
-            using M = std::decay_t<decltype(arg)>; \
-            if constexpr (std::is_convertible_v<M, V>) { \
-                return arg op b; \
-            } else { \
-                return false; \
-            } \
-        }, *a); \
+
+    template <template <typename ...> typename Variant, typename ...Ts, typename V>
+    std::enable_if_t<internal::type_info::is_variant_t<Variant<Ts...>>::value, rbool>
+    operator ==(const persisted<Variant<Ts...>>& a, V&& b)
+    {
+        if (a.should_detect_usage_for_queries) {
+            auto query = internal::bridge::query(a.query->get_table());
+//            query.equal(a.managed, internal::bridge::mixed(experimental::serialize<std::decay_t<V>>(b)));
+            return query;
+        }
+        return std::visit([&b](auto&& arg) {
+            using M = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_convertible_v<M, V>) {
+                return arg == b;
+            } else {
+                return false;
+            }
+        }, *a);
     }
 
-    __cpp_realm_generate_mixed_operator(==)
-    __cpp_realm_generate_mixed_operator(!=)
+    template <template <typename ...> typename Variant, typename ...Ts, typename V>
+    std::enable_if_t<internal::type_info::is_variant_t<Variant<Ts...>>::value, rbool>
+    operator !=(const persisted<Variant<Ts...>>& a, V&& b)
+    {
+        if (a.should_detect_usage_for_queries) {
+            auto query = internal::bridge::query(a.query->get_table());
+//            query.not_equal(a.managed, internal::bridge::mixed(experimental::serialize<std::decay_t<V>>(b)));
+            return query;
+        }
+        return std::visit([&b](auto&& arg) {
+            using M = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_convertible_v<M, V>) {
+                return arg == b;
+            } else {
+                return false;
+            }
+        }, *a);
+    }
 
     template <template <typename ...> typename Variant, typename ...Ts>
     std::enable_if_t<internal::type_info::is_variant_t<Variant<Ts...>>::value, rbool>

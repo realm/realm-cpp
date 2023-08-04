@@ -34,6 +34,36 @@ namespace realm {
         template <typename mapped_type>
         friend struct box_base;
     };
+
+    struct decimal128 {
+        explicit decimal128(const std::string &);
+        decimal128(const double &);
+        decimal128() = default;
+        [[nodiscard]] std::string to_string() const;
+        [[nodiscard]] bool is_NaN() const;
+        decimal128(const internal::bridge::decimal128 &);
+        internal::bridge::decimal128 m_decimal;
+        friend struct internal::bridge::decimal128;
+        template <typename mapped_type>
+        friend struct box_base;
+
+        decimal128 operator-(const decimal128& o);
+        decimal128 operator+(const decimal128& o);
+        decimal128 operator*(const decimal128& o);
+        decimal128 operator/(const decimal128& o);
+
+        decimal128& operator-=(const decimal128& o);
+        decimal128& operator+=(const decimal128& o);
+        decimal128& operator*=(const decimal128& o);
+        decimal128& operator/=(const decimal128& o);
+    };
+
+    inline bool operator >(const decimal128& lhs, const decimal128& rhs) { return lhs.m_decimal > rhs.m_decimal; }
+    inline bool operator >=(const decimal128& lhs, const decimal128& rhs) { return lhs.m_decimal >= rhs.m_decimal; }
+    inline bool operator <(const decimal128& lhs, const decimal128& rhs) { return lhs.m_decimal < rhs.m_decimal; }
+    inline bool operator <=(const decimal128& lhs, const decimal128& rhs) { return lhs.m_decimal <= rhs.m_decimal; }
+    inline bool operator ==(const decimal128& lhs, const decimal128& rhs) { return lhs.m_decimal == rhs.m_decimal; }
+    inline bool operator !=(const decimal128& lhs, const decimal128& rhs) { return lhs.m_decimal != rhs.m_decimal; }
 }
 
 namespace realm::experimental {
@@ -89,8 +119,8 @@ namespace realm::experimental {
         return static_cast<T>(v);
     }
 
-    template<typename T, std::enable_if_t<std::is_enum_v<typename T::value_type>>>
-    static std::optional<int64_t> serialize(const T& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    template<typename T>
+    static std::enable_if_t<std::is_enum_v<typename T::value_type>, std::optional<int64_t>> serialize(const T& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         if (v) {
             return static_cast<int64_t>(*v);
         } else {
@@ -192,6 +222,24 @@ namespace realm::experimental {
         }
     }
 
+    static internal::bridge::decimal128 serialize(const realm::decimal128& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+        return v;
+    }
+    static realm::decimal128 deserialize(const internal::bridge::decimal128& v) {
+        return v.operator ::realm::decimal128();
+    }
+
+    static std::optional<internal::bridge::decimal128> serialize(const std::optional<realm::decimal128>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+        return v;
+    }
+    static std::optional<realm::decimal128> deserialize(const std::optional<internal::bridge::decimal128>& v) {
+        if (v) {
+            return v->operator ::realm::decimal128();
+        } else {
+            return std::nullopt;
+        }
+    }
+
     template <typename T>
     static typename std::enable_if_t<internal::type_info::MixedPersistableConcept<T>::value, internal::bridge::mixed> serialize(const T& v, const std::optional<internal::bridge::realm>& realm = std::nullopt) {
         return std::visit([&](auto&& arg) {
@@ -233,6 +281,8 @@ namespace realm::experimental {
             return static_cast<internal::bridge::uuid>(value).operator ::realm::uuid();
         } else if constexpr (std::is_same_v<T, realm::object_id>) {
             return static_cast<internal::bridge::object_id>(value).operator ::realm::object_id();
+        } else if constexpr (std::is_same_v<T, realm::decimal128>) {
+            return static_cast<internal::bridge::decimal128>(value).operator ::realm::decimal128();
         } else {
             abort();
         }
@@ -263,6 +313,8 @@ namespace realm::experimental {
                 return static_cast<internal::bridge::uuid>(value).operator ::realm::uuid();
             case internal::bridge::data_type::ObjectId:
                 return static_cast<internal::bridge::object_id>(value).operator ::realm::object_id();
+            case internal::bridge::data_type::Decimal:
+                return static_cast<internal::bridge::decimal128>(value).operator ::realm::decimal128();
             case internal::bridge::data_type::TypedLink:
                 abort();
                 //                REALM_TERMINATE("Objects stored in mixed properties must be accessed via `get_object_value()`");

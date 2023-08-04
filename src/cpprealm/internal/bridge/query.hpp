@@ -8,6 +8,7 @@
 
 namespace realm {
     struct object_id;
+    struct decimal128;
     struct uuid;
     class Query;
 }
@@ -17,6 +18,7 @@ namespace realm::internal::bridge {
     struct timestamp;
     struct binary;
     struct object_id;
+    struct decimal128;
     struct uuid;
     struct mixed;
 
@@ -80,6 +82,14 @@ namespace realm::internal::bridge {
         query& greater_equal(col_key column_key, object_id value);
         query& less_equal(col_key column_key, object_id value);
         query& less(col_key column_key, object_id value);
+
+        // Conditions: Decimal128
+        query& equal(col_key column_key, decimal128 value);
+        query& not_equal(col_key column_key, decimal128 value);
+        query& greater(col_key column_key, decimal128 value);
+        query& greater_equal(col_key column_key, decimal128 value);
+        query& less_equal(col_key column_key, decimal128 value);
+        query& less(col_key column_key, decimal128 value);
 
         // Conditions: string
         query& equal(col_key column_key, std::string_view value, bool case_sensitive = true);
