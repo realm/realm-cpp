@@ -8,4 +8,5 @@ namespace realm {
     decimal128 persisted<decimal128>::deserialize(const internal::bridge::decimal128 &v) {
         return static_cast<decimal128>(v);
     }
+
 }
