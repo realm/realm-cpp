@@ -102,7 +102,8 @@ else()
             experimental/db/realm_tests.cpp
             experimental/db/results_tests.cpp
             experimental/db/run_loop_tests.cpp
-            experimental/db/string_tests.cpp)
+            experimental/db/string_tests.cpp
+            experimental/db/performance_tests.cpp)
     target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
     target_link_libraries(cpprealm_alpha_tests cpprealm Catch2::Catch2)
     target_compile_definitions(cpprealm_alpha_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
