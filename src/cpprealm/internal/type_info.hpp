@@ -12,6 +12,7 @@
 #include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/object_id.hpp>
 #include <cpprealm/internal/bridge/decimal128.hpp>
+#include <cpprealm/internal/bridge/set.hpp>
 
 #include <map>
 #include <vector>
@@ -38,6 +39,14 @@ namespace realm::internal::type_info {
     };
     template <typename T>
     struct is_vector<std::vector<T>> : std::true_type {
+        static constexpr auto value = true;
+    };
+    template <typename T, typename = void>
+    struct is_set : std::false_type {
+        static constexpr auto value = false;
+    };
+    template <typename T>
+    struct is_set<std::set<T>> : std::true_type {
         static constexpr auto value = true;
     };
     template <typename T, typename = void>
@@ -243,6 +252,13 @@ namespace realm::internal::type_info {
         using internal_type = internal::bridge::dictionary;
         static constexpr bridge::property::type type() {
             return bridge::property::type::Dictionary | type_info<ValueType>::type();
+        }
+    };
+    template <typename ValueType>
+    struct type_info<std::set<ValueType>> {
+        using internal_type = bridge::set;
+        static constexpr bridge::property::type type() {
+            return bridge::property::type::Set | type_info<ValueType>::type();
         }
     };
     template <typename T>

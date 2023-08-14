@@ -164,6 +164,70 @@ namespace realm::experimental {
             return ret;
         }
 
+        class iterator {
+        public:
+            using value_type = managed<T>;
+
+            using difference_type = std::ptrdiff_t;
+            using pointer = T*;
+            using reference = T&;
+            using iterator_category = std::forward_iterator_tag;
+
+            bool operator!=(const iterator& other) const
+            {
+                return !(*this == other);
+            }
+
+            bool operator==(const iterator& other) const
+            {
+                return (m_parent == other.m_parent) && (m_i == other.m_i);
+            }
+
+            managed<T> operator*() const noexcept
+            {
+                auto list = realm::internal::bridge::list(*m_parent->m_realm, *m_parent->m_obj, m_parent->m_key);
+                managed<T> m(realm::internal::bridge::get<realm::internal::bridge::obj>(list, m_i), *m_parent->m_realm);
+                std::apply([&m](auto &&...ptr) {
+                    std::apply([&](auto &&...name) {
+                        ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
+                    }, managed<T>::managed_pointers_names);
+                }, managed<T>::managed_pointers());
+                return {std::move(m)};
+            }
+
+            iterator& operator++()
+            {
+                this->m_i++;
+                return *this;
+            }
+
+            const iterator& operator++(int i)
+            {
+                this->m_i += i;
+                return *this;
+            }
+        private:
+            template<typename, typename>
+            friend struct managed;
+
+            iterator(size_t i, managed<std::vector<T*>>* parent)
+                : m_i(i), m_parent(parent)
+            {
+            }
+            size_t m_i;
+            managed<std::vector<T*>>* m_parent;
+        };
+
+        iterator begin()
+        {
+            return iterator(0, this);
+        }
+
+        iterator end()
+        {
+            return iterator(size(), this);
+        }
+
         void pop_back() {
             internal::bridge::list(*m_realm, *m_obj, m_key).remove(size() - 1);
         }
@@ -186,9 +250,9 @@ namespace realm::experimental {
             } else {
                 m_obj = table.create_object();
             }
-            std::apply([&m_obj, &value](auto && ...p) {
+            std::apply([&m_obj, &value, realm = *m_realm](auto && ...p) {
                 (accessor<typename std::decay_t<decltype(p)>::Result>::set(
-                         m_obj, m_obj.get_table().get_column_key(p.name),
+                         m_obj, m_obj.get_table().get_column_key(p.name), realm,
                          (*value).*(std::decay_t<decltype(p)>::ptr)), ...);
             }, managed<T, void>::schema.ps);
             if (!managed<T>::schema.is_embedded_experimental()) {
@@ -214,7 +278,7 @@ namespace realm::experimental {
             }
         }
 
-        size_t size()
+        size_t size() const
         {
             return internal::bridge::list(*m_realm, *m_obj, m_key).size();
         }

@@ -107,9 +107,9 @@ namespace realm {
                     m_obj->set(m_key, obj.get_key());
                 }
 
-                std::apply([&obj, &o](auto && ...p) {
+                std::apply([&obj, &o, realm = *m_realm](auto && ...p) {
                     (accessor<typename std::decay_t<decltype(p)>::Result>::set(
-                             obj, obj.get_table().get_column_key(p.name), (*o).*(std::decay_t<decltype(p)>::ptr)
+                             obj, obj.get_table().get_column_key(p.name), realm, (*o).*(std::decay_t<decltype(p)>::ptr)
                                      ), ...);
                 }, managed<T>::schema.ps);
                 auto m = managed<T>(std::move(obj), *m_realm);

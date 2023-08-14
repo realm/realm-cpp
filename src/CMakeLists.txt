@@ -44,6 +44,7 @@ set(SOURCES
     cpprealm/internal/bridge/realm.cpp
     cpprealm/internal/bridge/results.cpp
     cpprealm/internal/bridge/schema.cpp
+    cpprealm/internal/bridge/set.cpp
     cpprealm/internal/bridge/status.cpp
     cpprealm/internal/bridge/sync_error.cpp
     cpprealm/internal/bridge/sync_manager.cpp
@@ -72,6 +73,7 @@ set(HEADERS
     cpprealm/experimental/managed_numeric.hpp
     cpprealm/experimental/managed_objectid.hpp
     cpprealm/experimental/managed_primary_key.hpp
+    cpprealm/experimental/managed_set.hpp
     cpprealm/experimental/managed_string.hpp
     cpprealm/experimental/managed_timestamp.hpp
     cpprealm/experimental/managed_uuid.hpp
@@ -97,6 +99,7 @@ set(HEADERS
     cpprealm/internal/bridge/realm.hpp
     cpprealm/internal/bridge/results.hpp
     cpprealm/internal/bridge/schema.hpp
+    cpprealm/internal/bridge/set.hpp
     cpprealm/internal/bridge/status.hpp
     cpprealm/internal/bridge/sync_error.hpp
     cpprealm/internal/bridge/sync_manager.hpp
@@ -114,7 +117,8 @@ set(HEADERS
     cpprealm/schema.hpp
     cpprealm/task.hpp
     cpprealm/thread_safe_reference.hpp
-    cpprealm/sdk.hpp cpprealm/alpha_support.hpp) # REALM_INSTALL_HEADERS
+    cpprealm/sdk.hpp
+    cpprealm/alpha_support.hpp) # REALM_INSTALL_HEADERS
 
 if(ENABLE_ALPHA_SDK)
     list(APPEND HEADERS

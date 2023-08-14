@@ -982,5 +982,31 @@ namespace realm::experimental {
             CHECK(detached_obj.map_mixed_col["foo"] == realm::mixed("bar"));
             CHECK(detached_obj.map_link_col["foo"]->str_col == "link object 3");
         }
+        SECTION("optional objects") {
+            auto realm = db(std::move(config));
+
+            auto obj1 = AllTypesObject();
+            obj1._id = 1;
+
+
+            auto o = AllTypesObjectLink();
+            o.str_col = "bar";
+            obj1.opt_obj_col = &o;
+
+            auto obj2 = AllTypesObject();
+
+
+            obj2._id = 2;
+            obj2.opt_obj_col = &o;
+
+            realm.write([&] {
+                realm.add(std::move(obj1));
+                realm.add(std::move(obj2));
+            });
+
+            CHECK(realm.objects<AllTypesObject>().size() == 2);
+//            CHECK(realm.objects<AllTypesObjectLink>().size() == 2);
+
+        }
     }
 }

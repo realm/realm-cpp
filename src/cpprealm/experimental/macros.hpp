@@ -465,7 +465,8 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
     \
             return a.get_table() == b->get_table() \
                    && a.get_key() == b->get_key(); \
-        }                       \
+        }                                          \
+       bool operator < (const managed<cls>& rhs) const { return m_obj.get_key() < rhs.m_obj.get_key(); }  \
     };                         \
     struct meta_schema_##cls {   \
         meta_schema_##cls() {                                                    \

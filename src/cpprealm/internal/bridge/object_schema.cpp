@@ -57,10 +57,6 @@ namespace realm::internal::bridge {
 #endif
     }
 
-
-
-
-
     object_schema::object_schema(const realm::ObjectSchema &v) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_schema) ObjectSchema(v);

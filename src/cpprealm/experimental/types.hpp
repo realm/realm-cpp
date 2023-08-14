@@ -3,6 +3,7 @@
 
 #include <array>
 #include <optional>
+#include <set>
 
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>

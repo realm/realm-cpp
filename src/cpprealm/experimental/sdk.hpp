@@ -13,6 +13,7 @@
 #include <cpprealm/experimental/managed_timestamp.hpp>
 #include <cpprealm/experimental/managed_uuid.hpp>
 #include <cpprealm/experimental/managed_decimal.hpp>
+#include <cpprealm/experimental/managed_set.hpp>
 #include <cpprealm/experimental/results.hpp>
 #include <cpprealm/experimental/link.hpp>
 #include <cpprealm/experimental/observation.hpp>
