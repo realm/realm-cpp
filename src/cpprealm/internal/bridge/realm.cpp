@@ -65,6 +65,15 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(Realm::Config)>{});
 #endif
 
+    static_assert((uint8_t)realm::config::schema_mode::Automatic == (uint8_t)::realm::SchemaMode::Automatic);
+    static_assert((uint8_t)realm::config::schema_mode::Immutable == (uint8_t)::realm::SchemaMode::Immutable);
+    static_assert((uint8_t)realm::config::schema_mode::ReadOnly == (uint8_t)::realm::SchemaMode::ReadOnly);
+    static_assert((uint8_t)realm::config::schema_mode::SoftResetFile == (uint8_t)::realm::SchemaMode::SoftResetFile);
+    static_assert((uint8_t)realm::config::schema_mode::HardResetFile == (uint8_t)::realm::SchemaMode::HardResetFile);
+    static_assert((uint8_t)realm::config::schema_mode::AdditiveDiscovered == (uint8_t)::realm::SchemaMode::AdditiveDiscovered);
+    static_assert((uint8_t)realm::config::schema_mode::AdditiveExplicit == (uint8_t)::realm::SchemaMode::AdditiveExplicit);
+    static_assert((uint8_t)realm::config::schema_mode::Manual == (uint8_t)::realm::SchemaMode::Manual);
+
     class null_logger : public ::realm::logger {
     public:
         null_logger() = default;
@@ -187,9 +196,12 @@ namespace realm::internal::bridge {
         for (auto& os : v) {
             v2.push_back(os);
         }
-        reinterpret_cast<RealmConfig*>(&m_config)->schema_version = 0;
         reinterpret_cast<RealmConfig*>(&m_config)->schema = v2;
     }
+    void realm::config::set_schema_mode(schema_mode mode) {
+        reinterpret_cast<RealmConfig*>(&m_config)->schema_mode = static_cast<::realm::SchemaMode>(mode);
+    }
+
     schema realm::schema() const {
         return m_realm->schema();
     }
