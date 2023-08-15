@@ -38,6 +38,8 @@ namespace realm::internal::bridge {
     mixed::mixed(const mixed& other) {
         if (other.type() == data_type::String) {
             m_owned_string = other.m_owned_string;
+        } else if (other.type() == data_type::Binary) {
+            m_owned_data = other.m_owned_data;
         }
         new (&m_mixed) Mixed(*reinterpret_cast<const Mixed*>(&other.m_mixed));
     }
@@ -46,6 +48,8 @@ namespace realm::internal::bridge {
         if (this != &other) {
             if (other.type() == data_type::String) {
                 m_owned_string = other.m_owned_string;
+            } else if (other.type() == data_type::Binary) {
+                m_owned_data = other.m_owned_data;
             }
             *reinterpret_cast<Mixed*>(&m_mixed) = *reinterpret_cast<const Mixed*>(&other.m_mixed);
         }
@@ -53,8 +57,12 @@ namespace realm::internal::bridge {
     }
 
     mixed::mixed(mixed&& other) {
-        if (!other.is_null() && other.type() == data_type::String) {
-            m_owned_string = std::move(other.m_owned_string);
+        if (!other.is_null()) {
+            if (other.type() == data_type::String) {
+                m_owned_string = std::move(other.m_owned_string);
+            } else if (other.type() == data_type::Binary) {
+                m_owned_data = std::move(other.m_owned_data);
+            }
         }
         new (&m_mixed) Mixed(std::move(*reinterpret_cast<Mixed*>(&other.m_mixed)));
     }
@@ -63,6 +71,8 @@ namespace realm::internal::bridge {
         if (this != &other) {
             if (other.type() == data_type::String) {
                 m_owned_string = std::move(other.m_owned_string);
+            } else if (other.type() == data_type::Binary) {
+                m_owned_data = std::move(other.m_owned_data);
             }
             *reinterpret_cast<Mixed*>(&m_mixed) = std::move(*reinterpret_cast<Mixed*>(&other.m_mixed));
         }
@@ -105,11 +115,14 @@ namespace realm::internal::bridge {
         } else {
             if (v.get_type() == type_String) {
                 m_owned_string = v.get_string();
+            } else if (v.get_type() == type_Binary) {
+                m_owned_data = v.get_binary();
             }
             new (&m_mixed) Mixed(v);
         }
     }
     mixed::mixed(const struct binary &v) {
+        m_owned_data = v;
         new (&m_mixed) Mixed(static_cast<BinaryData>(v));
     }
     mixed::mixed(const struct obj_link &v) {
@@ -135,8 +148,12 @@ namespace realm::internal::bridge {
     CPPREALM_OPTIONAL_MIXED(bool);
 
     mixed::operator Mixed() const {
-        if (!is_null() && type() == data_type::String) {
-            return m_owned_string;
+        if (!is_null()) {
+            if (type() == data_type::String) {
+                return m_owned_string;
+            } else if (type() == data_type::Binary) {
+                return m_owned_data.operator BinaryData();
+            }
         }
         return *reinterpret_cast<const Mixed*>(m_mixed);
     }
@@ -145,7 +162,7 @@ namespace realm::internal::bridge {
         return m_owned_string;
     }
     mixed::operator bridge::binary() const {
-        return reinterpret_cast<const Mixed*>(&m_mixed)->get_binary();
+        return m_owned_data;
     }
     mixed::operator bridge::timestamp() const {
         return reinterpret_cast<const Mixed*>(&m_mixed)->get_timestamp();

@@ -21,6 +21,7 @@ namespace realm::internal::bridge {
         [[nodiscard]] const char* data() const;
         [[nodiscard]] size_t size() const;
         operator std::vector<uint8_t>() const; //NOLINT(google-explicit-constructor)
+        operator OwnedBinaryData() const; //NOLINT(google-explicit-constructor)
         operator BinaryData() const; //NOLINT(google-explicit-constructor)
         char operator[](size_t i) const noexcept;
     private:
@@ -35,7 +36,6 @@ namespace realm::internal::bridge {
 #elif _WIN32
         std::aligned_storage<16, 8>::type m_data[1];
 #endif
-
     };
 
     bool operator ==(const binary& lhs, const binary& rhs);
