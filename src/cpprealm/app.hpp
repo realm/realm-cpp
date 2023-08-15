@@ -160,6 +160,7 @@ struct user {
         config.set_path(sync_manager().path_for_realm(config.sync_config()));
         config.sync_config().set_client_resync_mode(realm::internal::bridge::realm::client_resync_mode::Manual);
         config.sync_config().set_stop_policy(realm::internal::bridge::realm::sync_session_stop_policy::AfterChangesUploaded);
+        config.set_schema_mode(realm::internal::bridge::realm::config::schema_mode::AdditiveDiscovered);
         return config;
     }
 

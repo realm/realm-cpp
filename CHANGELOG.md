@@ -4,6 +4,7 @@ x.y.z Release notes (yyyy-MM-dd)
 ### Fixed
 * Windows would not compile under Release build configuration as `aligned_storage` parameters were
   incorrectly set.
+* The default schema mode was incorrectly set to Automatic and not AdditiveDiscovered when using a Synced Realm.
 
 ### Enhancements
 * Add support for the Decimal128 data type (`realm::decimal128`).
