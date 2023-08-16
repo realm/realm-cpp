@@ -251,6 +251,10 @@ namespace realm::internal::bridge {
         reinterpret_cast<NotificationToken *>(&m_token)->unregister();
     }
 
+    notification_token::~notification_token() {
+        reinterpret_cast<NotificationToken*>(&m_token)->~NotificationToken();
+    }
+
     collection_change_set::collection_change_set() {
         new (&m_change_set) CollectionChangeSet();
     }
