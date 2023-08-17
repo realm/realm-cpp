@@ -25,15 +25,22 @@
 
 int main(int argc, char *argv[]) {
     Catch::ConfigData config;
+
+#ifdef REALM_CPP_PERFORMANCE_TESTS
+    config.sectionsToRun.push_back("~[performance]");
+#else
+    config.testsOrTags.push_back("~[performance]");
+#endif
+
     if (getenv("REALM_CI")) {
         config.showDurations = Catch::ShowDurations::Always;// this is to help debug hangs
         config.reporterSpecifications.push_back(Catch::ReporterSpec{"console", {}, {}, {}});
         config.reporterSpecifications.push_back(Catch::ReporterSpec{"junit", {"TestResults.xml"}, {}, {}});
     }
 
-//#ifdef CPPREALM_ENABLE_SYNC_TESTS
-//    Admin::shared().cache_app_id(Admin::shared().create_app({"str_col", "_id"}));
-//#endif
+#ifdef CPPREALM_ENABLE_SYNC_TESTS
+    Admin::shared().cache_app_id(Admin::shared().create_app({"str_col", "_id"}));
+#endif
 
     Catch::Session session;
     session.useConfigData(config);
