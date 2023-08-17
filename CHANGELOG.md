@@ -4,7 +4,8 @@ x.y.z Release notes (yyyy-MM-dd)
 ### Fixed
 * Windows would not compile under Release build configuration as `aligned_storage` parameters were
   incorrectly set.
-* Fix memory leak on internal::bridge::notificaiton_token caused by missing destructor.
+* Fix memory leak on internal::bridge::notification_token caused by missing destructor.
+* Fix memory leak on internal::bridge::binary caused by wrong destructor being called.
 
 ### Enhancements
 * None

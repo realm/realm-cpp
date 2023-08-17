@@ -5,28 +5,18 @@
 
 namespace realm::internal::bridge {
 #ifdef __i386__
-        static_assert(SizeCheck<8, sizeof(BinaryData)>{});
-        static_assert(SizeCheck<4, alignof(BinaryData)>{});
         static_assert(SizeCheck<8, sizeof(OwnedBinaryData)>{});
         static_assert(SizeCheck<4, alignof(OwnedBinaryData)>{});
 #elif __x86_64__
-        static_assert(SizeCheck<16, sizeof(BinaryData)>{});
-        static_assert(SizeCheck<8, alignof(BinaryData)>{});
         static_assert(SizeCheck<16, sizeof(OwnedBinaryData)>{});
         static_assert(SizeCheck<8, alignof(OwnedBinaryData)>{});
 #elif __arm__
-        static_assert(SizeCheck<8, sizeof(BinaryData)>{});
-        static_assert(SizeCheck<4, alignof(BinaryData)>{});
         static_assert(SizeCheck<8, sizeof(OwnedBinaryData)>{});
         static_assert(SizeCheck<4, alignof(OwnedBinaryData)>{});
 #elif __aarch64__
-        static_assert(SizeCheck<16, sizeof(BinaryData)>{});
-        static_assert(SizeCheck<8, alignof(BinaryData)>{});
         static_assert(SizeCheck<16, sizeof(OwnedBinaryData)>{});
         static_assert(SizeCheck<8, alignof(OwnedBinaryData)>{});
 #elif _WIN32
-        static_assert(SizeCheck<16, sizeof(BinaryData)>{});
-        static_assert(SizeCheck<8, alignof(BinaryData)>{});
         static_assert(SizeCheck<16, sizeof(OwnedBinaryData)>{});
         static_assert(SizeCheck<8, alignof(OwnedBinaryData)>{});
 #endif
