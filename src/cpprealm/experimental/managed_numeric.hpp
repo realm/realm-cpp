@@ -163,7 +163,21 @@ namespace realm::experimental {
             } \
             m_obj->template set<type>(this->m_key, (*old_val) * o); \
         } \
-    };                                           \
+        void operator*(const type& o) { \
+            auto old_val = m_obj->get_optional<type>(m_key);    \
+            if (!old_val) { \
+                throw std::runtime_error("Cannot perform arithmetic on null value."); \
+            } \
+            m_obj->template set<type>(this->m_key, (*old_val) * o); \
+        } \
+        void operator/(const type& o) { \
+            auto old_val = m_obj->get_optional<type>(m_key);    \
+            if (!old_val) { \
+                throw std::runtime_error("Cannot perform arithmetic on null value."); \
+            } \
+            m_obj->template set<type>(this->m_key, (*old_val) / o); \
+        } \
+    }; \
 
 CPP_REALM_MANAGED_OPTIONAL_NUMERIC(int64_t);
 CPP_REALM_MANAGED_OPTIONAL_NUMERIC(double);

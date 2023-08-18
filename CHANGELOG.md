@@ -6,12 +6,10 @@ x.y.z Release notes (yyyy-MM-dd)
   incorrectly set.
 * Fix memory leak on internal::bridge::notification_token caused by missing destructor.
 * Fix memory leak on internal::bridge::binary caused by wrong destructor being called.
+* The default schema mode was incorrectly set to Automatic and not AdditiveDiscovered when using a Synced Realm.
 
 ### Enhancements
-* None
-
-### Other API enhancements:
-* None
+* Add support for the Decimal128 data type (`realm::decimal128`).
 
 ### Breaking Changes
 * None

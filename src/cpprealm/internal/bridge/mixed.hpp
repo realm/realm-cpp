@@ -10,6 +10,7 @@
 #include <cpprealm/internal/bridge/timestamp.hpp>
 #include <cpprealm/internal/bridge/obj_key.hpp>
 #include <cpprealm/internal/bridge/object_id.hpp>
+#include <cpprealm/internal/bridge/decimal128.hpp>
 
 namespace realm {
     class Mixed;
@@ -26,11 +27,11 @@ namespace realm {
             std::vector<uint8_t>,
             std::chrono::time_point<std::chrono::system_clock>,
             uuid,
-            object_id>;
+            object_id,
+            decimal128>;
 }
 
 namespace realm::internal::bridge {
-//    struct realm;
     enum class data_type {
         // Note: Value assignments must be kept in sync with <realm/column_type.h>
         // Note: Any change to this enum is a file-format breaking change.
@@ -66,6 +67,7 @@ namespace realm::internal::bridge {
         mixed(const bool&); //NOLINT(google-explicit-constructor)
         mixed(const struct uuid&); //NOLINT(google-explicit-constructor)
         mixed(const struct object_id&); //NOLINT(google-explicit-constructor)
+        mixed(const struct decimal128&); //NOLINT(google-explicit-constructor)
         mixed(const struct timestamp&); //NOLINT(google-explicit-constructor)
         mixed(const struct obj_link&); //NOLINT(google-explicit-constructor)
         mixed(const struct obj_key&); //NOLINT(google-explicit-constructor)
@@ -79,6 +81,7 @@ namespace realm::internal::bridge {
         operator bool() const; //NOLINT(google-explicit-constructor)
         operator bridge::uuid() const; //NOLINT(google-explicit-constructor)
         operator bridge::object_id() const; //NOLINT(google-explicit-constructor)
+        operator bridge::decimal128() const; //NOLINT(google-explicit-constructor)
         operator bridge::timestamp() const; //NOLINT(google-explicit-constructor)
         operator bridge::obj_link() const; //NOLINT(google-explicit-constructor)
         operator bridge::obj_key() const; //NOLINT(google-explicit-constructor)

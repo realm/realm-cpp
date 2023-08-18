@@ -36,6 +36,7 @@
 #include <cpprealm/persisted_timestamp.hpp>
 #include <cpprealm/persisted_uuid.hpp>
 #include <cpprealm/persisted_object_id.hpp>
+#include <cpprealm/persisted_decimal128.hpp>
 #include <cpprealm/schema.hpp>
 #include <cpprealm/results.hpp>
 #include <cpprealm/notifications.hpp>
@@ -44,5 +45,6 @@
 #include <cpprealm/app.hpp>
 #include <cpprealm/db.hpp>
 #include <cpprealm/thread_safe_reference.hpp>
+#include <cpprealm/rbool.hpp>
 
 #endif /* realm_sdk_hpp */

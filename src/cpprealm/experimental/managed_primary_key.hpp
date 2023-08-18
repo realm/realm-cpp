@@ -1,13 +1,8 @@
 #ifndef CPPREALM_MANAGED_PRIMARY_KEY_HPP
 #define CPPREALM_MANAGED_PRIMARY_KEY_HPP
 
-#include <cpprealm/experimental/macros.hpp>
-#include <cpprealm/experimental/types.hpp>
-#include <cpprealm/persisted.hpp>
+#include <cpprealm/rbool.hpp>
 
-namespace realm {
-class rbool;
-};
 namespace realm::experimental {
         template <typename, typename>
         struct managed;
@@ -246,7 +241,7 @@ namespace realm::experimental {
 
         template<typename T>
         struct managed<primary_key<T>, std::enable_if_t<std::is_enum_v<T>>> : managed_base {
-            using managed<primary_key<realm::object_id>>::managed_base::operator=;
+            using managed<primary_key<int64_t>>::managed_base::operator=;
 
             primary_key<T> value() const {
                 return operator T();
@@ -256,8 +251,22 @@ namespace realm::experimental {
                 return static_cast<T>(m_obj->template get<int64_t>(m_key));
             }
 
-            rbool operator==(const T& rhs) const noexcept;
-            rbool operator!=(const T& rhs) const noexcept;
+            rbool operator==(const T& rhs) const noexcept {
+                if (this->should_detect_usage_for_queries) {
+                    auto query = internal::bridge::query(this->query->get_table());
+                    query.equal(this->m_key, serialize(rhs));
+                    return query;
+                }
+                return serialize(value().value) == serialize(rhs);
+            }
+            rbool operator!=(const T& rhs) const noexcept {
+                if (this->should_detect_usage_for_queries) {
+                    auto query = internal::bridge::query(this->query->get_table());
+                    query.not_equal(this->m_key, serialize(rhs));
+                    return query;
+                }
+                return serialize(value().value) != serialize(rhs);
+            }
         };
 
         template<>
@@ -282,6 +291,50 @@ namespace realm::experimental {
             rbool operator>=(const int& rhs) const noexcept;
             rbool operator<(const int& rhs) const noexcept;
             rbool operator<=(const int& rhs) const noexcept;
+        };
+
+        template<typename T>
+        struct managed<primary_key<T>, std::enable_if_t<std::conjunction_v<typename internal::type_info::is_optional<T>,
+                                                                           std::is_enum<typename T::value_type> >>> : managed_base {
+            using managed<primary_key<std::optional<int64_t>>>::managed_base::operator=;
+
+            primary_key<T> value() const {
+                return operator T();
+            }
+
+            operator T() const {
+                auto v = m_obj->get_optional<int64_t>(m_key);
+                if (v) {
+                    return static_cast<typename T::value_type>(*v);
+                } else {
+                    return std::nullopt;
+                }
+            }
+
+            rbool operator==(const T& rhs) const noexcept {
+                if (this->should_detect_usage_for_queries) {
+                    auto query = internal::bridge::query(this->query->get_table());
+                    if (auto r = serialize(rhs)) {
+                        query.equal(this->m_key, *r);
+                    } else {
+                        query.equal(this->m_key, std::nullopt);
+                    }
+                    return query;
+                }
+                return serialize(value().value) == serialize(rhs);
+            }
+            rbool operator!=(const T& rhs) const noexcept {
+                if (this->should_detect_usage_for_queries) {
+                    auto query = internal::bridge::query(this->query->get_table());
+                    if (auto r = serialize(rhs)) {
+                        query.not_equal(this->m_key, *r);
+                    } else {
+                        query.not_equal(this->m_key, std::nullopt);
+                    }
+                    return query;
+                }
+                return serialize(value().value) != serialize(rhs);
+            }
         };
 
         template<>

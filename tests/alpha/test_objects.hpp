@@ -71,6 +71,7 @@ struct AllTypesObject: realm::object<AllTypesObject> {
             std::chrono::time_point<std::chrono::system_clock>,
             realm::uuid,
             realm::object_id,
+            realm::decimal128,
             AllTypesObjectLink>;
 
 

@@ -109,6 +109,9 @@ namespace realm::internal::bridge {
     mixed::mixed(const struct object_id &v) {
         new (&m_mixed) Mixed(static_cast<ObjectId>(v));
     }
+    mixed::mixed(const struct decimal128 &v) {
+        new (&m_mixed) Mixed(static_cast<Decimal128>(v));
+    }
     mixed::mixed(const realm::Mixed &v) {
         if (v.is_null()) {
             new (&m_mixed) Mixed();
@@ -142,6 +145,7 @@ namespace realm::internal::bridge {
     CPPREALM_OPTIONAL_MIXED(double);
     CPPREALM_OPTIONAL_MIXED(struct uuid);
     CPPREALM_OPTIONAL_MIXED(struct object_id);
+    CPPREALM_OPTIONAL_MIXED(struct decimal128);
     CPPREALM_OPTIONAL_MIXED(struct binary);
     CPPREALM_OPTIONAL_MIXED(struct obj_link);
     CPPREALM_OPTIONAL_MIXED(struct obj_key);
@@ -179,6 +183,9 @@ namespace realm::internal::bridge {
     mixed::operator bridge::object_id() const {
         return static_cast<const object_id &>(reinterpret_cast<const Mixed *>(&m_mixed)->get_object_id());
     }
+    mixed::operator bridge::decimal128() const {
+        return static_cast<const decimal128 &>(reinterpret_cast<const Mixed *>(&m_mixed)->get_decimal());
+    }
     mixed::operator int64_t() const {
         return static_cast<const int64_t &>(reinterpret_cast<const Mixed *>(&m_mixed)->get_int());
     }
@@ -196,7 +203,7 @@ namespace realm::internal::bridge {
     }
 #define __cpp_realm_gen_mixed_op(op) \
     bool operator op(const mixed& a, const mixed& b) { \
-        return a.operator Mixed() op b.operator Mixed();                                       \
+        return a.operator Mixed() op b.operator Mixed(); \
     }
 
     __cpp_realm_gen_mixed_op(==)
