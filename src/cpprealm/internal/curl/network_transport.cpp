@@ -147,7 +147,7 @@ namespace realm::internal {
                 fprintf(stderr, "curl_easy_perform() failed when sending request to '%s' with body '%s': %s\n",
                         request.url.c_str(), request.body.c_str(), curl_easy_strerror(response_code));
             }
-            int http_code = 0;
+            long http_code = 0;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
             return {
                     http_code,
