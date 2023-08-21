@@ -88,9 +88,18 @@ namespace realm::internal {
         const std::string host = domain.substr(found1 + 1, found2 - found1 - 1);
 
         realm::sync::network::Service service;
-        auto resolver = realm::sync::network::Resolver{service};
-        auto resolved = resolver.resolve(sync::network::Resolver::Query(host, "443"));
-        realm::sync::network::Endpoint ep = *resolved.begin();
+        realm::sync::network::Endpoint ep;
+
+        try {
+            auto resolver = realm::sync::network::Resolver{service};
+            auto resolved = resolver.resolve(sync::network::Resolver::Query(host, "443"));
+            ep = *resolved.begin();
+        } catch (...) {
+            app::Response response;
+            response.http_status_code = 500;
+            completion_block(std::move(response));
+            return;
+        }
 
         using namespace realm::sync::network::ssl;
         Context m_ssl_context;
