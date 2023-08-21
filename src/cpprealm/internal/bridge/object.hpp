@@ -29,6 +29,7 @@ namespace realm::internal::bridge {
         notification_token(notification_token &&other);
         notification_token &operator=(notification_token &&other);
         notification_token(NotificationToken&&);
+        ~notification_token();
         operator NotificationToken() const;
         void unregister();
     private:

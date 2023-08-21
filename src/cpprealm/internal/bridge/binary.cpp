@@ -5,44 +5,44 @@
 
 namespace realm::internal::bridge {
 #ifdef __i386__
-        static_assert(SizeCheck<8, sizeof(BinaryData)>{});
-        static_assert(SizeCheck<4, alignof(BinaryData)>{});
+        static_assert(SizeCheck<8, sizeof(OwnedBinaryData)>{});
+        static_assert(SizeCheck<4, alignof(OwnedBinaryData)>{});
 #elif __x86_64__
-        static_assert(SizeCheck<16, sizeof(BinaryData)>{});
-        static_assert(SizeCheck<8, alignof(BinaryData)>{});
+        static_assert(SizeCheck<16, sizeof(OwnedBinaryData)>{});
+        static_assert(SizeCheck<8, alignof(OwnedBinaryData)>{});
 #elif __arm__
-        static_assert(SizeCheck<8, sizeof(BinaryData)>{});
-        static_assert(SizeCheck<4, alignof(BinaryData)>{});
+        static_assert(SizeCheck<8, sizeof(OwnedBinaryData)>{});
+        static_assert(SizeCheck<4, alignof(OwnedBinaryData)>{});
 #elif __aarch64__
-        static_assert(SizeCheck<16, sizeof(BinaryData)>{});
-        static_assert(SizeCheck<8, alignof(BinaryData)>{});
+        static_assert(SizeCheck<16, sizeof(OwnedBinaryData)>{});
+        static_assert(SizeCheck<8, alignof(OwnedBinaryData)>{});
 #elif _WIN32
-        static_assert(SizeCheck<16, sizeof(BinaryData)>{});
-        static_assert(SizeCheck<8, alignof(BinaryData)>{});
+        static_assert(SizeCheck<16, sizeof(OwnedBinaryData)>{});
+        static_assert(SizeCheck<8, alignof(OwnedBinaryData)>{});
 #endif
 
     char binary::operator[](size_t i) const noexcept {
-        return reinterpret_cast<const BinaryData*>(&m_data)->operator[](i);
+        return reinterpret_cast<const OwnedBinaryData*>(&m_data)->get().operator[](i);
     }
     binary::binary() {
-        new (&m_data) BinaryData();
+        new (&m_data) OwnedBinaryData();
     }
     binary::binary(const binary& other) {
-        new (&m_data) BinaryData(*reinterpret_cast<const BinaryData*>(&other.m_data));
+        new (&m_data) OwnedBinaryData(*reinterpret_cast<const OwnedBinaryData*>(&other.m_data));
     }
     binary& binary::operator=(const binary& other) {
-        *reinterpret_cast<BinaryData*>(&m_data) = *reinterpret_cast<const BinaryData*>(&other.m_data);
+        *reinterpret_cast<OwnedBinaryData*>(&m_data) = *reinterpret_cast<const OwnedBinaryData*>(&other.m_data);
         return *this;
     }
     binary::binary(binary&& other) {
-        new (&m_data) BinaryData(std::move(*reinterpret_cast<BinaryData*>(&other.m_data)));
+        new (&m_data) OwnedBinaryData(std::move(*reinterpret_cast<OwnedBinaryData*>(&other.m_data)));
     }
     binary& binary::operator=(binary&& other) {
-        *reinterpret_cast<BinaryData*>(&m_data) = std::move(*reinterpret_cast<BinaryData*>(&other.m_data));
+        *reinterpret_cast<OwnedBinaryData*>(&m_data) = std::move(*reinterpret_cast<OwnedBinaryData*>(&other.m_data));
         return *this;
     }
     binary::~binary() {
-        reinterpret_cast<BinaryData*>(&m_data)->~BinaryData();
+        reinterpret_cast<OwnedBinaryData*>(&m_data)->~OwnedBinaryData();
     }
     binary::binary(const realm::BinaryData &v) {
         new (&m_data) OwnedBinaryData(v);
@@ -56,17 +56,20 @@ namespace realm::internal::bridge {
         }
     }
 
+    binary::operator OwnedBinaryData() const {
+        return *reinterpret_cast<const OwnedBinaryData*>(&m_data);
+    }
     binary::operator BinaryData() const {
-        return *reinterpret_cast<const BinaryData*>(&m_data);
+        return reinterpret_cast<const OwnedBinaryData*>(&m_data)->get();
     }
     size_t binary::size() const {
-        return reinterpret_cast<const BinaryData*>(&m_data)->size();
+        return reinterpret_cast<const OwnedBinaryData*>(&m_data)->size();
     }
     const char *binary::data() const {
-        return reinterpret_cast<const BinaryData*>(&m_data)->data();
+        return reinterpret_cast<const OwnedBinaryData*>(&m_data)->data();
     }
     bool operator ==(binary const& lhs, binary const& rhs) {
-        return static_cast<BinaryData>(lhs) == static_cast<BinaryData>(rhs);
+        return static_cast<OwnedBinaryData>(lhs).get() == static_cast<OwnedBinaryData>(rhs).get();
     }
     binary::operator std::vector<uint8_t>() const {
         std::vector<uint8_t> v;

@@ -1,26 +1,25 @@
-#include "../main.hpp"
+#include "../../main.hpp"
 #include "test_objects.hpp"
 
 using namespace realm;
 
-TEST_CASE("basic_alpha", "[performance]") {
+TEST_CASE("basic_beta_performance", "[performance]") {
     BENCHMARK_ADVANCED("write 1000")(Catch::Benchmark::Chronometer meter) {
         realm_path path;
         realm::db_config config;
         config.set_path(path);
-        auto realm = open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
+        auto realm = experimental::db(std::move(config));
 
         return meter.measure([&]() {
             realm.write([&] {
-                for (int64_t i = 0; i < 10000; i++) {
-                    AllTypesObject o;
+                for (int64_t i = 0; i < 1000; i++) {
+                    experimental::AllTypesObject o;
                     o._id = i;
                     realm.add(std::move(o));
                 }
             });
         });
-
-        CHECK(realm.objects<AllTypesObject>().size() == 10000);
+        CHECK(realm.objects<experimental::AllTypesObject>().size() == 1000);
 
     };
 
@@ -28,20 +27,20 @@ TEST_CASE("basic_alpha", "[performance]") {
         realm_path path;
         realm::db_config config;
         config.set_path(path);
-        auto realm = open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
+        auto realm = experimental::db(std::move(config));
 
         realm.write([&] {
-            for (int64_t i = 0; i < 10000; i++) {
-                AllTypesObject o;
+            for (int64_t i = 0; i < 1000; i++) {
+                experimental::AllTypesObject o;
                 o._id = i;
                 realm.add(std::move(o));
             }
         });
 
         return meter.measure([&]() {
-            auto results = realm.objects<AllTypesObject>();
-            CHECK(results.size() == 10000);
-            for (int64_t i = 0; i < 10000; i++) {
+            auto results = realm.objects<experimental::AllTypesObject>();
+            CHECK(results.size() == 1000);
+            for (int64_t i = 0; i < 1000; i++) {
                 CHECK(results[i]._id == i);
             }
         });
@@ -51,19 +50,18 @@ TEST_CASE("basic_alpha", "[performance]") {
         realm_path path;
         realm::db_config config;
         config.set_path(path);
-        auto realm = open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
+        auto realm = experimental::db(std::move(config));
 
         return meter.measure([&]() {
             realm.write([&] {
                 for (int64_t i = 0; i < 10000; i++) {
-                    AllTypesObject o;
+                    experimental::AllTypesObject o;
                     o._id = i;
                     realm.add(std::move(o));
                 }
             });
         });
-
-        CHECK(realm.objects<AllTypesObject>().size() == 10000);
+        CHECK(realm.objects<experimental::AllTypesObject>().size() == 10000);
 
     };
 
@@ -71,18 +69,18 @@ TEST_CASE("basic_alpha", "[performance]") {
         realm_path path;
         realm::db_config config;
         config.set_path(path);
-        auto realm = open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(std::move(config));
+        auto realm = experimental::db(std::move(config));
 
         realm.write([&] {
             for (int64_t i = 0; i < 10000; i++) {
-                AllTypesObject o;
+                experimental::AllTypesObject o;
                 o._id = i;
                 realm.add(std::move(o));
             }
         });
 
         return meter.measure([&]() {
-            auto results = realm.objects<AllTypesObject>();
+            auto results = realm.objects<experimental::AllTypesObject>();
             CHECK(results.size() == 10000);
             for (int64_t i = 0; i < 10000; i++) {
                 CHECK(results[i]._id == i);
