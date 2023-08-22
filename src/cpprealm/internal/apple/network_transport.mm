@@ -53,6 +53,12 @@ void DefaultTransport::send_request_to_server(const app::Request& request,
             [urlRequest addValue:[NSString stringWithCString:header.second.c_str() encoding:NSUTF8StringEncoding]
               forHTTPHeaderField:[NSString stringWithCString:header.first.c_str() encoding:NSUTF8StringEncoding]];
         }
+        if (m_custom_http_headers) {
+            for (auto& header : *m_custom_http_headers) {
+                [urlRequest addValue:[NSString stringWithCString:header.second.c_str() encoding:NSUTF8StringEncoding]
+                        forHTTPHeaderField:[NSString stringWithCString:header.first.c_str() encoding:NSUTF8StringEncoding]];
+            }
+        }
         if (request.method != app::HttpMethod::get && !request.body.empty()) {
             [urlRequest setHTTPBody:[[NSString stringWithCString:request.body.c_str() encoding:NSUTF8StringEncoding]
                     dataUsingEncoding:NSUTF8StringEncoding]];

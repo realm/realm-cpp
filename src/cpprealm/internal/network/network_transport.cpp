@@ -125,6 +125,12 @@ namespace realm::internal {
             headers["Content-Length"] = util::to_string(request.body.size());
         }
 
+        if (m_custom_http_headers) {
+            for (auto& header : *m_custom_http_headers) {
+                headers.emplace(header);
+            }
+        }
+
         std::shared_ptr<realm::util::StderrLogger> logger = std::make_shared<realm::util::StderrLogger>();
         realm::sync::HTTPClient<DefaultSocket> m_http_client = realm::sync::HTTPClient<DefaultSocket>(socket, logger);
 

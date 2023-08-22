@@ -250,6 +250,14 @@ namespace realm::internal::bridge {
             reinterpret_cast<RealmConfig*>(&m_config)->sync_config = nullptr;
     }
 
+    void realm::config::set_custom_http_headers(const std::map<std::string, std::string>& headers) {
+        if (reinterpret_cast<RealmConfig*>(&m_config)->sync_config) {
+            reinterpret_cast<const RealmConfig*>(&m_config)->sync_config->custom_http_headers = headers;
+        } else {
+            throw std::logic_error("HTTP headers can only be set on a config for a synced Realm.");
+        }
+    }
+
     realm::sync_config realm::config::sync_config() const {
         return reinterpret_cast<const RealmConfig*>(&m_config)->sync_config;
     }
