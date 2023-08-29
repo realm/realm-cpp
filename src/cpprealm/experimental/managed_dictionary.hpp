@@ -345,7 +345,6 @@ namespace realm::experimental {
         }
 
         bool operator==(const managed<V*> &rhs) const {
-           // const realm::experimental::box<realm::experimental::managed<realm::experimental::AllTypesObjectEmbedded *>> *' to 'box<realm::experimental::AllTypesObjectEmbedded *> *'
             auto a = const_cast<box<managed<V*>> *>(this)->m_backing_map.get_object(this->m_key);
             auto &b = rhs.m_obj;
             if (this->m_realm != *rhs.m_realm) {

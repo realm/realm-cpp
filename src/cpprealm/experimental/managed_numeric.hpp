@@ -95,12 +95,20 @@ namespace realm::experimental {
             auto old_val = m_obj->template get<int64_t>(m_key);
             m_obj->template set<int64_t>(this->m_key, old_val + 1);
         }
+        void operator++() {
+            auto old_val = m_obj->template get<int64_t>(m_key);
+            m_obj->template set<int64_t>(this->m_key, old_val + 1);
+        }
         managed& operator-=(const int64_t& o) {
             auto old_val = m_obj->template get<int64_t>(m_key);
             m_obj->template set<int64_t>(this->m_key, old_val - o);
             return *this;
         }
         void operator--(int) {
+            auto old_val = m_obj->template get<int64_t>(m_key);
+            m_obj->template set<int64_t>(this->m_key, old_val - 1);
+        }
+        void operator--() {
             auto old_val = m_obj->template get<int64_t>(m_key);
             m_obj->template set<int64_t>(this->m_key, old_val - 1);
         }
@@ -204,11 +212,19 @@ namespace realm::experimental {
             auto old_val = m_obj->template get<double>(m_key);
             m_obj->template set<double>(this->m_key, old_val + 1.0);
         }
+        void operator++() {
+            auto old_val = m_obj->template get<double>(m_key);
+            m_obj->template set<double>(this->m_key, old_val + 1.0);
+        }
         void operator-=(const double& o) {
             auto old_val = m_obj->template get<double>(m_key);
             m_obj->template set<double>(this->m_key, old_val - o);
         }
         void operator--(int) {
+            auto old_val = m_obj->template get<double>(m_key);
+            m_obj->template set<double>(this->m_key, old_val - 1.0);
+        }
+        void operator--() {
             auto old_val = m_obj->template get<double>(m_key);
             m_obj->template set<double>(this->m_key, old_val - 1.0);
         }

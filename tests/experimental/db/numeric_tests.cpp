@@ -80,6 +80,12 @@ TEST_CASE("numerics", "[numerics]") {
             managed_obj.int_col++;
             CHECK(managed_obj.int_col == 5);
 
+            ++managed_obj.int_col;
+            CHECK(managed_obj.int_col == 6);
+
+            --managed_obj.int_col;
+            CHECK(managed_obj.int_col == 5);
+
             managed_obj.int_col--;
             CHECK(managed_obj.int_col == 4);
         });
@@ -133,7 +139,13 @@ TEST_CASE("numerics", "[numerics]") {
             managed_obj.double_col++;
             CHECK(managed_obj.double_col == 5.0);
 
+            ++managed_obj.double_col;
+            CHECK(managed_obj.double_col == 6.0);
+
             managed_obj.double_col--;
+            CHECK(managed_obj.double_col == 5.0);
+
+            --managed_obj.double_col;
             CHECK(managed_obj.double_col == 4.0);
 
             managed_obj.double_col = 1;

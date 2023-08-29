@@ -32,14 +32,15 @@ namespace realm {
                     if (this->m_managed.m_realm != rhs.m_realm) {
                         return false;
                     }
-                    return this->m_managed.m_obj.get_key() == rhs.m_obj.get_key();
-
+                    return this->m_managed.m_obj.get_table() == rhs.m_obj.get_table() &&
+                        this->m_managed.m_obj.get_key() == rhs.m_obj.get_key();
                 }
                 bool operator ==(const ref_type& rhs) const {
                     if (this->m_managed.m_realm != rhs.m_managed.m_realm) {
                         return false;
                     }
-                    return this->m_managed.m_obj.get_key() == rhs.m_managed.m_obj.get_key();
+                    return this->m_managed.m_obj.get_table() == rhs.m_managed.m_obj.get_table() &&
+                        this->m_managed.m_obj.get_key() == rhs.m_managed.m_obj.get_key();
                 }
                 bool operator !=(const managed<T*>& rhs) const {
                     return !this->operator==(rhs);
