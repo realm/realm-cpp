@@ -217,7 +217,7 @@ TEST_CASE("numerics", "[numerics]") {
         CHECK(res.size() == 0);
 
         realm.write([&realm, &managed_obj] {
-            managed_obj.opt_int_col = *managed_obj.opt_int_col.value() + 1;
+            managed_obj.opt_int_col = *managed_obj.opt_int_col.detach() + 1;
             CHECK(managed_obj.opt_int_col == 2);
 
             managed_obj.opt_int_col += 1;
@@ -250,7 +250,7 @@ TEST_CASE("numerics", "[numerics]") {
         CHECK(res.size() == 0);
 
         realm.write([&realm, &managed_obj] {
-            managed_obj.opt_double_col = *managed_obj.opt_double_col.value() + 1.0;
+            managed_obj.opt_double_col = *managed_obj.opt_double_col.detach() + 1.0;
             CHECK(managed_obj.opt_double_col == 2.0);
 
             managed_obj.opt_double_col += 1.0;
@@ -284,7 +284,7 @@ TEST_CASE("numerics", "[numerics]") {
         CHECK(res.size() == 0);
 
         realm.write([&realm, &managed_obj] {
-            managed_obj.opt_double_col = *managed_obj.opt_double_col.value() + 1;
+            managed_obj.opt_double_col = *managed_obj.opt_double_col.detach() + 1;
             CHECK(managed_obj.opt_double_col == 2);
 
             managed_obj.opt_double_col += 1;

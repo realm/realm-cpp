@@ -204,7 +204,7 @@ TEST_CASE("map", "[map]") {
             return realm.add(std::move(obj));
         });
 
-        std::map<std::string, std::string> as_values = managed_obj.map_str_col.value();
+        std::map<std::string, std::string> as_values = managed_obj.map_str_col.detach();
         CHECK(as_values == std::map<std::string, std::string>({{"a", std::string("baz")}, {"b", std::string("foo")}}));
     }
 }

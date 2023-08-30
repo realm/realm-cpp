@@ -14,7 +14,7 @@ namespace realm::experimental {
     struct managed<std::vector<uint8_t>> : managed_base {
         using managed<std::vector<uint8_t>>::managed_base::operator=;
 
-        [[nodiscard]] std::vector<uint8_t> value() const;
+        [[nodiscard]] std::vector<uint8_t> detach() const;
         [[nodiscard]]  operator std::vector<uint8_t>() const;
 
         std::vector<uint8_t> operator*() const;
@@ -31,7 +31,7 @@ namespace realm::experimental {
     struct managed<std::optional<std::vector<uint8_t>>> : managed_base {
         using managed<std::optional<std::vector<uint8_t>>>::managed_base::operator=;
 
-        [[nodiscard]] std::optional<std::vector<uint8_t>> value() const;
+        [[nodiscard]] std::optional<std::vector<uint8_t>> detach() const;
         [[nodiscard]]  operator std::optional<std::vector<uint8_t>>() const;
 
         struct box {

@@ -222,7 +222,7 @@ namespace realm::experimental {
         using iterator = typename results<typename internal::ptr_type_extractor<ptr>::class_type>::iterator;
         using Class = typename internal::ptr_type_extractor<ptr>::class_type;
 
-        linking_objects<ptr> value() const {
+        linking_objects<ptr> detach() const {
             return {};
         }
 

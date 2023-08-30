@@ -380,13 +380,13 @@ namespace realm::experimental {
             CHECK(managed_obj.bool_col == true);
             CHECK(managed_obj.enum_col == AllTypesObject::Enum::two);
             CHECK(managed_obj.date_col == date);
-            CHECK(managed_obj.uuid_col.value() == uuid);
+            CHECK(managed_obj.uuid_col.detach() == uuid);
             CHECK(managed_obj.object_id_col == object_id);
             CHECK(managed_obj.decimal_col == decimal);
-            CHECK(managed_obj.binary_col.value() == std::vector<uint8_t>({1}));
-            CHECK(managed_obj.mixed_col.value() == AllTypesObject::my_mixed("mixed"));
+            CHECK(managed_obj.binary_col.detach() == std::vector<uint8_t>({1}));
+            CHECK(managed_obj.mixed_col.detach() == AllTypesObject::my_mixed("mixed"));
 
-            CHECK(managed_obj.object_id_col.value() == object_id);
+            CHECK(managed_obj.object_id_col.detach() == object_id);
 
             CHECK(managed_obj.opt_int_col == 2);
             CHECK(managed_obj.opt_double_col == 2.34);
@@ -395,7 +395,7 @@ namespace realm::experimental {
             CHECK(managed_obj.opt_enum_col == AllTypesObject::Enum::two);
             CHECK(managed_obj.opt_date_col == date);
             CHECK(managed_obj.opt_uuid_col == uuid);
-            CHECK(managed_obj.opt_binary_col.value() == std::vector<uint8_t>({1}));
+            CHECK(managed_obj.opt_binary_col.detach() == std::vector<uint8_t>({1}));
             CHECK(managed_obj.opt_object_id_col == object_id);
             CHECK(managed_obj.opt_decimal_col == decimal);
 

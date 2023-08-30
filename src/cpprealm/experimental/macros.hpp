@@ -127,7 +127,7 @@
 #define DECLARE_MANAGED_PROPERTY(cls, p) &realm::experimental::managed<cls>::p,
 #define DECLARE_UNMANAGED_TO_MANAGED_PAIR(cls, p) std::pair {&cls::p, &realm::experimental::managed<cls>::p},
 #define DECLARE_MANAGED_PROPERTY_NAME(cls, p) #p,
-#define DECLARE_COND_PROPERTY_VALUE_FOR_NAME(cls, p) if (_name == #p) { auto ptr = &managed<cls>::p; return (*this.*ptr).value(); }
+#define DECLARE_COND_PROPERTY_VALUE_FOR_NAME(cls, p) if (_name == #p) { auto ptr = &managed<cls>::p; return (*this.*ptr).detach(); }
 #define DECLARE_COND_UNMANAGED_TO_MANAGED(cls, p) if constexpr (std::is_same_v<decltype(ptr), decltype(&cls::p)>) { return &managed<cls>::p; }
 
 #include <utility>
@@ -262,7 +262,7 @@ rbool managed<type>::operator op(const type& rhs) const noexcept { \
         query.name(this->m_key, serialize(rhs)); \
         return query; \
     } \
-    return serialize(value()) op serialize(rhs); \
+    return serialize(detach()) op serialize(rhs); \
 } \
 
 #define __cpprealm_build_optional_experimental_query(op, name, type) \
@@ -276,7 +276,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         } \
         return query; \
     } \
-    return serialize(value()) op serialize(rhs); \
+    return serialize(detach()) op serialize(rhs); \
 } \
 
 #define REALM_SCHEMA(cls, ...) \

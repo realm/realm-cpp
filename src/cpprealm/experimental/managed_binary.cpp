@@ -2,7 +2,7 @@
 #include <cpprealm/persisted.hpp>
 
 namespace realm::experimental {
-    std::vector<uint8_t> managed<std::vector<uint8_t>>::value() const {
+    std::vector<uint8_t> managed<std::vector<uint8_t>>::detach() const {
         return m_obj->template get<realm::internal::bridge::binary>(m_key);
     }
 
@@ -11,7 +11,7 @@ namespace realm::experimental {
     }
 
     std::vector<uint8_t> managed<std::vector<uint8_t>>::operator*() const {
-        return value();
+        return detach();
     }
 
     void managed<std::vector<uint8_t>>::push_back(uint8_t v) {
@@ -33,7 +33,7 @@ namespace realm::experimental {
 
     // MARK: Optional
 
-    std::optional<std::vector<uint8_t>> managed<std::optional<std::vector<uint8_t>>>::value() const {
+    std::optional<std::vector<uint8_t>> managed<std::optional<std::vector<uint8_t>>>::detach() const {
         return m_obj->get_optional<realm::internal::bridge::binary>(m_key);
     }
 

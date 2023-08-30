@@ -89,12 +89,12 @@ namespace realm::experimental {
         set(value);
     }
 
-    std::string managed_string::value() const {
+    std::string managed_string::detach() const {
         return get();
     }
 
     managed_string::operator std::string() const {
-        return value();
+        return detach();
     };
 
     rbool managed_string::operator==(const char* rhs) const noexcept {
@@ -103,7 +103,7 @@ namespace realm::experimental {
             query.equal(this->m_key, std::string(rhs));
             return query;
         }
-        return value() == rhs;
+        return detach() == rhs;
     }
 
     rbool managed_string::operator!=(const char* rhs) const noexcept {
@@ -112,7 +112,7 @@ namespace realm::experimental {
             query.not_equal(this->m_key, std::string(rhs));
             return query;
         }
-        return value() != rhs;
+        return detach() != rhs;
     }
 
     rbool managed_string::contains(const std::string &rhs) const noexcept {
@@ -121,7 +121,7 @@ namespace realm::experimental {
             query.contains(this->m_key, std::string(rhs));
             return query;
         }
-        return value().find(rhs) != cpprealm::npos;
+        return detach().find(rhs) != cpprealm::npos;
     }
 
     rbool managed_string::empty() const noexcept {
@@ -130,7 +130,7 @@ namespace realm::experimental {
             query.equal(this->m_key, std::string());
             return query;
         } else {
-            return value().empty();
+            return detach().empty();
         }
     }
 

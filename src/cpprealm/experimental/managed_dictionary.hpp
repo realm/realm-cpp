@@ -468,7 +468,7 @@ namespace realm::experimental {
     struct managed<std::map<std::string, T>, void> : managed_base {
         using managed<std::map<std::string, T>>::managed_base::operator=;
 
-        [[nodiscard]] std::map<std::string, T> value() const {
+        [[nodiscard]] std::map<std::string, T> detach() const {
             if constexpr (std::is_pointer_v<T>) {
                 throw std::runtime_error("value() is not available on collections of managed objects. Access each object via subscript instead.");
             }

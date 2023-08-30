@@ -299,13 +299,13 @@ namespace realm {
                 if constexpr (N + 1 == sizeof...(Properties)) {
                     if (property_name == std::string_view(names[N])) {
                         auto ptr = experimental::managed<Class, void>::template unmanaged_to_managed_pointer(property.ptr);
-                        return (cls.*ptr).value();
+                        return (cls.*ptr).detach();
                     }
                     return variant_t{};
                 } else {
                     if (property_name == std::string_view(names[N])) {
                         auto ptr = experimental::managed<Class, void>::template unmanaged_to_managed_pointer(property.ptr);
-                        return (cls.*ptr).value();
+                        return (cls.*ptr).detach();
                     }
                     return property_value_for_name<N + 1>(property_name, cls, std::get<N + 1>(properties));
                 }

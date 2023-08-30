@@ -62,7 +62,7 @@ namespace realm::experimental {
         {
             return iterator(size(), this);
         }
-        [[nodiscard]] std::vector<T> value() const {
+        [[nodiscard]] std::vector<T> detach() const {
             auto list = realm::internal::bridge::list(*m_realm, *m_obj, m_key);
             using U = typename internal::type_info::type_info<T>::internal_type;
 
@@ -133,8 +133,8 @@ namespace realm::experimental {
 
     template<typename T>
     struct managed<std::vector<T*>> : managed_base {
-        [[nodiscard]] std::vector<T*> value() const {
-            throw std::runtime_error("value() is not available on collections of managed objects. Access each object via subscript instead.");
+        [[nodiscard]] std::vector<T*> detach() const {
+            throw std::runtime_error("detach() is not available on collections of managed objects. Access each object via subscript instead.");
         }
 
         void pop_back() {

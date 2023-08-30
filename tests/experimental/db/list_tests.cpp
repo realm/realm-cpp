@@ -461,7 +461,7 @@ TEST_CASE("list", "[list]") {
             return realm.add(std::move(obj));
         });
 
-        std::vector<int64_t> as_value = managed_obj.list_int_col.value();
+        std::vector<int64_t> as_value = managed_obj.list_int_col.detach();
         CHECK(as_value == std::vector<int64_t>{1, 2, 3});
     }
 }

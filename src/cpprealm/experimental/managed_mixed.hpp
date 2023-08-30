@@ -24,12 +24,12 @@ namespace realm::experimental {
             return *this;
         }
 
-        [[nodiscard]] T value() const {
+        [[nodiscard]] T detach() const {
             return deserialize<T>(m_obj->get<realm::internal::bridge::mixed>(m_key));
         }
 
         [[nodiscard]] T operator *() const {
-            return value();
+            return detach();
         }
 
         //MARK: -   comparison operators
@@ -39,7 +39,7 @@ namespace realm::experimental {
                 query.equal(this->m_key, serialize(rhs));
                 return query;
             }
-            return value() == rhs;
+            return detach() == rhs;
         }
 
         rbool operator!=(const T& rhs) const noexcept {
@@ -48,7 +48,7 @@ namespace realm::experimental {
                 query.not_equal(this->m_key, serialize(rhs));
                 return query;
             }
-            return value() != rhs;
+            return detach() != rhs;
         }
 
         rbool operator==(const std::nullopt_t& rhs) const noexcept {
@@ -57,7 +57,7 @@ namespace realm::experimental {
                 query.equal(this->m_key, rhs);
                 return query;
             }
-            return value() == T(std::monostate());
+            return detach() == T(std::monostate());
         }
 
         rbool operator!=(const std::nullopt_t& rhs) const noexcept {
@@ -66,7 +66,7 @@ namespace realm::experimental {
                 query.not_equal(this->m_key, rhs);
                 return query;
             }
-            return value() != T(std::monostate());
+            return detach() != T(std::monostate());
         }
     };
 }

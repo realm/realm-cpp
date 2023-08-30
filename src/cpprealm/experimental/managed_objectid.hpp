@@ -14,16 +14,16 @@ namespace realm::experimental {
     template<>
     struct managed<realm::object_id> : managed_base {
         using managed<realm::object_id>::managed_base::operator=;
-        [[nodiscard]] realm::object_id value() const {
+        [[nodiscard]] realm::object_id detach() const {
             return m_obj->template get<realm::internal::bridge::object_id>(m_key).operator ::realm::object_id();
         }
 
         [[nodiscard]] realm::object_id operator *() const {
-            return value();
+            return detach();
         }
 
         [[nodiscard]] operator realm::object_id() const {
-            return value();
+            return detach();
         }
 
         //MARK: -   comparison operators
@@ -35,7 +35,7 @@ namespace realm::experimental {
     struct managed<std::optional<realm::object_id>> : managed_base {
         using managed<std::optional<realm::object_id>>::managed_base::operator=;
 
-        [[nodiscard]] std::optional<realm::object_id> value() const {
+        [[nodiscard]] std::optional<realm::object_id> detach() const {
             auto v = m_obj->template get_optional<realm::internal::bridge::object_id>(m_key);
             if (v) {
                 return v.value().operator ::realm::object_id();
@@ -45,11 +45,11 @@ namespace realm::experimental {
         }
 
         [[nodiscard]] std::optional<realm::object_id> operator *() const {
-            return value();
+            return detach();
         }
 
         [[nodiscard]] operator std::optional<realm::object_id>() const {
-            return value();
+            return detach();
         }
 
         //MARK: -   comparison operators

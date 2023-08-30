@@ -13,12 +13,12 @@ namespace realm::experimental {
     struct managed<std::chrono::time_point<std::chrono::system_clock>> : public managed_base {
         using managed<std::chrono::time_point<std::chrono::system_clock>>::managed_base::operator=;
 
-        [[nodiscard]] std::chrono::time_point<std::chrono::system_clock> value() const {
+        [[nodiscard]] std::chrono::time_point<std::chrono::system_clock> detach() const {
             return m_obj->template get<realm::internal::bridge::timestamp>(m_key);
         }
 
         [[nodiscard]] operator std::chrono::time_point<std::chrono::system_clock>() const {
-            return value();
+            return detach();
         }
 
         auto time_since_epoch() const {
@@ -45,12 +45,12 @@ namespace realm::experimental {
     struct managed<std::optional<std::chrono::time_point<std::chrono::system_clock>>> : managed_base {
         using managed<std::optional<std::chrono::time_point<std::chrono::system_clock>>>::managed_base::operator=;
 
-        [[nodiscard]] std::optional<std::chrono::time_point<std::chrono::system_clock>> value() const {
+        [[nodiscard]] std::optional<std::chrono::time_point<std::chrono::system_clock>> detach() const {
             return m_obj->get_optional<realm::internal::bridge::timestamp>(m_key);
         }
 
         [[nodiscard]] operator std::optional<std::chrono::time_point<std::chrono::system_clock>>() const {
-            return value();
+            return detach();
         }
 
         struct box {
