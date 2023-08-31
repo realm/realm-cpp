@@ -65,8 +65,6 @@ namespace realm::internal::bridge {
         }
         obj add_embedded();
 
-       // [[nodiscard]] realm get_realm() const;
-
         void set(size_t pos, const int64_t &);
         void set(size_t pos, const double &);
         void set(size_t pos, const bool &);

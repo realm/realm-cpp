@@ -255,6 +255,17 @@ namespace realm::experimental {
     struct managed;
 }
 
+template <typename... Ts, typename... Us, size_t... Is>
+auto zipTuplesHelper(const std::tuple<Ts...>& tuple1, const std::tuple<Us...>& tuple2, std::index_sequence<Is...>) {
+    return std::make_tuple(std::make_pair(std::get<Is>(tuple1), std::get<Is>(tuple2))...);
+}
+
+template <typename... Ts, typename... Us>
+auto zipTuples(const std::tuple<Ts...>& tuple1, const std::tuple<Us...>& tuple2) {
+    static_assert(sizeof...(Ts) == sizeof...(Us), "Tuples must have the same size");
+    return zipTuplesHelper(tuple1, tuple2, std::index_sequence_for<Ts...>());
+}
+
 #define __cpprealm_build_experimental_query(op, name, type) \
 rbool managed<type>::operator op(const type& rhs) const noexcept { \
     if (this->should_detect_usage_for_queries) { \
@@ -304,8 +315,8 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         internal::bridge::obj m_obj;\
         internal::bridge::realm m_realm;                                                           \
         bool m_prepare_for_query = false;                                                           \
-        explicit managed(internal::bridge::obj&& obj,                 \
-                     internal::bridge::realm realm)                  \
+        explicit managed(const internal::bridge::obj& obj,                 \
+                         internal::bridge::realm realm)                  \
         : m_obj(std::move(obj))\
         , m_realm(std::move(realm))       \
         {     \
@@ -413,7 +424,18 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
                     ((m.*ptr).prepare_for_query(&m.m_realm, table_ref, _name), ...);                \
                 }, managed_pointers_names);                                                         \
             }, managed_pointers());                                                                 \
-            return m;                                                                                       \
+            return m;                                                                               \
+        }                                                                                           \
+        cls detach() const {                                                                        \
+            cls v;                                                                                  \
+            auto assign = [&v, this](auto& pair) {                                                  \
+                v.*(std::decay_t<decltype(pair.first)>::ptr) = ((*this).*(pair.second)).detach();   \
+            };                                                                                      \
+            auto zipped = zipTuples(managed<cls>::schema.ps, managed<cls>::managed_pointers());     \
+            std::apply([&v, &assign, this](auto& ...pair) {                                       \
+                (assign(pair), ...);                                                                \
+            }, zipped);                                                                             \
+            return v;                                                                               \
         }                                                                                           \
         auto observe(std::function<void(realm::experimental::object_change<managed>&&)>&& fn) { \
             auto m_object = std::make_shared<internal::bridge::object>(m_realm, m_obj);                   \

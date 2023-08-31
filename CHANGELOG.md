@@ -25,7 +25,8 @@ x.y.z Release notes (yyyy-MM-dd)
 * Add `box<managed<V*>>::box& operator=(const managed<V>& o)`
 
 ### Breaking Changes
-* None
+* `managed<>::value()` has been renamed to `managed<>::detach()` to better convey that the returned value will be unmanaged. In the case where the value is a
+  pointer type it is up to the consumer of the value to manage the lifetime of the object.
 
 ### Compatibility
 * Fileformat: Generates files with format v22.

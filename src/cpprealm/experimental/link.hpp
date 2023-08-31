@@ -12,7 +12,19 @@ namespace realm {
 
         template<typename T>
         struct managed<T*> : managed_base {
-            managed<T*> detach() const { return *this; }
+            T* detach() const {
+                T* v = new T();
+                managed<T> m(m_obj->is_null(m_key) ? *m_obj : m_obj->get_linked_object(m_key), *m_realm);
+                auto assign = [&m, &v](auto& pair) {
+                    (*v).*(std::decay_t<decltype(pair.first)>::ptr) = (m.*(pair.second)).detach();
+                };
+                auto zipped = zipTuples(managed<T>::schema.ps, managed<T>::managed_pointers());
+                std::apply([&v, &m, &assign](auto && ...pair) {
+                    (assign(pair), ...);
+                }, zipped);
+                return v;
+            }
+
             struct ref_type {
                 managed<T> m_managed;
                 managed<T>* operator ->() const {

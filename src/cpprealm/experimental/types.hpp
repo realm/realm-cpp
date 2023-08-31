@@ -283,6 +283,8 @@ namespace realm::experimental {
             return static_cast<internal::bridge::object_id>(value).operator ::realm::object_id();
         } else if constexpr (std::is_same_v<T, realm::decimal128>) {
             return static_cast<internal::bridge::decimal128>(value).operator ::realm::decimal128();
+        } else if constexpr (std::is_enum_v<T>) {
+            return static_cast<T>(value.operator int64_t());
         } else {
             abort();
         }

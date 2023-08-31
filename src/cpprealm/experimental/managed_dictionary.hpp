@@ -470,7 +470,28 @@ namespace realm::experimental {
 
         [[nodiscard]] std::map<std::string, T> detach() const {
             if constexpr (std::is_pointer_v<T>) {
-                throw std::runtime_error("value() is not available on collections of managed objects. Access each object via subscript instead.");
+                auto d = internal::bridge::get<internal::bridge::core_dictionary>(*m_obj, m_key);
+                size_t s = d.size();
+                std::map<std::string, T> ret;
+                for (size_t i = 0; i < s; i++) {
+                    auto pair = d.get_pair(i);
+                    using Type = std::remove_pointer_t<T>;
+                    T v = new Type;
+                    managed<Type, void> m(d.get_object(pair.first), *m_realm);
+
+                    auto assign = [&m, &v](auto& pair) {
+                        (*v).*(std::decay_t<decltype(pair.first)>::ptr) = (m.*(pair.second)).detach();
+                    };
+                    auto zipped = zipTuples(managed<Type>::schema.ps, managed<Type>::managed_pointers());
+
+                    std::apply([&v, &m, &assign](auto && ...pair) {
+                        (assign(pair), ...);
+                    }, zipped);
+
+                    ret[pair.first] = v;
+                }
+
+                return ret;
             }
             auto ret = std::map<std::string, T>();
             for (auto [k, v] : *this) {
