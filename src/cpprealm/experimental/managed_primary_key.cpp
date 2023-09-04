@@ -9,7 +9,7 @@ namespace realm::experimental {
             query.name(this->m_key, serialize(rhs)); \
             return query; \
         } \
-        return serialize(value().value) op serialize(rhs); \
+        return serialize(detach().value) op serialize(rhs); \
     } \
 
 // Int needs to be cast to int64_t
@@ -20,7 +20,7 @@ namespace realm::experimental {
             query.name(this->m_key, serialize((cast)rhs)); \
             return query; \
         } \
-        return serialize(value().value) op serialize((cast)rhs); \
+        return serialize(detach().value) op serialize((cast)rhs); \
     }  \
 
     __cpprealm_build_experimental_pk_query(==, equal, int64_t, int64_t)
@@ -52,7 +52,7 @@ namespace realm::experimental {
             query.equal(this->m_key, serialize(std::string(rhs)));
             return query;
         }
-        return serialize(value().value) == serialize(std::string(rhs));
+        return serialize(detach().value) == serialize(std::string(rhs));
     }
 
     rbool managed<primary_key<std::string>>::operator !=(const char* rhs) const noexcept {
@@ -61,7 +61,7 @@ namespace realm::experimental {
             query.not_equal(this->m_key, serialize(std::string(rhs)));
             return query;
         }
-        return serialize(value().value) != serialize(std::string(rhs));
+        return serialize(detach().value) != serialize(std::string(rhs));
     }
 
     rbool managed<primary_key<std::optional<std::string>>>::operator ==(const char* rhs) const noexcept {
@@ -70,7 +70,7 @@ namespace realm::experimental {
             query.equal(this->m_key, serialize(std::string(rhs)));
             return query;
         }
-        return serialize(value().value) == serialize(std::string(rhs));
+        return serialize(detach().value) == serialize(std::string(rhs));
     }
 
     rbool managed<primary_key<std::optional<std::string>>>::operator !=(const char* rhs) const noexcept {
@@ -79,7 +79,7 @@ namespace realm::experimental {
             query.not_equal(this->m_key, serialize(std::string(rhs)));
             return query;
         }
-        return serialize(value().value) != serialize(std::string(rhs));
+        return serialize(detach().value) != serialize(std::string(rhs));
     }
 
     // MARK: Optional
@@ -105,7 +105,7 @@ namespace realm::experimental {
             } \
             return query; \
         } \
-        return serialize(value()) op serialize(rhs); \
+        return serialize(detach()) op serialize(rhs); \
     } \
 
     __cpprealm_build_optional_experimental_pk_query(==, equal, int64_t, std::optional<int64_t>)

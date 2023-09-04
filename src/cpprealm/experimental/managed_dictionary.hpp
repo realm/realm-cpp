@@ -16,7 +16,7 @@ namespace realm::experimental {
             : m_backing_map(std::move(backing_map)), m_key(key), m_realm(r) {}
 
         box_base &operator=(const mapped_type &o) {
-            m_backing_map.insert(m_key, std::move(o));
+            m_backing_map.insert(m_key, internal::bridge::mixed(std::move(o)));
             return *this;
         }
         box_base &operator=(mapped_type &&o) {
@@ -80,6 +80,9 @@ namespace realm::experimental {
             } else {
                 return m_backing_map.get(m_key) == internal::bridge::mixed(rhs);
             }
+        }
+        bool operator!=(const mapped_type &rhs) const {
+            return !this->operator==(rhs);
         }
         internal::bridge::core_dictionary m_backing_map;
         internal::bridge::realm m_realm;
@@ -161,6 +164,9 @@ namespace realm::experimental {
         bool operator==(const V& rhs) const {
             return this->m_backing_map.get(this->m_key).operator int64_t() == static_cast<int64_t>(rhs);
         }
+        bool operator!=(const V& rhs) const {
+            return !this->operator==(rhs);
+        }
     };
     template<typename V>
     struct box<V, std::enable_if_t<std::is_enum_v<typename V::value_type>>> : public box_base<V> {
@@ -176,12 +182,15 @@ namespace realm::experimental {
             };
         }
 
-        bool operator==(const V &rhs) const {
+        bool operator==(const V& rhs) const {
             auto v = this->m_backing_map.get(this->m_key);
             if (v.is_null() && !rhs) {
                 return true;
             }
             return static_cast<typename V::value_type>(v.operator int64_t()) == rhs;
+        }
+        bool operator!=(const V& rhs) const {
+            return !this->operator==(rhs);
         }
     };
     template<>
@@ -331,23 +340,34 @@ namespace realm::experimental {
             }
             return a.get_table() == b.get_table() && a.get_key() == b.get_key();
         }
+        bool operator!=(const V*& rhs) const {
+            return !this->operator==(rhs);
+        }
 
         bool operator==(const managed<V*> &rhs) const {
-            auto a = const_cast<box<V*> *>(this)->m_backing_map.get_object(this->m_key);
+            auto a = const_cast<box<managed<V*>> *>(this)->m_backing_map.get_object(this->m_key);
             auto &b = rhs.m_obj;
-            if (this->m_realm != rhs.m_realm) {
+            if (this->m_realm != *rhs.m_realm) {
                 return false;
             }
-            return a.get_table() == b.get_table() && a.get_key() == b.get_key();
+            return a.get_key() == b->get_key();
         }
+        bool operator!=(const managed<V*> rhs) const {
+            return !this->operator==(rhs);
+        }
+
         bool operator==(const managed<V> &rhs) const {
             auto a = const_cast<box<managed<V*>> *>(this)->m_backing_map.get_object(this->m_key);
             auto &b = rhs.m_obj;
             if (this->m_realm != rhs.m_realm) {
                 return false;
             }
-            return a.get_table() == b.get_table() && a.get_key() == b.get_key();
+            return a.get_key() == b.get_key();
         }
+        bool operator!=(const managed<V> rhs) const {
+            return !this->operator==(rhs);
+        }
+
         typename managed<V*>::ref_type operator*() {
             auto obj = this->m_backing_map.get_object(this->m_key);
             if (!obj.is_valid()) {
@@ -375,7 +395,7 @@ namespace realm::experimental {
             return {std::move(m)};
         }
 
-        box operator=(V* o) {
+        box& operator=(V* o) {
             if (!o) {
                 // Insert null link for key.
                 this->m_backing_map.insert(this->m_key, realm::internal::bridge::mixed());
@@ -397,30 +417,50 @@ namespace realm::experimental {
             return *this;
         }
 
+        box& operator=(const managed<V*>& o) {
+            this->m_backing_map.insert(this->m_key, o->m_obj.get_key());
+            return *this;
+        }
+
+        box& operator=(const managed<V>& o) {
+            this->m_backing_map.insert(this->m_key, o.m_obj.get_key());
+            return *this;
+        }
+
         bool operator==(const box<managed<V*>> &rhs) const {
             auto a = const_cast<box<managed<V*>>*>(this)->m_backing_map.get_object(this->m_key);
             auto &b = static_cast<box<managed<V*>>>(rhs)->m_obj;
             if (this->m_realm != rhs.m_realm) {
                 return false;
             }
-            return a.get_table() == b.get_table() && a.get_key() == b.get_key();
+            return a.get_key() == b.get_key();
         }
-        bool operator==(const V &rhs) const {
+        bool operator!=(const box<managed<V*>> rhs) const {
+            return !this->operator==(rhs);
+        }
+
+        bool operator==(const V& rhs) const {
             auto a = const_cast<box<managed<V*>> *>(this)->m_backing_map.get_object(this->m_key);
             auto &b = rhs.m_obj;
             if (this->m_realm != rhs.m_realm) {
                 return false;
             }
-            return a.get_table() == b.get_table() && a.get_key() == b.get_key();
+            return a.get_key() == b.get_key();
+        }
+        bool operator!=(const V& rhs) const {
+            return !this->operator==(rhs);
         }
 
-        bool operator==(const box<V*> &rhs) {
+        bool operator==(const box<V*>& rhs) {
             auto a = const_cast<box<managed<V*>> *>(this)->m_backing_map.get_object(this->m_key);
             auto &b = (&rhs)->m_obj;
             if (this->m_realm != rhs.m_realm) {
                 return false;
             }
-            return a.get_table() == b.get_table() && a.get_key() == b.get_key();
+            return a.get_key() == b.get_key();
+        }
+        bool operator!=(const box<V*>& rhs) const {
+            return !this->operator==(rhs);
         }
     };
 
@@ -428,9 +468,44 @@ namespace realm::experimental {
     struct managed<std::map<std::string, T>, void> : managed_base {
         using managed<std::map<std::string, T>>::managed_base::operator=;
 
-        [[nodiscard]] std::map<std::string, T> value() const {
-            // unused
-            return std::map<std::string, T>();
+        [[nodiscard]] std::map<std::string, T> detach() const {
+            if constexpr (std::is_pointer_v<T>) {
+                auto d = internal::bridge::get<internal::bridge::core_dictionary>(*m_obj, m_key);
+                size_t s = d.size();
+                std::map<std::string, T> ret;
+                for (size_t i = 0; i < s; i++) {
+                    auto pair = d.get_pair(i);
+                    using Type = std::remove_pointer_t<T>;
+                    T v = new Type;
+                    managed<Type, void> m(d.get_object(pair.first), *m_realm);
+
+                    auto assign = [&m, &v](auto& pair) {
+                        (*v).*(std::decay_t<decltype(pair.first)>::ptr) = (m.*(pair.second)).detach();
+                    };
+                    auto zipped = zipTuples(managed<Type>::schema.ps, managed<Type>::managed_pointers());
+
+                    std::apply([&v, &m, &assign](auto && ...pair) {
+                        (assign(pair), ...);
+                    }, zipped);
+
+                    ret[pair.first] = v;
+                }
+
+                return ret;
+            }
+            auto ret = std::map<std::string, T>();
+            for (auto [k, v] : *this) {
+                ret[k] = v;
+            }
+            return ret;
+        }
+
+        std::enable_if<std::is_pointer_v<T>, std::map<std::string, managed<T>>> to_map() const {
+            auto ret = std::map<std::string, T>();
+            for (auto [k, v] : *this) {
+                ret[k] = v;
+            }
+            return ret;
         }
 
         class iterator {
@@ -468,25 +543,25 @@ namespace realm::experimental {
             template<typename, typename>
             friend struct managed;
 
-            iterator(size_t i, managed<std::map<std::string, T>>* parent)
+            iterator(size_t i, const managed<std::map<std::string, T>>* parent)
                 : m_i(i), m_parent(parent)
             {
             }
             size_t m_i;
-            managed<std::map<std::string, T>>* m_parent;
+            const managed<std::map<std::string, T>>* m_parent;
         };
 
-        size_t size()
+        size_t size() const
         {
             return m_obj->get_dictionary(m_key).size();
         }
 
-        iterator begin()
+        iterator begin() const
         {
             return iterator(0, this);
         }
 
-        iterator end()
+        iterator end() const
         {
             return iterator(size(), this);
         }

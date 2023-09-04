@@ -258,6 +258,10 @@ namespace realm::internal::bridge {
         }
     }
 
+    void realm::config::set_schema_version(uint64_t version) {
+        reinterpret_cast<RealmConfig*>(&m_config)->schema_version = version;
+    }
+
     realm::sync_config realm::config::sync_config() const {
         return reinterpret_cast<const RealmConfig*>(&m_config)->sync_config;
     }

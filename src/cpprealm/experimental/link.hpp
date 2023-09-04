@@ -12,7 +12,19 @@ namespace realm {
 
         template<typename T>
         struct managed<T*> : managed_base {
-            managed<T*> value() const { return *this; }
+            T* detach() const {
+                T* v = new T();
+                managed<T> m(m_obj->is_null(m_key) ? *m_obj : m_obj->get_linked_object(m_key), *m_realm);
+                auto assign = [&m, &v](auto& pair) {
+                    (*v).*(std::decay_t<decltype(pair.first)>::ptr) = (m.*(pair.second)).detach();
+                };
+                auto zipped = zipTuples(managed<T>::schema.ps, managed<T>::managed_pointers());
+                std::apply([&v, &m, &assign](auto && ...pair) {
+                    (assign(pair), ...);
+                }, zipped);
+                return v;
+            }
+
             struct ref_type {
                 managed<T> m_managed;
                 managed<T>* operator ->() const {
@@ -22,30 +34,57 @@ namespace realm {
                     return &m_managed;
                 }
 
+                bool operator ==(const managed<T*>& rhs) const {
+                    if (this->m_managed.m_realm != *rhs.m_realm) {
+                        return false;
+                    }
+                    return this->m_managed.m_obj.get_key() == rhs.m_obj->get_key();
+                }
                 bool operator ==(const managed<T>& rhs) const {
                     if (this->m_managed.m_realm != rhs.m_realm) {
                         return false;
                     }
                     return this->m_managed.m_obj.get_table() == rhs.m_obj.get_table() &&
-                           this->m_managed.m_obj.get_key() == rhs.m_obj.get_key();
+                        this->m_managed.m_obj.get_key() == rhs.m_obj.get_key();
                 }
                 bool operator ==(const ref_type& rhs) const {
                     if (this->m_managed.m_realm != rhs.m_managed.m_realm) {
                         return false;
                     }
-                    return this->m_managed.m_obj.get_table() == rhs.m_managed.m_obj.get_table()
-                           && this->m_managed.m_obj.get_key() == rhs.m_managed.m_obj.get_key();
+                    return this->m_managed.m_obj.get_table() == rhs.m_managed.m_obj.get_table() &&
+                        this->m_managed.m_obj.get_key() == rhs.m_managed.m_obj.get_key();
+                }
+                bool operator !=(const managed<T*>& rhs) const {
+                    return !this->operator==(rhs);
+                }
+                bool operator !=(const managed<T>& rhs) const {
+                    return !this->operator==(rhs);
+                }
+                bool operator !=(const ref_type& rhs) const {
+                    return !this->operator==(rhs);
                 }
             };
             ref_type operator ->() const {
+                if (should_detect_usage_for_queries) {
+                    managed<T> m = managed<T>::prepare_for_query(*m_realm);
+                    return {std::move(m)};
+                }
                 managed<T> m(m_obj->get_linked_object(m_key), *m_realm);
                 return {std::move(m)};
             }
             operator bool() {
                 if (m_obj && m_key) {
-                    return m_obj->is_null(m_key);
+                    return !m_obj->is_null(m_key);
                 }
                 return false;
+            }
+            managed &operator=(const managed<T>& obj) {
+                m_obj->set(m_key, obj.m_obj.get_key());
+                return *this;
+            }
+            managed &operator=(const managed<T*> &obj) {
+                m_obj->set(m_key, obj.m_obj->get_key());
+                return *this;
             }
             managed &operator=(std::nullptr_t) {
                 m_obj->set_null(m_key);
@@ -87,13 +126,25 @@ namespace realm {
             }
             bool operator ==(const managed<T>& rhs) const {
                 if (*this->m_realm != rhs.m_realm)
-                    return false;
-                if (this->m_obj->get_table() != rhs.m_obj.get_table())
-                    return false;
-                if (this->m_obj->get_key() == rhs.m_obj.get_key())
-                    return false;
+                    return false;                
+                return m_obj->get_linked_object(m_key).get_key() == rhs.m_obj.get_key();
+            }
 
-                return true;
+            bool operator ==(const managed<T*>& rhs) const {
+                if (*this->m_realm != *rhs.m_realm)
+                    return false;
+                return m_obj->get_linked_object(m_key).get_key() == rhs.m_obj->get_key();
+            }
+
+            bool operator !=(const std::nullptr_t) const {
+                return !this->operator==(nullptr);
+            }
+            bool operator !=(const managed<T>& rhs) const {
+                return !this->operator==(rhs);
+            }
+
+            bool operator !=(const managed<T*>& rhs) const {
+                return !this->operator==(rhs);
             }
         };
     }

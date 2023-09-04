@@ -277,9 +277,15 @@ namespace realm::experimental {
         SECTION("object_initialization_beta") {
             auto date = std::chrono::time_point<std::chrono::system_clock>();
             auto uuid = realm::uuid();
+
+            auto str_obj_link = StringObject();
+            str_obj_link._id = 1;
+            str_obj_link.str_col = "string col link";
+
             auto link1 = AllTypesObjectLink();
             link1._id = 1;
             link1.str_col = "link object";
+            link1.str_link_col = &str_obj_link;
 
             auto link2 = AllTypesObjectLink();
             link2._id = 2;
@@ -301,6 +307,7 @@ namespace realm::experimental {
 
             AllTypesObject obj;
             obj._id = 123;
+            obj.int_col = 123;
             obj.double_col = 12.34;
             obj.bool_col = true;
             obj.str_col = std::string("foo");
@@ -358,19 +365,28 @@ namespace realm::experimental {
                 return db.add(std::move(obj));
             });
 
+            managed<AllTypesObject> AllTypesObject_res = db.objects<AllTypesObject>()[0];
+            managed<AllTypesObjectLink> allTypeObjectLink = db.objects<AllTypesObjectLink>().where([](auto& o) {
+                return o._id == 1;
+            })[0];
+
+            managed<AllTypesObjectLink> allTypeObjectLink2 = db.objects<AllTypesObjectLink>().where([](auto& o) {
+                return o._id == 2;
+            })[0];
+
             CHECK(managed_obj._id == (int64_t)123);
             CHECK(managed_obj.double_col == 12.34);
             CHECK(managed_obj.str_col == "foo");
             CHECK(managed_obj.bool_col == true);
             CHECK(managed_obj.enum_col == AllTypesObject::Enum::two);
             CHECK(managed_obj.date_col == date);
-            CHECK(managed_obj.uuid_col.value() == uuid);
+            CHECK(managed_obj.uuid_col.detach() == uuid);
             CHECK(managed_obj.object_id_col == object_id);
             CHECK(managed_obj.decimal_col == decimal);
-            CHECK(managed_obj.binary_col.value() == std::vector<uint8_t>({1}));
-            CHECK(managed_obj.mixed_col.value() == AllTypesObject::my_mixed("mixed"));
+            CHECK(managed_obj.binary_col.detach() == std::vector<uint8_t>({1}));
+            CHECK(managed_obj.mixed_col.detach() == AllTypesObject::my_mixed("mixed"));
 
-            CHECK(managed_obj.object_id_col.value() == object_id);
+            CHECK(managed_obj.object_id_col.detach() == object_id);
 
             CHECK(managed_obj.opt_int_col == 2);
             CHECK(managed_obj.opt_double_col == 2.34);
@@ -379,7 +395,7 @@ namespace realm::experimental {
             CHECK(managed_obj.opt_enum_col == AllTypesObject::Enum::two);
             CHECK(managed_obj.opt_date_col == date);
             CHECK(managed_obj.opt_uuid_col == uuid);
-            CHECK(managed_obj.opt_binary_col.value() == std::vector<uint8_t>({1}));
+            CHECK(managed_obj.opt_binary_col.detach() == std::vector<uint8_t>({1}));
             CHECK(managed_obj.opt_object_id_col == object_id);
             CHECK(managed_obj.opt_decimal_col == decimal);
 
@@ -393,17 +409,19 @@ namespace realm::experimental {
             CHECK(managed_obj.list_date_col[0] == date);
             CHECK(managed_obj.list_uuid_col[0] == uuid);
             CHECK(managed_obj.list_mixed_col[0] == realm::mixed("mixed str"));
-            auto other_obj = db.objects<realm::experimental::AllTypesObjectLink>()[1];
+
+            CHECK(managed_obj.opt_obj_col == allTypeObjectLink);
+            CHECK(managed_obj.opt_obj_col != allTypeObjectLink2);
+
             CHECK(managed_obj.opt_obj_col->str_col == "link object");
-            auto a = managed_obj.list_obj_col[0]->str_col.value();
             CHECK(managed_obj.list_obj_col[0]->str_col == "link object 2");
-            CHECK(managed_obj.list_obj_col[0] == other_obj);
-            auto b = managed_obj.list_embedded_obj_col[0]->str_col.value();
-            auto c = managed_obj.opt_embedded_obj_col->str_col.value();
+            CHECK(managed_obj.list_obj_col[0] == allTypeObjectLink2);
+            CHECK(managed_obj.list_obj_col[0] != allTypeObjectLink);
 
             CHECK(managed_obj.list_embedded_obj_col[0]->str_col == "embedded obj2");
             CHECK(managed_obj.opt_embedded_obj_col->str_col == "embedded obj1");
             CHECK(managed_obj.list_embedded_obj_col[0] == managed_obj.list_embedded_obj_col[0]);
+            CHECK(managed_obj.list_embedded_obj_col[0] != managed_obj.opt_embedded_obj_col);
 
             CHECK(managed_obj.map_int_col["foo"] == 1);
             CHECK(managed_obj.map_double_col["foo"] == 1.23);
@@ -419,11 +437,9 @@ namespace realm::experimental {
             CHECK(managed_obj.map_link_col["foo"] == other_obj2);
             auto map_embedded_col = other_obj3.map_embedded_col["foo"];
             CHECK(managed_obj.map_embedded_col["foo"] == map_embedded_col);
+            CHECK(managed_obj.map_embedded_col["foo"] != managed_obj.opt_embedded_obj_col);
 
             auto allTypeObjects = db.objects<AllTypesObject>();
-            managed<AllTypesObjectLink> allTypeObjectLink = db.objects<AllTypesObjectLink>().where([](auto& o) {
-                return o._id == 1;
-            })[0];
 
             auto results_obj = allTypeObjects[0];
             CHECK(results_obj._id == (int64_t)123);
@@ -449,8 +465,11 @@ namespace realm::experimental {
             CHECK(results_obj.opt_object_id_col == object_id);
             CHECK(results_obj.opt_decimal_col == decimal);
 
-//            CHECK(results_obj.opt_obj_col == allTypeObjectLink);
-//            CHECK(*results_obj.opt_embedded_obj_col == embedded_obj);
+            CHECK(results_obj.opt_obj_col == allTypeObjectLink);
+            CHECK(results_obj.opt_obj_col != allTypeObjectLink2);
+
+            CHECK(results_obj.opt_embedded_obj_col == AllTypesObject_res.opt_embedded_obj_col);
+            CHECK(!(results_obj.opt_embedded_obj_col != managed_obj.opt_embedded_obj_col));
 
             CHECK(results_obj.list_int_col[0] == 1);
             CHECK(results_obj.list_double_col[0] == 1.23);
@@ -462,8 +481,11 @@ namespace realm::experimental {
             CHECK(results_obj.list_object_id_col[0] == object_id);
             CHECK(results_obj.list_decimal_col[0] == decimal);
             CHECK(results_obj.list_mixed_col[0] == realm::mixed("mixed str"));
-//            CHECK(results_obj.list_obj_col[0] == allTypeObjectLink);
-//            CHECK(results_obj.list_embedded_obj_col[0] == embedded_obj);
+            CHECK(results_obj.list_obj_col[0]->str_col == "link object 2");
+            CHECK(results_obj.list_obj_col[0] == allTypeObjectLink2);
+            CHECK(results_obj.opt_obj_col->str_link_col->str_col == "string col link");
+            CHECK(results_obj.list_embedded_obj_col[0] == AllTypesObject_res.list_embedded_obj_col[0]);
+            CHECK(results_obj.list_embedded_obj_col[0] != managed_obj.opt_embedded_obj_col);
 
             CHECK(results_obj.map_int_col["foo"] == 1);
             CHECK(results_obj.map_double_col["foo"] == 1.23);
@@ -475,8 +497,9 @@ namespace realm::experimental {
             CHECK(results_obj.map_object_id_col["foo"] == object_id);
             CHECK(results_obj.map_decimal_col["foo"] == decimal);
             CHECK(results_obj.map_mixed_col["foo"] == realm::mixed("bar"));
-//            CHECK(results_obj.map_link_col["foo"] == allTypeObjectLink);
-//            CHECK(results_obj.map_embedded_col["foo"] == embedded_obj);
+            CHECK(results_obj.map_link_col["foo"] == other_obj2);
+            CHECK(results_obj.map_embedded_col["foo"] == AllTypesObject_res.map_embedded_col["foo"]);
+            CHECK(results_obj.map_embedded_col["foo"] != managed_obj.opt_embedded_obj_col);
         }
 
         SECTION("object_notifications_beta") {
@@ -499,7 +522,7 @@ namespace realm::experimental {
                 if (run_count == 1) {
                     CHECK(change.is_deleted);
                 } else {
-                    CHECK(change.property_changes.size() == 26);
+                    CHECK(change.property_changes.size() == 35);
                     for (auto& prop_change : change.property_changes) {
                         if (prop_change.name == "str_col" && prop_change.new_value) {
                             CHECK(std::get<std::string>(*prop_change.new_value) == "foo");
@@ -535,33 +558,43 @@ namespace realm::experimental {
                             auto obj = std::get<managed<AllTypesObjectEmbedded*>>(*prop_change.new_value);
                             CHECK((obj->str_col) == "embedded obj");
                         } else if (prop_change.name == "list_int_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<int64_t>>(*prop_change.new_value);
+                            std::get<std::monostate>(*prop_change.new_value);
                             // Cocoa does not populate collection changes for an object and neither should we for perforamnce reasons.
-                            CHECK(obj.size() == 0);
                         } else if (prop_change.name == "list_bool_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<bool>>(*prop_change.new_value);
-                            CHECK(obj.size() == 0);
+                            std::get<std::monostate>(*prop_change.new_value);
                         } else if (prop_change.name == "list_str_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<std::string>>(*prop_change.new_value);
-                            CHECK(obj.size() == 0);
+                            std::get<std::monostate>(*prop_change.new_value);
                         } else if (prop_change.name == "list_uuid_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<realm::uuid>>(*prop_change.new_value);
-                            CHECK(obj.size() == 0);
+                            std::get<std::monostate>(*prop_change.new_value);
                         } else if (prop_change.name == "list_binary_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<std::vector<uint8_t>>>(*prop_change.new_value);
-                            CHECK(obj.size() == 0);
+                            std::get<std::monostate>(*prop_change.new_value);
                         } else if (prop_change.name == "list_date_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<std::chrono::time_point<std::chrono::system_clock>>>(*prop_change.new_value);
-                            CHECK(obj.size() == 0);
+                            std::get<std::monostate>(*prop_change.new_value);
                         } else if (prop_change.name == "list_mixed_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<realm::mixed>>(*prop_change.new_value);
-                            CHECK(obj.size() == 0);
+                            std::get<std::monostate>(*prop_change.new_value);
                         } else if (prop_change.name == "list_obj_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<AllTypesObjectLink*>>(*prop_change.new_value);
-                            CHECK(obj.size() == 0);
+                            std::get<std::monostate>(*prop_change.new_value);
                         } else if (prop_change.name == "list_embedded_obj_col" && prop_change.new_value) {
-                            auto obj = std::get<std::vector<AllTypesObjectEmbedded*>>(*prop_change.new_value);
-                            CHECK(obj.size() == 0);
+                            std::get<std::monostate>(*prop_change.new_value);
+                        } else if (prop_change.name == "map_int_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
+                            // Cocoa does not populate collection changes for an object and neither should we for perforamnce reasons.
+                        } else if (prop_change.name == "map_bool_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
+                        } else if (prop_change.name == "map_str_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
+                        } else if (prop_change.name == "map_uuid_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
+                        } else if (prop_change.name == "map_binary_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
+                        } else if (prop_change.name == "map_date_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
+                        } else if (prop_change.name == "map_mixed_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
+                        } else if (prop_change.name == "map_link_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
+                        } else if (prop_change.name == "map_embedded_col" && prop_change.new_value) {
+                            std::get<std::monostate>(*prop_change.new_value);
                         }
                     }
                 }
@@ -604,6 +637,16 @@ namespace realm::experimental {
                 managed_foo.list_obj_col.push_back(&o2);
                 o4.str_col = "embedded obj 2";
                 managed_foo.list_embedded_obj_col.push_back(&o4);
+
+                managed_foo.map_int_col["foo"] = 1;
+                managed_foo.map_bool_col["foo"] = true;
+                managed_foo.map_str_col["foo"] = "bar";
+                managed_foo.map_uuid_col["foo"] = uuid;
+                managed_foo.map_binary_col["foo"] = std::vector<uint8_t>({1});
+                managed_foo.map_date_col["foo"] = date;
+                managed_foo.map_mixed_col["foo"] = "mixed str";
+                managed_foo.map_link_col["foo"] = &o2;
+                managed_foo.map_embedded_col["foo"] = &o4;
             });
             realm.refresh();
             realm.write([&managed_foo, &realm] {
@@ -678,6 +721,253 @@ namespace realm::experimental {
                 jill->dog = nullptr;
             });
             CHECK(realm.objects<experimental::Dog>()[0].owners.size() == 0);
+        }
+
+        SECTION("assign link") {
+            AllTypesObject obj;
+            obj._id = 1;
+            AllTypesObjectLink link;
+            link._id = 1;
+            link.str_col = "link";
+
+            experimental::db db = experimental::open(path);
+            auto [managed_obj, managed_link] = db.write([&]() -> std::tuple<managed<AllTypesObject>, managed<AllTypesObjectLink>> {
+                auto managed_link = db.add(std::move(link));
+                auto o = db.add(std::move(obj));
+                o.opt_obj_col = managed_link;
+                o.list_obj_col.push_back(managed_link);
+                o.map_link_col["foo"] = managed_link;
+
+                return {o, managed_link};
+            });
+            CHECK(managed_obj.opt_obj_col->str_col == "link");
+            CHECK(managed_obj.list_obj_col[0]->str_col == "link");
+            CHECK(managed_obj.map_link_col["foo"]->str_col == "link");
+
+            CHECK(managed_obj.opt_obj_col == managed_link);
+            CHECK(managed_obj.list_obj_col[0] == managed_link);
+            CHECK(managed_obj.map_link_col["foo"] == managed_link);
+
+            CHECK(db.objects<AllTypesObjectLink>().size() == 1);
+
+            AllTypesObject obj2;
+            obj2._id = 2;
+
+            auto managed_obj2 = db.write([&db, &obj2, &managed_obj = managed_obj, &managed_link = managed_link]() {
+                auto o = db.add(std::move(obj2));
+                o.opt_obj_col = managed_obj.opt_obj_col;
+                o.list_obj_col.push_back(managed_obj.opt_obj_col);
+                o.list_obj_col.push_back(managed_link);
+                o.map_link_col["foo"] = managed_link;
+                o.map_link_col["bar"] = managed_obj.opt_obj_col;
+                return o;
+            });
+
+            CHECK(managed_obj2.opt_obj_col->str_col == "link");
+            CHECK(managed_obj2.list_obj_col[0]->str_col == "link");
+            CHECK(managed_obj2.list_obj_col[1]->str_col == "link");
+            CHECK(managed_obj2.map_link_col["foo"]->str_col == "link");
+
+            CHECK(managed_obj2.opt_obj_col == managed_link);
+            CHECK(managed_obj2.list_obj_col[0] == managed_link);
+            CHECK(managed_obj2.list_obj_col[1] == managed_link);
+
+            CHECK(managed_obj2.map_link_col["foo"] == managed_link);
+            CHECK(managed_obj2.map_link_col["bar"] == managed_link);
+
+            AllTypesObjectLink link2;
+            link2._id = 2;
+            link2.str_col = "link2";
+
+            auto managed_link2 = db.write([&db, &obj2, &managed_obj = managed_obj, &link2]() {
+                auto o = db.add(std::move(link2));
+                managed_obj.opt_obj_col = o;
+                managed_obj.list_obj_col.push_back(o);
+                managed_obj.list_obj_col.push_back(o);
+                managed_obj.map_link_col["foo"] = o;
+                managed_obj.map_link_col["bar"] = o;
+                return o;
+            });
+
+            CHECK(managed_obj.opt_obj_col->str_col == "link2");
+            CHECK(managed_obj.list_obj_col[1]->str_col == "link2");
+            CHECK(managed_obj.list_obj_col[2]->str_col == "link2");
+            CHECK(managed_obj.map_link_col["foo"]->str_col == "link2");
+
+            CHECK(managed_obj.opt_obj_col == managed_link2);
+            CHECK(managed_obj.list_obj_col[1] == managed_link2);
+            CHECK(managed_obj.list_obj_col[2] == managed_link2);
+
+            CHECK(managed_obj.map_link_col["foo"] == managed_link2);
+            CHECK(managed_obj.map_link_col["bar"] == managed_link2);
+        }
+
+        SECTION("null bool operator") {
+            AllTypesObject obj;
+            obj._id = 1;
+            AllTypesObjectLink link;
+            link._id = 1;
+
+            experimental::db db = experimental::open(path);
+            auto managed_obj = db.write([&]() {
+                return db.add(std::move(obj));
+            });
+
+            bool has_link = managed_obj.opt_obj_col;
+            CHECK(!has_link);
+
+            db.write([&]() {
+                managed_obj.opt_obj_col = &link;
+            });
+
+            has_link = managed_obj.opt_obj_col;
+            CHECK(has_link);
+        }
+
+        SECTION("detach()") {
+            auto date = std::chrono::time_point<std::chrono::system_clock>();
+            auto uuid = realm::uuid();
+
+            auto str_obj_link = StringObject();
+            str_obj_link._id = 1;
+            str_obj_link.str_col = "string col link";
+
+            auto link1 = AllTypesObjectLink();
+            link1._id = 1;
+            link1.str_col = "link object";
+            link1.str_link_col = &str_obj_link;
+
+            auto link2 = AllTypesObjectLink();
+            link2._id = 2;
+            link2.str_col = "link object 2";
+
+            auto link3 = AllTypesObjectLink();
+            link3._id = 3;
+            link3.str_col = "link object 3";
+
+            AllTypesObjectEmbedded embedded_obj1;
+            embedded_obj1.str_col = "embedded obj1";
+            AllTypesObjectEmbedded embedded_obj2;
+            embedded_obj2.str_col = "embedded obj2";
+            AllTypesObjectEmbedded embedded_obj3;
+            embedded_obj3.str_col = "embedded obj3";
+
+            auto object_id = realm::object_id::generate();
+            auto decimal = realm::decimal128(123.456);
+
+            AllTypesObject obj;
+            obj._id = 123;
+            obj.int_col = 123;
+            obj.double_col = 12.34;
+            obj.bool_col = true;
+            obj.str_col = std::string("foo");
+            obj.enum_col = AllTypesObject::Enum::two;
+            obj.date_col = date;
+            obj.uuid_col = uuid;
+            obj.object_id_col = object_id;
+            obj.binary_col = std::vector<uint8_t>({1});
+            obj.decimal_col = decimal;
+            obj.mixed_col = AllTypesObject::my_mixed("mixed");
+
+            obj.opt_int_col = 2;
+            obj.opt_double_col = 2.34;
+            obj.opt_str_col = "opt string";
+            obj.opt_bool_col = true;
+            obj.opt_enum_col = AllTypesObject::Enum::two;
+            obj.opt_date_col = date;
+            obj.opt_uuid_col = uuid;
+            obj.opt_object_id_col = object_id;
+            obj.opt_decimal_col = decimal;
+            obj.opt_binary_col = std::vector<uint8_t>({1});
+
+            obj.opt_obj_col = &link1,
+            obj.opt_embedded_obj_col = &embedded_obj1,
+
+            obj.list_int_col = std::vector<int64_t>({1});
+            obj.list_double_col = std::vector<double>({1.23});
+            obj.list_bool_col = std::vector<bool>({true});
+            obj.list_str_col = std::vector<std::string>({"bar"});
+            obj.list_uuid_col = std::vector<realm::uuid>({uuid});
+            obj.list_object_id_col = std::vector<realm::object_id>({object_id});
+            obj.list_decimal_col = std::vector<realm::decimal128>({decimal});
+            obj.list_binary_col = std::vector<std::vector<uint8_t>>({{1}});
+            obj.list_date_col = std::vector<std::chrono::time_point<std::chrono::system_clock>>({date});
+            obj.list_mixed_col = std::vector<realm::mixed>({realm::mixed("mixed str")});
+            obj.list_obj_col = std::vector<AllTypesObjectLink*>({&link2});
+            obj.list_embedded_obj_col = std::vector<AllTypesObjectEmbedded*>({&embedded_obj2});
+
+            obj.map_int_col = std::map<std::string, int64_t>({{"foo", 1}});
+            obj.map_double_col = std::map<std::string, double>({{"foo", 1.23}});
+            obj.map_bool_col = std::map<std::string, bool>({{"foo", true}});
+            obj.map_str_col = std::map<std::string, std::string>({{"foo", "bar"}});
+            obj.map_uuid_col = std::map<std::string, realm::uuid>({{"foo", uuid}});
+            obj.map_object_id_col = std::map<std::string, realm::object_id>({{"foo", object_id}});
+            obj.map_decimal_col = std::map<std::string, realm::decimal128>({{"foo", decimal}});
+            obj.map_binary_col = std::map<std::string, std::vector<std::uint8_t>>({{"foo", {1}}});
+            obj.map_date_col = std::map<std::string, std::chrono::time_point<std::chrono::system_clock>>({{"foo", date}});
+            obj.map_enum_col = std::map<std::string, AllTypesObject::Enum>({{"foo", AllTypesObject::Enum::one}});
+            obj.map_mixed_col = std::map<std::string, realm::mixed>({{"foo", realm::mixed("bar")}});
+            obj.map_link_col = std::map<std::string, AllTypesObjectLink*>({{"foo", &link3}});
+            obj.map_embedded_col = std::map<std::string, AllTypesObjectEmbedded*>({{"foo", &embedded_obj3}});
+
+            experimental::db db = experimental::open(path);
+            auto managed_obj = db.write([&obj, &db]() {
+                return db.add(std::move(obj));
+            });
+
+            experimental::AllTypesObject detached_obj = managed_obj.detach();
+
+            CHECK(detached_obj._id == (int64_t)123);
+            CHECK(detached_obj.double_col == 12.34);
+            CHECK(detached_obj.str_col == "foo");
+            CHECK(detached_obj.bool_col == true);
+            CHECK(detached_obj.enum_col == AllTypesObject::Enum::two);
+            CHECK(detached_obj.date_col == date);
+            CHECK(detached_obj.uuid_col == uuid);
+            CHECK(detached_obj.object_id_col == object_id);
+            CHECK(detached_obj.decimal_col == decimal);
+            CHECK(detached_obj.binary_col == std::vector<uint8_t>({1}));
+            CHECK(detached_obj.mixed_col == AllTypesObject::my_mixed("mixed"));
+            CHECK(detached_obj.object_id_col == object_id);
+
+            CHECK(detached_obj.opt_int_col == 2);
+            CHECK(detached_obj.opt_double_col == 2.34);
+            CHECK(detached_obj.opt_str_col == "opt string");
+            CHECK(detached_obj.opt_bool_col == true);
+            CHECK(detached_obj.opt_enum_col == AllTypesObject::Enum::two);
+            CHECK(detached_obj.opt_date_col == date);
+            CHECK(detached_obj.opt_uuid_col == uuid);
+            CHECK(detached_obj.opt_binary_col == std::vector<uint8_t>({1}));
+            CHECK(detached_obj.opt_object_id_col == object_id);
+            CHECK(detached_obj.opt_decimal_col == decimal);
+
+            CHECK(detached_obj.list_int_col[0] == 1);
+            CHECK(detached_obj.list_double_col[0] == 1.23);
+            CHECK(detached_obj.list_bool_col[0] == true);
+            CHECK(detached_obj.list_str_col[0] == "bar");
+            CHECK(detached_obj.list_uuid_col[0] == uuid);
+            CHECK(detached_obj.list_object_id_col[0] == object_id);
+            CHECK(detached_obj.list_decimal_col[0] == decimal);
+            CHECK(detached_obj.list_date_col[0] == date);
+            CHECK(detached_obj.list_uuid_col[0] == uuid);
+            CHECK(detached_obj.list_mixed_col[0] == realm::mixed("mixed str"));
+
+            CHECK(detached_obj.opt_obj_col->str_col == "link object");
+            CHECK(detached_obj.opt_obj_col->str_link_col->str_col == "string col link");
+
+            CHECK(detached_obj.list_obj_col[0]->str_col == "link object 2");
+
+            CHECK(detached_obj.list_embedded_obj_col[0]->str_col == "embedded obj2");
+            CHECK(detached_obj.opt_embedded_obj_col->str_col == "embedded obj1");
+            CHECK(detached_obj.map_int_col["foo"] == 1);
+            CHECK(detached_obj.map_double_col["foo"] == 1.23);
+            CHECK(detached_obj.map_bool_col["foo"] == true);
+            CHECK(detached_obj.map_str_col["foo"] == "bar");
+            CHECK(detached_obj.map_uuid_col["foo"] == uuid);
+            CHECK(detached_obj.map_date_col["foo"] == date);
+            CHECK(detached_obj.map_uuid_col["foo"] == uuid);
+            CHECK(detached_obj.map_mixed_col["foo"] == realm::mixed("bar"));
+            CHECK(detached_obj.map_link_col["foo"]->str_col == "link object 3");
         }
     }
 }

@@ -62,9 +62,25 @@ namespace realm::experimental {
         {
             return iterator(size(), this);
         }
-        [[nodiscard]] std::vector<T> value() const {
-            // unused
-            return std::vector<T>();
+        [[nodiscard]] std::vector<T> detach() const {
+            auto list = realm::internal::bridge::list(*m_realm, *m_obj, m_key);
+            using U = typename internal::type_info::type_info<T>::internal_type;
+
+            size_t count = list.size();
+            if (count == 0)
+                return std::vector<T>();
+
+            auto ret = std::vector<T>();
+            ret.reserve(count);
+            for(size_t i = 0; i < count; i++) {
+                if constexpr (internal::type_info::MixedPersistableConcept<T>::value) {
+                    ret.push_back(deserialize<T>(realm::internal::bridge::get<U>(list, i)));
+                } else {
+                    ret.push_back(deserialize(realm::internal::bridge::get<U>(list, i)));
+                }
+            }
+
+            return ret;
         }
 
         realm::notification_token observe(std::function<void(realm::experimental::collection_change)>&& fn) {
@@ -78,6 +94,7 @@ namespace realm::experimental {
             return token;
         }
 
+        // TODO: emulate a reference to the value.
         T operator[](size_t idx) const {
             auto list = realm::internal::bridge::list(*m_realm, *m_obj, m_key);
             using U = typename internal::type_info::type_info<T>::internal_type;
@@ -116,9 +133,27 @@ namespace realm::experimental {
 
     template<typename T>
     struct managed<std::vector<T*>> : managed_base {
-        [[nodiscard]] std::vector<T*> value() const {
-            // unused
-            return std::vector<T*>();
+        [[nodiscard]] std::vector<T*> detach() const {
+            auto list = realm::internal::bridge::list(*m_realm, *m_obj, m_key);
+            size_t count = list.size();
+            if (count == 0)
+                return std::vector<T*>();
+            auto ret = std::vector<T*>();
+            ret.reserve(count);
+            for(size_t i = 0; i < count; i++) {
+                managed<T> m(realm::internal::bridge::get<internal::bridge::obj>(list, i), *m_realm);
+                T* v = new T();
+                auto assign = [&m, &v](auto& pair) {
+                    (*v).*(std::decay_t<decltype(pair.first)>::ptr) = (m.*(pair.second)).detach();
+                };
+                auto zipped = zipTuples(managed<T>::schema.ps, managed<T>::managed_pointers());
+                std::apply([&v, &m, &assign](auto && ...pair) {
+                    (assign(pair), ...);
+                }, zipped);
+
+                ret.push_back(v);
+            }
+            return ret;
         }
 
         void pop_back() {
@@ -157,6 +192,15 @@ namespace realm::experimental {
             auto list = internal::bridge::list(*m_realm, *m_obj, m_key);
             if (!managed<T>::schema.is_embedded_experimental()) {
                 list.add(value.m_obj.get_key());
+            } else {
+                throw std::logic_error("Cannot add existing embedded object to managed list.");
+            }
+        }
+        void push_back(const managed<T*>& value)
+        {
+            if (!managed<T>::schema.is_embedded_experimental()) {
+                auto list = internal::bridge::list(*m_realm, *m_obj, m_key);
+                list.add(value.m_obj->get_key());
             } else {
                 throw std::logic_error("Cannot add existing embedded object to managed list.");
             }

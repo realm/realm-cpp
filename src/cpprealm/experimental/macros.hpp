@@ -127,7 +127,7 @@
 #define DECLARE_MANAGED_PROPERTY(cls, p) &realm::experimental::managed<cls>::p,
 #define DECLARE_UNMANAGED_TO_MANAGED_PAIR(cls, p) std::pair {&cls::p, &realm::experimental::managed<cls>::p},
 #define DECLARE_MANAGED_PROPERTY_NAME(cls, p) #p,
-#define DECLARE_COND_PROPERTY_VALUE_FOR_NAME(cls, p) if (_name == #p) { auto ptr = &managed<cls>::p; return (*this.*ptr).value(); }
+#define DECLARE_COND_PROPERTY_VALUE_FOR_NAME(cls, p) if (_name == #p) { auto ptr = &managed<cls>::p; return (*this.*ptr).detach(); }
 #define DECLARE_COND_UNMANAGED_TO_MANAGED(cls, p) if constexpr (std::is_same_v<decltype(ptr), decltype(&cls::p)>) { return &managed<cls>::p; }
 
 #include <utility>
@@ -155,6 +155,7 @@ constexpr constant_index< acc > counter_crumb( id, constant_index< rank >, const
 #include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/property.hpp>
+#include <cpprealm/internal/bridge/query.hpp>
 
 namespace realm::experimental {
     struct managed_base {
@@ -239,10 +240,30 @@ namespace realm::experimental {
             should_detect_usage_for_queries = true;
             query = &query_builder;
         }
+
+        void prepare_for_query(internal::bridge::realm* realm,
+                               const internal::bridge::table& table,
+                               const std::string& col_name) {
+            this->query = new internal::bridge::query(table);
+            this->m_realm = realm;
+            this->m_key = table.get_column_key(col_name);
+            this->should_detect_usage_for_queries = true;
+        }
     };
 
     template<typename T, typename = void>
     struct managed;
+}
+
+template <typename... Ts, typename... Us, size_t... Is>
+auto zipTuplesHelper(const std::tuple<Ts...>& tuple1, const std::tuple<Us...>& tuple2, std::index_sequence<Is...>) {
+    return std::make_tuple(std::make_pair(std::get<Is>(tuple1), std::get<Is>(tuple2))...);
+}
+
+template <typename... Ts, typename... Us>
+auto zipTuples(const std::tuple<Ts...>& tuple1, const std::tuple<Us...>& tuple2) {
+    static_assert(sizeof...(Ts) == sizeof...(Us), "Tuples must have the same size");
+    return zipTuplesHelper(tuple1, tuple2, std::index_sequence_for<Ts...>());
 }
 
 #define __cpprealm_build_experimental_query(op, name, type) \
@@ -252,7 +273,7 @@ rbool managed<type>::operator op(const type& rhs) const noexcept { \
         query.name(this->m_key, serialize(rhs)); \
         return query; \
     } \
-    return serialize(value()) op serialize(rhs); \
+    return serialize(detach()) op serialize(rhs); \
 } \
 
 #define __cpprealm_build_optional_experimental_query(op, name, type) \
@@ -266,7 +287,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         } \
         return query; \
     } \
-    return serialize(value()) op serialize(rhs); \
+    return serialize(detach()) op serialize(rhs); \
 } \
 
 #define REALM_SCHEMA(cls, ...) \
@@ -292,9 +313,10 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         } \
         static constexpr auto managed_pointers_names = std::tuple{FOR_EACH(DECLARE_MANAGED_PROPERTY_NAME, cls, __VA_ARGS__)}; \
         internal::bridge::obj m_obj;\
-        internal::bridge::realm m_realm;        \
-        explicit managed(internal::bridge::obj&& obj,                 \
-                     internal::bridge::realm realm)                  \
+        internal::bridge::realm m_realm;                                                           \
+        bool m_prepare_for_query = false;                                                           \
+        explicit managed(const internal::bridge::obj& obj,                 \
+                         internal::bridge::realm realm)                  \
         : m_obj(std::move(obj))\
         , m_realm(std::move(realm))       \
         {     \
@@ -307,41 +329,114 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         managed(const managed& other) { \
             m_obj = other.m_obj; \
             m_realm = other.m_realm;                                                               \
-            std::apply([&](auto && ...ptr) { \
-                std::apply([&](auto&& ..._name) { \
-                ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
-                }, managed_pointers_names); \
-            }, managed_pointers()); \
+            m_prepare_for_query = other.m_prepare_for_query;                                     \
+            if (m_prepare_for_query) {                                                                                       \
+                auto schema = m_realm.schema().find(other.schema.name);                                  \
+                auto group = m_realm.read_group();                                                   \
+                auto table_ref = group.get_table(schema.table_key());                                  \
+                std::apply([&](auto &&...ptr) {                                                        \
+                    std::apply([&](auto &&..._name) {                                                   \
+                        ((*this.*ptr).prepare_for_query(&m_realm, table_ref, _name), ...);                \
+                    }, managed_pointers_names);                                                         \
+                }, managed_pointers());                                                                 \
+            } else {                                                                                      \
+                std::apply([&](auto &&...ptr) { \
+                    std::apply([&](auto &&..._name) { \
+                    ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
+                    }, managed_pointers_names); \
+                }, managed_pointers());                                                                \
+            }                                                                                       \
         } \
         managed& operator=(const managed& other) { \
             m_obj = other.m_obj; \
             m_realm = other.m_realm;                                                               \
-            std::apply([&](auto && ...ptr) { \
-                std::apply([&](auto&& ..._name) { \
-                ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
-                }, managed_pointers_names); \
-            }, managed_pointers()); \
+            m_prepare_for_query = other.m_prepare_for_query;                                     \
+             if (m_prepare_for_query) {                                                                                       \
+                 auto schema = m_realm.schema().find(other.schema.name);                                  \
+                 auto group = m_realm.read_group();                                                   \
+                 auto table_ref = group.get_table(schema.table_key());                                  \
+                 std::apply([&](auto &&...ptr) {                                                        \
+                     std::apply([&](auto &&..._name) {                                                   \
+                         ((*this.*ptr).prepare_for_query(&m_realm, table_ref, _name), ...);                \
+                     }, managed_pointers_names);                                                         \
+                 }, managed_pointers());                                                                 \
+             } else {                                                                                      \
+                 std::apply([&](auto &&...ptr) { \
+                     std::apply([&](auto &&..._name) { \
+                     ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
+                     }, managed_pointers_names); \
+                 }, managed_pointers());                                                                \
+             }                                                                                       \
             return *this; \
         } \
         managed(managed&& other) { \
             m_obj = std::move(other.m_obj); \
             m_realm = std::move(other.m_realm);                                                    \
-            std::apply([&](auto && ...ptr) { \
-                std::apply([&](auto&& ..._name) { \
-                ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
-                }, managed_pointers_names); \
-            }, managed_pointers()); \
+            m_prepare_for_query = std::move(other.m_prepare_for_query);                                     \
+             if (m_prepare_for_query) {                                                                                       \
+                 auto schema = m_realm.schema().find(other.schema.name);                                  \
+                 auto group = m_realm.read_group();                                                   \
+                 auto table_ref = group.get_table(schema.table_key());                                  \
+                 std::apply([&](auto &&...ptr) {                                                        \
+                     std::apply([&](auto &&..._name) {                                                   \
+                         ((*this.*ptr).prepare_for_query(&m_realm, table_ref, _name), ...);                \
+                     }, managed_pointers_names);                                                         \
+                 }, managed_pointers());                                                                 \
+             } else {                                                                                      \
+                 std::apply([&](auto &&...ptr) { \
+                     std::apply([&](auto &&..._name) { \
+                     ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
+                     }, managed_pointers_names); \
+                 }, managed_pointers());                                                                \
+             }                                                                                       \
         } \
         managed& operator=(managed&& other) { \
-             m_obj = std::move(other.m_obj); \
-             m_realm = std::move(other.m_realm);                                                   \
-            std::apply([&](auto && ...ptr) { \
-                std::apply([&](auto&& ..._name) { \
-                ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
-                }, managed_pointers_names); \
-            }, managed_pointers()); \
+            m_obj = std::move(other.m_obj); \
+            m_realm = std::move(other.m_realm);                                                   \
+            m_prepare_for_query = std::move(other.m_prepare_for_query);                                     \
+            if (m_prepare_for_query) {                                                                                       \
+                auto schema = m_realm.schema().find(other.schema.name);                                  \
+                auto group = m_realm.read_group();                                                   \
+                auto table_ref = group.get_table(schema.table_key());                                  \
+                std::apply([&](auto &&...ptr) {                                                        \
+                   std::apply([&](auto &&..._name) {                                                   \
+                     ((*this.*ptr).prepare_for_query(&m_realm, table_ref, _name), ...);                \
+                   }, managed_pointers_names);                                                         \
+                }, managed_pointers());                                                                 \
+                } else {                                                                                      \
+                   std::apply([&](auto &&...ptr) { \
+                        std::apply([&](auto &&..._name) { \
+                        ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
+                    }, managed_pointers_names); \
+                }, managed_pointers());                                                                \
+            }  \
              return *this;\
-        } \
+        }                                                                                          \
+        static managed prepare_for_query(const internal::bridge::realm& r) {                       \
+            managed<cls> m;                                                                        \
+            m.m_prepare_for_query = true;                                                          \
+            m.m_realm = r;                                                                         \
+            auto schema = m.m_realm.schema().find(m.schema.name);                                  \
+            auto group = m.m_realm.read_group();                                                   \
+            auto table_ref = group.get_table(schema.table_key());                                  \
+            std::apply([&](auto && ...ptr) {                                                        \
+                std::apply([&](auto&& ..._name) {                                                   \
+                    ((m.*ptr).prepare_for_query(&m.m_realm, table_ref, _name), ...);                \
+                }, managed_pointers_names);                                                         \
+            }, managed_pointers());                                                                 \
+            return m;                                                                               \
+        }                                                                                           \
+        cls detach() const {                                                                        \
+            cls v;                                                                                  \
+            auto assign = [&v, this](auto& pair) {                                                  \
+                v.*(std::decay_t<decltype(pair.first)>::ptr) = ((*this).*(pair.second)).detach();   \
+            };                                                                                      \
+            auto zipped = zipTuples(managed<cls>::schema.ps, managed<cls>::managed_pointers());     \
+            std::apply([&v, &assign, this](auto& ...pair) {                                       \
+                (assign(pair), ...);                                                                \
+            }, zipped);                                                                             \
+            return v;                                                                               \
+        }                                                                                           \
         auto observe(std::function<void(realm::experimental::object_change<managed>&&)>&& fn) { \
             auto m_object = std::make_shared<internal::bridge::object>(m_realm, m_obj);                   \
             auto wrapper = realm::experimental::ObjectChangeCallbackWrapper<managed>{ \

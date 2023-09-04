@@ -172,4 +172,53 @@ TEST_CASE("binary", "[binary]") {
         CHECK(managed_obj.list_binary_col[2] == std::vector<uint8_t>({ static_cast<uint8_t>(2) }));
         CHECK(managed_obj.list_binary_col[3] == std::vector<uint8_t>({ static_cast<uint8_t>(3) }));
     }
+
+    SECTION("operator") {
+        auto realm = realm::experimental::db(std::move(config));
+        auto obj = realm::experimental::AllTypesObject();
+        obj.binary_col.push_back(1);
+        obj.binary_col.push_back(2);
+        obj.binary_col.push_back(3);
+        auto managed_obj = realm.write([&realm, &obj] {
+            return realm.add(std::move(obj));
+        });
+        CHECK(managed_obj.binary_col.size() == 3);
+        realm.write([&managed_obj] {
+            managed_obj.binary_col.push_back(4);
+        });
+        std::vector<uint8_t> vector = managed_obj.binary_col;
+        CHECK(vector.size() == 4);
+        CHECK(vector[0] == 1);
+        CHECK(vector[1] == 2);
+        CHECK(vector[2] == 3);
+        CHECK(vector[3] == 4);
+        CHECK(vector == std::vector<uint8_t>({1, 2, 3, 4}));
+        CHECK(vector != std::vector<uint8_t>({1, 2, 3}));
+    }
+
+    SECTION("optional operator") {
+        auto realm = realm::experimental::db(std::move(config));
+        auto obj = realm::experimental::AllTypesObject();
+        CHECK(obj.opt_binary_col == std::nullopt);
+        obj.opt_binary_col = std::vector<uint8_t>();
+        obj.opt_binary_col->push_back(1);
+        obj.opt_binary_col->push_back(2);
+        obj.opt_binary_col->push_back(3);
+        auto managed_obj = realm.write([&realm, &obj] {
+            return realm.add(std::move(obj));
+        });
+        CHECK(managed_obj.opt_binary_col->size() == 3);
+        realm.write([&managed_obj] {
+            managed_obj.opt_binary_col->push_back(4);
+        });
+
+        std::optional<std::vector<uint8_t>> vector = managed_obj.opt_binary_col;
+        CHECK(vector->size() == 4);
+        CHECK((*vector)[0] == 1);
+        CHECK((*vector)[1] == 2);
+        CHECK((*vector)[2] == 3);
+        CHECK((*vector)[3] == 4);
+        CHECK(vector == std::vector<uint8_t>({1, 2, 3, 4}));
+        CHECK(vector != std::vector<uint8_t>({1, 2, 3}));
+    }
 }

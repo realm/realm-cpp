@@ -50,7 +50,7 @@ namespace realm::experimental {
         using managed<std::string>::managed_base::managed_base;
         using managed<std::string>::managed_base::operator=;
 
-        [[nodiscard]] std::string value() const;
+        [[nodiscard]] std::string detach() const;
 
         using reference = char_reference;
         using const_reference = const_char_reference;
@@ -131,16 +131,16 @@ namespace realm::experimental {
         managed& operator =(const std::optional<std::string>& v) { set(v); return *this; }
         managed& operator =(const char* v) { set(v); return *this; }
 
-        [[nodiscard]] std::optional<std::string> value() const {
+        [[nodiscard]] std::optional<std::string> detach() const {
             return m_obj->template get_optional<std::string>(m_key);
         }
 
         [[nodiscard]] std::optional<std::string> operator *() const {
-            return value();
+            return detach();
         }
 
         [[nodiscard]] operator std::optional<std::string>() const {
-            return value();
+            return detach();
         }
 
         rbool operator==(const std::optional<std::string>& rhs) const noexcept;

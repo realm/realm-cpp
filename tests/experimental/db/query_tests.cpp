@@ -17,7 +17,12 @@ namespace realm::experimental {
 
             auto create_obj = [&]() {
                 AllTypesObject obj;
+                AllTypesObjectLink link;
+                link._id = 1;
+                link.str_col = "foo";
+
                 obj._id = 123;
+                obj.opt_obj_col = &link;
                 obj.str_col = "foo bar";
                 obj.enum_col = AllTypesObject::Enum::two;
                 obj.date_col = std::chrono::system_clock::from_time_t(date);
@@ -63,6 +68,9 @@ namespace realm::experimental {
             CHECK(query_results_size(AllTypesObject, [](auto &o) {
                       return o.uuid_col != realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002");
                   }) == 0);
+
+            auto x = realm.objects<AllTypesObject>().where([](auto& o) { return o.opt_obj_col->str_col == "foo"; }).size();
+            CHECK(x == 1);
         }
 
         SECTION("tsq_greater_less_than", "[query]") {
@@ -175,6 +183,44 @@ namespace realm::experimental {
 
             res = realm.objects<AllTypesObject>().where([](auto &obj) {
                 return obj.mixed_col != std::nullopt;
+            });
+            CHECK(res.size() == 0);
+        }
+
+        SECTION("link column") {
+            auto realm = db(std::move(config));
+
+            auto obj = AllTypesObject();
+            auto obj_link = AllTypesObjectLink();
+            obj_link.str_col = "foo";
+            auto obj_link2 = StringObject();
+            obj_link2.str_col = "bar";
+
+            obj.opt_obj_col = &obj_link;
+            obj_link.str_link_col = &obj_link2;
+
+            auto managed_obj = realm.write([&]() {
+                return realm.add(std::move(obj));
+            });
+
+            auto res = realm.objects<AllTypesObject>().where([](auto &obj) {
+                return obj.opt_obj_col->str_col == "foo";
+            });
+            CHECK(res.size() == 1);
+            res = realm.objects<AllTypesObject>().where([](auto &obj) {
+                return obj.opt_obj_col->str_col == "bar";
+            });
+            CHECK(res.size() == 0);
+            res = realm.objects<AllTypesObject>().where([](auto &obj) {
+                return obj.opt_obj_col->str_col != "bar";
+            });
+            CHECK(res.size() == 1);
+            res = realm.objects<AllTypesObject>().where([](auto &obj) {
+                return obj.opt_obj_col->str_link_col->str_col == "bar";
+            });
+            CHECK(res.size() == 1);
+            res = realm.objects<AllTypesObject>().where([](auto &obj) {
+                return obj.opt_obj_col->str_link_col->str_col != "bar";
             });
             CHECK(res.size() == 0);
         }

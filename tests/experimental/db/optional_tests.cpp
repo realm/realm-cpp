@@ -34,7 +34,7 @@ namespace realm::experimental {
             CHECK(managed_obj.opt_enum_col == std::nullopt);
             CHECK(managed_obj.opt_date_col == std::nullopt);
             CHECK(managed_obj.opt_uuid_col == std::nullopt);
-            CHECK(managed_obj.opt_binary_col.value() == std::nullopt);
+            CHECK(managed_obj.opt_binary_col.detach() == std::nullopt);
             CHECK(managed_obj.opt_object_id_col == std::nullopt);
             CHECK(managed_obj.mixed_col == AllTypesObject::my_mixed());
             CHECK(managed_obj.list_mixed_col[0] == realm::mixed());

@@ -167,7 +167,7 @@ namespace realm::experimental {
         struct managed<primary_key<int64_t>> : managed_base {
             using managed<primary_key<int64_t>>::managed_base::operator=;
 
-            primary_key<int64_t> value() const {
+            primary_key<int64_t> detach() const {
                 return operator int64_t();
             }
 
@@ -193,7 +193,7 @@ namespace realm::experimental {
         struct managed<primary_key<std::string>> : managed_base {
             using managed<primary_key<std::string>>::managed_base::operator=;
 
-            primary_key<std::string> value() const {
+            primary_key<std::string> detach() const {
                 return operator std::string();
             }
 
@@ -211,7 +211,7 @@ namespace realm::experimental {
         struct managed<primary_key<realm::uuid>> : managed_base {
             using managed<primary_key<realm::uuid>>::managed_base::operator=;
 
-            primary_key<realm::uuid> value() const {
+            primary_key<realm::uuid> detach() const {
                 return operator realm::uuid();
             }
 
@@ -227,7 +227,7 @@ namespace realm::experimental {
         struct managed<primary_key<realm::object_id>> : managed_base {
             using managed<primary_key<realm::object_id>>::managed_base::operator=;
 
-            primary_key<realm::object_id> value() const {
+            primary_key<realm::object_id> detach() const {
                 return operator realm::object_id();
             }
 
@@ -243,7 +243,7 @@ namespace realm::experimental {
         struct managed<primary_key<T>, std::enable_if_t<std::is_enum_v<T>>> : managed_base {
             using managed<primary_key<int64_t>>::managed_base::operator=;
 
-            primary_key<T> value() const {
+            primary_key<T> detach() const {
                 return operator T();
             }
 
@@ -257,7 +257,7 @@ namespace realm::experimental {
                     query.equal(this->m_key, serialize(rhs));
                     return query;
                 }
-                return serialize(value().value) == serialize(rhs);
+                return serialize(detach().value) == serialize(rhs);
             }
             rbool operator!=(const T& rhs) const noexcept {
                 if (this->should_detect_usage_for_queries) {
@@ -265,7 +265,7 @@ namespace realm::experimental {
                     query.not_equal(this->m_key, serialize(rhs));
                     return query;
                 }
-                return serialize(value().value) != serialize(rhs);
+                return serialize(detach().value) != serialize(rhs);
             }
         };
 
@@ -273,7 +273,7 @@ namespace realm::experimental {
         struct managed<primary_key<std::optional<int64_t>>> : managed_base {
             using managed<primary_key<std::optional<int64_t>>>::managed_base::operator=;
 
-            primary_key<std::optional<int64_t>> value() const {
+            primary_key<std::optional<int64_t>> detach() const {
                 return operator std::optional<int64_t>();
             }
 
@@ -298,7 +298,7 @@ namespace realm::experimental {
                                                                            std::is_enum<typename T::value_type> >>> : managed_base {
             using managed<primary_key<std::optional<int64_t>>>::managed_base::operator=;
 
-            primary_key<T> value() const {
+            primary_key<T> detach() const {
                 return operator T();
             }
 
@@ -321,7 +321,7 @@ namespace realm::experimental {
                     }
                     return query;
                 }
-                return serialize(value().value) == serialize(rhs);
+                return serialize(detach().value) == serialize(rhs);
             }
             rbool operator!=(const T& rhs) const noexcept {
                 if (this->should_detect_usage_for_queries) {
@@ -333,7 +333,7 @@ namespace realm::experimental {
                     }
                     return query;
                 }
-                return serialize(value().value) != serialize(rhs);
+                return serialize(detach().value) != serialize(rhs);
             }
         };
 
@@ -341,7 +341,7 @@ namespace realm::experimental {
         struct managed<primary_key<std::optional<std::string>>> : managed_base {
             using managed<primary_key<std::optional<std::string>>>::managed_base::operator=;
 
-            primary_key<std::optional<std::string>> value() const {
+            primary_key<std::optional<std::string>> detach() const {
                 return operator std::optional<std::string>();
             }
 
@@ -359,7 +359,7 @@ namespace realm::experimental {
         struct managed<primary_key<std::optional<realm::uuid>>> : managed_base {
             using managed<primary_key<std::optional<realm::uuid>>>::managed_base::operator=;
 
-            primary_key<std::optional<realm::uuid>> value() const {
+            primary_key<std::optional<realm::uuid>> detach() const {
                 return operator std::optional<realm::uuid>();
             }
 
@@ -379,7 +379,7 @@ namespace realm::experimental {
         struct managed<primary_key<std::optional<realm::object_id>>> : managed_base {
             using managed<primary_key<std::optional<realm::object_id>>>::managed_base::operator=;
 
-            std::optional<realm::object_id> value() const {
+            std::optional<realm::object_id> detach() const {
                 return operator std::optional<realm::object_id>();
             }
 

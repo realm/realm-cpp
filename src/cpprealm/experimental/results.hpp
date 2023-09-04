@@ -24,26 +24,28 @@ namespace realm::experimental {
     struct query : public T {
     private:
         template<typename V>
-        void set_managed(V &prop, const internal::bridge::col_key &column_key) {
+        void set_managed(V &prop, const internal::bridge::col_key &column_key, internal::bridge::realm& r) {
             new(&prop.m_key) internal::bridge::col_key(column_key);
+            prop.m_realm = &r;
         }
 
         template<size_t N, typename P>
         constexpr auto
-        prepare_for_query(internal::bridge::query &query, internal::bridge::object_schema &schema, P property) {
+        prepare_for_query(internal::bridge::query &query, internal::bridge::object_schema &schema,
+                          internal::bridge::realm& r, P property) {
             if constexpr (N + 1 == std::tuple_size_v<decltype(T::managed_pointers() )>) {
                 (this->*property).prepare_for_query(query);
-                set_managed((this->*property), schema.property_for_name(T::schema.names[N]).column_key());
+                set_managed((this->*property), schema.property_for_name(T::schema.names[N]).column_key(), r);
                 return;
             } else {
                 (this->*property).prepare_for_query(query);
-                set_managed((this->*property), schema.property_for_name(T::schema.names[N]).column_key());
-                return prepare_for_query<N + 1>(query, schema, std::get<N + 1>(T::managed_pointers() ));
+                set_managed((this->*property), schema.property_for_name(T::schema.names[N]).column_key(), r);
+                return prepare_for_query<N + 1>(query, schema, r, std::get<N + 1>(T::managed_pointers() ));
             }
         }
 
-        query(internal::bridge::query &query, internal::bridge::object_schema &&schema) {
-            prepare_for_query<0>(query, schema, std::get<0>(T::managed_pointers()));
+        query(internal::bridge::query &query, internal::bridge::object_schema &&schema, internal::bridge::realm& r) {
+            prepare_for_query<0>(query, schema, r, std::get<0>(T::managed_pointers()));
         }
         template<typename>
         friend struct ::realm::experimental::results;
@@ -71,7 +73,7 @@ namespace realm::experimental {
         class iterator {
         public:
             using difference_type = size_t;
-            using value_type = T;
+            using value_type = managed<T, void>;
             using pointer = std::unique_ptr<value_type>;
             using reference = value_type &;
             using iterator_category = std::input_iterator_tag;
@@ -85,8 +87,8 @@ namespace realm::experimental {
             }
 
             reference operator*() noexcept {
-                auto obj = internal::bridge::get<internal::bridge::obj>(*m_parent, m_idx);
-                value = std::move(T::schema.create(std::move(obj), m_parent->m_parent.get_realm()));
+                internal::bridge::obj obj = internal::bridge::get<internal::bridge::obj>(m_parent->m_parent, m_idx);
+                value = managed<T, void>(std::move(obj), this->m_parent->m_parent.get_realm());
                 return value;
             }
 
@@ -112,7 +114,7 @@ namespace realm::experimental {
 
             size_t m_idx;
             results<T> *m_parent;
-            T value;
+            managed<T, void> value;
 
             template<auto>
             friend struct linking_objects;
@@ -145,7 +147,7 @@ namespace realm::experimental {
             auto group = realm.read_group();
             auto table_ref = group.get_table(schema.table_key());
             auto builder = internal::bridge::query(table_ref);
-            auto q = realm::experimental::query<experimental::managed<T>>(builder, std::move(schema));
+            auto q = realm::experimental::query<experimental::managed<T>>(builder, std::move(schema), realm);
             auto full_query = fn(q).q;
             m_parent = internal::bridge::results(m_parent.get_realm(), full_query);
             return dynamic_cast<results &>(*this);
@@ -220,7 +222,7 @@ namespace realm::experimental {
         using iterator = typename results<typename internal::ptr_type_extractor<ptr>::class_type>::iterator;
         using Class = typename internal::ptr_type_extractor<ptr>::class_type;
 
-        linking_objects<ptr> value() const {
+        linking_objects<ptr> detach() const {
             return {};
         }
 

@@ -7,6 +7,10 @@ x.y.z Release notes (yyyy-MM-dd)
 * Fix memory leak on internal::bridge::notification_token caused by missing destructor.
 * Fix memory leak on internal::bridge::binary caused by wrong destructor being called.
 * The default schema mode was incorrectly set to Automatic and not AdditiveDiscovered when using a Synced Realm.
+* Fix iterator on `experimental::Results`
+* Fix issue where properties on a link column could not be queried.
+* `operator bool()` on link properties incorrectly returned true when the link was null.
+* The default schema mode was incorrectly set to Automatic and not AdditiveDiscovered when using a Synced Realm.
 
 ### Enhancements
 * Add support for the Decimal128 data type (`realm::decimal128`).
@@ -14,9 +18,15 @@ x.y.z Release notes (yyyy-MM-dd)
 * Add user::is_logged_in()
 * Add ability to set custom http headers. The http headers should be passed when constructing a `realm::App` and when in 
   possession of a config derived from `realm::user::flexible_sync_configuration()` by calling `foo_config.set_custom_http_headers(...);`.
+* Add `operator!=()` to collections.
+* Add `set_schema_version(uint64_t)`
+* Add `managed<std::vector<T*>>::push_back(const managed<T*>&)`
+* Add `box<managed<V*>>::box& operator=(const managed<V*>& o)`
+* Add `box<managed<V*>>::box& operator=(const managed<V>& o)`
 
 ### Breaking Changes
-* None
+* `managed<>::value()` has been renamed to `managed<>::detach()` to better convey that the returned value will be unmanaged. In the case where the value is a
+  pointer type it is up to the consumer of the value to manage the lifetime of the object.
 
 ### Compatibility
 * Fileformat: Generates files with format v22.
