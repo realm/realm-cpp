@@ -24,8 +24,9 @@ namespace realm::experimental {
 
     struct CoffeeMachine {
         enum class State {
+            NEEDS_ATTENTION,
             OK,
-            NEEDS_ATTENTION
+            MAINTENANCE_MODE
         };
         primary_key<realm::object_id> _id;
         std::string location;
