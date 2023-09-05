@@ -47,7 +47,8 @@ set(SOURCES
     cpprealm/experimental/managed_binary.cpp
     cpprealm/experimental/managed_primary_key.cpp
     cpprealm/experimental/managed_decimal.cpp
-    cpprealm/experimental/types.cpp) # REALM_SOURCES
+    cpprealm/experimental/types.cpp
+    cpprealm/internal/bridge/status.cpp) # REALM_SOURCES
 
 set(HEADERS
     cpprealm/sdk.hpp
@@ -128,7 +129,8 @@ set(HEADERS
     cpprealm/experimental/sdk.hpp
     cpprealm/internal/bridge/decimal128.hpp
     cpprealm/experimental/managed_decimal.hpp
-    cpprealm/persisted_decimal128.hpp) # REALM_INSTALL_HEADERS
+    cpprealm/persisted_decimal128.hpp
+    cpprealm/internal/bridge/status.hpp) # REALM_INSTALL_HEADERS
 
 add_library(cpprealm STATIC ${SOURCES} ${HEADERS})
 include(GNUInstallDirs)

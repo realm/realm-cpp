@@ -1,4 +1,4 @@
-x.y.z Release notes (yyyy-MM-dd)
+0.3.0 Release notes (2023-09-14)
 =============================================================
 
 ### Fixed
@@ -27,12 +27,15 @@ x.y.z Release notes (yyyy-MM-dd)
 ### Breaking Changes
 * `managed<>::value()` has been renamed to `managed<>::detach()` to better convey that the returned value will be unmanaged. In the case where the value is a
   pointer type it is up to the consumer of the value to manage the lifetime of the object.
+* `sync_session::wait_for_upload_completion` & `sync_session::wait_for_download_completion` now returns a `realm::status` in its callback instead of a `std::error_code`.
+* `is_connection_level_protocol_error`, `is_session_level_protocol_error` & `is_client_error` has been removed from `realm::sync_error` and is replaced by
+  `realm::sync_error::user_info()`, `realm::sync_error::compensating_writes_info()`, & `realm::sync_error::get_status()`.
 
 ### Compatibility
 * Fileformat: Generates files with format v22.
 
 ### Internals
-* None
+* Upgraded to Core v13.20.0
 
 ----------------------------------------------
 
