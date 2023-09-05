@@ -71,7 +71,12 @@ CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
                 {
                     emit enableMachine();
                 }
-                else if (oldVal == realm::experimental::CoffeeMachine::State::OK && newVal == realm::experimental::CoffeeMachine::State::NEEDS_ATTENTION)
+                else if (oldVal == realm::experimental::CoffeeMachine::State::MAINTENANCE_MODE && newVal == realm::experimental::CoffeeMachine::State::OK)
+                {
+                    emit enableMachine();
+                }
+                else if (oldVal == realm::experimental::CoffeeMachine::State::OK && (newVal == realm::experimental::CoffeeMachine::State::NEEDS_ATTENTION ||
+                                                                                     newVal == realm::experimental::CoffeeMachine::State::MAINTENANCE_MODE))
                 {
                     emit disableMachine();
                 }
