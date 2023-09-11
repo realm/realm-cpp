@@ -107,8 +107,6 @@ else()
             experimental/db/performance_tests.cpp
             experimental/db/numeric_tests.cpp)
     target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
-    target_link_libraries(cpprealm_alpha_tests cpprealm Catch2::Catch2)
-    target_compile_definitions(cpprealm_alpha_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
 endif()
 
 target_link_libraries(cpprealm_sync_tests cpprealm Catch2::Catch2)
