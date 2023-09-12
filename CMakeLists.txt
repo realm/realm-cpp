@@ -96,8 +96,9 @@ elseif(MSVC)
     target_sources(cpprealm PRIVATE src/cpprealm/internal/network/network_transport.cpp)
 else()
     find_package(CURL REQUIRED)
+    # stdc++fs is required for GCC versions less than 9
     target_link_libraries(cpprealm PUBLIC
-            CURL::libcurl
+            CURL::libcurl stdc++fs
             )
     target_sources(cpprealm PRIVATE src/cpprealm/internal/curl/network_transport.cpp)
 endif()

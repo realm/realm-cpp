@@ -87,8 +87,6 @@ namespace realm::internal::type_info {
                     return check_variant_types<N + 1, Variant>();
                 } else if constexpr (is_primitive<std::variant_alternative_t<N, Variant>>::value) {
                     return check_variant_types<N + 1, Variant>();
-                } else if constexpr (std::is_base_of_v<object<std::variant_alternative_t<N, Variant>>, std::variant_alternative_t<N, Variant>>) {
-                    return check_variant_types<N + 1, Variant>();
                 } else {
                     return false;
                 }

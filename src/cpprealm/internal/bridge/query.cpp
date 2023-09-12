@@ -88,7 +88,7 @@ namespace realm::internal::bridge {
     }
 
     query::query(const table &table) {
-        new (&m_query) Query(static_cast<ConstTableRef>(table));
+        new (&m_query) Query(table.operator ConstTableRef());
     }
 
     query::query(const Query &v) {

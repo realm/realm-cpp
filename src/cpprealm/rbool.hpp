@@ -44,10 +44,6 @@ namespace realm::experimental {
         template <typename, typename ...> \
         friend struct realm::schemagen::schema; \
         template <typename> friend struct query;\
-        template <typename> \
-        friend struct persisted_base;     \
-        template <typename> \
-        friend struct persisted_primitive_base; \
         __friend_rbool_operators__(int64_t, >)  \
         __friend_rbool_operators__(int64_t, <) \
         __friend_rbool_operators__(int64_t, >=)   \

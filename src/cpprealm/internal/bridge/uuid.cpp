@@ -1,7 +1,7 @@
 #include <cpprealm/internal/bridge/uuid.hpp>
 #include <realm/uuid.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
-#include <cpprealm/persisted_uuid.hpp>
+#include <cpprealm/experimental/types.hpp>
 
 namespace realm::internal::bridge {
 #ifdef __i386__

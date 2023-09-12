@@ -40,8 +40,19 @@ struct ObjectChange;
 struct notification_token {
     notification_token(const notification_token &nt) noexcept = delete;
     notification_token &operator=(const notification_token &) = delete;
-    notification_token(notification_token&& nt) noexcept = default;
-    notification_token &operator=(notification_token &&other) = default;
+    notification_token(notification_token&& other) noexcept {
+        m_token = std::move(other.m_token);
+        m_dictionary = std::move(other.m_dictionary);
+        m_list = std::move(other.m_list);
+        m_realm = std::move(other.m_realm);
+    };
+    notification_token &operator=(notification_token &&other) {
+        m_token = std::move(other.m_token);
+        m_dictionary = std::move(other.m_dictionary);
+        m_list = std::move(other.m_list);
+        m_realm = std::move(other.m_realm);
+        return *this;
+    };
     notification_token() = default;
     ~notification_token() = default;
 
@@ -55,69 +66,6 @@ struct notification_token {
     std::shared_ptr<internal::bridge::dictionary> m_dictionary;
     std::shared_ptr<internal::bridge::list> m_list;
     internal::bridge::realm m_realm;
-};
-
-template <typename T>
-struct collection_change {
-    /// The list being observed.
-    const persisted<T>* collection;
-    std::vector<uint64_t> deletions;
-    std::vector<uint64_t> insertions;
-    std::vector<uint64_t> modifications;
-
-    // This flag indicates whether the underlying object which is the source of this
-    // collection was deleted. This applies to lists, dictionaries and sets.
-    // This enables notifiers to report a change on empty collections that have been deleted.
-    bool collection_root_was_deleted = false;
-
-    [[nodiscard]] bool empty() const noexcept {
-        return deletions.empty() && insertions.empty() && modifications.empty() &&
-        !collection_root_was_deleted;
-    }
-};
-
-
-template <typename T>
-struct collection_callback_wrapper : internal::bridge::collection_change_callback {
-    std::function<void(collection_change<T>)> handler;
-    persisted<T>& collection;
-    bool ignoreChangesInInitialNotification;
-
-    collection_callback_wrapper(std::function<void(collection_change<T>)> handler,
-                                persisted<T>& collection,
-                                bool ignoreChangesInInitialNotification)
-    : handler(handler)
-    , collection(collection)
-    , ignoreChangesInInitialNotification(ignoreChangesInInitialNotification)
-    {}
-
-    void before(const realm::internal::bridge::collection_change_set &c) final {}
-    void after(internal::bridge::collection_change_set const& changes) final {
-        if (ignoreChangesInInitialNotification) {
-            ignoreChangesInInitialNotification = false;
-            handler({&collection, {},{},{}});
-        }
-        else if (changes.empty()) {
-            handler({&collection, {},{},{}});
-
-        }
-        else if (!changes.collection_root_was_deleted() || !changes.deletions().empty()) {
-            handler({&collection,
-                to_vector(changes.deletions()),
-                to_vector(changes.insertions()),
-                to_vector(changes.modifications()),
-            });
-        }
-    }
-
-private:
-    std::vector<uint64_t> to_vector(const internal::bridge::index_set& index_set) {
-        auto vector = std::vector<uint64_t>();
-        for (auto index : index_set.as_indexes()) {
-            vector.push_back(index);
-        }
-        return vector;
-    };
 };
 
 // MARK: PropertyChange

@@ -93,7 +93,7 @@ namespace realm::experimental {
                                                                   false));
             token.m_realm = *m_realm;
             token.m_list = list;
-            return token;
+            return std::move(token);
         }
 
         // TODO: emulate a reference to the value.
@@ -121,7 +121,7 @@ namespace realm::experimental {
         void push_back(const T& value)
         {
             auto list = internal::bridge::list(*m_realm, *m_obj, m_key);
-            list.add(value);
+            list.add(serialize(value));
         }
         size_t size()
         {

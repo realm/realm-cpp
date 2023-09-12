@@ -590,7 +590,7 @@ namespace realm::experimental {
                             std::get<std::monostate>(*prop_change.new_value);
                         } else if (prop_change.name == "map_int_col" && prop_change.new_value) {
                             std::get<std::monostate>(*prop_change.new_value);
-                            // Cocoa does not populate collection changes for an object and neither should we for perforamnce reasons.
+                            // Cocoa does not populate collection changes for an object and neither should we for performance reasons.
                         } else if (prop_change.name == "map_bool_col" && prop_change.new_value) {
                             std::get<std::monostate>(*prop_change.new_value);
                         } else if (prop_change.name == "map_str_col" && prop_change.new_value) {
