@@ -53,7 +53,7 @@ jobs:
       matrix:
         compiler:
           - name: gcc
-            version: 8.3
+            version: 8
         configuration:
           - Debug
           - Release
@@ -125,7 +125,7 @@ jobs:
       matrix:
         compiler:
           - name: gcc
-            version: 8.3
+            version: 8
         configuration:
           - Debug
           - Release
