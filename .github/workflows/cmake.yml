@@ -46,14 +46,14 @@ jobs:
           privateApiKey: ${{ env.REALM_ATLAS_PRIVATE_API_KEY }}
 
   build-linux:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Linux ${{ matrix.configuration }} (${{ matrix.compiler.name }} ${{ matrix.compiler.version }})
     strategy:
       fail-fast: false
       matrix:
         compiler:
           - name: gcc
-            version: 8
+            version: 8.3
         configuration:
           - Debug
           - Release
@@ -118,14 +118,14 @@ jobs:
           timeout-minutes: 15
 
   build-linux-sync:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Linux Sync ${{ matrix.configuration }} (${{ matrix.compiler.name }} ${{ matrix.compiler.version }})
     strategy:
       fail-fast: false
       matrix:
         compiler:
           - name: gcc
-            version: 8
+            version: 8.3
         configuration:
           - Debug
           - Release
