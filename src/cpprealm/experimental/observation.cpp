@@ -1,8 +1,8 @@
 #include "observation.hpp"
 
 // since C++ 20
-#include <version>
 #if __cpp_coroutines
+#include <version>
 #ifdef __cpp_lib_coroutine
 #include <coroutine>
 namespace coro = std;

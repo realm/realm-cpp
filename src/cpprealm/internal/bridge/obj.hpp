@@ -7,6 +7,8 @@
 #include <memory>
 #include <optional>
 #include <string>
+
+#include <cpprealm/experimental/types.hpp>
 #include <cpprealm/internal/bridge/binary.hpp>
 #include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/decimal128.hpp>
@@ -36,8 +38,6 @@ namespace realm {
         struct obj_link;
     }
     namespace internal::type_info {
-        template <typename T, std::enable_if_t<std::is_base_of_v<object_base<T>, T>>>
-        bridge::obj_key serialize(const T& o);
         template <typename, typename>
         struct type_info;
     }
@@ -209,7 +209,7 @@ namespace realm::internal::bridge {
                     }, experimental::managed<std::remove_pointer_t<ValueType>, void>::schema.ps);
                     v2.push_back(m_obj.get_key());
                 } else {
-                    v2.push_back(persisted<ValueType, void>::serialize(v));
+                    v2.push_back(::realm::experimental::serialize(v));
                 }
             }
             set_list_values(col_key, v2);

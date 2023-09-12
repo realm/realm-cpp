@@ -69,7 +69,7 @@ namespace realm::internal::bridge {
         return reinterpret_cast<const OwnedBinaryData*>(&m_data)->data();
     }
     bool operator ==(binary const& lhs, binary const& rhs) {
-        return static_cast<OwnedBinaryData>(lhs).get() == static_cast<OwnedBinaryData>(rhs).get();
+        return lhs.operator OwnedBinaryData().get() == rhs.operator OwnedBinaryData().get();
     }
     binary::operator std::vector<uint8_t>() const {
         std::vector<uint8_t> v;

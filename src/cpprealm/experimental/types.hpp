@@ -4,7 +4,6 @@
 #include <array>
 #include <optional>
 
-#include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
 #include <cpprealm/internal/type_info.hpp>
@@ -23,6 +22,9 @@ namespace realm {
         friend struct box_base;
     };
 
+    inline bool operator ==(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid == rhs.m_uuid; }
+    inline bool operator !=(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid != rhs.m_uuid; }
+
     struct object_id {
         explicit object_id(const std::string &);
         object_id() = default;
@@ -34,6 +36,9 @@ namespace realm {
         template <typename mapped_type>
         friend struct box_base;
     };
+
+    inline bool operator ==(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id == rhs.m_object_id; }
+    inline bool operator !=(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id != rhs.m_object_id; }
 
     struct decimal128 {
         explicit decimal128(const std::string &);
@@ -249,8 +254,7 @@ namespace realm::experimental {
                 StoredType o = std::get<StoredType>(v);
                 if (!arg.m_object) {
                     auto actual_schema = realm->schema().find(StoredType::schema.name);
-                    auto group = const_cast<internal::bridge::realm&>(*realm).read_group();
-                    auto table = group.get_table(actual_schema.table_key());
+                    auto table = const_cast<internal::bridge::realm&>(*realm).get_table(actual_schema.table_key());
                     o.manage(table, *realm);
                 }
                 return internal::bridge::mixed(o.m_object->get_obj().get_key());
@@ -278,11 +282,11 @@ namespace realm::experimental {
         } else if constexpr (std::disjunction_v<std::is_same<T, double>, std::is_same<T, float>>) {
             return static_cast<double>(value);
         } else if constexpr (std::is_same_v<T, realm::uuid>) {
-            return static_cast<internal::bridge::uuid>(value).operator ::realm::uuid();
+            return value.operator internal::bridge::uuid().operator ::realm::uuid();
         } else if constexpr (std::is_same_v<T, realm::object_id>) {
-            return static_cast<internal::bridge::object_id>(value).operator ::realm::object_id();
+            return value.operator internal::bridge::object_id().operator ::realm::object_id();
         } else if constexpr (std::is_same_v<T, realm::decimal128>) {
-            return static_cast<internal::bridge::decimal128>(value).operator ::realm::decimal128();
+            return value.operator internal::bridge::decimal128() .operator ::realm::decimal128();
         } else if constexpr (std::is_enum_v<T>) {
             return static_cast<T>(value.operator int64_t());
         } else {
@@ -312,14 +316,13 @@ namespace realm::experimental {
             case internal::bridge::data_type::Double:
                 return static_cast<double>(value);
             case internal::bridge::data_type::UUID:
-                return static_cast<internal::bridge::uuid>(value).operator ::realm::uuid();
+                return value.operator internal::bridge::uuid().operator ::realm::uuid();
             case internal::bridge::data_type::ObjectId:
-                return static_cast<internal::bridge::object_id>(value).operator ::realm::object_id();
+                return value.operator internal::bridge::object_id().operator ::realm::object_id();
             case internal::bridge::data_type::Decimal:
-                return static_cast<internal::bridge::decimal128>(value).operator ::realm::decimal128();
+                return value.operator internal::bridge::decimal128().operator ::realm::decimal128();
             case internal::bridge::data_type::TypedLink:
                 abort();
-                //                REALM_TERMINATE("Objects stored in mixed properties must be accessed via `get_object_value()`");
             default:
                 abort();
         }

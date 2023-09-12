@@ -1,7 +1,10 @@
 #include <realm/object_id.hpp>
 #include <realm/string_data.hpp>
+#include <realm/object_id.hpp>
+#include <cpprealm/experimental/types.hpp>
+
 #include <cpprealm/internal/bridge/utils.hpp>
-#include <cpprealm/persisted_object_id.hpp>
+#include <cpprealm/internal/bridge/object_id.hpp>
 
 namespace realm::internal::bridge {
 #ifdef __i386__
