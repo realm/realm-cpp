@@ -46,52 +46,62 @@ jobs:
           privateApiKey: ${{ env.REALM_ATLAS_PRIVATE_API_KEY }}
 
   build-linux:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     name: Linux ${{ matrix.configuration }} (${{ matrix.compiler.name }} ${{ matrix.compiler.version }})
     strategy:
       fail-fast: false
       matrix:
         compiler:
           - name: gcc
-            version: 8
+            version: "8.3"
+          - name: gcc
+            version: "9.1"
+          - name: gcc
+            version: "10.1"
+          - name: gcc
+            version: "11.1"
+          - name: gcc
+            version: "12.1"
+          - name: clang
+            version: 15
         configuration:
           - Debug
           - Release
     needs:
       - deploy-cluster
-    env:
-      REALM_ATLAS_CLUSTER_NAME: ${{ needs.deploy-cluster.outputs.clusterName }}
+    container:
+      image: ${{ matrix.compiler.name == 'clang' && 'silkeh/clang' || matrix.compiler.name }}:${{ matrix.compiler.version }}
+      env:
+        REALM_ATLAS_CLUSTER_NAME: ${{ needs.deploy-cluster.outputs.clusterName }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: 'recursive'
+      - name: Install Linux Dependencies
+        run: |
+          apt-get update
+          apt-get install -y \
+            git \
+            libcurl4-openssl-dev \
+            libssl-dev \
+            libuv1-dev \
+            ninja-build \
+            sudo \
+            zlib1g-dev
 
       - name: Setup Ccache
         uses: hendrikmuhs/ccache-action@v1.1
         with:
           key: ccache-linux-${{ matrix.compiler.name }}-${{ matrix.compiler.version }}
       
-      - name: Install Linux Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libcurl4-openssl-dev \
-            libssl-dev \
-            libuv1-dev \
-            ninja-build \
-            zlib1g-dev \
-            ${{ matrix.compiler.name }}-${{ matrix.compiler.version }}
-
-      - name: Setup GCC ${{ matrix.compiler.version }}
-        if: matrix.compiler.name == 'gcc'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y g++-${{ matrix.compiler.version }}
-          sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-${{ matrix.compiler.version }} 100
-          sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-${{ matrix.compiler.version }} 100
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v1.13
+        with:
+          cmake-version: latest
 
       - uses: ammaraskar/gcc-problem-matcher@master
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
 
       - name: Configure
         run: cmake --preset linux -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF}
@@ -104,7 +114,7 @@ jobs:
         run: ./cpprealm_db_tests
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v3
+        uses: mikepenz/action-junit-report@v4
         if: always()
         with:
           report_paths: '.build/**/TestResults.xml'
