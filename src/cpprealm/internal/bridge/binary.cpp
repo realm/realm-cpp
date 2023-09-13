@@ -71,6 +71,9 @@ namespace realm::internal::bridge {
     bool operator ==(binary const& lhs, binary const& rhs) {
         return lhs.operator OwnedBinaryData().get() == rhs.operator OwnedBinaryData().get();
     }
+    bool operator !=(binary const& lhs, binary const& rhs) {
+        return lhs.operator OwnedBinaryData().get() != rhs.operator OwnedBinaryData().get();
+    }
     binary::operator std::vector<uint8_t>() const {
         std::vector<uint8_t> v;
         for (size_t i = 0; i < size(); i++) {

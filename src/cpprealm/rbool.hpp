@@ -3,6 +3,7 @@
 
 #include <cpprealm/schema.hpp>
 #include <cpprealm/internal/bridge/query.hpp>
+#include <cpprealm/experimental/db.hpp>
 
 namespace realm::experimental {
     template<typename>
@@ -182,6 +183,21 @@ namespace realm {
                 b = r.b;
         }
     };
+
+    inline rbool operator &&(const rbool& lhs, const rbool& rhs) {
+        if (lhs.is_for_queries) {
+            lhs.q.and_query(rhs.q);
+            return lhs;
+        }
+        return lhs.b && rhs.b;
+    }
+    inline rbool operator ||(const rbool& lhs, const rbool& rhs) {
+        if (lhs.is_for_queries) {
+            lhs.q = lhs.q || rhs.q;
+            return lhs;
+        }
+        return lhs.b && rhs.b;
+    }
 }
 
 #endif //CPPREALM_RBOOL_HPP

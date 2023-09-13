@@ -27,9 +27,9 @@
 #include <cpprealm/internal/bridge/schema.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 
-#include <cpprealm/results.hpp>
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/experimental/results.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm {
     template <typename>
@@ -90,7 +90,7 @@ namespace realm {
             auto builder = internal::bridge::query(table_ref);
 
             if (query_fn) {
-                auto q = realm::query<T>(builder, std::move(schema));
+                auto q = realm::experimental::query<T>(builder, std::move(schema));
                 auto full_query = (*query_fn)(q).q;
                 insert_or_assign(name, full_query);
             } else {

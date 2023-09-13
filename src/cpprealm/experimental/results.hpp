@@ -8,8 +8,6 @@
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/schema.hpp>
 
-#include <cpprealm/persisted.hpp>
-
 namespace realm {
     class rbool;
     struct mutable_sync_subscription_set;

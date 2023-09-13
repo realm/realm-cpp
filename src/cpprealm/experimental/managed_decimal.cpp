@@ -1,6 +1,6 @@
 #include <cpprealm/experimental/managed_decimal.hpp>
-#include <cpprealm/persisted.hpp>
 #include <cpprealm/internal/bridge/decimal128.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm::experimental {
     __cpprealm_build_experimental_query(==, equal, realm::decimal128);

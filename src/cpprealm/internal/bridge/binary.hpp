@@ -39,6 +39,7 @@ namespace realm::internal::bridge {
     };
 
     bool operator ==(const binary& lhs, const binary& rhs);
+    bool operator !=(const binary& lhs, const binary& rhs);
 }
 
 #endif //CPP_REALM_BRIDGE_BINARY_HPP
