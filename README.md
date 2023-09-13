@@ -117,6 +117,9 @@ The API reference is located [here](https://www.mongodb.com/docs/realm-sdks/cpp/
 
 ### MacOS / Linux / Windows
 
+-DREALM_USE_SYSTEM_OPENSSL=ON & `stdc++fs` is required for GCC versions lower than GCC 10
+
+
 Prerequisites:
 
 * git, cmake, cxx17

@@ -39,13 +39,13 @@ set(SOURCES
     cpprealm/experimental/managed_binary.cpp
     cpprealm/experimental/managed_primary_key.cpp
     cpprealm/experimental/managed_decimal.cpp
-    cpprealm/experimental/types.cpp) # REALM_SOURCES
+    cpprealm/experimental/types.cpp
+    cpprealm/experimental/db.cpp) # REALM_SOURCES
 
 set(HEADERS
     cpprealm/sdk.hpp
     cpprealm/app.hpp
     cpprealm/results.hpp
-    cpprealm/db.hpp
     cpprealm/logger.hpp
     cpprealm/notifications.hpp
     cpprealm/object.hpp

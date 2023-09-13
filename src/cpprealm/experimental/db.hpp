@@ -3,21 +3,45 @@
 
 #include <cpprealm/experimental/accessors.hpp>
 
-#include <realm/db.hpp>
 #include <realm/transaction.hpp>
 #include <realm/object-store/property.hpp>
 
-#include <cpprealm/db.hpp>
-#include <cpprealm/persisted.hpp>
 #include <cpprealm/schema.hpp>
+
+#include <cpprealm/internal/bridge/sync_session.hpp>
+#include <cpprealm/scheduler.hpp>
+#include <cpprealm/thread_safe_reference.hpp>
 
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/experimental/results.hpp>
 #include <cpprealm/experimental/types.hpp>
 
+#include <filesystem>
 #include <optional>
 #include <string>
 #include <utility>
+
+namespace realm {
+    namespace cpprealm {
+        constexpr size_t npos = size_t(-1);
+    }
+    namespace {
+        template<typename T>
+        using is_optional = internal::type_info::is_optional<T>;
+    }
+    namespace schemagen {
+        template <typename Class, typename ...Properties>
+        struct schema;
+        template <auto Ptr, bool IsPrimaryKey>
+        struct property;
+    }
+
+    using sync_config = internal::bridge::realm::sync_config;
+    using db_config = internal::bridge::realm::config;
+    using sync_session = internal::bridge::sync_session;
+
+    struct sync_subscription_set;
+}
 
 namespace realm::experimental {
 
@@ -124,9 +148,7 @@ namespace realm::experimental {
             return m_realm.refresh();
         }
 
-        sync_subscription_set subscriptions() {
-            return sync_subscription_set(m_realm);
-        }
+        ::realm::sync_subscription_set subscriptions();
 
         /**
         An object encapsulating an Atlas App Services "session". Sessions represent the

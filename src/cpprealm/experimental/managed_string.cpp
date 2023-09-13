@@ -1,5 +1,6 @@
 #include <cpprealm/experimental/managed_string.hpp>
-#include <cpprealm/persisted.hpp>
+#include <cpprealm/experimental/db.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm::experimental {
     using managed_string = managed<std::string>;

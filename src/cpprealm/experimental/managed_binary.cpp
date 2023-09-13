@@ -1,5 +1,5 @@
 #include <cpprealm/experimental/managed_binary.hpp>
-#include <cpprealm/persisted.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm::experimental {
     std::vector<uint8_t> managed<std::vector<uint8_t>>::detach() const {

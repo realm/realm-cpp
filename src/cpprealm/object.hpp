@@ -23,6 +23,8 @@
 #include <cpprealm/thread_safe_reference.hpp>
 #include <cpprealm/schema.hpp>
 #include <cpprealm/internal/type_info.hpp>
+#include <cpprealm/schema.hpp>
+#include <cpprealm/rbool.hpp>
 
 #include <any>
 #include <iostream>

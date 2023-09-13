@@ -21,14 +21,13 @@
 
 #include <utility>
 
-#include <cpprealm/persisted.hpp>
 #include <cpprealm/schema.hpp>
 #include <cpprealm/results.hpp>
 #include <cpprealm/notifications.hpp>
 #include <cpprealm/asymmetric_object.hpp>
 #include <cpprealm/object.hpp>
 #include <cpprealm/app.hpp>
-#include <cpprealm/db.hpp>
+#include <cpprealm/flex_sync.hpp>
 #include <cpprealm/thread_safe_reference.hpp>
 #include <cpprealm/rbool.hpp>
 

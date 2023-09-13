@@ -126,7 +126,7 @@ namespace realm {
             }
             bool operator ==(const managed<T>& rhs) const {
                 if (*this->m_realm != rhs.m_realm)
-                    return false;                
+                    return false;
                 return m_obj->get_linked_object(m_key).get_key() == rhs.m_obj.get_key();
             }
 
