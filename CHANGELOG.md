@@ -1,4 +1,4 @@
-0.3.0 Release notes (2023-09-14)
+0.3.0 Release notes (2023-09-15)
 =============================================================
 
 ### Fixed
@@ -30,12 +30,13 @@
 * `sync_session::wait_for_upload_completion` & `sync_session::wait_for_download_completion` now returns a `realm::status` in its callback instead of a `std::error_code`.
 * `is_connection_level_protocol_error`, `is_session_level_protocol_error` & `is_client_error` has been removed from `realm::sync_error` and is replaced by
   `realm::sync_error::user_info()`, `realm::sync_error::compensating_writes_info()`, & `realm::sync_error::get_status()`.
+* Data ingest Realms must now specify a schema containing the Asymmetric objects and their dependencies e.g `experimental::open<experimental::AllTypesAsymmetricObject, experimental::EmbeddedFoo>(user.flexible_sync_configuration())`.
 
 ### Compatibility
 * Fileformat: Generates files with format v22.
 
 ### Internals
-* Upgraded to Core v13.20.0
+* Upgraded to Core v13.20.1
 
 ----------------------------------------------
 

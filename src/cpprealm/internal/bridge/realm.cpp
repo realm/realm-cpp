@@ -202,6 +202,13 @@ namespace realm::internal::bridge {
         reinterpret_cast<RealmConfig*>(&m_config)->schema_mode = static_cast<::realm::SchemaMode>(mode);
     }
 
+    std::optional<schema> realm::config::get_schema() {
+        if (auto s = reinterpret_cast<RealmConfig*>(&m_config)->schema) {
+            return *s;
+        }
+        return std::nullopt;
+    }
+
     schema realm::schema() const {
         return m_realm->schema();
     }

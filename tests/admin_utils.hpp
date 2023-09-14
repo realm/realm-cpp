@@ -73,7 +73,7 @@ struct Session {
 
     const std::string& base_url() const { return m_base_url; }
 
-    std::string create_app(bson::BsonArray queryable_fields = {}, std::string name = "test");
+    std::string create_app(bson::BsonArray queryable_fields = {}, std::string name = "test", bool is_asymmetric = false);
     [[nodiscard]] std::string cached_app_id() const;
     void cache_app_id(const std::string& app_id);
 private:

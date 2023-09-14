@@ -37,15 +37,15 @@ namespace realm::internal::bridge {
 
     private:
 #ifdef __i386__
-        std::aligned_storage<4, 8>::type m_error_category[1];
+        std::aligned_storage<4, 4>::type m_error_category[1];
 #elif __arm__
-        std::aligned_storage<4, 8>::type m_error_category[1];
+        std::aligned_storage<4, 4>::type m_error_category[1];
 #elif __x86_64__
-        std::aligned_storage<4, 8>::type m_error_category[1];
+        std::aligned_storage<4, 4>::type m_error_category[1];
 #elif __aarch64__
-        std::aligned_storage<4, 8>::type m_error_category[1];
+        std::aligned_storage<4, 4>::type m_error_category[1];
 #elif _WIN32
-        std::aligned_storage<4, 8>::type m_error_category[1];
+        std::aligned_storage<4, 4>::type m_error_category[1];
 #endif
     };
 
@@ -251,9 +251,9 @@ namespace realm::internal::bridge {
 
     private:
     #ifdef __i386__
-        std::aligned_storage<4, 8>::type m_status[1];
+        std::aligned_storage<4, 4>::type m_status[1];
     #elif __arm__
-        std::aligned_storage<4, 8>::type m_status[1];
+        std::aligned_storage<4, 4>::type m_status[1];
     #elif __x86_64__
         std::aligned_storage<8, 8>::type m_status[1];
     #elif __aarch64__
