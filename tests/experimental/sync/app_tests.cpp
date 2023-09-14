@@ -28,4 +28,14 @@ TEST_CASE("app", "[sync]") {
         user_from_app = app.get_current_user();
         CHECK(user == user_from_app);
     }
+
+    SECTION("clear_cached_apps") {
+        auto temp_app_id = Admin::shared().create_app({"str_col", "_id"});
+        auto temp_app = realm::App(temp_app_id, Admin::shared().base_url());
+        auto cached_app = temp_app.get_cached_app(temp_app_id, Admin::shared().base_url());
+        CHECK(cached_app.has_value());
+        app.clear_cached_apps();
+        cached_app = temp_app.get_cached_app(temp_app_id, Admin::shared().base_url());
+        CHECK(cached_app.has_value() == false);
+    }
 }
