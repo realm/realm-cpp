@@ -26,7 +26,8 @@ namespace realm::experimental {
         internal::bridge::realm m_realm;
         explicit db(realm::db_config config)
         {
-            config.set_schema(db::schemas);
+            if (!config.get_schema())
+                config.set_schema(db::schemas);
             m_realm = internal::bridge::realm(config);
         }
 

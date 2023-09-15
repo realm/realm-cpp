@@ -309,7 +309,7 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
 
 }
 
-std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::string app_name) {
+std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::string app_name, bool is_asymmetric) {
     auto info = static_cast<bson::BsonDocument>(apps.post({{"name", app_name}}));
     app_name = static_cast<std::string>(info["client_app_id"]);
     if (m_cluster_name) {
@@ -480,8 +480,8 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
             }
     };
 
-    static_cast<void>(app["schemas"].post(std::move(asymmetricObject)));
-    static_cast<void>(app["schemas"].post(std::move(userData)));
+    if (is_asymmetric)
+        static_cast<void>(app["schemas"].post(std::move(asymmetricObject)));
 
     bson::BsonDocument mongodb_service_response(app["services"].post({
         {"name", util::format("db-%1", app_name)},
@@ -529,7 +529,7 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
     }
 
     auto config = app["sync"]["config"];
-    config.put({{"development_mode_enabled", true}});
+    config.put({{"is_recovery_mode_disabled", true}});
 
     bson::BsonDocument user_data_rule = {
         {"database", "test_data"},
@@ -578,6 +578,8 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
         {"collection_name", "UserData"},
         {"user_id_field", "user_id"},
     });
+    app["sync"]["config"].put({{"development_mode_enabled", true}});
+
     return *static_cast<std::optional<std::string>>(info["client_app_id"]);
 }
 

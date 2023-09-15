@@ -136,7 +136,7 @@ namespace realm::internal::bridge {
         new (&m_object) Object(realm, link);
     }
     obj object::get_obj() const {
-        return reinterpret_cast<const Object*>(&m_object)->obj();
+        return reinterpret_cast<const Object*>(&m_object)->get_obj();
     }
     list object::get_list(const col_key& col_key) const {
         return List(get_realm(), get_obj(), col_key);

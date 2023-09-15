@@ -7,10 +7,10 @@ using namespace realm;
 
 TEST_CASE("asymmetric object", "[sync_beta]") {
     SECTION("basic", "[sync]") {
-        auto asymmetric_app_id = Admin::shared().create_app();
+        auto asymmetric_app_id = Admin::shared().create_app({}, "test", true);
         auto app = realm::App(asymmetric_app_id, Admin::shared().base_url());
         auto user = app.login(realm::App::credentials::anonymous()).get();
-        auto synced_realm = experimental::db(user.flexible_sync_configuration());
+        auto synced_realm = experimental::open<experimental::AllTypesAsymmetricObject, experimental::EmbeddedFoo>(user.flexible_sync_configuration());
 
         auto obj = experimental::AllTypesAsymmetricObject();
         const realm::object_id oid = realm::object_id::generate();

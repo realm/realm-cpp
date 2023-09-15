@@ -149,7 +149,7 @@ namespace realm::internal {
             long http_code = 0;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
             return {
-                    http_code,
+                    static_cast<int>(http_code),
                     0, // binding_response_code
                     std::move(response_headers),
                     std::move(response),

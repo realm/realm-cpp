@@ -71,21 +71,21 @@ struct app_error {
     [[nodiscard]] bool is_client_error() const;
 private:
 #ifdef __i386__
-    std::aligned_storage<28, 4>::type m_error[1];
+    std::aligned_storage<40, 4>::type m_error[1];
 #elif _WIN32
     #if _DEBUG
-    std::aligned_storage<80, 8>::type m_error[1];
+    std::aligned_storage<120, 8>::type m_error[1];
     #else
-    std::aligned_storage<72, 8>::type m_error[1];
+    std::aligned_storage<104, 8>::type m_error[1];
     #endif   
 #elif __x86_64__
     #if defined(__clang__)
 std::aligned_storage<48, 8>::type m_error[1];
     #elif defined(__GNUC__) || defined(__GNUG__)
-std::aligned_storage<56, 8>::type m_error[1];
+std::aligned_storage<88, 8>::type m_error[1];
     #endif
 #elif __arm__
-    std::aligned_storage<28, 4>::type m_error[1];
+    std::aligned_storage<40, 4>::type m_error[1];
 #elif __aarch64__
 #if defined(__clang__)
     std::aligned_storage<48, 8>::type m_error[1];
