@@ -44,6 +44,4 @@ cc_binary {
     defaults: ["realm_consumer_defaults", "realm_cpp_defaults", "realm_defaults"],
     srcs: ["test.cpp"],
     static_libs: ["realm-cpp", "realm"],
-    rtti: true,
-    cppflags: ["-fexceptions"]
 }
