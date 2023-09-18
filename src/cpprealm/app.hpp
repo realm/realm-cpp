@@ -269,8 +269,11 @@ public:
     void login(const credentials& credentials, std::function<void(user, std::optional<app_error>)>&& callback);
     [[nodiscard]] internal::bridge::sync_manager get_sync_manager() const;
     [[nodiscard]] std::optional<user> get_current_user() const;
+    void clear_cached_apps();
+    std::optional<App> get_cached_app(const std::string& app_id, const std::optional<std::string>& base_url);
 private:
     std::shared_ptr<app::App> m_app;
+    App(std::shared_ptr<app::App>&& a) : m_app(std::move(a)) { }
 };
 
 }

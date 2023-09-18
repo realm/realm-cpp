@@ -23,6 +23,7 @@
 * Add `managed<std::vector<T*>>::push_back(const managed<T*>&)`
 * Add `box<managed<V*>>::box& operator=(const managed<V*>& o)`
 * Add `box<managed<V*>>::box& operator=(const managed<V>& o)`
+* Add `App::clear_cached_apps()` and `App::get_cached_app(const std::string& app_id, const std::optional<std::string>& base_url);`.
 
 ### Breaking Changes
 * `managed<>::value()` has been renamed to `managed<>::detach()` to better convey that the returned value will be unmanaged. In the case where the value is a

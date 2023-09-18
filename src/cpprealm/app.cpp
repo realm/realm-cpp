@@ -427,4 +427,15 @@ namespace realm {
         }
         return std::nullopt;
     }
+
+    void App::clear_cached_apps() {
+        m_app->clear_cached_apps();
+    }
+    std::optional<App> App::get_cached_app(const std::string& app_id, const std::optional<std::string>& base_url) {
+        if (auto a = m_app->get_cached_app(app_id, base_url)) {
+            return App(std::move(a));
+        }
+        return std::nullopt;
+    }
+
 }
