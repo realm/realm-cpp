@@ -39,7 +39,7 @@
 
 #include <realm/util/base64.hpp>
 
-#include <iostream>
+#include <sstream>
 
 namespace realm {
 #if __APPLE__ || __MACH__

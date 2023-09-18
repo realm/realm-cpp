@@ -147,6 +147,7 @@ namespace realm::internal {
                 break;
             case app::HttpMethod::del:
                 method = realm::sync::HTTPMethod::Delete;
+                break;
             default:
                 REALM_UNREACHABLE();
         }
