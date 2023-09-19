@@ -7,49 +7,53 @@
 
 #include <utility>
 
-namespace realm {
-
-#ifdef __i386__
-    static_assert(internal::bridge::SizeCheck<8, sizeof(realm::app::AppCredentials)>{});
-    static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppCredentials)>{});
-    static_assert(internal::bridge::SizeCheck<28, sizeof(realm::app::AppError)>{});
-    static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppError)>{});
+namespace realm::internal::bridge {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::AppCredentials, ::realm::app::AppCredentials>{});
+    static_assert(LayoutCheck<storage::AppError, ::realm::app::AppError>{});
+#elif __i386__
+    static_assert(SizeCheck<8, sizeof(realm::app::AppCredentials)>{});
+    static_assert(SizeCheck<4, alignof(realm::app::AppCredentials)>{});
+    static_assert(SizeCheck<28, sizeof(realm::app::AppError)>{});
+    static_assert(SizeCheck<4, alignof(realm::app::AppError)>{});
 #elif __x86_64__
-    static_assert(internal::bridge::SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
-    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppCredentials)>{});
+    static_assert(SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
+    static_assert(SizeCheck<8, alignof(realm::app::AppCredentials)>{});
     #if defined(__clang__)
-    static_assert(internal::bridge::SizeCheck<48, sizeof(realm::app::AppError)>{});
-    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
+    static_assert(SizeCheck<48, sizeof(realm::app::AppError)>{});
+    static_assert(SizeCheck<8, alignof(realm::app::AppError)>{});
     #elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(internal::bridge::SizeCheck<56, sizeof(realm::app::AppError)>{});
-    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
+    static_assert(SizeCheck<56, sizeof(realm::app::AppError)>{});
+    static_assert(SizeCheck<8, alignof(realm::app::AppError)>{});
     #endif
 #elif __arm__
-    static_assert(internal::bridge::SizeCheck<8, sizeof(realm::app::AppCredentials)>{});
-    static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppCredentials)>{});
-    static_assert(internal::bridge::SizeCheck<28, sizeof(realm::app::AppError)>{});
-    static_assert(internal::bridge::SizeCheck<4, alignof(realm::app::AppError)>{});
+    static_assert(SizeCheck<8, sizeof(realm::app::AppCredentials)>{});
+    static_assert(SizeCheck<4, alignof(realm::app::AppCredentials)>{});
+    static_assert(SizeCheck<28, sizeof(realm::app::AppError)>{});
+    static_assert(SizeCheck<4, alignof(realm::app::AppError)>{});
 #elif __aarch64__
-    static_assert(internal::bridge::SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
-    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppCredentials)>{});
+    static_assert(SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
+    static_assert(SizeCheck<8, alignof(realm::app::AppCredentials)>{});
 #if defined(__clang__)
-    static_assert(internal::bridge::SizeCheck<48, sizeof(realm::app::AppError)>{});
+    static_assert(SizeCheck<48, sizeof(realm::app::AppError)>{});
 #elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(internal::bridge::SizeCheck<56, sizeof(realm::app::AppError)>{});
+    static_assert(SizeCheck<56, sizeof(realm::app::AppError)>{});
 #endif
-    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
+    static_assert(SizeCheck<8, alignof(realm::app::AppError)>{});
 #elif _WIN32
     #if _DEBUG
-    static_assert(internal::bridge::SizeCheck<80, sizeof(realm::app::AppError)>{});
+    static_assert(SizeCheck<80, sizeof(realm::app::AppError)>{});
     #else
-    static_assert(internal::bridge::SizeCheck<72, sizeof(realm::app::AppError)>{});
+    static_assert(SizeCheck<72, sizeof(realm::app::AppError)>{});
     #endif
-    static_assert(internal::bridge::SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
-    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppCredentials)>{});
+    static_assert(SizeCheck<16, sizeof(realm::app::AppCredentials)>{});
+    static_assert(SizeCheck<8, alignof(realm::app::AppCredentials)>{});
     
-    static_assert(internal::bridge::SizeCheck<8, alignof(realm::app::AppError)>{});
+    static_assert(SizeCheck<8, alignof(realm::app::AppError)>{});
 #endif
+} // namespace realm::internal::bridge
 
+namespace realm {
     static_assert((int)user::state::logged_in == (int)SyncUser::State::LoggedIn);
     static_assert((int)user::state::logged_out == (int)SyncUser::State::LoggedOut);
     static_assert((int)user::state::removed == (int)SyncUser::State::Removed);

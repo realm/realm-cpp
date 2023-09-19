@@ -5,7 +5,9 @@ set(BRIDGE_TYPE_REQUIRED_HEADERS
     realm/object-store/list.hpp
     realm/object-store/results.hpp
     realm/object-store/thread_safe_reference.hpp
+    realm/object-store/sync/app.hpp
     realm/sync/config.hpp
+    realm/sync/subscriptions.hpp
 )
 
 set(BRIDGE_TYPES
@@ -39,6 +41,10 @@ set(BRIDGE_TYPES
     ThreadSafeReference realm::ThreadSafeReference
     Timestamp realm::Timestamp
     UUID realm::UUID
+    AppCredentials realm::app::AppCredentials
+    AppError realm::app::AppError
+    SyncSubscriptionSet realm::sync::SubscriptionSet
+    MutableSyncSubscriptionSet realm::sync::MutableSubscriptionSet
 )
 
 while(BRIDGE_TYPES)
@@ -56,4 +62,11 @@ endforeach()
 
 configure_file(bridge_type_info_generator.cpp.in bridge_type_info_generator.cpp)
 add_library(BridgeTypeInfoGenerator STATIC ${CMAKE_CURRENT_BINARY_DIR}/bridge_type_info_generator.cpp)
+
+if(MSVC)
+    target_compile_options(BridgeTypeInfoGenerator PRIVATE /O0)
+else()
+    target_compile_options(BridgeTypeInfoGenerator PRIVATE -O0)
+endif()
+
 target_link_libraries(BridgeTypeInfoGenerator Realm::Storage)

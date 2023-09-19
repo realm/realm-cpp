@@ -2,49 +2,55 @@
 #include <realm/object-store/shared_realm.hpp>
 #include <realm/sync/subscriptions.hpp>
 
-namespace realm {
-#ifdef __i386__
-    static_assert(internal::bridge::SizeCheck<60, sizeof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<4, alignof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<116, sizeof(sync::MutableSubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<4, alignof(sync::MutableSubscriptionSet)>{});
+namespace realm::internal::bridge {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::SyncSubscriptionSet, sync::SubscriptionSet>{});
+    static_assert(LayoutCheck<storage::MutableSyncSubscriptionSet, sync::MutableSubscriptionSet>{});
+#elif __i386__
+    static_assert(SizeCheck<60, sizeof(sync::SubscriptionSet)>{});
+    static_assert(SizeCheck<4, alignof(sync::SubscriptionSet)>{});
+    static_assert(SizeCheck<116, sizeof(sync::MutableSubscriptionSet)>{});
+    static_assert(SizeCheck<4, alignof(sync::MutableSubscriptionSet)>{});
 #elif __x86_64__
     #if defined(__clang__)
-    static_assert(internal::bridge::SizeCheck<96, sizeof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<184, sizeof(sync::MutableSubscriptionSet)>{});
+    static_assert(SizeCheck<96, sizeof(sync::SubscriptionSet)>{});
+    static_assert(SizeCheck<184, sizeof(sync::MutableSubscriptionSet)>{});
     #elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(internal::bridge::SizeCheck<104, sizeof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<192, sizeof(sync::MutableSubscriptionSet)>{});
+    static_assert(SizeCheck<104, sizeof(sync::SubscriptionSet)>{});
+    static_assert(SizeCheck<192, sizeof(sync::MutableSubscriptionSet)>{});
     #endif
-    static_assert(internal::bridge::SizeCheck<8, alignof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
+    static_assert(SizeCheck<8, alignof(sync::SubscriptionSet)>{});
+    static_assert(SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
 #elif __arm__
-    static_assert(internal::bridge::SizeCheck<64, sizeof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<8, alignof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<136, sizeof(sync::MutableSubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
+    static_assert(SizeCheck<64, sizeof(sync::SubscriptionSet)>{});
+    static_assert(SizeCheck<8, alignof(sync::SubscriptionSet)>{});
+    static_assert(SizeCheck<136, sizeof(sync::MutableSubscriptionSet)>{});
+    static_assert(SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
 #elif __aarch64__
 #if defined(__clang__)
-    static_assert(internal::bridge::SizeCheck<96, sizeof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<184, sizeof(sync::MutableSubscriptionSet)>{});
+    static_assert(SizeCheck<96, sizeof(sync::SubscriptionSet)>{});
+    static_assert(SizeCheck<184, sizeof(sync::MutableSubscriptionSet)>{});
 #elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(internal::bridge::SizeCheck<104, sizeof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<192, sizeof(sync::MutableSubscriptionSet)>{});
+    static_assert(SizeCheck<104, sizeof(sync::SubscriptionSet)>{});
+    static_assert(SizeCheck<192, sizeof(sync::MutableSubscriptionSet)>{});
 #endif
-    static_assert(internal::bridge::SizeCheck<8, alignof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
+    static_assert(SizeCheck<8, alignof(sync::SubscriptionSet)>{});
+    static_assert(SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
 #elif _WIN32
-    static_assert(internal::bridge::SizeCheck<8, alignof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
+    static_assert(SizeCheck<8, alignof(sync::SubscriptionSet)>{});
+    static_assert(SizeCheck<8, alignof(sync::MutableSubscriptionSet)>{});
 
     #if _DEBUG
-    static_assert(internal::bridge::SizeCheck<120, sizeof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<208, sizeof(sync::MutableSubscriptionSet)>{});
+    static_assert(SizeCheck<120, sizeof(sync::SubscriptionSet)>{});
+    static_assert(SizeCheck<208, sizeof(sync::MutableSubscriptionSet)>{});
     #else
-    static_assert(internal::bridge::SizeCheck<104, sizeof(sync::SubscriptionSet)>{});
-    static_assert(internal::bridge::SizeCheck<192, sizeof(sync::MutableSubscriptionSet)>{});
+    static_assert(SizeCheck<104, sizeof(sync::SubscriptionSet)>{});
+    static_assert(SizeCheck<192, sizeof(sync::MutableSubscriptionSet)>{});
     #endif
 #endif
+} // namespace realm::internal::bridge
+
+namespace realm {
     sync_subscription::sync_subscription(const sync::Subscription &v)
     {
        identifier = v.id.to_string();
