@@ -124,7 +124,9 @@ namespace realm::internal::bridge {
         query& not_equal(col_key column_key, bool value);
         using underlying = Query;
     private:
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::Query m_query[1];
+#elif __i386__
         std::aligned_storage<68, 4>::type m_query[1];
 #elif __x86_64__
     #if defined(__clang__)

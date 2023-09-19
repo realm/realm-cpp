@@ -24,7 +24,9 @@ namespace realm::internal::bridge {
         [[nodiscard]] std::string to_string() const;
         [[nodiscard]] static object_id generate();
     private:
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::ObjectId m_object_id[1];
+#elif __i386__
         std::aligned_storage<12, 1>::type m_object_id[1];
 #elif __x86_64__
         std::aligned_storage<12, 1>::type m_object_id[1];

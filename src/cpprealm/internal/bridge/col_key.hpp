@@ -21,7 +21,9 @@ namespace realm::internal::bridge {
         operator bool() const;
         [[nodiscard]] int64_t value() const;
     private:
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::ColKey m_col_key[1];
+#elif __i386__
         std::aligned_storage<8, 4>::type m_col_key[1];
 #elif __x86_64__
         std::aligned_storage<8, 8>::type m_col_key[1];

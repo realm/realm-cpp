@@ -4,7 +4,9 @@
 #include <cpprealm/experimental/types.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::UUID, UUID>{});
+#elif __i386__
     static_assert(SizeCheck<16, sizeof(::realm::UUID)>{});
     static_assert(SizeCheck<1, alignof(::realm::UUID)>{});
 #elif __x86_64__

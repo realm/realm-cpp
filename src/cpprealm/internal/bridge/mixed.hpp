@@ -94,7 +94,9 @@ namespace realm::internal::bridge {
     private:
         std::string m_owned_string;
         binary m_owned_data;
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::Mixed m_mixed[1];
+#elif __i386__
         std::aligned_storage<20, 4>::type m_mixed[1];
 #elif __x86_64__
         std::aligned_storage<24, 8>::type m_mixed[1];

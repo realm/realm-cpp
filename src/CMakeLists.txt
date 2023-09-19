@@ -1,3 +1,16 @@
+add_subdirectory(cpprealm/internal/bridge/generator)
+
+add_custom_command(
+    COMMAND ${CMAKE_COMMAND} -D SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/cpprealm/internal/bridge 
+                             -D BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge
+                             -D BRIDGE_TYPE_INFO_BIN=$<TARGET_FILE:BridgeTypeInfoGenerator>
+                             -P ${CMAKE_CURRENT_SOURCE_DIR}/cpprealm/internal/bridge/generator/bridge_type_info_parser.cmake
+    DEPENDS BridgeTypeInfoGenerator
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cpprealm/internal/bridge/generator/bridge_type_info_parser.cmake
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cpprealm/internal/bridge/bridge_types.hpp.in
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp
+)
+
 set(SOURCES
     cpprealm/app.cpp
     cpprealm/sdk.cpp
@@ -104,10 +117,28 @@ set(HEADERS
     cpprealm/experimental/managed_primary_key.hpp
     cpprealm/experimental/sdk.hpp
     cpprealm/internal/bridge/decimal128.hpp
-    cpprealm/experimental/managed_decimal.hpp
-        ) # REALM_INSTALL_HEADERS
+    cpprealm/experimental/managed_decimal.hpp) # REALM_INSTALL_HEADERS
 
-add_library(cpprealm STATIC ${SOURCES} ${HEADERS})
 include(GNUInstallDirs)
-install(TARGETS cpprealm ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(DIRECTORY cpprealm/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm)
+
+add_library(cpprealm ${SOURCES} ${HEADERS} ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp)
+target_include_directories(cpprealm PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
+install(TARGETS cpprealm RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime)
+install(TARGETS cpprealm LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime)
+install(TARGETS cpprealm ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT devel)
+
+foreach(header ${HEADERS})
+    get_filename_component(dir ${header} DIRECTORY)
+    install(FILES ${header}
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${dir}
+            COMPONENT devel)
+endforeach()
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm/internal/bridge
+        COMPONENT devel)
+install()

@@ -20,7 +20,9 @@ namespace realm::internal::bridge {
         ~obj_key();
         operator ObjKey() const;
     private:
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::ObjKey m_obj_key[1];
+#elif __i386__
         std::aligned_storage<8, 4>::type m_obj_key[1];
 #elif __x86_64__
         std::aligned_storage<8, 8>::type m_obj_key[1];
@@ -50,7 +52,9 @@ namespace realm::internal::bridge {
         operator ObjLink() const;
         obj_key get_obj_key();
     private:
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::ObjLink m_obj_link[1];
+#elif __i386__
         std::aligned_storage<12, 4>::type m_obj_link[1];
 #elif __x86_64__
         std::aligned_storage<16, 8>::type m_obj_link[1];

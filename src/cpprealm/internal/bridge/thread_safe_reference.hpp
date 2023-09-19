@@ -27,7 +27,9 @@ namespace realm::internal::bridge {
         friend struct realm;
         template <typename T>
         friend T resolve(const realm&, thread_safe_reference&& tsr);
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::ThreadSafeReference m_thread_safe_reference[1];
+#elif __i386__
         std::aligned_storage<4, 4>::type m_thread_safe_reference[1];
 #elif __x86_64__
         std::aligned_storage<8, 8>::type m_thread_safe_reference[1];

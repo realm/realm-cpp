@@ -38,7 +38,9 @@ namespace realm::internal::bridge {
         property property_for_name(const std::string&);
         bool operator==(const object_schema& rhs);
     private:
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::ObjectSchema m_schema[1];
+#elif __i386__
         std::aligned_storage<68, 4>::type m_schema[1];
 #elif __x86_64__
     #if defined(__clang__)

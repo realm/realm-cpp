@@ -7,7 +7,9 @@
 #include <cpprealm/internal/bridge/object_id.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::ObjectId, ObjectId>{});
+#elif __i386__
     static_assert(SizeCheck<12, sizeof(::realm::ObjectId)>{});
     static_assert(SizeCheck<1, alignof(::realm::ObjectId)>{});
 #elif __x86_64__

@@ -106,7 +106,9 @@ namespace realm::internal::bridge {
 
         size_t size() const;
     private:
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::CoreDictionary m_dictionary[1];
+#elif __i386__
         std::aligned_storage<96, 4>::type m_dictionary[1];
 #elif __x86_64__
         std::aligned_storage<144, 8>::type m_dictionary[1];
@@ -144,7 +146,9 @@ namespace realm::internal::bridge {
     private:
         template <typename T>
         friend T get(dictionary&, const std::string&);
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::Dictionary m_dictionary[1];
+#elif __i386__
         std::aligned_storage<40, 4>::type m_dictionary[1];
 #elif __x86_64__
         std::aligned_storage<80, 8>::type m_dictionary[1];

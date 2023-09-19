@@ -6,7 +6,9 @@
 #include <realm/list.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::LnkLst, LnkLst>{});
+#elif __i386__
     static_assert(SizeCheck<104, sizeof(LnkLst)>{});
     static_assert(SizeCheck<4, alignof(LnkLst)>{});
 #elif __x86_64__

@@ -35,7 +35,9 @@ namespace realm::internal::bridge {
         decimal128& operator/=(const decimal128& o);
         decimal128& operator-=(const decimal128& o);
     private:
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::Decimal128 m_decimal[1];
+#elif __i386__
         std::aligned_storage<12, 1>::type m_decimal[1];
 #elif __x86_64__
         std::aligned_storage<12, 1>::type m_decimal[1];

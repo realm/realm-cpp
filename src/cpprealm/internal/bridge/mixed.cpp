@@ -4,7 +4,9 @@
 #include <realm/mixed.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::Mixed, Mixed>{});
+#elif __i386__
     static_assert(SizeCheck<20, sizeof(Mixed)>{});
     static_assert(SizeCheck<4, alignof(Mixed)>{});
 #elif __x86_64__

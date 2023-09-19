@@ -20,7 +20,9 @@
 #include <cpprealm/internal/bridge/realm.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::Obj, Obj>{});
+#elif __i386__
     static_assert(SizeCheck<44, sizeof(Obj)>{});
     static_assert(SizeCheck<4, alignof(Obj)>{});
 #elif __x86_64__
