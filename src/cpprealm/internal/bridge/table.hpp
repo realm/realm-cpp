@@ -29,7 +29,7 @@ namespace realm {
             operator TableRef() const;
             operator ConstTableRef() const;
 
-            col_key get_column_key(const std::string &name) const;
+            col_key get_column_key(const std::string_view &name) const;
 
             obj create_object_with_primary_key(const mixed &key) const;
 
