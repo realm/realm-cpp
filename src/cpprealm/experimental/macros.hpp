@@ -432,7 +432,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
                 v.*(std::decay_t<decltype(pair.first)>::ptr) = ((*this).*(pair.second)).detach();   \
             };                                                                                      \
             auto zipped = zipTuples(managed<cls>::schema.ps, managed<cls>::managed_pointers());     \
-            std::apply([&v, &assign, this](auto& ...pair) {                                       \
+            std::apply([&assign](auto& ...pair) {                                       \
                 (assign(pair), ...);                                                                \
             }, zipped);                                                                             \
             return v;                                                                               \
