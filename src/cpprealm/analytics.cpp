@@ -25,6 +25,8 @@
 #include <net/if_dl.h>
 #include <sys/socket.h>
 #include <sys/sysctl.h>
+#include <sys/types.h>
+#include <unistd.h>
 #elif __linux__
 #include <fcntl.h>
 #include <ifaddrs.h>
@@ -81,14 +83,14 @@ namespace realm {
     std::string get_mac_address() {
         int en0 = static_cast<int>(if_nametoindex("en0"));
         if (!en0) {
-            return nil;
+            return "";
         }
 
         std::array<int, 6> mib = {{CTL_NET, PF_ROUTE, 0, AF_LINK, NET_RT_IFLIST, en0}};
         size_t buffer_size;
         auto buffer = do_sysctl(&mib[0], mib.size(), &buffer_size);
         if (!buffer) {
-            return nil;
+            return "";
         }
 
         // sockaddr_dl struct is immediately after the if_msghdr struct in the buffer

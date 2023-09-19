@@ -103,13 +103,9 @@ namespace realm::internal::bridge {
         return static_cast<TableRef>(*this)->remove_object(v);
     }
 
-//    col_key table::get_column_key(const std::string &name) const {
-//        return static_cast<TableRef>(*this)->get_column_key(name);
-//    }
     col_key table::get_column_key(const std::string_view &name) const {
         return static_cast<TableRef>(*this)->get_column_key(std::string(name));
     }
-
 
     table table::get_link_target(const col_key col_key) const {
         return static_cast<TableRef>(*this)->get_link_target(col_key);

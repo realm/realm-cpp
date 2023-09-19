@@ -63,6 +63,7 @@ static std::string authenticate(const std::string& baas_url, const std::string& 
 
 #if !REALM_WINDOWS && !REALM_MOBILE
 #include <unistd.h>
+#include <fcntl.h>
 
 namespace local {
 using namespace std::filesystem;
