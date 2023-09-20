@@ -328,7 +328,7 @@ TEST_CASE("list", "[list]") {
             return managed_obj;
         });
 
-        int deletions = 0;
+        size_t deletions = 0;
         auto token = managed_obj.list_int_col.observe([&](auto&& c) {
             deletions = c.deletions.size();
         });

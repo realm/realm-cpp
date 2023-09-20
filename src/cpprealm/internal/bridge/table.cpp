@@ -104,7 +104,7 @@ namespace realm::internal::bridge {
     }
 
     col_key table::get_column_key(const std::string_view &name) const {
-        return static_cast<TableRef>(*this)->get_column_key(std::string(name));
+        return static_cast<TableRef>(*this)->get_column_key(name);
     }
 
     table table::get_link_target(const col_key col_key) const {
