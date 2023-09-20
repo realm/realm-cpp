@@ -1,0 +1,40 @@
+package {
+    default_applicable_licenses: ["external_realm_cpp_license"],
+}
+
+license {
+    name: "external_realm_cpp_license",
+    visibility: [":__subpackages__"],
+    license_kinds: [
+        "SPDX-license-identifier-Apache-2.0"
+    ],
+    license_text: [
+        "LICENSE",
+    ],
+}
+
+cc_defaults {
+    name: "realm_cpp_defaults",
+    cppflags: [
+        "-Wno-delete-non-abstract-non-virtual-dtor",
+        "-Wno-mismatched-tags",
+        "-Wno-unused-parameter",
+        "-Wno-reorder-ctor",
+        "-Wno-unused-function",
+        "-Wno-unused-local-typedef",
+        "-Wno-unused-variable"
+    ]
+}
+
+cc_library_static {
+    name: "realm-cpp",
+    defaults: ["realm_consumer_defaults", "realm_defaults", "realm_cpp_defaults"],
+    srcs: ["src/cpprealm/**/*.cpp"],
+    exclude_srcs: [
+        "src/cpprealm/internal/apple/**/*",
+        "src/cpprealm/internal/curl/**/*"
+    ],
+    export_include_dirs: ["src"],
+    static_libs: ["realm"],
+    include_build_directory: false
+}

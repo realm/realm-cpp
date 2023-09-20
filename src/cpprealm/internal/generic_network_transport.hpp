@@ -19,7 +19,6 @@
 #ifndef realm_cpp_generic_network_transport
 #define realm_cpp_generic_network_transport
 
-#include <realm/object-store/sync/impl/sync_client.hpp>
 #include <realm/object-store/sync/generic_network_transport.hpp>
 #include <map>
 #include <optional>

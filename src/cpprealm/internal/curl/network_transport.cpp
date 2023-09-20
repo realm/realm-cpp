@@ -95,10 +95,6 @@ namespace realm::internal {
             }
 
             struct curl_slist* list = nullptr;
-            auto curl_cleanup = util::ScopeExit([&]() noexcept {
-                curl_easy_cleanup(curl);
-                curl_slist_free_all(list);
-            });
 
             std::string response;
             app::HttpHeaders response_headers;
@@ -148,6 +144,8 @@ namespace realm::internal {
             }
             long http_code = 0;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+            curl_easy_cleanup(curl);
+            curl_slist_free_all(list);
             return {
                     static_cast<int>(http_code),
                     0, // binding_response_code

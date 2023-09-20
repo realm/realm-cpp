@@ -243,7 +243,7 @@ namespace realm::experimental {
 
         void prepare_for_query(internal::bridge::realm* realm,
                                const internal::bridge::table& table,
-                               const std::string& col_name) {
+                               const std::string_view& col_name) {
             this->query = new internal::bridge::query(table);
             this->m_realm = realm;
             this->m_key = table.get_column_key(col_name);
@@ -311,7 +311,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         template <typename PtrType> static constexpr auto unmanaged_to_managed_pointer(PtrType ptr) {         \
            FOR_EACH(DECLARE_COND_UNMANAGED_TO_MANAGED, cls, __VA_ARGS__);  \
         } \
-        static constexpr auto managed_pointers_names = std::tuple{FOR_EACH(DECLARE_MANAGED_PROPERTY_NAME, cls, __VA_ARGS__)}; \
+        static constexpr auto managed_pointers_names = std::array<std::string_view, std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value>{FOR_EACH(DECLARE_MANAGED_PROPERTY_NAME, cls, __VA_ARGS__)}; \
         internal::bridge::obj m_obj;\
         internal::bridge::realm m_realm;                                                           \
         bool m_prepare_for_query = false;                                                           \
@@ -432,7 +432,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
                 v.*(std::decay_t<decltype(pair.first)>::ptr) = ((*this).*(pair.second)).detach();   \
             };                                                                                      \
             auto zipped = zipTuples(managed<cls>::schema.ps, managed<cls>::managed_pointers());     \
-            std::apply([&v, &assign, this](auto& ...pair) {                                       \
+            std::apply([&assign](auto& ...pair) {                                       \
                 (assign(pair), ...);                                                                \
             }, zipped);                                                                             \
             return v;                                                                               \
