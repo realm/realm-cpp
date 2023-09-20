@@ -28,7 +28,9 @@
         return *this; \
     }
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::Query, Query>{});
+#elif __i386__
     static_assert(SizeCheck<68, sizeof(Query)>{});
     static_assert(SizeCheck<4, alignof(Query)>{});
 #elif __x86_64__

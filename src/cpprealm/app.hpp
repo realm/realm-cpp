@@ -70,8 +70,10 @@ struct app_error {
 
     [[nodiscard]] bool is_client_error() const;
 private:
-#ifdef __i386__
-    std::aligned_storage<40, 4>::type m_error[1];
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    internal::bridge::storage::AppError m_error[1];
+#elif __i386__
+    std::aligned_storage<28, 4>::type m_error[1];
 #elif _WIN32
     #if _DEBUG
     std::aligned_storage<120, 8>::type m_error[1];
@@ -251,7 +253,9 @@ public:
         operator app::AppCredentials() const;
         friend class App;
 
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    internal::bridge::storage::AppCredentials m_credentials[1];
+#elif __i386__
     std::aligned_storage<8, 4>::type m_credentials[1];
 #elif _WIN32
     std::aligned_storage<16, 8>::type m_credentials[1];

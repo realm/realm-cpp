@@ -5,8 +5,10 @@
 #include <realm/sync/config.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
-    static_assert(SizeCheck<64, sizeof(SyncError)>{});
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::SyncError, SyncError>{});
+#elif __i386__
+    static_assert(SizeCheck<68, sizeof(SyncError)>{});
     static_assert(SizeCheck<4, alignof(SyncError)>{});
 #elif __x86_64__
     #if defined(__clang__)

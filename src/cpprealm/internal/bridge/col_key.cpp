@@ -3,7 +3,9 @@
 #include <realm/keys.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::ColKey, ColKey>{});
+#elif __i386__
     static_assert(SizeCheck<8, sizeof(ColKey)>{});
     static_assert(SizeCheck<4, alignof(ColKey)>{});
 #elif __x86_64__

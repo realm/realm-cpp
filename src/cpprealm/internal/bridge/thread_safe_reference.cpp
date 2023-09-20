@@ -9,7 +9,9 @@
 #include <memory>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::ThreadSafeReference, ThreadSafeReference>{});
+#elif __i386__
     static_assert(SizeCheck<4, sizeof(ThreadSafeReference)>{});
     static_assert(SizeCheck<4, alignof(ThreadSafeReference)>{});
 #elif __x86_64__

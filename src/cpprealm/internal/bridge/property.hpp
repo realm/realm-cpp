@@ -62,7 +62,9 @@ namespace realm::internal::bridge {
         std::string name() const;
         [[nodiscard]] col_key column_key() const;
     private:
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::Property m_property[1];
+#elif __i386__
         std::aligned_storage<64, 4>::type m_property[1];
 #elif __x86_64__
     #if defined(__clang__)

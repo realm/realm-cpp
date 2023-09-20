@@ -5,7 +5,9 @@
 #include <realm/decimal128.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        static_assert(LayoutCheck<storage::Decimal128, Decimal128>{});
+#elif __i386__
     static_assert(SizeCheck<16, sizeof(::realm::Decimal128)>{});
     static_assert(SizeCheck<4, alignof(::realm::Decimal128)>{});
 #elif __x86_64__

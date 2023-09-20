@@ -25,7 +25,9 @@ namespace realm::internal::bridge {
         operator BinaryData() const; //NOLINT(google-explicit-constructor)
         char operator[](size_t i) const noexcept;
     private:
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+            storage::OwnedBinaryData m_data[1];
+#elif __i386__
             std::aligned_storage<8, 4>::type m_data[1];
 #elif __x86_64__
             std::aligned_storage<16, 8>::type m_data[1];

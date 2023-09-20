@@ -33,7 +33,9 @@ namespace realm::internal::bridge {
     private:
         template <typename T>
         friend T get(results&, size_t);
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::Results m_results[1];
+#elif __i386__
         std::aligned_storage<496, 4>::type m_results[1];
 #elif __x86_64__
     #if defined(__clang__)

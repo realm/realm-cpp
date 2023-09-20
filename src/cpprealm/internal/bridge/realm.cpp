@@ -30,7 +30,9 @@
 #include <filesystem>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::Realm_Config, Realm::Config>{});
+#elif __i386__
     static_assert(SizeCheck<192, sizeof(Realm::Config)>{});
     static_assert(SizeCheck<8, alignof(Realm::Config)>{});
 #elif __x86_64__

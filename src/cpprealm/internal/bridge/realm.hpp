@@ -152,7 +152,9 @@ namespace realm::internal::bridge {
             void set_schema_version(uint64_t version);
             std::optional<schema> get_schema();
         private:
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+            storage::Realm_Config m_config[1];
+#elif __i386__
             std::aligned_storage<192, 8>::type m_config[1];
 #elif __x86_64__
     #if defined(__clang__)

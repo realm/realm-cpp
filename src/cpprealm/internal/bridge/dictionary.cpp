@@ -8,7 +8,9 @@
 #include <realm/object-store/results.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::Dictionary, object_store::Dictionary>{});
+#elif __i386__
     static_assert(SizeCheck<40, sizeof(Dictionary)>{});
     static_assert(SizeCheck<4, alignof(Dictionary)>{});
 #elif __x86_64__
@@ -25,7 +27,9 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(Dictionary)>{});
 #endif
 
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        static_assert(LayoutCheck<storage::CoreDictionary, CoreDictionary>{});
+#elif __i386__
     static_assert(SizeCheck<96, sizeof(CoreDictionary)>{});
     static_assert(SizeCheck<4, alignof(CoreDictionary)>{});
 #elif __x86_64__

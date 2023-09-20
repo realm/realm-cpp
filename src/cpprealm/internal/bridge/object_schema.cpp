@@ -6,7 +6,9 @@
 #include <realm/object-store/property.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::ObjectSchema, ObjectSchema>{});
+#elif __i386__
     static_assert(SizeCheck<68, sizeof(ObjectSchema)>{});
     static_assert(SizeCheck<4, alignof(ObjectSchema)>{});
 #elif __x86_64__

@@ -1,0 +1,9 @@
+#pragma once
+
+#include <type_traits>
+
+#define CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+
+namespace realm::internal::bridge::storage {
+@BRIDGE_TYPE_DECLS@
+}

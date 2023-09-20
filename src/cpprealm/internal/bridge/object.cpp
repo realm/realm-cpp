@@ -14,7 +14,14 @@
 #include <memory>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::Object, Object>{});
+    static_assert(LayoutCheck<storage::IndexSet, IndexSet>{});
+    static_assert(LayoutCheck<storage::CollectionChangeSet, CollectionChangeSet>{});
+    static_assert(LayoutCheck<storage::IndexSet_IndexIterator, IndexSet::IndexIterator>{});
+    static_assert(LayoutCheck<storage::IndexSet_IndexIteratableAdaptor, IndexSet::IndexIteratableAdaptor>{});
+    static_assert(LayoutCheck<storage::NotificationToken, NotificationToken>{});
+#elif __i386__
     static_assert(SizeCheck<64, sizeof(Object)>{});
     static_assert(SizeCheck<4, alignof(Object)>{});
     static_assert(SizeCheck<12, sizeof(IndexSet)>{});

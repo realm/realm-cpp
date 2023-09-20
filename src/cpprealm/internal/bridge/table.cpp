@@ -10,7 +10,10 @@
 #include <realm/mixed.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::TableRef, TableRef>{});
+    static_assert(LayoutCheck<storage::TableRef, ConstTableRef>{});
+#elif __i386__
     static_assert(SizeCheck<12, sizeof(TableRef)>{});
     static_assert(SizeCheck<4, alignof(TableRef)>{});
     static_assert(SizeCheck<12, sizeof(ConstTableRef)>{});
@@ -128,7 +131,9 @@ namespace realm::internal::bridge {
         return static_cast<TableRef>(lhs) != static_cast<TableRef>(rhs);
     }
 
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::TableView, TableView>{});
+#elif __i386__
     static_assert(SizeCheck<316, sizeof(TableView)>{});
     static_assert(SizeCheck<4, alignof(TableView)>{});
 #elif __x86_64__

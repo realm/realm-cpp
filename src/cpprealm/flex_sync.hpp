@@ -157,7 +157,9 @@ namespace realm {
 
     private:
         mutable_sync_subscription_set(internal::bridge::realm&, const sync::MutableSubscriptionSet& subscription_set);
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        internal::bridge::storage::MutableSyncSubscriptionSet m_subscription_set[1];
+#elif __i386__
         std::aligned_storage<116, 4>::type m_subscription_set[1];
 #elif __x86_64__
     #if defined(__clang__)
@@ -207,7 +209,9 @@ namespace realm {
     private:
         template <typename ...Ts>
         friend struct db;
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        internal::bridge::storage::SyncSubscriptionSet m_subscription_set[1];
+#elif __i386__
         std::aligned_storage<60, 4>::type m_subscription_set[1];
 #elif __x86_64__
     #if defined(__clang__)

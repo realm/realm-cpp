@@ -3,7 +3,9 @@
 #include <realm/timestamp.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::Timestamp, Timestamp>{});
+#elif __i386__
     static_assert(SizeCheck<16, sizeof(Timestamp)>{});
     static_assert(SizeCheck<4, alignof(Timestamp)>{});
 #elif __x86_64__

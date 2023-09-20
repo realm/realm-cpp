@@ -4,7 +4,9 @@
 #include <realm/binary_data.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        static_assert(LayoutCheck<storage::OwnedBinaryData, OwnedBinaryData>{});
+#elif __i386__
         static_assert(SizeCheck<8, sizeof(OwnedBinaryData)>{});
         static_assert(SizeCheck<4, alignof(OwnedBinaryData)>{});
 #elif __x86_64__

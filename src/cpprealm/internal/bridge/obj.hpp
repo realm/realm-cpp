@@ -225,7 +225,9 @@ namespace realm::internal::bridge {
     private:
         template <typename T>
         friend T get(const obj&, const col_key& col_key);
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::Obj m_obj[1];
+#elif __i386__
         std::aligned_storage<44, 4>::type m_obj[1];
 #elif __x86_64__
         std::aligned_storage<64, 8>::type m_obj[1];

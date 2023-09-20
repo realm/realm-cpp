@@ -31,7 +31,9 @@ namespace realm::internal::bridge {
         }
     private:
         static constexpr int32_t nanoseconds_per_second = 1000000000;
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::Timestamp m_timestamp[1];
+#elif __i386__
         std::aligned_storage<16, 4>::type m_timestamp[1];
 #elif __x86_64__
         std::aligned_storage<16, 8>::type m_timestamp[1];

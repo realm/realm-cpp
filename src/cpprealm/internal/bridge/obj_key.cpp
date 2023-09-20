@@ -4,7 +4,9 @@
 #include <realm/keys.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::ObjKey, ObjKey>{});
+#elif __i386__
     static_assert(SizeCheck<8, sizeof(ObjKey)>{});
     static_assert(SizeCheck<4, alignof(ObjKey)>{});
 #elif __x86_64__
@@ -71,7 +73,9 @@ namespace realm::internal::bridge {
         return static_cast<ObjKey>(lhs) != static_cast<ObjKey>(rhs);
     }
 
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::ObjLink, ObjLink>{});
+#elif __i386__
     static_assert(SizeCheck<12, sizeof(ObjLink)>{});
     static_assert(SizeCheck<4, alignof(ObjLink)>{});
 #elif __x86_64__

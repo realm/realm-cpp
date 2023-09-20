@@ -42,8 +42,10 @@ namespace realm::internal::bridge {
         /// The error indicates a client reset situation.
         [[nodiscard]] bool is_client_reset_requested() const;
     private:
-#ifdef __i386__
-        std::aligned_storage<64, 4>::type m_error[1];
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::SyncError m_error[1];
+#elif __i386__
+        std::aligned_storage<68, 4>::type m_error[1];
 #elif __x86_64__
     #if defined(__clang__)
         std::aligned_storage<120, 8>::type m_error[1];

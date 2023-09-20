@@ -45,7 +45,9 @@ namespace realm {
             obj get_object(const obj_key&) const;
             bool is_valid(const obj_key&) const;
             using underlying = TableRef;
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::TableRef m_table[1];
+#elif __i386__
          std::aligned_storage<12, 4>::type m_table[1];
 #elif __x86_64__
         std::aligned_storage<16, 8>::type m_table[1];
@@ -68,7 +70,9 @@ namespace realm {
             table_view(const TableView &);
             operator TableView() const;
             using underlying = TableView;
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+            storage::TableView m_table_view[1];
+#elif __i386__
             std::aligned_storage<316, 4>::type m_table_view[1];
 #elif __x86_64__
 #if defined(__clang__)

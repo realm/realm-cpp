@@ -10,7 +10,9 @@
 #include <realm/object-store/list.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    static_assert(LayoutCheck<storage::List, List>{});
+#elif __i386__
     static_assert(SizeCheck<40, sizeof(List)>{});
     static_assert(SizeCheck<4, alignof(List)>{});
 #elif __x86_64__

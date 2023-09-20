@@ -33,7 +33,9 @@ namespace realm::internal::bridge {
         operator NotificationToken() const;
         void unregister();
     private:
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::NotificationToken m_token[1];
+#elif __i386__
         std::aligned_storage<16, 4>::type m_token[1];
 #elif __x86_64__
         std::aligned_storage<24, 8>::type m_token[1];
@@ -75,7 +77,9 @@ namespace realm::internal::bridge {
 
         private:
             friend struct index_iterable_adaptor;
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+            storage::IndexSet_IndexIterator m_iterator[1];
+#elif __i386__
             std::aligned_storage<16, 4>::type m_iterator[1];
 #elif __x86_64__
             std::aligned_storage<32, 8>::type m_iterator[1];
@@ -105,7 +109,9 @@ namespace realm::internal::bridge {
             const_iterator end() const noexcept;
         private:
             friend struct index_set;
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+            storage::IndexSet_IndexIteratableAdaptor m_index_iterable_adaptor[1];
+#elif __i386__
             std::aligned_storage<4, 4>::type m_index_iterable_adaptor[1];
 #elif __x86_64__
             std::aligned_storage<8, 8>::type m_index_iterable_adaptor[1];
@@ -119,7 +125,9 @@ namespace realm::internal::bridge {
         };
         index_iterable_adaptor as_indexes() const;
     private:
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::IndexSet m_idx_set[1];
+#elif __i386__
         std::aligned_storage<24, 4>::type m_idx_set[1];
 #elif __x86_64__
         std::aligned_storage<24, 8>::type m_idx_set[1];
@@ -151,7 +159,9 @@ namespace realm::internal::bridge {
         [[nodiscard]] bool empty() const;
         [[nodiscard]] bool collection_root_was_deleted() const;
     private:
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::CollectionChangeSet m_change_set[1];
+#elif __i386__
         std::aligned_storage<84, 4>::type m_change_set[1];
 #elif __x86_64__
     #if defined(__clang__)
@@ -206,7 +216,9 @@ namespace realm::internal::bridge {
         [[nodiscard]] list get_list(const col_key&) const;
         [[nodiscard]] dictionary get_dictionary(const col_key&) const;
     private:
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::Object m_object[1];
+#elif __i386__
         std::aligned_storage<64, 4>::type m_object[1];
 #elif __x86_64__
         std::aligned_storage<104, 8>::type m_object[1];

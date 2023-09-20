@@ -26,7 +26,9 @@ namespace realm::internal::bridge {
         [[nodiscard]] std::string to_base64() const;
         [[nodiscard]] std::array<uint8_t, 16> to_bytes() const;
     private:
-#ifdef __i386__
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::UUID m_uuid[1];
+#elif __i386__
         std::aligned_storage<16, 1>::type m_uuid[1];
 #elif __x86_64__
         std::aligned_storage<16, 1>::type m_uuid[1];
