@@ -37,16 +37,8 @@ namespace realm::internal::bridge {
     private:
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::Decimal128 m_decimal[1];
-#elif __i386__
-        std::aligned_storage<12, 1>::type m_decimal[1];
-#elif __x86_64__
-        std::aligned_storage<12, 1>::type m_decimal[1];
-#elif __arm__
-        std::aligned_storage<12, 1>::type m_decimal[1];
-#elif __aarch64__
-        std::aligned_storage<12, 1>::type m_decimal[1];
-#elif _WIN32
-        std::aligned_storage<12, 1>::type m_decimal[1];
+#else
+        uint64_t m_decimal[2];
 #endif
         friend bool operator ==(const decimal128&, const decimal128&);
         friend bool operator !=(const decimal128&, const decimal128&);

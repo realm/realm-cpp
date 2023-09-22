@@ -2,7 +2,6 @@
 #define REALM_COL_KEY_HPP
 
 #include <cinttypes>
-#include <type_traits>
 
 namespace realm {
     struct ColKey;
@@ -14,27 +13,14 @@ namespace realm::internal::bridge {
         col_key& operator=(const col_key& other) ;
         col_key(col_key&& other);
         col_key& operator=(col_key&& other);
-        ~col_key();
+        ~col_key() = default;
         col_key(int64_t); //NOLINT(google-explicit-constructor)
         col_key(const ColKey&); //NOLINT(google-explicit-constructor)
         operator ColKey() const; //NOLINT(google-explicit-constructor)
         operator bool() const;
         [[nodiscard]] int64_t value() const;
     private:
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        storage::ColKey m_col_key[1];
-#elif __i386__
-        std::aligned_storage<8, 4>::type m_col_key[1];
-#elif __x86_64__
-        std::aligned_storage<8, 8>::type m_col_key[1];
-#elif __arm__
-        std::aligned_storage<8, 8>::type m_col_key[1];
-#elif __aarch64__
-        std::aligned_storage<8, 8>::type m_col_key[1];
-#elif _WIN64
-        std::aligned_storage<8, 8>::type m_col_key[1];
-
-#endif
+        uint64_t m_col_key;
     };
 }
 

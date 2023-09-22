@@ -87,19 +87,15 @@ namespace realm::internal::bridge {
     private:
         template <typename ValueType>
         friend ValueType get(const list&, size_t idx);
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        storage::List m_list[1];
-#elif __i386__
-        std::aligned_storage<40, 4>::type m_list[1];
-#elif __x86_64__
-        std::aligned_storage<80, 8>::type m_list[1];
-#elif __arm__
-        std::aligned_storage<40, 4>::type m_list[1];
-#elif __aarch64__
-        std::aligned_storage<80, 8>::type m_list[1];
-#elif _WIN32
-        std::aligned_storage<80, 8>::type m_list[1];
-#endif
+        friend inline List* get_list(const list& lst);
+        friend inline const List* get_list_const(const list& lst);
+        inline ::realm::List* get_list();
+        inline const ::realm::List* get_list_const() const;
+//#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+//        storage::List m_list[1];
+//#else
+        std::shared_ptr<::realm::List> m_list;
+//#endif
     };
 
     template <typename ValueType>

@@ -223,20 +223,16 @@ namespace realm::internal::bridge {
         obj create_and_set_linked_object(const col_key&);
         table_view get_backlink_view(table, col_key);
     private:
+        inline const Obj* get_obj_const() const;
+        inline Obj* get_obj();
+        friend inline const Obj* get_obj_const(const obj&);
+        friend inline Obj* get_obj(obj&);
         template <typename T>
         friend T get(const obj&, const col_key& col_key);
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::Obj m_obj[1];
-#elif __i386__
-        std::aligned_storage<44, 4>::type m_obj[1];
-#elif __x86_64__
-        std::aligned_storage<64, 8>::type m_obj[1];
-#elif __arm__
-        std::aligned_storage<56, 8>::type m_obj[1];
-#elif __aarch64__
-        std::aligned_storage<64, 8>::type m_obj[1];
-#elif _WIN32
-        std::aligned_storage<64, 8>::type m_obj[1];
+#else
+        std::shared_ptr<Obj> m_obj;
 #endif
     };
 

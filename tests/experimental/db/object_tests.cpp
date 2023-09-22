@@ -447,9 +447,9 @@ namespace realm::experimental {
             auto other_obj2 = db.objects<realm::experimental::AllTypesObjectLink>()[2];
             auto other_obj3 = db.objects<realm::experimental::AllTypesObject>()[0];
             CHECK(managed_obj.map_link_col["foo"] == other_obj2);
-            auto map_embedded_col = other_obj3.map_embedded_col["foo"];
-            CHECK(managed_obj.map_embedded_col["foo"] == map_embedded_col);
-            CHECK(managed_obj.map_embedded_col["foo"] != managed_obj.opt_embedded_obj_col);
+            auto map_embedded_col = other_obj3.map_embedded_col["foo"]->str_col;
+            CHECK(managed_obj.map_embedded_col["foo"]->str_col == map_embedded_col);
+            CHECK(managed_obj.map_embedded_col["foo"]->str_col != managed_obj.opt_embedded_obj_col->str_col);
 
             auto allTypeObjects = db.objects<AllTypesObject>();
 
@@ -510,8 +510,8 @@ namespace realm::experimental {
             CHECK(results_obj.map_decimal_col["foo"] == decimal);
             CHECK(results_obj.map_mixed_col["foo"] == realm::mixed("bar"));
             CHECK(results_obj.map_link_col["foo"] == other_obj2);
-            CHECK(results_obj.map_embedded_col["foo"] == AllTypesObject_res.map_embedded_col["foo"]);
-            CHECK(results_obj.map_embedded_col["foo"] != managed_obj.opt_embedded_obj_col);
+            CHECK(results_obj.map_embedded_col["foo"]->str_col == AllTypesObject_res.map_embedded_col["foo"]->str_col);
+            CHECK(results_obj.map_embedded_col["foo"]->str_col != managed_obj.opt_embedded_obj_col->str_col);
         }
 
         SECTION("object_notifications_beta") {

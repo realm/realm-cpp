@@ -1,7 +1,9 @@
 #ifndef CPP_REALM_BRIDGE_OBJ_KEY_HPP
 #define CPP_REALM_BRIDGE_OBJ_KEY_HPP
 #include <cinttypes>
+#include <memory>
 #include <type_traits>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm {
     struct ObjKey;
@@ -22,16 +24,8 @@ namespace realm::internal::bridge {
     private:
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::ObjKey m_obj_key[1];
-#elif __i386__
-        std::aligned_storage<8, 4>::type m_obj_key[1];
-#elif __x86_64__
-        std::aligned_storage<8, 8>::type m_obj_key[1];
-#elif __arm__
-        std::aligned_storage<8, 8>::type m_obj_key[1];
-#elif __aarch64__
-        std::aligned_storage<8, 8>::type m_obj_key[1];
-#elif _WIN32
-        std::aligned_storage<8, 8>::type m_obj_key[1];
+#else
+        std::shared_ptr<ObjKey> m_obj_key;
 #endif
     };
 
@@ -54,16 +48,8 @@ namespace realm::internal::bridge {
     private:
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::ObjLink m_obj_link[1];
-#elif __i386__
-        std::aligned_storage<12, 4>::type m_obj_link[1];
-#elif __x86_64__
-        std::aligned_storage<16, 8>::type m_obj_link[1];
-#elif __arm__
-        std::aligned_storage<16, 8>::type m_obj_link[1];
-#elif __aarch64__
-        std::aligned_storage<16, 8>::type m_obj_link[1];
-#elif _WIN32
-        std::aligned_storage<16, 8>::type m_obj_link[1];
+#else
+        std::shared_ptr<ObjLink> m_obj_link;
 #endif
     };
 
