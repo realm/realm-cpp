@@ -305,7 +305,7 @@ namespace realm::internal::bridge {
     void obj::set_list_values(const col_key &col_key, const std::vector<timestamp> &values) {
         std::vector<Timestamp> v;
         for (auto& v2 : values) {
-            v.emplace_back(v2);
+            v.emplace_back(v2.operator Timestamp());
         }
         get_obj()->set_list_values(col_key, v);
     }

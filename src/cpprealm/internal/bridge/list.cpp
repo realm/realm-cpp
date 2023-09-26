@@ -160,7 +160,7 @@ namespace realm::internal::bridge {
         get_list()->add(static_cast<ObjKey>(v));
     }
     void list::add(const timestamp &v) {
-        get_list()->add(static_cast<Timestamp>(v));
+        get_list()->add(v.operator Timestamp());
     }
     void list::add(const bool &v) {
         get_list()->add(v);
@@ -280,7 +280,7 @@ namespace realm::internal::bridge {
     void list::set(size_t pos, const decimal128 &v) { get_list()->set(pos, static_cast<Decimal128>(v)); }
     void list::set(size_t pos, const mixed &v) { get_list()->set(pos, v.operator ::realm::Mixed()); }
     void list::set(size_t pos, const binary &v) { get_list()->set(pos, static_cast<BinaryData>(v)); }
-    void list::set(size_t pos, const timestamp &v) { get_list()->set(pos, static_cast<Timestamp>(v)); }
+    void list::set(size_t pos, const timestamp &v) { get_list()->set(pos, v.operator Timestamp()); }
 
     size_t list::find(const int64_t &v) { return get_list()->find(v); }
     size_t list::find(const bool &v) { return get_list()->find(v); }
@@ -290,7 +290,7 @@ namespace realm::internal::bridge {
     size_t list::find(const object_id &v) { return get_list()->find(static_cast<ObjectId>(v)); }
     size_t list::find(const decimal128 &v) { return get_list()->find(static_cast<Decimal128>(v)); }
     size_t list::find(const mixed &v) { return get_list()->find(v.operator ::realm::Mixed()); }
-    size_t list::find(const timestamp &v) { return get_list()->find(static_cast<Timestamp>(v)); }
+    size_t list::find(const timestamp &v) { return get_list()->find(v.operator Timestamp()); }
     size_t list::find(const binary& v) {
         auto v_actual = v.operator BinaryData();
         auto val_actual = get_list()->get<BinaryData>(1);
