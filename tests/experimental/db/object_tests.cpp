@@ -329,7 +329,7 @@ namespace realm::experimental {
             obj.object_id_col = object_id;
             obj.binary_col = std::vector<uint8_t>({1});
             obj.decimal_col = decimal;
-            obj.mixed_col = AllTypesObject::my_mixed("mixed");
+            obj.mixed_col = realm::mixed("mixed");
 
             obj.opt_int_col = 2;
             obj.opt_double_col = 2.34;
@@ -396,7 +396,7 @@ namespace realm::experimental {
             CHECK(managed_obj.object_id_col == object_id);
             CHECK(managed_obj.decimal_col == decimal);
             CHECK(managed_obj.binary_col.detach() == std::vector<uint8_t>({1}));
-            CHECK(managed_obj.mixed_col.detach() == AllTypesObject::my_mixed("mixed"));
+            CHECK(managed_obj.mixed_col.detach() == realm::mixed("mixed"));
 
             CHECK(managed_obj.object_id_col.detach() == object_id);
 
@@ -549,7 +549,7 @@ namespace realm::experimental {
                         } else if (prop_change.name == "binary_col" && prop_change.new_value) {
                             CHECK(std::get<std::vector<uint8_t>>(*prop_change.new_value) == std::vector<uint8_t>({1}));
                         } else if (prop_change.name == "mixed_col" && prop_change.new_value) {
-                            auto val = std::get<AllTypesObject::my_mixed>(*prop_change.new_value);
+                            auto val = std::get<realm::mixed>(*prop_change.new_value);
                             CHECK(std::get<std::string>(val) == "mixed");
                         } else if (prop_change.name == "opt_str_col" && prop_change.new_value) {
                             CHECK(std::get<std::optional<std::string>>(*prop_change.new_value) == "opt string");
@@ -879,7 +879,7 @@ namespace realm::experimental {
             obj.object_id_col = object_id;
             obj.binary_col = std::vector<uint8_t>({1});
             obj.decimal_col = decimal;
-            obj.mixed_col = AllTypesObject::my_mixed("mixed");
+            obj.mixed_col = realm::mixed("mixed");
 
             obj.opt_int_col = 2;
             obj.opt_double_col = 2.34;
@@ -905,6 +905,7 @@ namespace realm::experimental {
             obj.list_binary_col = std::vector<std::vector<uint8_t>>({{1}});
             obj.list_date_col = std::vector<std::chrono::time_point<std::chrono::system_clock>>({date});
             obj.list_mixed_col = std::vector<realm::mixed>({realm::mixed("mixed str")});
+            obj.list_enum_col = std::vector<AllTypesObject::Enum>({AllTypesObject::Enum::one});
             obj.list_obj_col = std::vector<AllTypesObjectLink*>({&link2});
             obj.list_embedded_obj_col = std::vector<AllTypesObjectEmbedded*>({&embedded_obj2});
 
@@ -939,7 +940,7 @@ namespace realm::experimental {
             CHECK(detached_obj.object_id_col == object_id);
             CHECK(detached_obj.decimal_col == decimal);
             CHECK(detached_obj.binary_col == std::vector<uint8_t>({1}));
-            CHECK(detached_obj.mixed_col == AllTypesObject::my_mixed("mixed"));
+            CHECK(detached_obj.mixed_col == realm::mixed("mixed"));
             CHECK(detached_obj.object_id_col == object_id);
 
             CHECK(detached_obj.opt_int_col == 2);
@@ -962,6 +963,7 @@ namespace realm::experimental {
             CHECK(detached_obj.list_decimal_col[0] == decimal);
             CHECK(detached_obj.list_date_col[0] == date);
             CHECK(detached_obj.list_uuid_col[0] == uuid);
+            CHECK(detached_obj.list_enum_col[0] == AllTypesObject::Enum::one);
             CHECK(detached_obj.list_mixed_col[0] == realm::mixed("mixed str"));
 
             CHECK(detached_obj.opt_obj_col->str_col == "link object");
