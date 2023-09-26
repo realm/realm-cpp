@@ -41,6 +41,8 @@ set(BRIDGE_TYPES
     ThreadSafeReference realm::ThreadSafeReference
     Timestamp realm::Timestamp
     UUID realm::UUID
+    Status realm::Status
+    ErrorCategory realm::ErrorCategory
     AppCredentials realm::app::AppCredentials
     AppError realm::app::AppError
     SyncSubscriptionSet realm::sync::SubscriptionSet

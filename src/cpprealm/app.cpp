@@ -7,120 +7,124 @@
 
 #include <utility>
 
-namespace realm::internal::bridge {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-    static_assert(LayoutCheck<storage::AppCredentials, app::AppCredentials>{});
-    static_assert(LayoutCheck<storage::AppError, app::AppError>{});
-#elif __i386__
-    static_assert(SizeCheck<8, sizeof(app::AppCredentials)>{});
-    static_assert(SizeCheck<4, alignof(app::AppCredentials)>{});
-    static_assert(SizeCheck<28, sizeof(app::AppError)>{});
-    static_assert(SizeCheck<4, alignof(app::AppError)>{});
-#elif __x86_64__
-    static_assert(SizeCheck<16, sizeof(app::AppCredentials)>{});
-    static_assert(SizeCheck<8, alignof(app::AppCredentials)>{});
-    #if defined(__clang__)
-    static_assert(SizeCheck<48, sizeof(app::AppError)>{});
-    static_assert(SizeCheck<8, alignof(app::AppError)>{});
-    #elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(SizeCheck<56, sizeof(app::AppError)>{});
-    static_assert(SizeCheck<8, alignof(app::AppError)>{});
-    #endif
-#elif __arm__
-    static_assert(SizeCheck<8, sizeof(app::AppCredentials)>{});
-    static_assert(SizeCheck<4, alignof(app::AppCredentials)>{});
-    static_assert(SizeCheck<28, sizeof(app::AppError)>{});
-    static_assert(SizeCheck<4, alignof(app::AppError)>{});
-#elif __aarch64__
-    static_assert(SizeCheck<16, sizeof(app::AppCredentials)>{});
-    static_assert(SizeCheck<8, alignof(app::AppCredentials)>{});
-#if defined(__clang__)
-    static_assert(SizeCheck<48, sizeof(app::AppError)>{});
-#elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(SizeCheck<56, sizeof(app::AppError)>{});
-#endif
-    static_assert(SizeCheck<8, alignof(app::AppError)>{});
-#elif _WIN32
-    #if _DEBUG
-    static_assert(SizeCheck<80, sizeof(app::AppError)>{});
-    #else
-    static_assert(SizeCheck<72, sizeof(app::AppError)>{});
-    #endif
-    static_assert(SizeCheck<16, sizeof(app::AppCredentials)>{});
-    static_assert(SizeCheck<8, alignof(app::AppCredentials)>{});
-    
-    static_assert(SizeCheck<8, alignof(app::AppError)>{});
-#endif
-} // namespace realm::internal::bridge
-
 namespace realm {
     static_assert((int)user::state::logged_in == (int)SyncUser::State::LoggedIn);
     static_assert((int)user::state::logged_out == (int)SyncUser::State::LoggedOut);
     static_assert((int)user::state::removed == (int)SyncUser::State::Removed);
 
     app_error::app_error(const app_error& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_error) app::AppError(*reinterpret_cast<const app::AppError*>(&other.m_error));
+#else
+        m_error = other.m_error;
+#endif
     }
 
     app_error& app_error::operator=(const app_error& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<app::AppError*>(&m_error) = *reinterpret_cast<const app::AppError*>(&other.m_error);
         }
+#else
+        m_error = other.m_error;
+#endif
         return *this;
     }
 
     app_error::app_error(app_error&& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_error) app::AppError(std::move(*reinterpret_cast<app::AppError*>(&other.m_error)));
+#else
+        m_error = std::move(other.m_error);
+#endif
     }
 
     app_error& app_error::operator=(app_error&& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<app::AppError*>(&m_error) = std::move(*reinterpret_cast<app::AppError*>(&other.m_error));
         }
+#else
+        m_error = std::move(other.m_error);
+#endif
         return *this;
     }
 
     app_error::~app_error() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         reinterpret_cast<app::AppError*>(&m_error)->~AppError();
+#endif
     }
 
     app_error::app_error(realm::app::AppError&& error) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_error) app::AppError(std::move(error));
+#else
+        m_error = std::make_shared<app::AppError>(std::move(error));
+#endif
     }
 
     std::string_view app_error::mesage() const
     {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const app::AppError *>(&m_error)->reason();
+#else
+        return m_error->reason();
+#endif
     }
 
     std::string_view app_error::link_to_server_logs() const
     {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const app::AppError*>(&m_error)->link_to_server_logs;
+#else
+        return m_error->link_to_server_logs;
+#endif
     }
 
     bool app_error::is_json_error() const
     {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const app::AppError*>(&m_error)->is_json_error();
+#else
+        return m_error->is_json_error();
+#endif
     }
 
     bool app_error::is_service_error() const
     {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const app::AppError*>(&m_error)->is_service_error();
+#else
+        return m_error->is_service_error();
+#endif
     }
 
     bool app_error::is_http_error() const
     {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const app::AppError*>(&m_error)->is_http_error();
+#else
+        return m_error->is_http_error();
+#endif
     }
 
     bool app_error::is_custom_error() const
     {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const app::AppError*>(&m_error)->is_custom_error();
+#else
+        return m_error->is_custom_error();
+#endif
     }
 
     bool app_error::is_client_error() const
     {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const app::AppError*>(&m_error)->is_client_error();
+#else
+        return m_error->is_client_error();
+#endif
     }
 
     user::user(std::shared_ptr<SyncUser> user) : m_user(std::move(user))
@@ -272,40 +276,70 @@ namespace realm {
     }
 
     App::credentials::credentials() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_credentials) app::AppCredentials();
+#else
+        m_credentials = std::make_shared<app::AppCredentials>();
+#endif
     }
 
     App::credentials::credentials(const credentials& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_credentials) app::AppCredentials(*reinterpret_cast<const app::AppCredentials*>(&other.m_credentials));
+#else
+        m_credentials = other.m_credentials;
+#endif
     }
 
     App::credentials& App::credentials::operator=(const credentials& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<app::AppCredentials*>(&m_credentials) = *reinterpret_cast<const app::AppCredentials*>(&other.m_credentials);
         }
+#else
+        m_credentials = other.m_credentials;
+#endif
         return *this;
     }
 
     App::credentials::credentials(credentials&& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_credentials) app::AppCredentials(std::move(*reinterpret_cast<app::AppCredentials*>(&other.m_credentials)));
+#else
+        m_credentials = std::move(other.m_credentials);
+#endif
     }
 
     App::credentials& App::credentials::operator=(App::credentials&& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<app::AppCredentials*>(&m_credentials) = std::move(*reinterpret_cast<app::AppCredentials*>(&other.m_credentials));
         }
+#else
+        m_credentials = std::move(other.m_credentials);
+#endif
         return *this;
     }
 
     App::credentials::~credentials() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         reinterpret_cast<app::AppCredentials*>(&m_credentials)->~AppCredentials();
+#endif
     }
 
     App::credentials::credentials(app::AppCredentials &&v) noexcept {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_credentials) app::AppCredentials(std::move(v));
+#else
+        m_credentials = std::make_shared<app::AppCredentials>(std::move(v));
+#endif
     }
     App::credentials::operator app::AppCredentials() const {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return *reinterpret_cast<const app::AppCredentials*>(&m_credentials);
+#else
+        return *m_credentials;
+#endif
     }
 
     App::credentials App::credentials::anonymous()

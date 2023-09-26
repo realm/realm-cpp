@@ -19,12 +19,12 @@
 #ifndef CPP_REALM_APP_HPP
 #define CPP_REALM_APP_HPP
 
-#include <cpprealm/task.hpp>
 #include <cpprealm/experimental/db.hpp>
 #include <cpprealm/internal/bridge/sync_session.hpp>
 #include <cpprealm/internal/bridge/sync_error.hpp>
 #include <cpprealm/internal/bridge/sync_manager.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 #include <realm/object-store/util/bson/bson.hpp>
 #include <realm/object-store/sync/app_credentials.hpp>
@@ -72,28 +72,8 @@ struct app_error {
 private:
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
     internal::bridge::storage::AppError m_error[1];
-#elif __i386__
-    std::aligned_storage<28, 4>::type m_error[1];
-#elif _WIN32
-    #if _DEBUG
-    std::aligned_storage<120, 8>::type m_error[1];
-    #else
-    std::aligned_storage<104, 8>::type m_error[1];
-    #endif   
-#elif __x86_64__
-    #if defined(__clang__)
-std::aligned_storage<48, 8>::type m_error[1];
-    #elif defined(__GNUC__) || defined(__GNUG__)
-std::aligned_storage<88, 8>::type m_error[1];
-    #endif
-#elif __arm__
-    std::aligned_storage<40, 4>::type m_error[1];
-#elif __aarch64__
-#if defined(__clang__)
-    std::aligned_storage<48, 8>::type m_error[1];
-#elif defined(__GNUC__) || defined(__GNUG__)
-    std::aligned_storage<56, 8>::type m_error[1];
-#endif
+#else
+    std::shared_ptr<realm::app::AppError> m_error;
 #endif
 };
 
@@ -255,16 +235,8 @@ public:
 
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
     internal::bridge::storage::AppCredentials m_credentials[1];
-#elif __i386__
-    std::aligned_storage<8, 4>::type m_credentials[1];
-#elif _WIN32
-    std::aligned_storage<16, 8>::type m_credentials[1];
-#elif __x86_64__
-    std::aligned_storage<16, 8>::type m_credentials[1];
-#elif __arm__
-    std::aligned_storage<8, 4>::type m_credentials[1];
-#elif __aarch64__
-    std::aligned_storage<16, 8>::type m_credentials[1];
+#else
+        std::shared_ptr<app::AppCredentials> m_credentials;
 #endif
     };
 

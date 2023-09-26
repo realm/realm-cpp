@@ -26,16 +26,8 @@ namespace realm::internal::bridge {
     private:
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::ObjectId m_object_id[1];
-#elif __i386__
-        std::aligned_storage<12, 1>::type m_object_id[1];
-#elif __x86_64__
-        std::aligned_storage<12, 1>::type m_object_id[1];
-#elif __arm__
-        std::aligned_storage<12, 1>::type m_object_id[1];
-#elif __aarch64__
-        std::aligned_storage<12, 1>::type m_object_id[1];
-#elif _WIN32
-        std::aligned_storage<12, 1>::type m_object_id[1];
+#else
+        std::array<uint8_t, 12> m_object_id;
 #endif
         friend bool operator ==(const object_id&, const object_id&);
         friend bool operator !=(const object_id&, const object_id&);

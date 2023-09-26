@@ -47,16 +47,8 @@ namespace realm {
             using underlying = TableRef;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::TableRef m_table[1];
-#elif __i386__
-         std::aligned_storage<12, 4>::type m_table[1];
-#elif __x86_64__
-        std::aligned_storage<16, 8>::type m_table[1];
-#elif __arm__
-        std::aligned_storage<16, 8>::type m_table[1];
-#elif __aarch64__
-        std::aligned_storage<16, 8>::type m_table[1];
-#elif _WIN32
-        std::aligned_storage<16, 8>::type m_table[1];
+#else
+        std::shared_ptr<TableRef> m_table;
 #endif
         };
 
@@ -72,28 +64,8 @@ namespace realm {
             using underlying = TableView;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
             storage::TableView m_table_view[1];
-#elif __i386__
-            std::aligned_storage<316, 4>::type m_table_view[1];
-#elif __x86_64__
-#if defined(__clang__)
-            std::aligned_storage<568, 8>::type m_table_view[1];
-#elif defined(__GNUC__) || defined(__GNUG__)
-            std::aligned_storage<576, 8>::type m_table_view[1];
-#endif
-#elif __arm__
-            std::aligned_storage<368, 8>::type m_table_view[1];
-#elif __aarch64__
-#if defined(__clang__)
-            std::aligned_storage<568, 8>::type m_table_view[1];
-#elif defined(__GNUC__) || defined(__GNUG__)
-            std::aligned_storage<624, 8>::type m_table_view[1];
-#endif
-#elif _WIN32
-            #if _DEBUG
-            std::aligned_storage<624, 8>::type m_table_view[1];
-            #else
-            std::aligned_storage<576, 8>::type m_table_view[1];
-            #endif
+#else
+            std::shared_ptr<TableView> m_table_view;
 #endif
         };
 

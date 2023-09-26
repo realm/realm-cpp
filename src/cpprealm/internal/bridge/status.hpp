@@ -1,8 +1,11 @@
 #ifndef CPP_REALM_BRIDGE_REALM_STATUS_HPP
 #define CPP_REALM_BRIDGE_REALM_STATUS_HPP
 
+#include <cpprealm/internal/bridge/utils.hpp>
+
 namespace realm {
     class Status;
+    struct ErrorCategory;
 }
 namespace realm::internal::bridge {
 
@@ -36,16 +39,10 @@ namespace realm::internal::bridge {
         int value() const;
 
     private:
-#ifdef __i386__
-        std::aligned_storage<4, 4>::type m_error_category[1];
-#elif __arm__
-        std::aligned_storage<4, 4>::type m_error_category[1];
-#elif __x86_64__
-        std::aligned_storage<4, 4>::type m_error_category[1];
-#elif __aarch64__
-        std::aligned_storage<4, 4>::type m_error_category[1];
-#elif _WIN32
-        std::aligned_storage<4, 4>::type m_error_category[1];
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::ErrorCategory m_error_category[1];
+#else
+        std::shared_ptr<ErrorCategory> m_error_category;
 #endif
     };
 
@@ -250,17 +247,11 @@ namespace realm::internal::bridge {
         inline std::string_view code_string() const noexcept;
 
     private:
-    #ifdef __i386__
-        std::aligned_storage<4, 4>::type m_status[1];
-    #elif __arm__
-        std::aligned_storage<4, 4>::type m_status[1];
-    #elif __x86_64__
-        std::aligned_storage<8, 8>::type m_status[1];
-    #elif __aarch64__
-        std::aligned_storage<8, 8>::type m_status[1];
-    #elif _WIN32
-        std::aligned_storage<8, 8>::type m_status[1];
-    #endif
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::Status m_status[1];
+#else
+        std::shared_ptr<Status> m_status;
+#endif
     };
 
 } // namespace realm::internal::bridge

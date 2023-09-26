@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm {
     class Schema;
@@ -24,20 +25,8 @@ namespace realm::internal::bridge {
     private:
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::Schema m_schema[1];
-#elif __i386__
-        std::aligned_storage<12, 4>::type m_schema[1];
-#elif __x86_64__
-        std::aligned_storage<24, 8>::type m_schema[1];
-#elif __arm__
-        std::aligned_storage<12, 4>::type m_schema[1];
-#elif __aarch64__
-        std::aligned_storage<24, 8>::type m_schema[1];
-#elif _WIN32
-        #if _DEBUG
-        std::aligned_storage<32, 8>::type m_schema[1];
-        #else
-        std::aligned_storage<24, 8>::type m_schema[1];
-        #endif
+#else
+        std::shared_ptr<Schema> m_schema;
 #endif
     };
 }

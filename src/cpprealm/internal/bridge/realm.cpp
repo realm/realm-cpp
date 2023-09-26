@@ -6,7 +6,6 @@
 #include <cpprealm/scheduler.hpp>
 #include <cpprealm/internal/bridge/object_schema.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
-#include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
@@ -30,43 +29,6 @@
 #include <filesystem>
 
 namespace realm::internal::bridge {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-    static_assert(LayoutCheck<storage::Realm_Config, Realm::Config>{});
-#elif __i386__
-    static_assert(SizeCheck<192, sizeof(Realm::Config)>{});
-    static_assert(SizeCheck<8, alignof(Realm::Config)>{});
-#elif __x86_64__
-    #if defined(__clang__)
-    static_assert(SizeCheck<368, sizeof(Realm::Config)>{});
-    static_assert(SizeCheck<16, alignof(Realm::Config)>{});
-    #elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(SizeCheck<328, sizeof(Realm::Config)>{});
-    static_assert(SizeCheck<8, alignof(Realm::Config)>{});
-    #endif
-#elif __arm__
-    static_assert(SizeCheck<192, sizeof(Realm::Config)>{});
-    static_assert(SizeCheck<8, alignof(Realm::Config)>{});
-#elif __aarch64__
-    #if __ANDROID__
-    static_assert(SizeCheck<368, sizeof(Realm::Config)>{});
-    static_assert(SizeCheck<16, alignof(Realm::Config)>{});
-    #else
-#if defined(__clang__)
-    static_assert(SizeCheck<312, sizeof(Realm::Config)>{});
-#elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(SizeCheck<328, sizeof(Realm::Config)>{});
-#endif
-    static_assert(SizeCheck<8, alignof(Realm::Config)>{});
-    #endif
-#elif _WIN32
-    #if _DEBUG
-    static_assert(SizeCheck<456, sizeof(Realm::Config)>{});
-    #else
-    static_assert(SizeCheck<424, sizeof(Realm::Config)>{});
-    #endif
-    static_assert(SizeCheck<8, alignof(Realm::Config)>{});
-#endif
-
     static_assert((uint8_t)realm::config::schema_mode::Automatic == (uint8_t)::realm::SchemaMode::Automatic);
     static_assert((uint8_t)realm::config::schema_mode::Immutable == (uint8_t)::realm::SchemaMode::Immutable);
     static_assert((uint8_t)realm::config::schema_mode::ReadOnly == (uint8_t)::realm::SchemaMode::ReadOnly);
@@ -138,37 +100,63 @@ namespace realm::internal::bridge {
         config.path = std::filesystem::current_path().append("default.realm").generic_string();
         config.scheduler = std::make_shared<internal_scheduler>(scheduler::make_default());
         config.schema_version = 0;
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_config) RealmConfig(config);
+#else
+        m_config = std::make_shared<RealmConfig>(config);
+#endif
     }
 
     realm::config::config(const config& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_config) RealmConfig(*reinterpret_cast<const RealmConfig*>(&other.m_config));
+#else
+        m_config = other.m_config;
+#endif
     }
 
     realm::config& realm::config::operator=(const config& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<RealmConfig*>(&m_config) = *reinterpret_cast<const RealmConfig*>(&other.m_config);
         }
+#else
+        m_config = other.m_config;
+#endif
         return *this;
     }
 
     realm::config::config(config&& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_config) RealmConfig(std::move(*reinterpret_cast<RealmConfig*>(&other.m_config)));
+#else
+        m_config = std::move(other.m_config);
+#endif
     }
 
     realm::config& realm::config::operator=(config&& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<RealmConfig*>(&m_config) = std::move(*reinterpret_cast<RealmConfig*>(&other.m_config));
         }
+#else
+        m_config = std::move(other.m_config);
+#endif
         return *this;
     }
 
     realm::config::~config() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         reinterpret_cast<RealmConfig*>(&m_config)->~RealmConfig();
+#endif
     }
 
     realm::config::config(const RealmConfig &v) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_config) RealmConfig(v);
+#else
+        m_config = std::make_shared<RealmConfig>(v);
+#endif
     }
     realm::config::config(const std::string& path,
                           const std::shared_ptr<struct scheduler>& scheduler) {
@@ -177,7 +165,11 @@ namespace realm::internal::bridge {
         config.path = path;
         config.scheduler = std::make_shared<internal_scheduler>(scheduler);
         config.schema_version = 0;
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_config) RealmConfig(config);
+#else
+        m_config = std::make_shared<RealmConfig>(config);
+#endif
     }
 
     realm::sync_config::sync_config(const std::shared_ptr<SyncConfig> &v) {
@@ -187,8 +179,24 @@ namespace realm::internal::bridge {
         return m_config;
     }
 
+    inline RealmConfig* realm::config::get_config() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<RealmConfig*>(&m_config);
+#else
+        return m_config.get();
+#endif
+    }
+
+    inline const RealmConfig* realm::config::get_config_const() const {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<const RealmConfig*>(&m_config);
+#else
+        return m_config.get();
+#endif
+    }
+
     std::string realm::config::path() const {
-        return reinterpret_cast<const RealmConfig*>(&m_config)->path;
+        return get_config_const()->path;
     }
     realm::config realm::get_config() const {
         return m_realm->config();
@@ -198,14 +206,14 @@ namespace realm::internal::bridge {
         for (auto& os : v) {
             v2.push_back(os);
         }
-        reinterpret_cast<RealmConfig*>(&m_config)->schema = v2;
+        get_config()->schema = v2;
     }
     void realm::config::set_schema_mode(schema_mode mode) {
-        reinterpret_cast<RealmConfig*>(&m_config)->schema_mode = static_cast<::realm::SchemaMode>(mode);
+        get_config()->schema_mode = static_cast<::realm::SchemaMode>(mode);
     }
 
     std::optional<schema> realm::config::get_schema() {
-        if (auto s = reinterpret_cast<RealmConfig*>(&m_config)->schema) {
+        if (auto s = get_config()->schema) {
             return *s;
         }
         return std::nullopt;
@@ -219,11 +227,13 @@ namespace realm::internal::bridge {
         return read_group().get_table(object_type);
     }
 
-    realm::realm() {
-
-    }
+    realm::realm() { }
     realm::config::operator RealmConfig() const {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return *reinterpret_cast<const RealmConfig*>(&m_config);
+#else
+        return *m_config;
+#endif
     }
     realm::realm(const config &v) {
         static bool initialized;
@@ -243,36 +253,44 @@ namespace realm::internal::bridge {
     }
     template <>
     dictionary resolve(const realm& r, thread_safe_reference &&tsr) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<ThreadSafeReference*>(tsr.m_thread_safe_reference)->resolve<Dictionary>(r);
+#else
+        return reinterpret_cast<ThreadSafeReference*>(tsr.m_thread_safe_reference.get())->resolve<Dictionary>(r);
+#endif
     }
     template <>
     object resolve(const realm& r, thread_safe_reference &&tsr) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<ThreadSafeReference*>(tsr.m_thread_safe_reference)->resolve<Object>(r);
+#else
+        return reinterpret_cast<ThreadSafeReference*>(tsr.m_thread_safe_reference.get())->resolve<Object>(r);
+#endif
     }
     void realm::config::set_scheduler(const std::shared_ptr<struct scheduler> &s) {
-        reinterpret_cast<RealmConfig*>(&m_config)->scheduler = std::make_shared<internal_scheduler>(s);
+        get_config()->scheduler = std::make_shared<internal_scheduler>(s);
     }
     void realm::config::set_sync_config(const std::optional<struct sync_config> &s) {
         if (s)
-            reinterpret_cast<RealmConfig*>(&m_config)->sync_config = static_cast<std::shared_ptr<SyncConfig>>(*s);
+            get_config()->sync_config = static_cast<std::shared_ptr<SyncConfig>>(*s);
         else
-            reinterpret_cast<RealmConfig*>(&m_config)->sync_config = nullptr;
+            get_config()->sync_config = nullptr;
     }
 
     void realm::config::set_custom_http_headers(const std::map<std::string, std::string>& headers) {
-        if (reinterpret_cast<RealmConfig*>(&m_config)->sync_config) {
-            reinterpret_cast<const RealmConfig*>(&m_config)->sync_config->custom_http_headers = headers;
+        if (get_config()->sync_config) {
+            get_config()->sync_config->custom_http_headers = headers;
         } else {
             throw std::logic_error("HTTP headers can only be set on a config for a synced Realm.");
         }
     }
 
     void realm::config::set_schema_version(uint64_t version) {
-        reinterpret_cast<RealmConfig*>(&m_config)->schema_version = version;
+        get_config()->schema_version = version;
     }
 
     realm::sync_config realm::config::sync_config() const {
-        return reinterpret_cast<const RealmConfig*>(&m_config)->sync_config;
+        return get_config_const()->sync_config;
     }
 
     struct external_scheduler final : public scheduler {
@@ -339,7 +357,7 @@ namespace realm::internal::bridge {
     }
 
     void realm::config::set_path(const std::string &path) {
-        reinterpret_cast<RealmConfig*>(&m_config)->path = path;
+        get_config()->path = path;
     }
 
     bool realm::refresh() {

@@ -3,6 +3,7 @@
 
 #include <chrono>
 #include <cpprealm/internal/bridge/utils.hpp>
+
 namespace realm {
     class Timestamp;
 }
@@ -33,16 +34,8 @@ namespace realm::internal::bridge {
         static constexpr int32_t nanoseconds_per_second = 1000000000;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::Timestamp m_timestamp[1];
-#elif __i386__
-        std::aligned_storage<16, 4>::type m_timestamp[1];
-#elif __x86_64__
-        std::aligned_storage<16, 8>::type m_timestamp[1];
-#elif __arm__
-        std::aligned_storage<16, 8>::type m_timestamp[1];
-#elif __aarch64__
-        std::aligned_storage<16, 8>::type m_timestamp[1];
-#elif _WIN32
-        std::aligned_storage<16, 8>::type m_timestamp[1];
+#else
+        std::pair<int64_t, int32_t> m_timestamp;
 #endif
         friend bool operator ==(const timestamp&, const timestamp&);
         friend bool operator !=(const timestamp&, const timestamp&);

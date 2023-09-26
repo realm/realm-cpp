@@ -2,6 +2,7 @@
 #define CPP_REALM_THREAD_SAFE_REFERENCE_HPP
 
 #include <type_traits>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm {
     class ThreadSafeReference;
@@ -29,16 +30,8 @@ namespace realm::internal::bridge {
         friend T resolve(const realm&, thread_safe_reference&& tsr);
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::ThreadSafeReference m_thread_safe_reference[1];
-#elif __i386__
-        std::aligned_storage<4, 4>::type m_thread_safe_reference[1];
-#elif __x86_64__
-        std::aligned_storage<8, 8>::type m_thread_safe_reference[1];
-#elif __arm__
-        std::aligned_storage<4, 4>::type m_thread_safe_reference[1];
-#elif __aarch64__
-        std::aligned_storage<8, 8>::type m_thread_safe_reference[1];
-#elif _WIN32
-        std::aligned_storage<8, 8>::type m_thread_safe_reference[1];
+#else
+        std::shared_ptr<ThreadSafeReference> m_thread_safe_reference;
 #endif
     };
 

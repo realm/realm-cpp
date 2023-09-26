@@ -12,7 +12,7 @@
 namespace realm::internal::bridge {
 
     list::list() {
-#ifndef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_list) List();
 #else
         m_list = std::make_shared<List>();
@@ -20,7 +20,7 @@ namespace realm::internal::bridge {
     }
     
     list::list(const list& other) {
-#ifndef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_list) List(*reinterpret_cast<const List*>(&other.m_list));
 #else
         m_list = other.m_list;
@@ -28,7 +28,7 @@ namespace realm::internal::bridge {
     }
     
     list& list::operator=(const list& other) {
-#ifndef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<List*>(&m_list) = *reinterpret_cast<const List*>(&other.m_list);
         }
@@ -39,7 +39,7 @@ namespace realm::internal::bridge {
     }
 
     list::list(list&& other) {
-#ifndef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_list) List(std::move(*reinterpret_cast<List*>(&other.m_list)));
 #else
         m_list = std::move(other.m_list);
@@ -47,7 +47,7 @@ namespace realm::internal::bridge {
     }
 
     list& list::operator=(list&& other) {
-#ifndef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<List*>(&m_list) = std::move(*reinterpret_cast<List*>(&other.m_list));
         }
@@ -58,7 +58,7 @@ namespace realm::internal::bridge {
     }
 
     list::~list() {
-#ifndef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         reinterpret_cast<List*>(&m_list)->~List();
 #else
         //m_list->~List();
@@ -66,7 +66,7 @@ namespace realm::internal::bridge {
     }
 
     list::list(const List &v) {
-#ifndef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_list) List(v);
 #else
         m_list = std::make_shared<List>(v);
@@ -76,7 +76,7 @@ namespace realm::internal::bridge {
     list::list(const realm &realm,
                const obj &obj,
                const col_key& col_key) {
-#ifndef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_list) List(object(realm, obj).get_list(col_key));
 #else
         m_list = std::make_shared<List>(List(object(realm, obj).get_list(col_key)));
@@ -84,7 +84,7 @@ namespace realm::internal::bridge {
     }
 
     inline List* list::get_list() {
-#ifndef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<List*>(&m_list);
 #else
         return m_list.get();
@@ -92,15 +92,15 @@ namespace realm::internal::bridge {
     }
 
     inline const List* list::get_list_const() const {
-#ifndef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const List*>(&m_list);
 #else
         return m_list.get();
 #endif
     }
 
-    inline List* get_list(const list& lst) {
-#ifndef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+    inline List* get_list(list& lst) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<List*>(&lst.m_list);
 #else
         return lst.m_list.get();
@@ -108,8 +108,8 @@ namespace realm::internal::bridge {
     }
 
     inline const List* get_list_const(const list& lst) {
-#ifndef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        return return reinterpret_cast<const List*>(&lst.m_list);
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<const List*>(&lst.m_list);
 #else
         return lst.m_list.get();
 #endif

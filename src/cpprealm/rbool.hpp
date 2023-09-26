@@ -3,6 +3,7 @@
 
 #include <cpprealm/schema.hpp>
 #include <cpprealm/internal/bridge/query.hpp>
+#include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/experimental/db.hpp>
 
 namespace realm::experimental {
@@ -163,7 +164,11 @@ namespace realm {
         }
         rbool operator!() const {
             if (is_for_queries) {
-                new (&q) internal::bridge::query(q.negate());
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+                new(&q) internal::bridge::query(q.negate());
+#else
+                q = internal::bridge::query(q.negate());
+#endif
                 return *this;
             }
             return !b;

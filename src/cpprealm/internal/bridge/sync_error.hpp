@@ -2,6 +2,7 @@
 #define CPP_REALM_BRIDGE_SYNC_ERROR_HPP
 
 #include <cpprealm/internal/bridge/mixed.hpp>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 #include <unordered_map>
 
@@ -44,28 +45,8 @@ namespace realm::internal::bridge {
     private:
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::SyncError m_error[1];
-#elif __i386__
-        std::aligned_storage<68, 4>::type m_error[1];
-#elif __x86_64__
-    #if defined(__clang__)
-        std::aligned_storage<120, 8>::type m_error[1];
-    #elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<136, 8>::type m_error[1];
-    #endif
-#elif __arm__
-        std::aligned_storage<64, 4>::type m_error[1];
-#elif __aarch64__
-#if defined(__clang__)
-        std::aligned_storage<120, 8>::type m_error[1];
-#elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<144, 8>::type m_error[1];
-#endif
-#elif _WIN32
-        #if _DEBUG
-        std::aligned_storage<168, 8>::type m_error[1];
-        #else
-        std::aligned_storage<144, 8>::type m_error[1];
-        #endif
+#else
+        std::shared_ptr<SyncError> m_error;
 #endif
     };
 }

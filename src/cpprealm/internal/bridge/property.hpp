@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <string>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm {
     struct Property;
@@ -56,7 +57,7 @@ namespace realm::internal::bridge {
         void set_object_link(const std::string&);
         void set_origin_property_name(const std::string&);
         void set_type(type);
-        void set_is_computed(bool);
+//        void set_is_computed(bool);
         void set_primary_key(bool);
         bool is_primary() const;
         std::string name() const;
@@ -64,28 +65,8 @@ namespace realm::internal::bridge {
     private:
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::Property m_property[1];
-#elif __i386__
-        std::aligned_storage<64, 4>::type m_property[1];
-#elif __x86_64__
-    #if defined(__clang__)
-        std::aligned_storage<120, 8>::type m_property[1];
-    #elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<152, 8>::type m_property[1];
-    #endif
-#elif __arm__
-        std::aligned_storage<64, 8>::type m_property[1];
-#elif __aarch64__
-#if defined(__clang__)
-        std::aligned_storage<120, 8>::type m_property[1];
-#elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<152, 8>::type m_property[1];
-#endif
-#elif _WIN32
-        #if _DEBUG
-        std::aligned_storage<184, 8>::type m_property[1];
-        #else
-        std::aligned_storage<152, 8>::type m_property[1];
-        #endif
+#else
+        std::shared_ptr<Property> m_property;
 #endif
     };
 

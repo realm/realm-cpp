@@ -6,6 +6,8 @@
 #include <memory>
 #include <unordered_map>
 
+#include <cpprealm/internal/bridge/utils.hpp>
+
 namespace realm {
     class Object;
     class IndexSet;
@@ -35,16 +37,8 @@ namespace realm::internal::bridge {
     private:
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::NotificationToken m_token[1];
-#elif __i386__
-        std::aligned_storage<16, 4>::type m_token[1];
-#elif __x86_64__
-        std::aligned_storage<24, 8>::type m_token[1];
-#elif __arm__
-        std::aligned_storage<16, 8>::type m_token[1];
-#elif __aarch64__
-        std::aligned_storage<24, 8>::type m_token[1];
-#elif _WIN32
-        std::aligned_storage<24, 8>::type m_token[1];
+#else
+        std::shared_ptr<NotificationToken> m_token;
 #endif
     };
 
@@ -79,20 +73,8 @@ namespace realm::internal::bridge {
             friend struct index_iterable_adaptor;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
             storage::IndexSet_IndexIterator m_iterator[1];
-#elif __i386__
-            std::aligned_storage<16, 4>::type m_iterator[1];
-#elif __x86_64__
-            std::aligned_storage<32, 8>::type m_iterator[1];
-#elif __arm__
-            std::aligned_storage<16, 4>::type m_iterator[1];
-#elif __aarch64__
-            std::aligned_storage<32, 8>::type m_iterator[1];
-#elif _WIN32
-            #if _DEBUG
-            std::aligned_storage<64, 8>::type m_iterator[1];
-            #else
-            std::aligned_storage<32, 8>::type m_iterator[1];
-            #endif
+#else
+            std::shared_ptr<std::any> m_iterator;
 #endif
         };
 
@@ -111,36 +93,16 @@ namespace realm::internal::bridge {
             friend struct index_set;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
             storage::IndexSet_IndexIteratableAdaptor m_index_iterable_adaptor[1];
-#elif __i386__
-            std::aligned_storage<4, 4>::type m_index_iterable_adaptor[1];
-#elif __x86_64__
-            std::aligned_storage<8, 8>::type m_index_iterable_adaptor[1];
-#elif __arm__
-            std::aligned_storage<4, 4>::type m_index_iterable_adaptor[1];
-#elif __aarch64__
-            std::aligned_storage<8, 8>::type m_index_iterable_adaptor[1];
-#elif _WIN32
-            std::aligned_storage<8, 8>::type m_index_iterable_adaptor[1];
+#else
+            std::shared_ptr<std::any> m_index_iterable_adaptor;
 #endif
         };
         index_iterable_adaptor as_indexes() const;
     private:
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::IndexSet m_idx_set[1];
-#elif __i386__
-        std::aligned_storage<24, 4>::type m_idx_set[1];
-#elif __x86_64__
-        std::aligned_storage<24, 8>::type m_idx_set[1];
-#elif __arm__
-        std::aligned_storage<24, 4>::type m_idx_set[1];
-#elif __aarch64__
-        std::aligned_storage<24, 8>::type m_idx_set[1];
-#elif _WIN32
-        #if _DEBUG
-        std::aligned_storage<32, 8>::type m_idx_set[1];
-        #else
-        std::aligned_storage<24, 8>::type m_idx_set[1];
-        #endif
+#else
+        std::shared_ptr<IndexSet> m_idx_set;
 #endif
     };
     struct collection_change_set {
@@ -161,28 +123,8 @@ namespace realm::internal::bridge {
     private:
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::CollectionChangeSet m_change_set[1];
-#elif __i386__
-        std::aligned_storage<84, 4>::type m_change_set[1];
-#elif __x86_64__
-    #if defined(__clang__)
-        std::aligned_storage<168, 8>::type m_change_set[1];
-    #elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<184, 8>::type m_change_set[1];
-    #endif
-#elif __arm__
-        std::aligned_storage<84, 4>::type m_change_set[1];
-#elif __aarch64__
-#if defined(__clang__)
-        std::aligned_storage<168, 8>::type m_change_set[1];
-#elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<184, 8>::type m_change_set[1];
-#endif
-#elif _WIN32
-        #if _DEBUG
-        std::aligned_storage<248, 8>::type m_change_set[1];
-        #else
-        std::aligned_storage<192, 8>::type m_change_set[1];
-        #endif
+#else
+        std::shared_ptr<CollectionChangeSet> m_change_set;
 #endif
     };
     struct collection_change_callback {
@@ -218,16 +160,8 @@ namespace realm::internal::bridge {
     private:
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::Object m_object[1];
-#elif __i386__
-        std::aligned_storage<64, 4>::type m_object[1];
-#elif __x86_64__
-        std::aligned_storage<104, 8>::type m_object[1];
-#elif __arm__
-        std::aligned_storage<80, 8>::type m_object[1];
-#elif __aarch64__
-        std::aligned_storage<104, 8>::type m_object[1];
-#elif _WIN32
-        std::aligned_storage<104, 8>::type m_object[1];
+#else
+        std::shared_ptr<Object> m_object;
 #endif
     };
 }
