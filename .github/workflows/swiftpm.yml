@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-12
+    runs-on: macos-13
     name: ${{ matrix.platform }} ${{ matrix.configuration }}, Xcode ${{ matrix.xcode }}
     strategy:
       fail-fast: false
@@ -26,7 +26,7 @@ jobs:
           - tvOS
           - tvOS Simulator
         xcode:
-          - '14.0'
+          - '15.0'
         configuration:
           - Debug
           - Release
@@ -71,11 +71,7 @@ jobs:
 
       - name: Build
         run: |
-          # Xcode 13 can't build executable targets for non-macOS platforms
-          scheme=realm-cpp-sdk
-          if [[ "${{ matrix.platform }}" == macOS* ]] || [[ "${{ matrix.xcode }}" != 13.* ]]; then
-            scheme=realm-beta-tests
-          fi
+          scheme=realm-beta-tests
           xcodebuild -scheme $scheme -destination "generic/platform=${{ matrix.platform }}" -configuration ${{ matrix.configuration }} -derivedDataPath .build/derivedData
 
       - name: Open a tmate debug session
