@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <memory>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm {
     class LnkLst;

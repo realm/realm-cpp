@@ -1,5 +1,4 @@
 #include <cpprealm/internal/bridge/decimal128.hpp>
-#include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/experimental/types.hpp>
 
 #include <realm/decimal128.hpp>

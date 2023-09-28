@@ -4,11 +4,6 @@
 #include <realm/mixed.hpp>
 
 namespace realm::internal::bridge {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-
-#else
-
-#endif
 
 #define CPPREALM_OPTIONAL_MIXED(type) \
     template<> \

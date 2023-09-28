@@ -15,8 +15,8 @@
 #include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
 #include <cpprealm/internal/bridge/object_id.hpp>
-#include <cpprealm/internal/bridge/decimal128.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm {
     class Group;

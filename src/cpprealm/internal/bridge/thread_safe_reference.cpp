@@ -1,8 +1,9 @@
 #include <cpprealm/internal/bridge/thread_safe_reference.hpp>
-#include <cpprealm/internal/bridge/object.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
-#include <realm/object-store/object.hpp>
+#include <cpprealm/internal/bridge/object.hpp>
+
 #include <realm/object-store/dictionary.hpp>
+#include <realm/object-store/object.hpp>
 #include <realm/object-store/thread_safe_reference.hpp>
 
 #include <memory>

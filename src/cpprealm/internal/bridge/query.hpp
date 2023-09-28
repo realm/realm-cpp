@@ -4,8 +4,8 @@
 #include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 
-#include <string_view>
 #include <optional>
+#include <string_view>
 
 namespace realm {
     struct object_id;

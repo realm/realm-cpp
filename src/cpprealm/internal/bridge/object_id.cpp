@@ -1,8 +1,9 @@
-#include <realm/object_id.hpp>
-#include <realm/string_data.hpp>
+#include <cpprealm/internal/bridge/object_id.hpp>
+
 #include <cpprealm/experimental/types.hpp>
 
-#include <cpprealm/internal/bridge/object_id.hpp>
+#include <realm/object_id.hpp>
+#include <realm/string_data.hpp>
 
 namespace realm::internal::bridge {
 

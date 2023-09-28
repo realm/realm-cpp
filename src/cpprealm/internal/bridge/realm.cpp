@@ -1,30 +1,28 @@
 #include <cpprealm/internal/bridge/realm.hpp>
 
-#include <cpprealm/app.hpp>
 #include <cpprealm/analytics.hpp>
-#include <cpprealm/logger.hpp>
-#include <cpprealm/scheduler.hpp>
-#include <cpprealm/internal/bridge/object_schema.hpp>
-#include <cpprealm/internal/bridge/schema.hpp>
-#include <cpprealm/internal/bridge/table.hpp>
+#include <cpprealm/app.hpp>
+#include <cpprealm/internal/bridge/async_open_task.hpp>
+#include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
-#include <cpprealm/internal/bridge/dictionary.hpp>
-#include <cpprealm/internal/bridge/thread_safe_reference.hpp>
-#include <cpprealm/internal/bridge/async_open_task.hpp>
-#include <cpprealm/internal/bridge/sync_session.hpp>
+#include <cpprealm/internal/bridge/object_schema.hpp>
+#include <cpprealm/internal/bridge/schema.hpp>
 #include <cpprealm/internal/bridge/sync_error.hpp>
+#include <cpprealm/internal/bridge/sync_session.hpp>
+#include <cpprealm/internal/bridge/table.hpp>
+#include <cpprealm/internal/bridge/thread_safe_reference.hpp>
+#include <cpprealm/logger.hpp>
+#include <cpprealm/scheduler.hpp>
 
-#include <realm/sync/config.hpp>
-
+#include <realm/object-store/dictionary.hpp>
 #include <realm/object-store/schema.hpp>
 #include <realm/object-store/shared_realm.hpp>
-#include <realm/object-store/thread_safe_reference.hpp>
-#include <realm/object-store/dictionary.hpp>
-#include <realm/object-store/sync/sync_user.hpp>
 #include <realm/object-store/sync/sync_session.hpp>
-
+#include <realm/object-store/sync/sync_user.hpp>
+#include <realm/object-store/thread_safe_reference.hpp>
 #include <realm/object-store/util/scheduler.hpp>
+#include <realm/sync/config.hpp>
 
 #include <filesystem>
 

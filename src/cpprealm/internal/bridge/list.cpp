@@ -1,11 +1,9 @@
 #include <cpprealm/internal/bridge/list.hpp>
 
 #include <cpprealm/internal/bridge/col_key.hpp>
-#include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/mixed.hpp>
-
+#include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
-#include <cpprealm/internal/type_info.hpp>
 
 #include <realm/object-store/list.hpp>
 

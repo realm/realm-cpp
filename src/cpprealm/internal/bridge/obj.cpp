@@ -1,23 +1,21 @@
 #include <cpprealm/internal/bridge/obj.hpp>
 
-#include <realm/dictionary.hpp>
-#include <realm/list.hpp>
-#include <realm/table_view.hpp>
-
-#include <realm/object-store/object_store.hpp>
-#include <realm/object-store/shared_realm.hpp>
-
 #include <cpprealm/object.hpp>
+
 #include <cpprealm/internal/type_info.hpp>
 
 #include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/lnklst.hpp>
 #include <cpprealm/internal/bridge/obj_key.hpp>
+#include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/timestamp.hpp>
 #include <cpprealm/internal/bridge/uuid.hpp>
 
-#include <cpprealm/internal/bridge/utils.hpp>
-#include <cpprealm/internal/bridge/realm.hpp>
+#include <realm/dictionary.hpp>
+#include <realm/list.hpp>
+#include <realm/table_view.hpp>
+#include <realm/object-store/object_store.hpp>
+#include <realm/object-store/shared_realm.hpp>
 
 namespace realm::internal::bridge {
     obj::obj() {

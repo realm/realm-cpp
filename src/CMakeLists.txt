@@ -12,114 +12,109 @@ add_custom_command(
 )
 
 set(SOURCES
-    cpprealm/app.cpp
-    cpprealm/sdk.cpp
     cpprealm/analytics.cpp
-    cpprealm/logger.cpp
-    cpprealm/internal/bridge/obj.cpp
-    cpprealm/internal/bridge/col_key.cpp
-    cpprealm/internal/bridge/object.cpp
-    cpprealm/internal/bridge/property.cpp
-    cpprealm/internal/bridge/object_schema.cpp
-    cpprealm/internal/bridge/mixed.cpp
-    cpprealm/internal/bridge/uuid.cpp
+    cpprealm/app.cpp
+    cpprealm/experimental/db.cpp
+    cpprealm/experimental/managed_binary.cpp
+    cpprealm/experimental/managed_decimal.cpp
+    cpprealm/experimental/managed_numeric.cpp
+    cpprealm/experimental/managed_objectid.cpp
+    cpprealm/experimental/managed_primary_key.cpp
+    cpprealm/experimental/managed_string.cpp
+    cpprealm/experimental/managed_timestamp.cpp
+    cpprealm/experimental/managed_uuid.cpp
+    cpprealm/experimental/observation.cpp
+    cpprealm/experimental/types.cpp
+    cpprealm/flex_sync.cpp
+    cpprealm/internal/bridge/async_open_task.cpp
     cpprealm/internal/bridge/binary.cpp
-    cpprealm/internal/bridge/timestamp.cpp
+    cpprealm/internal/bridge/col_key.cpp
+    cpprealm/internal/bridge/decimal128.cpp
+    cpprealm/internal/bridge/dictionary.cpp
+    cpprealm/internal/bridge/list.cpp
+    cpprealm/internal/bridge/lnklst.cpp
+    cpprealm/internal/bridge/mixed.cpp
+    cpprealm/internal/bridge/obj.cpp
     cpprealm/internal/bridge/obj_key.cpp
-    cpprealm/internal/bridge/table.cpp
+    cpprealm/internal/bridge/object.cpp
+    cpprealm/internal/bridge/object_id.cpp
+    cpprealm/internal/bridge/object_schema.cpp
+    cpprealm/internal/bridge/property.cpp
     cpprealm/internal/bridge/query.cpp
     cpprealm/internal/bridge/realm.cpp
-    cpprealm/internal/bridge/dictionary.cpp
     cpprealm/internal/bridge/results.cpp
     cpprealm/internal/bridge/schema.cpp
-    cpprealm/scheduler.cpp
-    cpprealm/internal/bridge/thread_safe_reference.cpp
-    cpprealm/internal/bridge/lnklst.cpp
-    cpprealm/internal/bridge/list.cpp
-    cpprealm/flex_sync.cpp
-    cpprealm/internal/bridge/sync_session.cpp
+    cpprealm/internal/bridge/status.cpp
     cpprealm/internal/bridge/sync_error.cpp
     cpprealm/internal/bridge/sync_manager.cpp
-    cpprealm/internal/bridge/async_open_task.cpp
-    cpprealm/internal/bridge/object_id.cpp
-    cpprealm/internal/bridge/decimal128.cpp
-    cpprealm/experimental/managed_string.cpp
-    cpprealm/experimental/observation.cpp
-    cpprealm/experimental/managed_timestamp.cpp
-    cpprealm/experimental/managed_numeric.cpp
-    cpprealm/experimental/managed_uuid.cpp
-    cpprealm/experimental/managed_objectid.cpp
-    cpprealm/experimental/managed_binary.cpp
-    cpprealm/experimental/managed_primary_key.cpp
-    cpprealm/experimental/managed_decimal.cpp
-    cpprealm/experimental/types.cpp
-    cpprealm/internal/bridge/status.cpp
-    cpprealm/experimental/db.cpp) # REALM_SOURCES
+    cpprealm/internal/bridge/sync_session.cpp
+    cpprealm/internal/bridge/table.cpp
+    cpprealm/internal/bridge/thread_safe_reference.cpp
+    cpprealm/internal/bridge/timestamp.cpp
+    cpprealm/internal/bridge/uuid.cpp
+    cpprealm/logger.cpp
+    cpprealm/scheduler.cpp
+    cpprealm/sdk.cpp) # REALM_SOURCES
 
 set(HEADERS
-    cpprealm/sdk.hpp
-    cpprealm/app.hpp
-    cpprealm/results.hpp
-    cpprealm/logger.hpp
-    cpprealm/notifications.hpp
-    cpprealm/object.hpp
-    cpprealm/asymmetric_object.hpp
-    cpprealm/persisted.hpp
-    cpprealm/schema.hpp
-    cpprealm/task.hpp
-    cpprealm/thread_safe_reference.hpp
-    cpprealm/flex_sync.hpp
     cpprealm/analytics.hpp
-    cpprealm/scheduler.hpp
-    cpprealm/internal/generic_network_transport.hpp
-    cpprealm/internal/bridge/obj.hpp
-    cpprealm/internal/type_info.hpp
-    cpprealm/internal/bridge/utils.hpp
-    cpprealm/internal/bridge/col_key.hpp
-    cpprealm/internal/bridge/object.hpp
-    cpprealm/internal/bridge/property.hpp
-    cpprealm/internal/bridge/object_schema.hpp
-    cpprealm/internal/bridge/mixed.hpp
-    cpprealm/internal/bridge/uuid.hpp
-    cpprealm/internal/bridge/binary.hpp
-    cpprealm/internal/bridge/timestamp.hpp
-    cpprealm/internal/bridge/obj_key.hpp
-    cpprealm/internal/bridge/table.hpp
-    cpprealm/internal/bridge/query.hpp
-    cpprealm/internal/bridge/realm.hpp
-    cpprealm/internal/bridge/dictionary.hpp
-    cpprealm/internal/bridge/results.hpp
-    cpprealm/internal/bridge/schema.hpp
-    cpprealm/internal/bridge/thread_safe_reference.hpp
-    cpprealm/internal/bridge/lnklst.hpp
-    cpprealm/internal/bridge/list.hpp
-    cpprealm/internal/bridge/sync_session.hpp
-    cpprealm/internal/bridge/sync_error.hpp
-    cpprealm/internal/bridge/sync_manager.hpp
-    cpprealm/internal/bridge/async_open_task.hpp
-    cpprealm/internal/bridge/object_id.hpp
+    cpprealm/app.hpp
+    cpprealm/asymmetric_object.hpp
+    cpprealm/experimental/accessors.hpp
     cpprealm/experimental/db.hpp
     cpprealm/experimental/link.hpp
     cpprealm/experimental/macros.hpp
-    cpprealm/experimental/managed_string.hpp
-    cpprealm/experimental/observation.hpp
+    cpprealm/experimental/managed_binary.hpp
+    cpprealm/experimental/managed_decimal.hpp
+    cpprealm/experimental/managed_dictionary.hpp
+    cpprealm/experimental/managed_list.hpp
+    cpprealm/experimental/managed_mixed.hpp
     cpprealm/experimental/managed_numeric.hpp
+    cpprealm/experimental/managed_objectid.hpp
+    cpprealm/experimental/managed_primary_key.hpp
+    cpprealm/experimental/managed_string.hpp
     cpprealm/experimental/managed_timestamp.hpp
     cpprealm/experimental/managed_uuid.hpp
-    cpprealm/experimental/managed_objectid.hpp
+    cpprealm/experimental/observation.hpp
     cpprealm/experimental/results.hpp
-    cpprealm/experimental/managed_binary.hpp
-    cpprealm/experimental/managed_list.hpp
-    cpprealm/experimental/managed_dictionary.hpp
-    cpprealm/experimental/managed_mixed.hpp
-    cpprealm/experimental/accessors.hpp
-    cpprealm/experimental/types.hpp
-    cpprealm/rbool.hpp
-    cpprealm/experimental/managed_primary_key.hpp
     cpprealm/experimental/sdk.hpp
+    cpprealm/experimental/types.hpp
+    cpprealm/flex_sync.hpp
+    cpprealm/internal/bridge/async_open_task.hpp
+    cpprealm/internal/bridge/binary.hpp
+    cpprealm/internal/bridge/col_key.hpp
     cpprealm/internal/bridge/decimal128.hpp
-    cpprealm/experimental/managed_decimal.hpp
-    cpprealm/internal/bridge/status.hpp) # REALM_INSTALL_HEADERS
+    cpprealm/internal/bridge/list.hpp
+    cpprealm/internal/bridge/lnklst.hpp
+    cpprealm/internal/bridge/mixed.hpp
+    cpprealm/internal/bridge/obj.hpp
+    cpprealm/internal/bridge/obj_key.hpp
+    cpprealm/internal/bridge/object.hpp
+    cpprealm/internal/bridge/object_id.hpp
+    cpprealm/internal/bridge/object_schema.hpp
+    cpprealm/internal/bridge/property.hpp
+    cpprealm/internal/bridge/query.hpp
+    cpprealm/internal/bridge/realm.hpp
+    cpprealm/internal/bridge/results.hpp
+    cpprealm/internal/bridge/schema.hpp
+    cpprealm/internal/bridge/status.hpp
+    cpprealm/internal/bridge/sync_error.hpp
+    cpprealm/internal/bridge/sync_manager.hpp
+    cpprealm/internal/bridge/sync_session.hpp
+    cpprealm/internal/bridge/table.hpp
+    cpprealm/internal/bridge/thread_safe_reference.hpp
+    cpprealm/internal/bridge/timestamp.hpp
+    cpprealm/internal/bridge/utils.hpp
+    cpprealm/internal/bridge/uuid.hpp
+    cpprealm/internal/generic_network_transport.hpp
+    cpprealm/internal/type_info.hpp
+    cpprealm/persisted.hpp
+    cpprealm/rbool.hpp
+    cpprealm/scheduler.hpp
+    cpprealm/schema.hpp
+    cpprealm/task.hpp
+    cpprealm/thread_safe_reference.hpp
+    cpprealm/sdk.hpp) # REALM_INSTALL_HEADERS
 
 include(GNUInstallDirs)
 

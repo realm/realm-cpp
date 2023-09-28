@@ -2,11 +2,11 @@
 #define CPP_REALM_BRIDGE_REALM_HPP
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-#include <map>
 #include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm {

@@ -1,4 +1,5 @@
 #include <cpprealm/flex_sync.hpp>
+
 #include <realm/object-store/shared_realm.hpp>
 #include <realm/sync/subscriptions.hpp>
 

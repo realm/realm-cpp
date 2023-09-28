@@ -2,9 +2,10 @@
 #define CPPREALM_RBOOL_HPP
 
 #include <cpprealm/schema.hpp>
+#include <cpprealm/experimental/db.hpp>
+
 #include <cpprealm/internal/bridge/query.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
-#include <cpprealm/experimental/db.hpp>
 
 namespace realm::experimental {
     template<typename>

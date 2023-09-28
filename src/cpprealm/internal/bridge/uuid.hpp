@@ -1,8 +1,8 @@
 #ifndef CPP_REALM_BRIDGE_UUID_HPP
 #define CPP_REALM_BRIDGE_UUID_HPP
 
-#include <string_view>
 #include <cpprealm/internal/bridge/utils.hpp>
+#include <string_view>
 
 namespace realm {
     struct uuid;

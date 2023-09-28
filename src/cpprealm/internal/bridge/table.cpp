@@ -1,13 +1,13 @@
 #include <cpprealm/internal/bridge/table.hpp>
-#include <cpprealm/internal/bridge/utils.hpp>
-#include <cpprealm/internal/bridge/query.hpp>
-#include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/mixed.hpp>
+#include <cpprealm/internal/bridge/obj.hpp>
+#include <cpprealm/internal/bridge/query.hpp>
+#include <cpprealm/internal/bridge/utils.hpp>
 
-#include <realm/table.hpp>
-#include <realm/table_view.hpp>
 #include <realm/keys.hpp>
 #include <realm/mixed.hpp>
+#include <realm/table.hpp>
+#include <realm/table_view.hpp>
 
 namespace realm::internal::bridge {
     table::table() {

@@ -1,7 +1,6 @@
 #include <cpprealm/internal/bridge/lnklst.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/obj_key.hpp>
-#include <cpprealm/internal/bridge/utils.hpp>
 
 #include <realm/list.hpp>
 

@@ -322,9 +322,9 @@ namespace realm::experimental {
             case internal::bridge::data_type::Decimal:
                 return value.operator internal::bridge::decimal128().operator ::realm::decimal128();
             case internal::bridge::data_type::TypedLink:
-                abort();
+                throw std::runtime_error("Objects stored in mixed properties must be accessed via `get_object_value()`");
             default:
-                abort();
+                throw std::runtime_error("Unknown datatype while deserializing mixed property.");
         }
     }
 

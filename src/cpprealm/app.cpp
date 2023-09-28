@@ -2,8 +2,8 @@
 #include <cpprealm/internal/generic_network_transport.hpp>
 
 #include <realm/object-store/sync/app.hpp>
-#include <realm/object-store/sync/sync_user.hpp>
 #include <realm/object-store/sync/sync_manager.hpp>
+#include <realm/object-store/sync/sync_user.hpp>
 
 #include <utility>
 

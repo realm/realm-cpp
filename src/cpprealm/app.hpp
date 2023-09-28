@@ -20,17 +20,18 @@
 #define CPP_REALM_APP_HPP
 
 #include <cpprealm/experimental/db.hpp>
-#include <cpprealm/internal/bridge/sync_session.hpp>
+
+#include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/sync_error.hpp>
 #include <cpprealm/internal/bridge/sync_manager.hpp>
-#include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/internal/bridge/sync_session.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 
-#include <realm/object-store/util/bson/bson.hpp>
 #include <realm/object-store/sync/app_credentials.hpp>
+#include <realm/object-store/util/bson/bson.hpp>
 
-#include <utility>
 #include <future>
+#include <utility>
 
 namespace realm {
     using sync_session = internal::bridge::sync_session;

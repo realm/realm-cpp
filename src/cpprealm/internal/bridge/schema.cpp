@@ -1,8 +1,8 @@
 #include <cpprealm/internal/bridge/schema.hpp>
 #include <cpprealm/internal/bridge/object_schema.hpp>
 
-#include <realm/object-store/schema.hpp>
 #include <realm/object-store/property.hpp>
+#include <realm/object-store/schema.hpp>
 
 namespace realm::internal::bridge {
     schema::schema() {

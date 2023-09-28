@@ -1,13 +1,15 @@
 #include <cpprealm/internal/bridge/query.hpp>
-#include <cpprealm/internal/bridge/col_key.hpp>
-#include <realm/query.hpp>
+
 #include <cpprealm/internal/bridge/binary.hpp>
+#include <cpprealm/internal/bridge/col_key.hpp>
+#include <cpprealm/internal/bridge/decimal128.hpp>
+#include <cpprealm/internal/bridge/mixed.hpp>
+#include <cpprealm/internal/bridge/object_id.hpp>
+#include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/timestamp.hpp>
 #include <cpprealm/internal/bridge/uuid.hpp>
-#include <cpprealm/internal/bridge/object_id.hpp>
-#include <cpprealm/internal/bridge/decimal128.hpp>
-#include <cpprealm/internal/bridge/table.hpp>
-#include <cpprealm/internal/bridge/mixed.hpp>
+
+#include <realm/query.hpp>
 
 #define __generate_query_operator(op, type) \
     query &query::op(col_key column_key, type value) { \

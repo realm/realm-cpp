@@ -1,6 +1,5 @@
 #include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/mixed.hpp>
-#include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
 

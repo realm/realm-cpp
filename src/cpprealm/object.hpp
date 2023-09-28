@@ -20,15 +20,15 @@
 #define realm_object_hpp
 
 #include <cpprealm/notifications.hpp>
+#include <cpprealm/schema.hpp>
 #include <cpprealm/thread_safe_reference.hpp>
+#include <cpprealm/rbool.hpp>
 #include <cpprealm/schema.hpp>
 #include <cpprealm/internal/type_info.hpp>
-#include <cpprealm/schema.hpp>
-#include <cpprealm/rbool.hpp>
 
 #include <any>
-#include <iostream>
 #include <future>
+#include <iostream>
 
 namespace realm {
 

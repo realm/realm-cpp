@@ -1,8 +1,9 @@
-#include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/results.hpp>
+
+#include <cpprealm/internal/bridge/obj.hpp>
+#include <cpprealm/internal/bridge/query.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
-#include <cpprealm/internal/bridge/query.hpp>
 #include <realm/object-store/results.hpp>
 
 namespace realm::internal::bridge {

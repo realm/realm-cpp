@@ -1,3 +1,7 @@
+#if defined(_MSC_VER)
+#define _WINSOCKAPI_
+#endif
+
 @BRIDGE_TYPE_HEADER_DECLS@
 
 #undef KEY

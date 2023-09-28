@@ -22,10 +22,10 @@
 #include <future>
 #include <type_traits>
 
-#include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/query.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
-#include <cpprealm/internal/bridge/obj.hpp>
+#include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 
 #include <cpprealm/experimental/macros.hpp>

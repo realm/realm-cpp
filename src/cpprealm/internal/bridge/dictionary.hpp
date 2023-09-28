@@ -1,10 +1,10 @@
 #ifndef CPP_REALM_BRIDGE_DICTIONARY_HPP
 #define CPP_REALM_BRIDGE_DICTIONARY_HPP
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
-#include <functional>
 #include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm::object_store {

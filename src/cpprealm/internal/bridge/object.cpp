@@ -1,14 +1,15 @@
 #include <cpprealm/internal/bridge/obj.hpp>
+
+#include <cpprealm/internal/bridge/dictionary.hpp>
+#include <cpprealm/internal/bridge/list.hpp>
 #include <cpprealm/internal/bridge/obj_key.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
 #include <cpprealm/internal/bridge/object_schema.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
-#include <cpprealm/internal/bridge/list.hpp>
-#include <cpprealm/internal/bridge/dictionary.hpp>
 
-#include <realm/object-store/object.hpp>
-#include <realm/object-store/list.hpp>
 #include <realm/object-store/dictionary.hpp>
+#include <realm/object-store/list.hpp>
+#include <realm/object-store/object.hpp>
 
 namespace realm::internal::bridge {
     object::object() {
