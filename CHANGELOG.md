@@ -1,3 +1,23 @@
+X.Y.Z Release notes (YYYY-MM-DD)
+=============================================================
+
+### Fixed
+* Primary keys could be changed after an object was inserted (since 0.1.0)
+
+### Enhancements
+* None
+
+### Breaking Changes
+* None
+
+### Compatibility
+* Fileformat: Generates files with format v22.
+
+### Internals
+* None
+
+----------------------------------------------
+
 0.3.0 Release notes (2023-09-15)
 =============================================================
 

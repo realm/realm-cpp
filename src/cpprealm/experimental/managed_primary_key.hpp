@@ -165,8 +165,6 @@ namespace realm::experimental {
 
         template<>
         struct managed<primary_key<int64_t>> : managed_base {
-            using managed<primary_key<int64_t>>::managed_base::operator=;
-
             primary_key<int64_t> detach() const {
                 return operator int64_t();
             }
@@ -191,8 +189,6 @@ namespace realm::experimental {
 
         template<>
         struct managed<primary_key<std::string>> : managed_base {
-            using managed<primary_key<std::string>>::managed_base::operator=;
-
             primary_key<std::string> detach() const {
                 return operator std::string();
             }
@@ -209,8 +205,6 @@ namespace realm::experimental {
 
         template<>
         struct managed<primary_key<realm::uuid>> : managed_base {
-            using managed<primary_key<realm::uuid>>::managed_base::operator=;
-
             primary_key<realm::uuid> detach() const {
                 return operator realm::uuid();
             }
@@ -225,8 +219,6 @@ namespace realm::experimental {
 
         template<>
         struct managed<primary_key<realm::object_id>> : managed_base {
-            using managed<primary_key<realm::object_id>>::managed_base::operator=;
-
             primary_key<realm::object_id> detach() const {
                 return operator realm::object_id();
             }
@@ -241,8 +233,6 @@ namespace realm::experimental {
 
         template<typename T>
         struct managed<primary_key<T>, std::enable_if_t<std::is_enum_v<T>>> : managed_base {
-            using managed<primary_key<int64_t>>::managed_base::operator=;
-
             primary_key<T> detach() const {
                 return operator T();
             }
@@ -271,8 +261,6 @@ namespace realm::experimental {
 
         template<>
         struct managed<primary_key<std::optional<int64_t>>> : managed_base {
-            using managed<primary_key<std::optional<int64_t>>>::managed_base::operator=;
-
             primary_key<std::optional<int64_t>> detach() const {
                 return operator std::optional<int64_t>();
             }
@@ -296,8 +284,6 @@ namespace realm::experimental {
         template<typename T>
         struct managed<primary_key<T>, std::enable_if_t<std::conjunction_v<typename internal::type_info::is_optional<T>,
                                                                            std::is_enum<typename T::value_type> >>> : managed_base {
-            using managed<primary_key<std::optional<int64_t>>>::managed_base::operator=;
-
             primary_key<T> detach() const {
                 return operator T();
             }
@@ -339,8 +325,6 @@ namespace realm::experimental {
 
         template<>
         struct managed<primary_key<std::optional<std::string>>> : managed_base {
-            using managed<primary_key<std::optional<std::string>>>::managed_base::operator=;
-
             primary_key<std::optional<std::string>> detach() const {
                 return operator std::optional<std::string>();
             }
@@ -357,8 +341,6 @@ namespace realm::experimental {
 
         template<>
         struct managed<primary_key<std::optional<realm::uuid>>> : managed_base {
-            using managed<primary_key<std::optional<realm::uuid>>>::managed_base::operator=;
-
             primary_key<std::optional<realm::uuid>> detach() const {
                 return operator std::optional<realm::uuid>();
             }
@@ -377,8 +359,6 @@ namespace realm::experimental {
 
         template<>
         struct managed<primary_key<std::optional<realm::object_id>>> : managed_base {
-            using managed<primary_key<std::optional<realm::object_id>>>::managed_base::operator=;
-
             std::optional<realm::object_id> detach() const {
                 return operator std::optional<realm::object_id>();
             }
