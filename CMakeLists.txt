@@ -35,6 +35,13 @@ add_compile_definitions(REALM_VERSION_MINOR=3)
 add_compile_definitions(REALM_VERSION_PATCH=0)
 add_compile_definitions(REALM_VERSION_STRING="0.3.0")
 
+# Check if the compiler is Clang or GCC >= 11
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "11.0"))
+    set(ENABLE_ALPHA_SDK TRUE)
+else()
+    set(ENABLE_ALPHA_SDK FALSE)
+endif()
+
 add_subdirectory(src)
 target_include_directories(cpprealm PUBLIC src)
 

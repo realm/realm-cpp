@@ -338,7 +338,7 @@ namespace realm::experimental {
 namespace realm {
 
     template <typename T>
-    struct thread_safe_reference<T> {
+    struct thread_safe_reference<T, std::enable_if_t<sizeof(experimental::managed<T>) != 0>> {
         explicit thread_safe_reference(const experimental::managed<T>& object)
             : m_tsr(internal::bridge::thread_safe_reference(internal::bridge::object(object.m_realm, object.m_obj)))
         {

@@ -22,11 +22,16 @@
 #include <future>
 #include <type_traits>
 
+#include <cpprealm/alpha_support.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/query.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
+
+#ifdef CPP_REALM_ENABLE_ALPHA_SDK
+#include <cpprealm/results.hpp>
+#endif
 
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/experimental/results.hpp>
@@ -81,6 +86,7 @@ namespace realm {
         // Inserts a new subscription into the set if one does not exist already.
         // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
         // for the templated class type.
+#ifdef CPP_REALM_ENABLE_ALPHA_SDK
         template <typename T>
         std::enable_if_t<std::is_base_of_v<object<T>, T>>
         add(const std::string& name,
@@ -91,13 +97,14 @@ namespace realm {
             auto builder = internal::bridge::query(table_ref);
 
             if (query_fn) {
-                auto q = realm::experimental::query<T>(builder, std::move(schema));
+                auto q = realm::query<T>(builder, std::move(schema));
                 auto full_query = (*query_fn)(q).q;
                 insert_or_assign(name, full_query);
             } else {
                 insert_or_assign(name, builder);
             }
         }
+#endif
 
         // Inserts a new subscription into the set if one does not exist already.
         // If the `query_fn` parameter is left empty, the subscription will sync *all* objects

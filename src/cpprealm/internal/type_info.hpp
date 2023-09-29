@@ -1,6 +1,7 @@
 #ifndef REALM_TYPE_INFO_HPP
 #define REALM_TYPE_INFO_HPP
 
+#include <cpprealm/alpha_support.hpp>
 #include <cpprealm/internal/bridge/property.hpp>
 #include <cpprealm/internal/bridge/uuid.hpp>
 #include <cpprealm/internal/bridge/binary.hpp>
@@ -87,7 +88,14 @@ namespace realm::internal::type_info {
                     return check_variant_types<N + 1, Variant>();
                 } else if constexpr (is_primitive<std::variant_alternative_t<N, Variant>>::value) {
                     return check_variant_types<N + 1, Variant>();
-                } else {
+                }
+#ifdef CPP_REALM_ENABLE_ALPHA_SDK
+                else if constexpr (std::is_base_of_v<object<std::variant_alternative_t<N, Variant>>, std::variant_alternative_t<N, Variant>>) {
+                    // TODO: Remove with alpha sdk.
+                    return check_variant_types<N + 1, Variant>();
+                }
+#endif
+                else {
                     return false;
                 }
             }
@@ -146,10 +154,6 @@ namespace realm::internal::type_info {
     struct is_backlink<experimental::linking_objects<T>> : std::true_type {
         static constexpr auto value = true;
     };
-//    template <typename T>
-//    struct is_link<T*> : std::true_type {
-//        static constexpr auto value = true;
-//    };
     template <>
     struct type_info<std::monostate> {
         using internal_type = std::monostate;

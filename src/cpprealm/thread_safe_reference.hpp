@@ -23,6 +23,7 @@
 #include <queue>
 #include <iostream>
 
+#include <cpprealm/alpha_support.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/thread_safe_reference.hpp>
 
@@ -82,32 +83,6 @@ private:
     friend struct db;
 };
 
-// TODO: Renable async_open with task.
-#if __cpp_coroutines
-    //template <typename ...Ts>
-//static inline task<thread_safe_reference<db<Ts...>>> async_open(const db_config& config) {
-//    // TODO: Add these flags to core
-//#if QT_CORE_LIB
-//    util::Scheduler::set_default_factory(util::make_qt);
-//#endif
-//    std::vector<ObjectSchema> schema;
-//    (schema.push_back(Ts::schema::to_core_schema()), ...);
-//
-//    auto tsr = co_await make_awaitable<ThreadSafeReference>([config, schema](auto cb) {
-//        std::shared_ptr<AsyncOpenTask> async_open_task = Realm::get_synchronized_realm({
-//                                                                                               .path = config.path,
-//                                                                                               .schema_mode = SchemaMode::AdditiveExplicit,
-//                                                                                               .schema = Schema(schema),
-//                                                                                               .schema_version = 0,
-//                                                                                               .sync_config = config.sync_config
-//                                                                                       });
-//        async_open_task->start(cb);
-//    });
-//    co_return thread_safe_reference<db<Ts...>>(std::move(tsr));
-//}
-#else
-
-#endif
 }
 
 

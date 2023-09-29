@@ -19,6 +19,11 @@
 #ifndef notifications_hpp
 #define notifications_hpp
 
+#include <cpprealm/alpha_support.hpp>
+#ifdef CPP_REALM_ENABLE_ALPHA_SDK
+#include <cpprealm/persisted.hpp>
+#endif
+
 #include <cpprealm/thread_safe_reference.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/list.hpp>
@@ -97,6 +102,71 @@ struct PropertyChange {
     */
     std::optional<typename decltype(T::schema)::variant_t> new_value;
 };
+
+#ifdef CPP_REALM_ENABLE_ALPHA_SDK
+template <typename T>
+        struct collection_change {
+    /// The list being observed.
+    const persisted<T>* collection;
+    std::vector<uint64_t> deletions;
+    std::vector<uint64_t> insertions;
+    std::vector<uint64_t> modifications;
+
+    // This flag indicates whether the underlying object which is the source of this
+    // collection was deleted. This applies to lists, dictionaries and sets.
+    // This enables notifiers to report a change on empty collections that have been deleted.
+    bool collection_root_was_deleted = false;
+
+    [[nodiscard]] bool empty() const noexcept {
+        return deletions.empty() && insertions.empty() && modifications.empty() &&
+               !collection_root_was_deleted;
+    }
+};
+
+
+template <typename T>
+struct collection_callback_wrapper : internal::bridge::collection_change_callback {
+    std::function<void(collection_change<T>)> handler;
+    persisted<T>& collection;
+    bool ignoreChangesInInitialNotification;
+
+    collection_callback_wrapper(std::function<void(collection_change<T>)> handler,
+                                persisted<T>& collection,
+                                bool ignoreChangesInInitialNotification)
+        : handler(handler)
+          , collection(collection)
+          , ignoreChangesInInitialNotification(ignoreChangesInInitialNotification)
+    {}
+
+    void before(const realm::internal::bridge::collection_change_set &c) final {}
+    void after(internal::bridge::collection_change_set const& changes) final {
+        if (ignoreChangesInInitialNotification) {
+            ignoreChangesInInitialNotification = false;
+            handler({&collection, {},{},{}});
+        }
+        else if (changes.empty()) {
+            handler({&collection, {},{},{}});
+
+        }
+        else if (!changes.collection_root_was_deleted() || !changes.deletions().empty()) {
+            handler({&collection,
+                    to_vector(changes.deletions()),
+                    to_vector(changes.insertions()),
+                    to_vector(changes.modifications()),
+            });
+        }
+    }
+
+private:
+    std::vector<uint64_t> to_vector(const internal::bridge::index_set& index_set) {
+        auto vector = std::vector<uint64_t>();
+        for (auto index : index_set.as_indexes()) {
+            vector.push_back(index);
+        }
+        return vector;
+    };
+};
+#endif
 
 } // namespace realm
 

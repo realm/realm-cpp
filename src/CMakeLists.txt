@@ -114,7 +114,38 @@ set(HEADERS
     cpprealm/schema.hpp
     cpprealm/task.hpp
     cpprealm/thread_safe_reference.hpp
-    cpprealm/sdk.hpp) # REALM_INSTALL_HEADERS
+    cpprealm/sdk.hpp cpprealm/alpha_support.hpp) # REALM_INSTALL_HEADERS
+
+if(ENABLE_ALPHA_SDK)
+    list(APPEND HEADERS
+            cpprealm/db.hpp
+            cpprealm/persisted.hpp
+            cpprealm/persisted_binary.hpp
+            cpprealm/persisted_decimal128.hpp
+            cpprealm/persisted_double.hpp
+            cpprealm/persisted_embedded.hpp
+            cpprealm/persisted_enum.hpp
+            cpprealm/persisted_int.hpp
+            cpprealm/persisted_list.hpp
+            cpprealm/persisted_map.hpp
+            cpprealm/persisted_mixed.hpp
+            cpprealm/persisted_object_id.hpp
+            cpprealm/persisted_optional.hpp
+            cpprealm/persisted_string.hpp
+            cpprealm/persisted_timestamp.hpp
+            cpprealm/persisted_uuid.hpp
+            cpprealm/results.hpp)
+
+    list(APPEND SOURCES
+            cpprealm/persisted_binary.cpp
+            cpprealm/persisted_bool.cpp
+            cpprealm/persisted_decimal128.cpp
+            cpprealm/persisted_double.cpp
+            cpprealm/persisted_int.cpp
+            cpprealm/persisted_object_id.cpp
+            cpprealm/persisted_string.cpp
+            cpprealm/persisted_uuid.cpp)
+endif()
 
 include(GNUInstallDirs)
 
