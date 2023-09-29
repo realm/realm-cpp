@@ -141,6 +141,18 @@ namespace realm::experimental {
             CHECK(realm.objects<PK4>().where([](auto& o) { return o._id != realm::uuid("68b696d7-320b-4402-a412-d9cee10fc6a3"); }).size() == 0);
             CHECK(realm.objects<PK5>().where([](auto& o) { return o._id == PrimaryKeyEnum::one; }).size() == 1);
             CHECK(realm.objects<PK5>().where([](auto& o) { return o._id != PrimaryKeyEnum::one; }).size() == 0);
+
+            static_assert(std::is_assignable<managed<primary_key<int64_t>>, int64_t>::value == false);
+            static_assert(std::is_assignable<managed<primary_key<realm::object_id>>, realm::object_id>::value == false);
+            static_assert(std::is_assignable<managed<primary_key<std::string>>, std::string>::value == false);
+            static_assert(std::is_assignable<managed<primary_key<realm::uuid>>, realm::uuid>::value == false);
+            static_assert(std::is_assignable<managed<primary_key<PrimaryKeyEnum>>, PrimaryKeyEnum>::value == false);
+
+            static_assert(std::is_assignable<managed<primary_key<std::optional<int64_t>>>, std::optional<int64_t>>::value == false);
+            static_assert(std::is_assignable<managed<primary_key<std::optional<realm::object_id>>>, std::optional<realm::object_id>>::value == false);
+            static_assert(std::is_assignable<managed<primary_key<std::optional<std::string>>>, std::optional<std::string>>::value == false);
+            static_assert(std::is_assignable<managed<primary_key<std::optional<realm::uuid>>>, std::optional<realm::uuid>>::value == false);
+            static_assert(std::is_assignable<managed<primary_key<std::optional<PrimaryKeyEnum>>>, std::optional<PrimaryKeyEnum>>::value == false);
         }
 
         SECTION("optional_primary_keys") {
