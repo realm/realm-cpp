@@ -21,7 +21,6 @@
 #define REALM_PERSISTED_DOUBLE_HPP
 
 #include <cpprealm/persisted.hpp>
-//#include <cpprealm/persisted_custom.hpp>
 
 namespace realm {
 

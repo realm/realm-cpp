@@ -12,9 +12,6 @@ namespace realm {
         return stream << value.to_string();
     }
 
-//    inline bool operator ==(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id == rhs.m_object_id; }
-//    inline bool operator !=(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id != rhs.m_object_id; }
-
     template <>
     struct persisted<object_id> : persisted_primitive_base<object_id> {
         using persisted_primitive_base<object_id>::persisted_primitive_base;
