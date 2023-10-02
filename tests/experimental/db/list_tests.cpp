@@ -368,7 +368,7 @@ TEST_CASE("list", "[list]") {
 
     SECTION("list_all_primitive_types") {
         auto realm = realm::experimental::db(std::move(config));
-
+        using Enum = realm::experimental::AllTypesObject::Enum;
         auto obj = realm.write([&]() {
             return realm.add(realm::experimental::AllTypesObject());
         });
@@ -376,6 +376,7 @@ TEST_CASE("list", "[list]") {
         test_list(obj.list_bool_col, std::vector<uint8_t>({true, false}), realm);
         test_list(obj.list_double_col, std::vector<double>({1.23, 2.45}), realm);
         test_list(obj.list_str_col, std::vector<std::string>({"foo", "bar"}), realm);
+        test_list(obj.list_enum_col, std::vector<Enum>({Enum::one, Enum::two}), realm);
         test_list(obj.list_uuid_col,
                   std::vector<realm::uuid>({realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120000"),
                                             realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002")}), realm);

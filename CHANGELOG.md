@@ -3,6 +3,7 @@ X.Y.Z Release notes (YYYY-MM-DD)
 
 ### Fixed
 * Primary keys could be changed after an object was inserted (since 0.1.0)
+* Using a property type of vector of enums would cause a compilation error (since 0.1.0).
 
 ### Enhancements
 * None

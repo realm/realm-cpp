@@ -72,6 +72,7 @@ namespace realm::experimental {
         std::vector<std::vector<std::uint8_t>> list_binary_col;
         std::vector<std::chrono::time_point<std::chrono::system_clock>> list_date_col;
         std::vector<realm::mixed> list_mixed_col;
+        std::vector<Enum> list_enum_col;
         std::vector<AllTypesObjectLink*> list_obj_col;
         std::vector<AllTypesObjectEmbedded*> list_embedded_obj_col;
 
@@ -96,7 +97,7 @@ namespace realm::experimental {
                  opt_int_col, opt_double_col, opt_str_col, opt_bool_col, opt_enum_col,
                  opt_date_col, opt_uuid_col, opt_object_id_col, opt_decimal_col, opt_binary_col, opt_obj_col, opt_embedded_obj_col,
                  list_int_col, list_double_col, list_bool_col, list_str_col, list_uuid_col, list_object_id_col, list_decimal_col, list_binary_col,
-                 list_date_col, list_mixed_col, list_obj_col, list_embedded_obj_col,
+                 list_date_col, list_mixed_col, list_enum_col, list_obj_col, list_embedded_obj_col,
                  map_int_col, map_double_col, map_bool_col, map_str_col, map_uuid_col, map_object_id_col, map_decimal_col, map_binary_col,
                  map_date_col, map_enum_col, map_mixed_col, map_link_col, map_embedded_col)
 

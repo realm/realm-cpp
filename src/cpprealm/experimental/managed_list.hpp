@@ -75,6 +75,8 @@ namespace realm::experimental {
             for(size_t i = 0; i < count; i++) {
                 if constexpr (internal::type_info::MixedPersistableConcept<T>::value) {
                     ret.push_back(deserialize<T>(realm::internal::bridge::get<U>(list, i)));
+                } else if constexpr (std::is_enum_v<T>) {
+                    ret.push_back(deserialize<T>(realm::internal::bridge::get<U>(list, i)));
                 } else {
                     ret.push_back(deserialize(realm::internal::bridge::get<U>(list, i)));
                 }
@@ -100,6 +102,8 @@ namespace realm::experimental {
             using U = typename internal::type_info::type_info<T>::internal_type;
             if constexpr (internal::type_info::MixedPersistableConcept<T>::value) {
                 return deserialize<T>(realm::internal::bridge::get<U>(list, idx));
+            } else if constexpr (std::is_enum_v<T>) {
+                return static_cast<T>(deserialize<T>(realm::internal::bridge::get<U>(list, idx)));
             } else {
                 return deserialize(realm::internal::bridge::get<U>(list, idx));
             }

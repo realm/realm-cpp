@@ -90,7 +90,7 @@ namespace realm::experimental {
         }
     };
     template <typename T>
-    struct accessor<T, std::enable_if_t<std::is_enum_v<typename T::value_type>>> {
+    struct accessor<T, std::enable_if_t<std::conjunction_v<internal::type_info::is_optional<T>, std::is_enum<typename T::value_type>>>> {
         static inline void set(internal::bridge::obj& obj,
                                const internal::bridge::col_key& key,
                                const T& value) {

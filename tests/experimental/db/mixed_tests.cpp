@@ -10,7 +10,7 @@ TEST_CASE("mixed", "[mixed]") {
     SECTION("unmanaged_managed_mixed_get_set", "[mixed]") {
         auto obj = experimental::AllTypesObject();
         obj.mixed_col = (int64_t)42;
-        CHECK(obj.mixed_col == experimental::AllTypesObject::my_mixed((int64_t)42));
+        CHECK(obj.mixed_col == realm::mixed((int64_t)42));
         auto realm = experimental::db(std::move(config));
         auto managed_obj = realm.write([&realm, &obj] {
             return realm.add(std::move(obj));
