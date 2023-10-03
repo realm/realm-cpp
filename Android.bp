@@ -38,3 +38,10 @@ cc_library_static {
     static_libs: ["realm"],
     include_build_directory: false
 }
+
+cc_binary {
+    name: "realm-cpp-test",
+    defaults: ["realm_consumer_defaults", "realm_cpp_defaults", "realm_defaults"],
+    srcs: ["tests/certificate_verification/certs_test.cpp"],
+    static_libs: ["realm-cpp", "realm"],
+}

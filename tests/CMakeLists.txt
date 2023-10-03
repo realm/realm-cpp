@@ -111,11 +111,15 @@ else()
     target_compile_definitions(cpprealm_alpha_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
 endif()
 
+
+add_executable(cpprealm_certs_test certificate_verification/certs_test.hpp certificate_verification/certs_test.cpp)
+target_link_libraries(cpprealm_certs_test cpprealm)
+
 target_link_libraries(cpprealm_sync_tests cpprealm Catch2::Catch2)
 target_link_libraries(cpprealm_db_tests cpprealm Catch2::Catch2)
 
 file(COPY ../realm-core/evergreen DESTINATION .)
 file(MAKE_DIRECTORY baas)
 
-add_test(cpprealm_tests cpprealm_sync_tests cpprealm_db_tests)
+add_test(cpprealm_tests cpprealm_certs_test)
 enable_testing()
