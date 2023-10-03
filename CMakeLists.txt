@@ -17,7 +17,6 @@ endif()
 set(REALM_BUILD_LIB_ONLY ON)
 add_subdirectory(realm-core)
 
-set(REALM_INCLUDE_CERTS 0)
 set(REALM_NO_CONFIG)
 set(REALM_ENABLE_SYNC)
 set(REALM_NO_TESTS)

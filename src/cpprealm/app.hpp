@@ -80,7 +80,7 @@ private:
     #endif   
 #elif __x86_64__
     #if defined(__clang__)
-std::aligned_storage<48, 8>::type m_error[1];
+std::aligned_storage<72, 8>::type m_error[1];
     #elif defined(__GNUC__) || defined(__GNUG__)
 std::aligned_storage<88, 8>::type m_error[1];
     #endif
@@ -88,9 +88,9 @@ std::aligned_storage<88, 8>::type m_error[1];
     std::aligned_storage<40, 4>::type m_error[1];
 #elif __aarch64__
 #if defined(__clang__)
-    std::aligned_storage<48, 8>::type m_error[1];
+    std::aligned_storage<72, 8>::type m_error[1];
 #elif defined(__GNUC__) || defined(__GNUG__)
-    std::aligned_storage<56, 8>::type m_error[1];
+    std::aligned_storage<78, 8>::type m_error[1];
 #endif
 #endif
 };
