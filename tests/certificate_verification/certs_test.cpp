@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
     static realm::internal::DefaultTransport transport;
 
     realm::app::Request r;
-    r.url = "https://www.mongodb.com";
+    r.url = "https://realm.mongodb.com";
 
     std::promise<realm::app::Response> p;
     transport.send_request_to_server(std::move(r),

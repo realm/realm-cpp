@@ -110,6 +110,11 @@ namespace realm::internal {
         socket.ssl_stream->set_host_name(host); // Throws
 
         socket.ssl_stream->set_verify_mode(VerifyMode::peer);
+
+        util::Logger::set_default_level_threshold(realm::util::Logger::Level::all);
+        auto logger = util::Logger::get_default_logger();
+        socket.ssl_stream->set_logger(logger.get());
+
         #if REALM_INCLUDE_CERTS
         socket.ssl_stream->use_included_certificates();
         #endif
@@ -164,6 +169,7 @@ namespace realm::internal {
 
         service.post([&](realm::Status&&){
             auto handler = [&](std::error_code ec) {
+
                 if (ec.value() == 0) {
                     realm::sync::HTTPRequest req;
                     req.method = method;
