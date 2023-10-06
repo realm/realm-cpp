@@ -133,10 +133,10 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<4, alignof(TableView)>{});
 #elif __x86_64__
 #if defined(__clang__)
-    static_assert(SizeCheck<568, sizeof(TableView)>{});
+    static_assert(SizeCheck<376, sizeof(TableView)>{});
     static_assert(SizeCheck<8, alignof(TableView)>{});
 #elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(SizeCheck<576, sizeof(TableView)>{});
+    static_assert(SizeCheck<384, sizeof(TableView)>{});
     static_assert(SizeCheck<8, alignof(TableView)>{});
 #endif
 #elif __arm__
@@ -144,7 +144,7 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(TableView)>{});
 #elif __aarch64__
 #if defined(__clang__)
-    static_assert(SizeCheck<568, sizeof(TableView)>{});
+    static_assert(SizeCheck<376, sizeof(TableView)>{});
     static_assert(SizeCheck<8, alignof(TableView)>{});
 #elif defined(__GNUC__) || defined(__GNUG__)
     static_assert(SizeCheck<576, sizeof(TableView)>{});

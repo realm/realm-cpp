@@ -12,9 +12,9 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<4, alignof(Results)>{});
 #elif __x86_64__
     #if defined(__clang__)
-    static_assert(SizeCheck<896, sizeof(Results)>{});
+    static_assert(SizeCheck<704, sizeof(Results)>{});
     #elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(SizeCheck<912, sizeof(Results)>{});
+    static_assert(SizeCheck<720, sizeof(Results)>{});
     #endif
     static_assert(SizeCheck<8, alignof(Results)>{});
 #elif __arm__
@@ -22,9 +22,9 @@ namespace realm::internal::bridge {
     static_assert(SizeCheck<8, alignof(Results)>{});
 #elif __aarch64__
 #if defined(__clang__)
-    static_assert(SizeCheck<896, sizeof(Results)>{});
+    static_assert(SizeCheck<704, sizeof(Results)>{});
 #elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(SizeCheck<912, sizeof(Results)>{});
+    static_assert(SizeCheck<720, sizeof(Results)>{});
 #endif
     static_assert(SizeCheck<8, alignof(Results)>{});
 #elif _WIN32
