@@ -2,6 +2,7 @@
 #define CPP_REALM_BRIDGE_OBJECT_ID_HPP
 
 #include <cpprealm/internal/bridge/utils.hpp>
+#include <array>
 
 namespace realm {
     struct object_id;
