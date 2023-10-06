@@ -3,10 +3,6 @@
 
 #include <realm/sync/config.hpp>
 
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-#else
-#endif
-
 namespace realm::internal::bridge {
     sync_error::sync_error(const sync_error& other) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES

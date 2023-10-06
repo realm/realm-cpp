@@ -14,19 +14,15 @@ namespace realm::internal::bridge {
     struct obj_key {
         obj_key(const ObjKey&);
         obj_key(int64_t);
-        obj_key();
-        obj_key(const obj_key& other) ;
-        obj_key& operator=(const obj_key& other) ;
-        obj_key(obj_key&& other);
-        obj_key& operator=(obj_key&& other);
-        ~obj_key();
+        obj_key() = default;
+        obj_key(const obj_key& other) = default;
+        obj_key& operator=(const obj_key& other) = default;
+        obj_key(obj_key&& other) = default;
+        obj_key& operator=(obj_key&& other) = default;
+        ~obj_key() = default;
         operator ObjKey() const;
     private:
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        storage::ObjKey m_obj_key[1];
-#else
-        std::shared_ptr<ObjKey> m_obj_key;
-#endif
+        int64_t m_obj_key;
     };
 
     bool operator==(const obj_key &, const obj_key &);

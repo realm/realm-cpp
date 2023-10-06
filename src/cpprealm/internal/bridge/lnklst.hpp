@@ -24,7 +24,7 @@ namespace realm::internal::bridge {
         obj create_and_insert_linked_object(size_t idx);
         void add(const obj_key&);
     private:
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPESX
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::LnkLst m_lnk_lst[1];
 #else
         std::shared_ptr<LnkLst> m_lnk_lst;

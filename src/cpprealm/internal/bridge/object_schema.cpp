@@ -78,7 +78,7 @@ namespace realm::internal::bridge {
 #endif
     }
 
-    const ObjectSchema*  object_schema::get_object_schema_const() const {
+    const ObjectSchema*  object_schema::get_object_schema() const {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const ObjectSchema*>(&m_schema);
 #else
@@ -128,10 +128,10 @@ namespace realm::internal::bridge {
         get_object_schema()->primary_key = primary_key;
     }
     object_schema::operator ObjectSchema() const {
-        return *get_object_schema_const();
+        return *get_object_schema();
     }
 
     bool object_schema::operator==(const object_schema& rhs) {
-        return get_object_schema_const()->name == rhs.get_object_schema_const()->name;
+        return get_object_schema()->name == rhs.get_object_schema()->name;
     }
 }

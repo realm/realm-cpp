@@ -40,7 +40,7 @@ namespace realm::internal::bridge {
         bool operator==(const object_schema& rhs);
     private:
         ObjectSchema*  get_object_schema();
-        const ObjectSchema*  get_object_schema_const() const;
+        const ObjectSchema*  get_object_schema() const;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::ObjectSchema m_schema[1];
 #else

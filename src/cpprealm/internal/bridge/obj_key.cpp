@@ -4,88 +4,24 @@
 #include <realm/keys.hpp>
 
 namespace realm::internal::bridge {
-    obj_key::obj_key() {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        new (&m_obj_key) ObjKey();
-#else
-        m_obj_key = std::make_shared<ObjKey>();
-#endif
-    }
-
-    obj_key::obj_key(const obj_key& other) {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        new (&m_obj_key) ObjKey(*reinterpret_cast<const ObjKey*>(&other.m_obj_key));
-#else
-        m_obj_key = other.m_obj_key;
-#endif
-    }
-
-    obj_key& obj_key::operator=(const obj_key& other) {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        if (this != &other) {
-            *reinterpret_cast<ObjKey*>(&m_obj_key) = *reinterpret_cast<const ObjKey*>(&other.m_obj_key);
-        }
-#else
-        m_obj_key = other.m_obj_key;
-#endif
-        return *this;
-    }
-
-    obj_key::obj_key(obj_key&& other) {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        new (&m_obj_key) ObjKey(std::move(*reinterpret_cast<ObjKey*>(&other.m_obj_key)));
-#else
-        m_obj_key = std::move(other.m_obj_key);
-#endif
-    }
-
-    obj_key& obj_key::operator=(obj_key&& other) {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        if (this != &other) {
-            *reinterpret_cast<ObjKey*>(&m_obj_key) = std::move(*reinterpret_cast<ObjKey*>(&other.m_obj_key));
-        }
-#else
-        m_obj_key = std::move(other.m_obj_key);
-#endif
-        return *this;
-    }
-
-    obj_key::~obj_key() {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        reinterpret_cast<ObjKey*>(&m_obj_key)->~ObjKey();
-#endif
-    }
-
     obj_key::obj_key(int64_t v) {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        new (&m_obj_key) ObjKey(v);
-#else
-        m_obj_key = std::make_shared<ObjKey>(v);
-#endif
+        m_obj_key = v;
     }
 
     obj_key::obj_key(const ObjKey& v) {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        new (&m_obj_key) ObjKey(v);
-#else
-        m_obj_key = std::make_shared<ObjKey>(v);
-#endif
+        m_obj_key = v.value;
     }
 
     obj_key::operator ObjKey() const {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        return *reinterpret_cast<const ObjKey*>(&m_obj_key);
-#else
-        return *m_obj_key;
-#endif
+        return ObjKey(m_obj_key);
     }
 
     bool operator==(obj_key const& lhs, obj_key const& rhs) {
-        return static_cast<ObjKey>(lhs) == static_cast<ObjKey>(rhs);
+        return lhs.operator ObjKey() == rhs.operator ObjKey();
     }
 
     bool operator!=(obj_key const &lhs, obj_key const &rhs) {
-        return static_cast<ObjKey>(lhs) != static_cast<ObjKey>(rhs);
+        return lhs.operator ObjKey() != rhs.operator ObjKey();
     }
 
     obj_link::obj_link() {

@@ -11,11 +11,11 @@ namespace realm {
 namespace realm::internal::bridge {
     struct object_id : core_binding<ObjectId> {
         object_id();
-        object_id(const object_id& other) ;
-        object_id& operator=(const object_id& other) ;
-        object_id(object_id&& other);
-        object_id& operator=(object_id&& other);
-        ~object_id();
+        object_id(const object_id& other) = default;
+        object_id& operator=(const object_id& other) = default;
+        object_id(object_id&& other) = default;
+        object_id& operator=(object_id&& other) = default;
+        ~object_id() = default;
         object_id(const ObjectId&); //NOLINT(google-explicit-constructor);
         explicit object_id(const std::string&);
         object_id(const struct ::realm::object_id&); //NOLINT(google-explicit-constructor);
@@ -24,11 +24,8 @@ namespace realm::internal::bridge {
         [[nodiscard]] std::string to_string() const;
         [[nodiscard]] static object_id generate();
     private:
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        storage::ObjectId m_object_id[1];
-#else
         std::array<uint8_t, 12> m_object_id;
-#endif
+
         friend bool operator ==(const object_id&, const object_id&);
         friend bool operator !=(const object_id&, const object_id&);
         friend bool operator >(const object_id&, const object_id&);

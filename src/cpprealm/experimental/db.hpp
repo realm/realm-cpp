@@ -22,9 +22,6 @@
 #include <utility>
 
 namespace realm {
-    namespace cpprealm {
-        constexpr size_t npos = size_t(-1);
-    }
     namespace {
         template<typename T>
         using is_optional = internal::type_info::is_optional<T>;

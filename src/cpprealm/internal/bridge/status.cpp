@@ -4,87 +4,24 @@
 #include <realm/status.hpp>
 
 namespace realm::internal::bridge {
-
-    error_category::error_category() {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        new (&m_error_category) ErrorCategory();
-#else
-        m_error_category = std::make_shared<ErrorCategory>();
-#endif
-    }
-    error_category::error_category(error_category&& other) {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        new (&m_error_category) ErrorCategory(std::move(*reinterpret_cast<ErrorCategory*>(&other.m_error_category)));
-#else
-        m_error_category = std::move(other.m_error_category);
-#endif
-    }
-    error_category::error_category(const error_category& other) {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        new (&m_error_category) ErrorCategory(*reinterpret_cast<const ErrorCategory*>(&other.m_error_category));
-#else
-        m_error_category = other.m_error_category;
-#endif
-    }
-    error_category& error_category::operator=(const error_category& other) {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        *reinterpret_cast<ErrorCategory*>(&m_error_category) = *reinterpret_cast<const ErrorCategory*>(&other.m_error_category);
-#else
-        m_error_category = other.m_error_category;
-#endif
-        return *this;
-    }
-    error_category& error_category::operator=(error_category&& other) {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        *reinterpret_cast<ErrorCategory*>(&m_error_category) = std::move(*reinterpret_cast<ErrorCategory*>(&other.m_error_category));
-#else
-        m_error_category = std::move(m_error_category);
-#endif
-        return *this;
-    }
-
     bool error_category::test(type cat) {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<ErrorCategory*>(&m_error_category)->test(static_cast<::realm::ErrorCategory::Type>(cat));
-#else
-        m_error_category->test(static_cast<::realm::ErrorCategory::Type>(cat));
-#endif
     }
     error_category& error_category::set(type cat) {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         reinterpret_cast<ErrorCategory*>(&m_error_category)->set(static_cast<::realm::ErrorCategory::Type>(cat));
-#else
-        m_error_category->set(static_cast<::realm::ErrorCategory::Type>(cat));
-#endif
         return *this;
     }
     void error_category::reset(type cat) {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         reinterpret_cast<ErrorCategory*>(&m_error_category)->reset(static_cast<::realm::ErrorCategory::Type>(cat));
-#else
-        m_error_category->reset(static_cast<::realm::ErrorCategory::Type>(cat));
-#endif
     }
     bool error_category::operator==(const error_category& other) const {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const ErrorCategory*>(&m_error_category) == reinterpret_cast<const ErrorCategory*>(&other.m_error_category);
-#else
-        return *m_error_category == *other.m_error_category;
-#endif
     }
     bool error_category::operator!=(const error_category& other) const {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const ErrorCategory*>(&m_error_category) != reinterpret_cast<const ErrorCategory*>(&other.m_error_category);
-#else
-        return *m_error_category != *other.m_error_category;
-#endif
     }
     int error_category::value() const {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const ErrorCategory*>(&m_error_category)->value();
-#else
-        return m_error_category->value();
-#endif
     }
 
     status::status(const ::realm::Status& other) {

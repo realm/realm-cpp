@@ -154,7 +154,7 @@ namespace realm::internal::bridge {
             std::optional<schema> get_schema();
         private:
             inline RealmConfig* get_config();
-            inline const RealmConfig* get_config_const() const;
+            inline const RealmConfig* get_config() const;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
             storage::Realm_Config m_config[1];
 #else

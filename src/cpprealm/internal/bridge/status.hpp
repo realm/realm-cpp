@@ -25,12 +25,12 @@ namespace realm::internal::bridge {
             websocket_error,
             sync_error,
         };
-        error_category();
-        error_category(error_category&&);
-        error_category(const error_category&);
-        error_category& operator=(const error_category&);
-        error_category& operator=(error_category&&);
-
+        error_category() = default;
+        error_category(error_category&&) = default;
+        error_category(const error_category&) = default;
+        error_category& operator=(const error_category&) = default;
+        error_category& operator=(error_category&&) = default;
+        ~error_category() = default;
         bool test(type cat);
         error_category& set(type cat);
         void reset(type cat);
@@ -39,11 +39,7 @@ namespace realm::internal::bridge {
         int value() const;
 
     private:
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        storage::ErrorCategory m_error_category[1];
-#else
-        std::shared_ptr<ErrorCategory> m_error_category;
-#endif
+        unsigned m_error_category = 0;
     };
 
     class error_codes {

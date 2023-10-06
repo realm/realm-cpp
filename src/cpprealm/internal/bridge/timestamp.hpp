@@ -10,12 +10,12 @@ namespace realm {
 
 namespace realm::internal::bridge {
     struct timestamp : core_binding<Timestamp> {
-        timestamp();
-        timestamp(const timestamp& other) ;
-        timestamp& operator=(const timestamp& other) ;
-        timestamp(timestamp&& other);
-        timestamp& operator=(timestamp&& other);
-        ~timestamp();
+        timestamp() = default;
+        timestamp(const timestamp& other) = default;
+        timestamp& operator=(const timestamp& other) = default;
+        timestamp(timestamp&& other) = default;
+        timestamp& operator=(timestamp&& other) = default;
+        ~timestamp() = default;
         timestamp(const Timestamp&); //NOLINT(google-explicit-constructor)
         operator Timestamp() const final; //NOLINT(google-explicit-constructor)
         operator std::chrono::time_point<std::chrono::system_clock>() const; //NOLINT(google-explicit-constructor)
@@ -32,11 +32,8 @@ namespace realm::internal::bridge {
         }
     private:
         static constexpr int32_t nanoseconds_per_second = 1000000000;
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        storage::Timestamp m_timestamp[1];
-#else
-        std::pair<int64_t, int32_t> m_timestamp;
-#endif
+        int64_t m_seconds = 0;
+        int32_t m_nanoseconds = 0;
         friend bool operator ==(const timestamp&, const timestamp&);
         friend bool operator !=(const timestamp&, const timestamp&);
         friend bool operator >(const timestamp&, const timestamp&);

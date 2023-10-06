@@ -10,12 +10,12 @@ namespace realm {
 
 namespace realm::internal::bridge {
     struct decimal128 : core_binding<Decimal128> {
-        decimal128();
+        decimal128() = default;
         decimal128(const decimal128& other) ;
         decimal128& operator=(const decimal128& other) ;
         decimal128(decimal128&& other);
         decimal128& operator=(decimal128&& other);
-        ~decimal128();
+        ~decimal128() = default;
         decimal128(const Decimal128&); //NOLINT(google-explicit-constructor);
         explicit decimal128(const std::string&);
         decimal128(const double&);
@@ -35,11 +35,8 @@ namespace realm::internal::bridge {
         decimal128& operator/=(const decimal128& o);
         decimal128& operator-=(const decimal128& o);
     private:
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        storage::Decimal128 m_decimal[1];
-#else
         uint64_t m_decimal[2];
-#endif
+
         friend bool operator ==(const decimal128&, const decimal128&);
         friend bool operator !=(const decimal128&, const decimal128&);
         friend bool operator >(const decimal128&, const decimal128&);

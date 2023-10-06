@@ -12,11 +12,11 @@ namespace realm {
 namespace realm::internal::bridge {
     struct uuid : core_binding<UUID> {
         uuid();
-        uuid(const uuid& other) ;
-        uuid& operator=(const uuid& other) ;
-        uuid(uuid&& other);
-        uuid& operator=(uuid&& other);
-        ~uuid();
+        uuid(const uuid& other) = default;
+        uuid& operator=(const uuid& other) = default;
+        uuid(uuid&& other) = default;
+        uuid& operator=(uuid&& other) = default;
+        ~uuid() = default;
         uuid(const UUID&); //NOLINT(google-explicit-constructor);
         explicit uuid(const std::string&);
         uuid(const struct ::realm::uuid&); //NOLINT(google-explicit-constructor);
@@ -26,11 +26,7 @@ namespace realm::internal::bridge {
         [[nodiscard]] std::string to_base64() const;
         [[nodiscard]] std::array<uint8_t, 16> to_bytes() const;
     private:
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        storage::UUID m_uuid[1];
-#else
         std::array<uint8_t, 16> m_uuid;
-#endif
         friend bool operator ==(const uuid&, const uuid&);
         friend bool operator !=(const uuid&, const uuid&);
         friend bool operator >(const uuid&, const uuid&);

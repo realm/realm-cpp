@@ -185,7 +185,7 @@ namespace realm::internal::bridge {
 #endif
     }
 
-    inline const RealmConfig* realm::config::get_config_const() const {
+    inline const RealmConfig* realm::config::get_config() const {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const RealmConfig*>(&m_config);
 #else
@@ -194,7 +194,7 @@ namespace realm::internal::bridge {
     }
 
     std::string realm::config::path() const {
-        return get_config_const()->path;
+        return get_config()->path;
     }
     realm::config realm::get_config() const {
         return m_realm->config();
@@ -288,7 +288,7 @@ namespace realm::internal::bridge {
     }
 
     realm::sync_config realm::config::sync_config() const {
-        return get_config_const()->sync_config;
+        return get_config()->sync_config;
     }
 
     struct external_scheduler final : public scheduler {

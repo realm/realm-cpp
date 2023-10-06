@@ -4,13 +4,6 @@
 #include <realm/object-store/property.hpp>
 
 namespace realm::internal::bridge {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-
-#else
-
-#endif
-
-
     property::property() {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_property) Property();
