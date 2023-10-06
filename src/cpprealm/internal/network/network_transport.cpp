@@ -115,7 +115,6 @@ namespace realm::internal {
 
         socket.ssl_stream->set_verify_mode(VerifyMode::peer);
 
-        util::Logger::set_default_level_threshold(realm::util::Logger::Level::all);
         auto logger = util::Logger::get_default_logger();
         socket.ssl_stream->set_logger(logger.get());
 
@@ -136,7 +135,6 @@ namespace realm::internal {
             }
         }
 
-        std::shared_ptr<realm::util::StderrLogger> logger = std::make_shared<realm::util::StderrLogger>();
         realm::sync::HTTPClient<DefaultSocket> m_http_client = realm::sync::HTTPClient<DefaultSocket>(socket, logger);
 
         realm::sync::HTTPMethod method;
