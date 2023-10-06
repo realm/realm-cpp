@@ -106,6 +106,10 @@ namespace realm::internal {
         DefaultSocket socket{service};
         socket.connect(ep);
 
+#if REALM_INCLUDE_CERTS
+        m_ssl_context.use_included_certificate_roots();
+#endif
+
         socket.ssl_stream.emplace(socket, m_ssl_context, Stream::client);
         socket.ssl_stream->set_host_name(host); // Throws
 
@@ -114,10 +118,6 @@ namespace realm::internal {
         util::Logger::set_default_level_threshold(realm::util::Logger::Level::all);
         auto logger = util::Logger::get_default_logger();
         socket.ssl_stream->set_logger(logger.get());
-
-        #if REALM_INCLUDE_CERTS
-        socket.ssl_stream->use_included_certificates();
-        #endif
 
         realm::sync::HTTPHeaders headers;
         for (auto& [k, v] : request.headers) {
