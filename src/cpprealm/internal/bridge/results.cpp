@@ -8,7 +8,7 @@
 
 namespace realm::internal::bridge {
 #ifdef __i386__
-    static_assert(SizeCheck<496, sizeof(Results)>{});
+    static_assert(SizeCheck<392, sizeof(Results)>{});
     static_assert(SizeCheck<4, alignof(Results)>{});
 #elif __x86_64__
     #if defined(__clang__)
@@ -18,7 +18,7 @@ namespace realm::internal::bridge {
     #endif
     static_assert(SizeCheck<8, alignof(Results)>{});
 #elif __arm__
-    static_assert(SizeCheck<568, sizeof(Results)>{});
+    static_assert(SizeCheck<456, sizeof(Results)>{});
     static_assert(SizeCheck<8, alignof(Results)>{});
 #elif __aarch64__
 #if defined(__clang__)

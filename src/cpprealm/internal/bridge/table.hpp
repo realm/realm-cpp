@@ -69,7 +69,7 @@ namespace realm {
             operator TableView() const;
             using underlying = TableView;
 #ifdef __i386__
-            std::aligned_storage<316, 4>::type m_table_view[1];
+            std::aligned_storage<212, 4>::type m_table_view[1];
 #elif __x86_64__
 #if defined(__clang__)
             std::aligned_storage<376, 8>::type m_table_view[1];
@@ -77,7 +77,7 @@ namespace realm {
             std::aligned_storage<384, 8>::type m_table_view[1];
 #endif
 #elif __arm__
-            std::aligned_storage<368, 8>::type m_table_view[1];
+            std::aligned_storage<256, 8>::type m_table_view[1];
 #elif __aarch64__
 #if defined(__clang__)
             std::aligned_storage<376, 8>::type m_table_view[1];

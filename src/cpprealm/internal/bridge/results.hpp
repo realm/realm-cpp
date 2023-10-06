@@ -34,7 +34,7 @@ namespace realm::internal::bridge {
         template <typename T>
         friend T get(results&, size_t);
 #ifdef __i386__
-        std::aligned_storage<496, 4>::type m_results[1];
+        std::aligned_storage<392, 4>::type m_results[1];
 #elif __x86_64__
     #if defined(__clang__)
         std::aligned_storage<704, 8>::type m_results[1];
@@ -42,7 +42,7 @@ namespace realm::internal::bridge {
         std::aligned_storage<720, 8>::type m_results[1];
     #endif
 #elif __arm__
-        std::aligned_storage<568, 8>::type m_results[1];
+        std::aligned_storage<456, 8>::type m_results[1];
 #elif __aarch64__
 #if defined(__clang__)
         std::aligned_storage<704, 8>::type m_results[1];
