@@ -6,7 +6,8 @@ X.Y.Z Release notes (YYYY-MM-DD)
 * Using a property type of vector of enums would cause a compilation error (since 0.1.0).
 
 ### Enhancements
-* None
+* The Sync metadata Realm is now encrypted by default unless the `REALM_DISABLE_METADATA_ENCRYPTION` environment variable is set.
+* Add ability to encrypt a Realm. Usage: `realm::config::set_encryption_key(const std::array<char, 64>&)`.
 
 ### Breaking Changes
 * None

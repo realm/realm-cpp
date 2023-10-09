@@ -269,6 +269,13 @@ namespace realm::internal::bridge {
         reinterpret_cast<RealmConfig*>(&m_config)->schema_version = version;
     }
 
+    void realm::config::set_encryption_key(const std::array<char, 64>& encryption_key) {
+        auto key = std::vector<char>();
+        key.resize(64);
+        key.assign(encryption_key.begin(), encryption_key.end());
+        reinterpret_cast<RealmConfig*>(&m_config)->encryption_key = std::move(key);
+    }
+
     realm::sync_config realm::config::sync_config() const {
         return reinterpret_cast<const RealmConfig*>(&m_config)->sync_config;
     }

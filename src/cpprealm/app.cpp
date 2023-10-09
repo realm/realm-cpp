@@ -352,11 +352,8 @@ namespace realm {
 #endif
         SyncClientConfig config;
         bool should_encrypt = !getenv("REALM_DISABLE_METADATA_ENCRYPTION");
-#if REALM_DISABLE_METADATA_ENCRYPTION
-        config.metadata_mode = SyncManager::MetadataMode::NoEncryption;
-#else
-        config.metadata_mode = SyncManager::MetadataMode::NoEncryption;
-#endif
+        config.metadata_mode = should_encrypt ? SyncManager::MetadataMode::Encryption : SyncManager::MetadataMode::NoEncryption;
+
 #ifdef QT_CORE_LIB
         auto qt_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
         if (!std::filesystem::exists(qt_path)) {

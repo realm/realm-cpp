@@ -75,4 +75,21 @@ TEST_CASE("flexible_sync_beta", "[sync]") {
         objs = synced_realm.objects<experimental::AllTypesObject>();
         CHECK(objs.size() == 1);
     }
+
+    SECTION("encrypted sync realm") {
+        auto encrypted_app = realm::App(Admin::shared().cached_app_id(), Admin::shared().base_url());
+        auto user = encrypted_app.login(realm::App::credentials::anonymous()).get();
+        auto flx_sync_config = user.flexible_sync_configuration();
+        flx_sync_config.set_encryption_key({0,0,0,0,0,0,0,0, 1,1,0,0,0,0,0,0, 2,2,0,0,0,0,0,0, 3,3,0,0,0,0,0,0, 4,4,0,0,0,0,0,0, 5,5,0,0,0,0,0,0, 6,6,0,0,0,0,0,0, 7,7,0,0,0,0,0,0});
+        auto synced_realm = experimental::db(flx_sync_config);
+
+        auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
+                                                              subs.clear();
+                                                          }).get();
+        CHECK(update_success == true);
+        CHECK(synced_realm.subscriptions().size() == 0);
+        // Missing encryption key
+        auto flx_sync_config2 = user.flexible_sync_configuration();
+        REQUIRE_THROWS(experimental::db(flx_sync_config2));
+    }
 }
