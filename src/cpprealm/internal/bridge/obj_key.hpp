@@ -14,7 +14,7 @@ namespace realm::internal::bridge {
     struct obj_key {
         obj_key(const ObjKey&);
         obj_key(int64_t);
-        obj_key() = default;
+        obj_key();
         obj_key(const obj_key& other) = default;
         obj_key& operator=(const obj_key& other) = default;
         obj_key(obj_key&& other) = default;

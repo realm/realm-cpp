@@ -128,7 +128,11 @@ namespace realm::experimental {
             return internal::bridge::list(*m_realm, *m_obj, m_key).size();
         }
         size_t find(const T& a) {
-            return internal::bridge::list(*m_realm, *m_obj, m_key).find(a);
+            if constexpr (std::is_enum_v<T>) {
+                return internal::bridge::list(*m_realm, *m_obj, m_key).find(static_cast<int64_t>(a));
+            } else {
+                return internal::bridge::list(*m_realm, *m_obj, m_key).find(a);
+            }
         }
         void set(size_t pos, const T& a) {
             internal::bridge::list(*m_realm, *m_obj, m_key).set(pos, a);

@@ -107,7 +107,7 @@ namespace realm::internal::bridge {
 
         size_t size() const;
     private:
-        const CoreDictionary* get_dictionary_const() const;
+        const CoreDictionary* get_dictionary() const;
         CoreDictionary* get_dictionary();
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::CoreDictionary m_dictionary[1];
@@ -139,10 +139,10 @@ namespace realm::internal::bridge {
         notification_token add_notification_callback(std::shared_ptr<collection_change_callback>&& cb);
         notification_token add_key_based_notification_callback(std::shared_ptr<dictionary_callback_wrapper>&& cb);
     private:
-        const Dictionary* get_dictionary_const() const;
+        const Dictionary* get_dictionary() const;
         Dictionary* get_dictionary();
         friend inline Dictionary * get_dictionary(dictionary& lst);
-        friend inline const Dictionary* get_dictionary_const(const dictionary& lst);
+        friend inline const Dictionary* get_dictionary(const dictionary& lst);
         template <typename T>
         friend T get(dictionary&, const std::string&);
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES

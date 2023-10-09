@@ -70,7 +70,7 @@ namespace realm::internal::bridge {
 #endif
     }
 
-    inline const Obj* obj::get_obj_const() const {
+    inline const Obj* obj::get_obj() const {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const Obj*>(&m_obj);
 #else
@@ -86,7 +86,7 @@ namespace realm::internal::bridge {
 #endif
     }
 
-    inline const Obj* get_obj_const(const obj& o) {
+    inline const Obj* get_obj(const obj& o) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const Obj*>(&o.m_obj);
 #else
@@ -128,70 +128,70 @@ namespace realm::internal::bridge {
     }
     
     obj_key obj::get_key() const {
-        return get_obj_const()->get_key();
+        return get_obj()->get_key();
     }
     obj_link obj::get_link() const {
-        return get_obj_const()->get_link();
+        return get_obj()->get_link();
     }
     table obj::get_table() const noexcept {
-        return get_obj_const()->get_table();
+        return get_obj()->get_table();
     }
     table obj::get_target_table(col_key key) const noexcept {
-        return get_obj_const()->get_target_table(key);
+        return get_obj()->get_target_table(key);
     }
     
     obj obj::get_linked_object(const col_key &col_key) {
         return get_obj()->get_linked_object(col_key);
     }
     bool obj::is_null(const col_key &col_key) const {
-        return get_obj_const()->is_null(col_key);
+        return get_obj()->is_null(col_key);
     }
     bool obj::is_valid() const {
-        return get_obj_const()->is_valid();
+        return get_obj()->is_valid();
     }
     template <>
     std::string get(const obj& o, const col_key& col_key) {
-        return get_obj_const(o)->get<StringData>(col_key);
+        return get_obj(o)->get<StringData>(col_key);
     }
     template <>
     int64_t get(const obj& o, const col_key& col_key) {
-        return get_obj_const(o)->get<Int>(col_key);
+        return get_obj(o)->get<Int>(col_key);
     }
     template <>
     double get(const obj& o, const col_key& col_key) {
-        return get_obj_const(o)->get<Double>(col_key);
+        return get_obj(o)->get<Double>(col_key);
     }
     template <>
     bool get(const obj& o, const col_key& col_key) {
-        return get_obj_const(o)->get<bool>(col_key);
+        return get_obj(o)->get<bool>(col_key);
     }
     template <>
     binary get(const obj& o, const col_key& col_key) {
-        return get_obj_const(o)->get<BinaryData>(col_key);
+        return get_obj(o)->get<BinaryData>(col_key);
     }
     template <>
     uuid get(const obj& o, const col_key& col_key) {
-        return get_obj_const(o)->get<UUID>(col_key);
+        return get_obj(o)->get<UUID>(col_key);
     }
     template <>
     object_id get(const obj& o, const col_key& col_key) {
-        return get_obj_const(o)->get<ObjectId>(col_key);
+        return get_obj(o)->get<ObjectId>(col_key);
     }
     template <>
     decimal128 get(const obj& o, const col_key& col_key) {
-        return get_obj_const(o)->get<Decimal128>(col_key);
+        return get_obj(o)->get<Decimal128>(col_key);
     }
     template <>
     mixed get(const obj& o, const col_key& col_key) {
-        return get_obj_const(o)->get_any(col_key);
+        return get_obj(o)->get_any(col_key);
     }
     template <>
     timestamp get(const obj& o, const col_key& col_key) {
-        return get_obj_const(o)->get<Timestamp>(col_key);
+        return get_obj(o)->get<Timestamp>(col_key);
     }
     template <>
     core_dictionary get(const obj& o, const col_key& col_key) {
-        return get_obj_const(o)->get_dictionary(col_key);
+        return get_obj(o)->get_dictionary(col_key);
     }
 
     void obj::set(const col_key &col_key, const std::string &value) {

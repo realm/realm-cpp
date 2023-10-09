@@ -63,7 +63,7 @@ namespace realm::internal::bridge {
 #endif
     }
 
-    inline const CoreDictionary* core_dictionary::get_dictionary_const() const {
+    inline const CoreDictionary* core_dictionary::get_dictionary() const {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const CoreDictionary*>(&m_dictionary);
 #else
@@ -80,7 +80,7 @@ namespace realm::internal::bridge {
     }
 
     core_dictionary::operator CoreDictionary() const {
-        return *get_dictionary_const();
+        return *get_dictionary();
     }
 
     void core_dictionary::insert(const std::string& key, const mixed& value) {
@@ -103,7 +103,7 @@ namespace realm::internal::bridge {
     }
 
     mixed core_dictionary::get(const std::string& key) const {
-        return get_dictionary_const()->get(key);
+        return get_dictionary()->get(key);
     }
 
     void core_dictionary::erase(const std::string& key) {
@@ -115,15 +115,15 @@ namespace realm::internal::bridge {
     }
 
     size_t core_dictionary::size() const {
-        return get_dictionary_const()->size();
+        return get_dictionary()->size();
     }
 
     std::pair<mixed, mixed> core_dictionary::get_pair(size_t ndx) const {
-        return get_dictionary_const()->get_pair(ndx);
+        return get_dictionary()->get_pair(ndx);
     }
 
     size_t core_dictionary::find_any_key(const std::string& value) const noexcept {
-        return get_dictionary_const()->find_any_key(value);
+        return get_dictionary()->find_any_key(value);
     }
 
     dictionary::dictionary() {
@@ -186,7 +186,7 @@ namespace realm::internal::bridge {
 #endif
     }
 
-    const Dictionary* dictionary::get_dictionary_const() const {
+    const Dictionary* dictionary::get_dictionary() const {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const Dictionary*>(&m_dictionary);
 #else
@@ -202,10 +202,10 @@ namespace realm::internal::bridge {
     }
 
     dictionary::operator Dictionary() const {
-        return *get_dictionary_const();
+        return *get_dictionary();
     }
     size_t dictionary::size() const {
-        return get_dictionary_const()->size();
+        return get_dictionary()->size();
     }
 
     void dictionary::insert(const std::string &key, const mixed &value) {
@@ -249,7 +249,7 @@ namespace realm::internal::bridge {
 #endif
     }
 
-    inline const Dictionary * get_dictionary_const(const dictionary& d) {
+    inline const Dictionary * get_dictionary(const dictionary& d) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const Dictionary*>(&d.m_dictionary);
 #else
@@ -259,35 +259,35 @@ namespace realm::internal::bridge {
 
     template <>
     std::string get(dictionary& dict, const std::string &key) {
-        return get_dictionary_const(dict)->get<StringData>(key);
+        return get_dictionary(dict)->get<StringData>(key);
     }
     template <>
     uuid get(dictionary& dict, const std::string &key) {
-        return get_dictionary_const(dict)->get<UUID>(key);
+        return get_dictionary(dict)->get<UUID>(key);
     }
     template <>
     object_id get(dictionary& dict, const std::string &key) {
-        return get_dictionary_const(dict)->get<ObjectId>(key);
+        return get_dictionary(dict)->get<ObjectId>(key);
     }
     template <>
     timestamp get(dictionary& dict, const std::string &key) {
-        return get_dictionary_const(dict)->get<Timestamp>(key);
+        return get_dictionary(dict)->get<Timestamp>(key);
     }
     template <>
     binary get(dictionary& dict, const std::string &key) {
-        return get_dictionary_const(dict)->get<BinaryData>(key);
+        return get_dictionary(dict)->get<BinaryData>(key);
     }
     template <>
     int64_t get(dictionary& dict, const std::string &key) {
-        return get_dictionary_const(dict)->get<Int>(key);
+        return get_dictionary(dict)->get<Int>(key);
     }
     template <>
     double get(dictionary& dict, const std::string &key) {
-        return get_dictionary_const(dict)->get<Double>(key);
+        return get_dictionary(dict)->get<Double>(key);
     }
     template <>
     obj_key get(dictionary& dict, const std::string &key) {
-        return get_dictionary_const(dict)->get<ObjKey>(key);
+        return get_dictionary(dict)->get<ObjKey>(key);
     }
     template <>
     obj get(dictionary& dict, const std::string &key) {

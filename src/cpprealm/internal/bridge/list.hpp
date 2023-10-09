@@ -89,9 +89,9 @@ namespace realm::internal::bridge {
         template <typename ValueType>
         friend ValueType get(const list&, size_t idx);
         friend inline List* get_list(list& lst);
-        friend inline const List* get_list_const(const list& lst);
+        friend inline const List* get_list(const list& lst);
         inline ::realm::List* get_list();
-        inline const ::realm::List* get_list_const() const;
+        inline const ::realm::List* get_list() const;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::List m_list[1];
 #else

@@ -4,6 +4,10 @@
 #include <realm/keys.hpp>
 
 namespace realm::internal::bridge {
+    obj_key::obj_key() {
+        m_obj_key = ObjKey().value;
+    }
+
     obj_key::obj_key(int64_t v) {
         m_obj_key = v;
     }

@@ -89,7 +89,7 @@ namespace realm::internal::bridge {
 #endif
     }
 
-    inline const List* list::get_list_const() const {
+    inline const List* list::get_list() const {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const List*>(&m_list);
 #else
@@ -105,7 +105,7 @@ namespace realm::internal::bridge {
 #endif
     }
 
-    inline const List* get_list_const(const list& lst) {
+    inline const List* get_list(const list& lst) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const List*>(&lst.m_list);
 #else
@@ -114,14 +114,14 @@ namespace realm::internal::bridge {
     }
 
     list::operator List() const {
-        return *get_list_const();
+        return *get_list();
     }
 
     table list::get_table() const {
-        return get_list_const()->get_table();
+        return get_list()->get_table();
     }
     size_t list::size() const {
-        return get_list_const()->size();
+        return get_list()->size();
     }
     void list::remove(size_t idx) {
         get_list()->remove(idx);
@@ -169,72 +169,72 @@ namespace realm::internal::bridge {
 
     template <>
     std::string get(const list& lst, size_t idx) {
-        return get_list_const(lst)->get<StringData>(idx);
+        return get_list(lst)->get<StringData>(idx);
     }
     template <>
     int64_t get(const list& lst, size_t idx) {
-        return get_list_const(lst)->get<Int>(idx);
+        return get_list(lst)->get<Int>(idx);
     }
     template <>
     double get(const list& lst, size_t idx) {
-        return get_list_const(lst)->get<Double>(idx);
+        return get_list(lst)->get<Double>(idx);
     }
     template <>
     binary get(const list& lst, size_t idx) {
-        return get_list_const(lst)->get<BinaryData>(idx);
+        return get_list(lst)->get<BinaryData>(idx);
     }
     template <>
     uuid get(const list& lst, size_t idx) {
-        return get_list_const(lst)->get<UUID>(idx);
+        return get_list(lst)->get<UUID>(idx);
     }
     template <>
     object_id get(const list& lst, size_t idx) {
-        return get_list_const(lst)->get<ObjectId>(idx);
+        return get_list(lst)->get<ObjectId>(idx);
     }
     template <>
     decimal128 get(const list& lst, size_t idx) {
-        return get_list_const(lst)->get<Decimal128>(idx);
+        return get_list(lst)->get<Decimal128>(idx);
     }
     template <>
     mixed get(const list& lst, size_t idx) {
-        return get_list_const(lst)->get<Mixed>(idx);
+        return get_list(lst)->get<Mixed>(idx);
     }
     template <>
     obj get(const list& lst, size_t idx) {
-        return get_list_const(lst)->get<Obj>(idx);
+        return get_list(lst)->get<Obj>(idx);
     }
     template <>
     bool get(const list& lst, size_t idx) {
-        return get_list_const(lst)->get<Bool>(idx);
+        return get_list(lst)->get<Bool>(idx);
     }
     template <>
     timestamp get(const list& lst, size_t idx) {
-        return get_list_const(lst)->get<Timestamp>(idx);
+        return get_list(lst)->get<Timestamp>(idx);
     }
 
     template <>
     std::optional<int64_t> get(const list& lst, size_t idx) {
-        return get_list_const(lst)->get<std::optional<Int>>(idx);
+        return get_list(lst)->get<std::optional<Int>>(idx);
     }
     template <>
     std::optional<double> get(const list& lst, size_t idx) {
-        return get_list_const(lst)->get<std::optional<Double>>(idx);
+        return get_list(lst)->get<std::optional<Double>>(idx);
     }
     template <>
     std::optional<bool> get(const list& lst, size_t idx) {
-        return get_list_const(lst)->get<std::optional<Bool>>(idx);
+        return get_list(lst)->get<std::optional<Bool>>(idx);
     }
     template <>
     std::optional<uuid> get(const list& lst, size_t idx) {
-        return get_list_const(lst)->get<std::optional<UUID>>(idx);
+        return get_list(lst)->get<std::optional<UUID>>(idx);
     }
     template <>
     std::optional<object_id> get(const list& lst, size_t idx) {
-        return get_list_const(lst)->get<std::optional<ObjectId>>(idx);
+        return get_list(lst)->get<std::optional<ObjectId>>(idx);
     }
     template <>
     std::optional<decimal128> get(const list& lst, size_t idx) {
-        auto v = get_list_const(lst)->get<Decimal128>(idx);
+        auto v = get_list(lst)->get<Decimal128>(idx);
         if (v.is_null()) {
             return std::nullopt;
         } else {
@@ -243,7 +243,7 @@ namespace realm::internal::bridge {
     }
     template <>
     std::optional<timestamp> get(const list& lst, size_t idx) {
-        auto v = get_list_const(lst)->get<Timestamp>(idx);
+        auto v = get_list(lst)->get<Timestamp>(idx);
         if (v.is_null()) {
             return std::nullopt;
         } else {
@@ -252,7 +252,7 @@ namespace realm::internal::bridge {
     }
     template <>
     std::optional<std::string> get(const list& lst, size_t idx) {
-        auto v = get_list_const(lst)->get<StringData>(idx);
+        auto v = get_list(lst)->get<StringData>(idx);
         if (v.is_null()) {
             return std::nullopt;
         } else {
@@ -261,7 +261,7 @@ namespace realm::internal::bridge {
     }
     template <>
     std::optional<binary> get(const list& lst, size_t idx) {
-        auto v = get_list_const(lst)->get<BinaryData>(idx);
+        auto v = get_list(lst)->get<BinaryData>(idx);
         if (v.is_null()) {
             return std::nullopt;
         } else {

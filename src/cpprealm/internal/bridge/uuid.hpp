@@ -3,6 +3,7 @@
 
 #include <cpprealm/internal/bridge/utils.hpp>
 #include <string_view>
+#include <array>
 
 namespace realm {
     struct uuid;
