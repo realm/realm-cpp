@@ -343,16 +343,24 @@ namespace realm {
         return credentials(app::AppCredentials::function(payload));
     }
 
-    App::App(const std::string &app_id,
-             const std::optional<std::string> &base_url,
-             const std::optional<std::string> &path,
-             const std::optional<std::map<std::string, std::string>> &custom_http_headers) {
+    App::App(const configuration& config) {
 #if QT_CORE_LIB
         util::Scheduler::set_default_factory(util::make_qt);
 #endif
-        SyncClientConfig config;
+        SyncClientConfig client_config;
+
+#if REALM_PLATFORM_APPLE
         bool should_encrypt = !getenv("REALM_DISABLE_METADATA_ENCRYPTION");
-        config.metadata_mode = should_encrypt ? SyncManager::MetadataMode::Encryption : SyncManager::MetadataMode::NoEncryption;
+#else
+        bool should_encrypt = config.metadata_encryption_key && !getenv("REALM_DISABLE_METADATA_ENCRYPTION");
+#endif
+        client_config.metadata_mode = should_encrypt ? SyncManager::MetadataMode::Encryption : SyncManager::MetadataMode::NoEncryption;
+        if (config.metadata_encryption_key) {
+            auto key = std::vector<char>();
+            key.resize(64);
+            key.assign(config.metadata_encryption_key->begin(), config.metadata_encryption_key->end());
+            client_config.custom_encryption_key = std::move(key);
+        }
 
 #ifdef QT_CORE_LIB
         auto qt_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
@@ -361,19 +369,19 @@ namespace realm {
         }
         config.base_file_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
 #else
-        if (path) {
-            config.base_file_path = *path;
+        if (config.path) {
+            client_config.base_file_path = *config.path;
         } else {
-            config.base_file_path = std::filesystem::current_path().make_preferred().generic_string();
+            client_config.base_file_path = std::filesystem::current_path().make_preferred().generic_string();
         }
 #endif
-        config.user_agent_binding_info = "RealmCpp/0.0.1";
-        config.user_agent_application_info = app_id;
+        client_config.user_agent_binding_info = "RealmCpp/0.0.1";
+        client_config.user_agent_application_info = config.app_id;
 
         auto app_config = app::App::Config();
-        app_config.app_id = app_id;
-        app_config.transport = std::make_shared<internal::DefaultTransport>(custom_http_headers);
-        app_config.base_url = base_url ? base_url : util::Optional<std::string>();
+        app_config.app_id = config.app_id;
+        app_config.transport = std::make_shared<internal::DefaultTransport>(config.custom_http_headers);
+        app_config.base_url = config.base_url ? config.base_url : util::Optional<std::string>();
         auto device_info = app::App::Config::DeviceInfo();
 
         device_info.framework_name = "Realm Cpp",
@@ -382,7 +390,19 @@ namespace realm {
         device_info.sdk = "Realm Cpp";
         app_config.device_info = std::move(device_info);
 
-        m_app = app::App::get_shared_app(std::move(app_config), config);
+        m_app = app::App::get_shared_app(std::move(app_config), client_config);
+    }
+
+    App::App(const std::string &app_id,
+             const std::optional<std::string> &base_url,
+             const std::optional<std::string> &path,
+             const std::optional<std::map<std::string, std::string>> &custom_http_headers) {
+        configuration c;
+        c.app_id = app_id;
+        c.base_url = base_url;
+        c.path = path;
+        c.custom_http_headers = custom_http_headers;
+        *this = App(std::move(c));
     }
 
     std::future<void> App::register_user(const std::string &username, const std::string &password) {
