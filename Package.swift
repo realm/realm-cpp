@@ -7,7 +7,7 @@ var cxxSettings: [CXXSetting] = [
     .headerSearchPath("."),
     .headerSearchPath("../"),
     .define("REALM_ENABLE_SYNC", to: "1"),
-    .define("REALM_VERSION", to: "0.0.1"),
+    .define("REALM_VERSION", to: "0.3.0"),
 
     .define("REALM_DEBUG", .when(configuration: .debug)),
     .define("REALM_NO_CONFIG"),
@@ -16,10 +16,10 @@ var cxxSettings: [CXXSetting] = [
     .define("REALM_ENABLE_ENCRYPTION", to: "1"),
 
     .define("REALM_VERSION_MAJOR", to: "0"),
-    .define("REALM_VERSION_MINOR", to: "0"),
-    .define("REALM_VERSION_PATCH", to: "1"),
+    .define("REALM_VERSION_MINOR", to: "3"),
+    .define("REALM_VERSION_PATCH", to: "0"),
     .define("REALM_VERSION_EXTRA", to: "\"\""),
-    .define("REALM_VERSION_STRING", to: "\"0.0.1\"")
+    .define("REALM_VERSION_STRING", to: "\"0.3.0\"")
 ]
 
 let testCxxSettings: [CXXSetting] = cxxSettings + [
@@ -65,7 +65,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/realm/realm-core.git", revision: "1eb93c9619f6a05b5a91c2719690606016802e0b")
+        .package(url: "https://github.com/realm/realm-core.git", revision: "eb34d4cb210b5e5374717c512ea910e3cb7d0bba")
     ],
     targets: [
         cppSdkTarget,

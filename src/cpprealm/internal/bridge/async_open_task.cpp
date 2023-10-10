@@ -1,8 +1,8 @@
-#include "async_open_task.hpp"
+#include <cpprealm/internal/bridge/async_open_task.hpp>
 #include <cpprealm/internal/bridge/thread_safe_reference.hpp>
 
-#include <realm/object-store/sync/async_open_task.hpp>
 #include <realm/object-store/thread_safe_reference.hpp>
+#include <realm/object-store/sync/async_open_task.hpp>
 
 namespace realm::internal::bridge {
     async_open_task::async_open_task(std::shared_ptr<AsyncOpenTask> &&v) {

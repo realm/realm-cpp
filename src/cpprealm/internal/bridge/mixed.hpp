@@ -94,16 +94,10 @@ namespace realm::internal::bridge {
     private:
         std::string m_owned_string;
         binary m_owned_data;
-#ifdef __i386__
-        std::aligned_storage<20, 4>::type m_mixed[1];
-#elif __x86_64__
-        std::aligned_storage<24, 8>::type m_mixed[1];
-#elif __arm__
-        std::aligned_storage<24, 8>::type m_mixed[1];
-#elif __aarch64__
-        std::aligned_storage<24, 8>::type m_mixed[1];
-#elif _WIN32
-        std::aligned_storage<24, 8>::type m_mixed[1];
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::Mixed m_mixed[1];
+#else
+        std::shared_ptr<Mixed> m_mixed;
 #endif
         friend bool operator ==(const mixed&, const mixed&);
         friend bool operator !=(const mixed&, const mixed&);

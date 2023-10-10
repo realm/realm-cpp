@@ -13,8 +13,6 @@ namespace realm {
         return stream << value.to_string();
     }
 
-    inline bool operator ==(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid == rhs.m_uuid; }
-    inline bool operator !=(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid != rhs.m_uuid; }
     inline bool operator >(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid > rhs.m_uuid; }
     inline bool operator <(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid < rhs.m_uuid; }
     inline bool operator >=(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid >= rhs.m_uuid; }
@@ -24,7 +22,6 @@ namespace realm {
     struct persisted<uuid> : persisted_primitive_base<uuid> {
         using persisted_primitive_base<uuid>::persisted_primitive_base;
 
-    protected:
         static internal::bridge::uuid serialize(const uuid&, const std::optional<internal::bridge::realm>& = std::nullopt);
         static uuid deserialize(const internal::bridge::uuid&);
 

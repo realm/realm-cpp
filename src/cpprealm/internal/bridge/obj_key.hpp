@@ -1,7 +1,9 @@
 #ifndef CPP_REALM_BRIDGE_OBJ_KEY_HPP
 #define CPP_REALM_BRIDGE_OBJ_KEY_HPP
 #include <cinttypes>
+#include <memory>
 #include <type_traits>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm {
     struct ObjKey;
@@ -13,24 +15,14 @@ namespace realm::internal::bridge {
         obj_key(const ObjKey&);
         obj_key(int64_t);
         obj_key();
-        obj_key(const obj_key& other) ;
-        obj_key& operator=(const obj_key& other) ;
-        obj_key(obj_key&& other);
-        obj_key& operator=(obj_key&& other);
-        ~obj_key();
+        obj_key(const obj_key& other) = default;
+        obj_key& operator=(const obj_key& other) = default;
+        obj_key(obj_key&& other) = default;
+        obj_key& operator=(obj_key&& other) = default;
+        ~obj_key() = default;
         operator ObjKey() const;
     private:
-#ifdef __i386__
-        std::aligned_storage<8, 4>::type m_obj_key[1];
-#elif __x86_64__
-        std::aligned_storage<8, 8>::type m_obj_key[1];
-#elif __arm__
-        std::aligned_storage<8, 8>::type m_obj_key[1];
-#elif __aarch64__
-        std::aligned_storage<8, 8>::type m_obj_key[1];
-#elif _WIN32
-        std::aligned_storage<8, 8>::type m_obj_key[1];
-#endif
+        int64_t m_obj_key;
     };
 
     bool operator==(const obj_key &, const obj_key &);
@@ -50,16 +42,10 @@ namespace realm::internal::bridge {
         operator ObjLink() const;
         obj_key get_obj_key();
     private:
-#ifdef __i386__
-        std::aligned_storage<12, 4>::type m_obj_link[1];
-#elif __x86_64__
-        std::aligned_storage<16, 8>::type m_obj_link[1];
-#elif __arm__
-        std::aligned_storage<16, 8>::type m_obj_link[1];
-#elif __aarch64__
-        std::aligned_storage<16, 8>::type m_obj_link[1];
-#elif _WIN32
-        std::aligned_storage<16, 8>::type m_obj_link[1];
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::ObjLink m_obj_link[1];
+#else
+        std::shared_ptr<ObjLink> m_obj_link;
 #endif
     };
 

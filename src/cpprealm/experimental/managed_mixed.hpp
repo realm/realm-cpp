@@ -3,7 +3,7 @@
 
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/experimental/types.hpp>
-#include <cpprealm/persisted.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm::experimental {
     template <typename T>

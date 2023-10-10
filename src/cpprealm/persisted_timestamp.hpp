@@ -36,7 +36,6 @@ namespace realm {
                 return this->unmanaged.time_since_epoch();
             }
         }
-    protected:
         static internal::bridge::timestamp serialize(const time_point& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
             return static_cast<internal::bridge::timestamp>(v);
         }

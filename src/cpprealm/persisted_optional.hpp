@@ -214,7 +214,7 @@ namespace realm {
         if (a.should_detect_usage_for_queries) {
             auto query = internal::bridge::query(a.query->get_table());
             if (b) {
-                query.equal(a.managed, internal::type_info::serialize(*b));
+                query.equal(a.managed, experimental::serialize(*b));
             } else {
                 query.equal(a.managed, std::nullopt);
             }

@@ -3,8 +3,8 @@
 
 #include <memory>
 #include <functional>
-#include <system_error>
 #include <future>
+#include <system_error>
 
 namespace realm {
     class SyncSession;

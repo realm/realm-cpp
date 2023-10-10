@@ -1,89 +1,104 @@
 #include <cpprealm/internal/bridge/table.hpp>
-#include <cpprealm/internal/bridge/utils.hpp>
-#include <cpprealm/internal/bridge/query.hpp>
-#include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/mixed.hpp>
+#include <cpprealm/internal/bridge/obj.hpp>
+#include <cpprealm/internal/bridge/query.hpp>
+#include <cpprealm/internal/bridge/utils.hpp>
 
-#include <realm/table.hpp>
-#include <realm/table_view.hpp>
 #include <realm/keys.hpp>
 #include <realm/mixed.hpp>
+#include <realm/table.hpp>
+#include <realm/table_view.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
-    static_assert(SizeCheck<12, sizeof(TableRef)>{});
-    static_assert(SizeCheck<4, alignof(TableRef)>{});
-    static_assert(SizeCheck<12, sizeof(ConstTableRef)>{});
-    static_assert(SizeCheck<4, alignof(ConstTableRef)>{});
-#elif __x86_64__
-    static_assert(SizeCheck<16, sizeof(TableRef)>{});
-    static_assert(SizeCheck<8, alignof(TableRef)>{});
-    static_assert(SizeCheck<16, sizeof(ConstTableRef)>{});
-    static_assert(SizeCheck<8, alignof(ConstTableRef)>{});
-#elif __arm__
-    static_assert(SizeCheck<16, sizeof(TableRef)>{});
-    static_assert(SizeCheck<8, alignof(TableRef)>{});
-    static_assert(SizeCheck<16, sizeof(ConstTableRef)>{});
-    static_assert(SizeCheck<8, alignof(ConstTableRef)>{});
-#elif __aarch64__
-    static_assert(SizeCheck<16, sizeof(TableRef)>{});
-    static_assert(SizeCheck<8, alignof(TableRef)>{});
-    static_assert(SizeCheck<16, sizeof(ConstTableRef)>{});
-    static_assert(SizeCheck<8, alignof(ConstTableRef)>{});
-#elif _WIN32
-    static_assert(SizeCheck<16, sizeof(TableRef)>{});
-    static_assert(SizeCheck<8, alignof(TableRef)>{});
-    static_assert(SizeCheck<16, sizeof(ConstTableRef)>{});
-    static_assert(SizeCheck<8, alignof(ConstTableRef)>{});
-#endif
     table::table() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_table) TableRef();
+#else
+        m_table = std::make_shared<TableRef>();
+#endif
     }
 
     table::table(const table& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_table) TableRef(*reinterpret_cast<const TableRef*>(&other.m_table));
+#else
+        m_table = other.m_table;
+#endif
     }
 
     table& table::operator=(const table& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<TableRef*>(&m_table) = *reinterpret_cast<const TableRef*>(&other.m_table);
         }
+#else
+        m_table = other.m_table;
+#endif
         return *this;
     }
 
     table::table(table&& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_table) TableRef(std::move(*reinterpret_cast<TableRef*>(&other.m_table)));
+#else
+        m_table = std::move(other.m_table);
+#endif
     }
 
     table& table::operator=(table&& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<TableRef*>(&m_table) = std::move(*reinterpret_cast<TableRef*>(&other.m_table));
         }
+#else
+        m_table = std::move(other.m_table);
+#endif
         return *this;
     }
 
     table::~table() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         reinterpret_cast<TableRef*>(&m_table)->~TableRef();
+#endif
     }
-    table::table(const TableRef & ref)
-    {
+    table::table(const TableRef & ref) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_table) TableRef(ref);
+#else
+        m_table = std::make_shared<TableRef>(ref);
+#endif
     }
 
     table::table(const ConstTableRef &ref) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_table) ConstTableRef(ref);
+#else
+        m_table = std::make_shared<TableRef>(ref.cast_away_const());
+#endif
     }
 
     table::operator TableRef() const {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return *reinterpret_cast<const TableRef*>(&m_table);
+#else
+        return *m_table;
+#endif
     }
 
     table::operator ConstTableRef() const {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return *reinterpret_cast<const ConstTableRef*>(&m_table);
+#else
+        return *m_table;
+#endif
     }
 
     bool table::is_embedded() const {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return (*reinterpret_cast<const TableRef*>(&m_table))->is_embedded();
+#else
+        return m_table->cast_away_const()->is_embedded();
+#endif
     }
 
     query table::query(const std::string& a,
@@ -128,65 +143,64 @@ namespace realm::internal::bridge {
         return static_cast<TableRef>(lhs) != static_cast<TableRef>(rhs);
     }
 
-#ifdef __i386__
-    static_assert(SizeCheck<316, sizeof(TableView)>{});
-    static_assert(SizeCheck<4, alignof(TableView)>{});
-#elif __x86_64__
-#if defined(__clang__)
-    static_assert(SizeCheck<568, sizeof(TableView)>{});
-    static_assert(SizeCheck<8, alignof(TableView)>{});
-#elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(SizeCheck<576, sizeof(TableView)>{});
-    static_assert(SizeCheck<8, alignof(TableView)>{});
-#endif
-#elif __arm__
-    static_assert(SizeCheck<368, sizeof(TableView)>{});
-    static_assert(SizeCheck<8, alignof(TableView)>{});
-#elif __aarch64__
-#if defined(__clang__)
-    static_assert(SizeCheck<568, sizeof(TableView)>{});
-    static_assert(SizeCheck<8, alignof(TableView)>{});
-#elif defined(__GNUC__) || defined(__GNUG__)
-    static_assert(SizeCheck<576, sizeof(TableView)>{});
-    static_assert(SizeCheck<8, alignof(TableView)>{});
-#endif
-#elif _WIN32
-    #if _DEBUG
-    static_assert(SizeCheck<624, sizeof(TableView)>{});
-    #else
-    static_assert(SizeCheck<576, sizeof(TableView)>{});
-    #endif
-    static_assert(SizeCheck<8, alignof(TableView)>{});
-#endif
-
     table_view::table_view() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_table_view) TableView();
+#else
+        m_table_view = std::make_shared<TableView>();
+#endif
     }
     table_view::table_view(const table_view& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_table_view) TableView(*reinterpret_cast<const TableRef*>(&other.m_table_view));
+#else
+        m_table_view = other.m_table_view;
+#endif
     }
     table_view& table_view::operator=(const table_view& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<TableView*>(&m_table_view) = *reinterpret_cast<const TableView*>(&other.m_table_view);
         }
+#else
+        m_table_view = other.m_table_view;
+#endif
         return *this;
     }
     table_view::table_view(table_view&& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_table_view) TableView(std::move(*reinterpret_cast<TableView*>(&other.m_table_view)));
+#else
+        m_table_view = std::move(other.m_table_view);
+#endif
     }
     table_view& table_view::operator=(table_view&& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<TableView*>(&m_table_view) = std::move(*reinterpret_cast<TableView*>(&other.m_table_view));
         }
+#else
+        m_table_view = std::move(other.m_table_view);
+#endif
         return *this;
     }
     table_view::~table_view() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         reinterpret_cast<TableView*>(&m_table_view)->~TableView();
+#endif
     }
     table_view::table_view(const TableView &ref) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_table_view) TableView(ref);
+#else
+        m_table_view = std::make_shared<TableView>(ref);
+#endif
     }
     table_view::operator TableView() const {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return *reinterpret_cast<const TableView*>(&m_table_view);
+#else
+        return *m_table_view;
+#endif
     }
 }

@@ -16,7 +16,7 @@ namespace realm {
         persisted& operator =(const std::string&);
         persisted(const std::string&);
         persisted();
-    protected:
+
         static std::string serialize(const std::string&, const std::optional<internal::bridge::realm>& = std::nullopt);
         static std::string deserialize(const std::string&);
 

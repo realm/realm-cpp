@@ -2,7 +2,7 @@
 #define CPPREALM_MANAGED_NUMERIC_HPP
 
 #include <cpprealm/experimental/macros.hpp>
-#include <cpprealm/persisted.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm::experimental {
     template<>

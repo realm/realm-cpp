@@ -74,7 +74,7 @@ namespace realm {
                 }
             }, value);
         }
-    protected:
+
         static T deserialize(const internal::bridge::mixed& value) {
             if (value.is_null()) {
                 return std::monostate();

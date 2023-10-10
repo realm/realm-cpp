@@ -35,7 +35,6 @@ namespace realm {
             }
             return *this;
         }
-    protected:
         static int64_t serialize(const T& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
             return static_cast<int64_t>(v);
         }

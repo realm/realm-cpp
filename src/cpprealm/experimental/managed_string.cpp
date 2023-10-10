@@ -1,5 +1,6 @@
 #include <cpprealm/experimental/managed_string.hpp>
-#include <cpprealm/persisted.hpp>
+#include <cpprealm/experimental/db.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm::experimental {
     using managed_string = managed<std::string>;
@@ -121,7 +122,7 @@ namespace realm::experimental {
             query.contains(this->m_key, std::string(rhs));
             return query;
         }
-        return detach().find(rhs) != cpprealm::npos;
+        return detach().find(rhs) != realm::npos;
     }
 
     rbool managed_string::empty() const noexcept {

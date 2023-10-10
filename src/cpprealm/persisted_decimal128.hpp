@@ -13,8 +13,6 @@ namespace realm {
     template <>
     struct persisted<decimal128> : persisted_primitive_base<decimal128> {
         using persisted_primitive_base<decimal128>::persisted_primitive_base;
-
-    protected:
         static internal::bridge::decimal128 serialize(const decimal128&, const std::optional<internal::bridge::realm>& = std::nullopt);
         static decimal128 deserialize(const internal::bridge::decimal128&);
 

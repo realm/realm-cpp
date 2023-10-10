@@ -22,14 +22,20 @@
 #include <future>
 #include <type_traits>
 
-#include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/alpha_support.hpp>
+#include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/query.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
-#include <cpprealm/internal/bridge/obj.hpp>
+#include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/internal/bridge/utils.hpp>
 
+#ifdef CPP_REALM_ENABLE_ALPHA_SDK
 #include <cpprealm/results.hpp>
+#endif
+
 #include <cpprealm/experimental/macros.hpp>
 #include <cpprealm/experimental/results.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm {
     template <typename>
@@ -80,6 +86,7 @@ namespace realm {
         // Inserts a new subscription into the set if one does not exist already.
         // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
         // for the templated class type.
+#ifdef CPP_REALM_ENABLE_ALPHA_SDK
         template <typename T>
         std::enable_if_t<std::is_base_of_v<object<T>, T>>
         add(const std::string& name,
@@ -97,6 +104,7 @@ namespace realm {
                 insert_or_assign(name, builder);
             }
         }
+#endif
 
         // Inserts a new subscription into the set if one does not exist already.
         // If the `query_fn` parameter is left empty, the subscription will sync *all* objects
@@ -157,28 +165,10 @@ namespace realm {
 
     private:
         mutable_sync_subscription_set(internal::bridge::realm&, const sync::MutableSubscriptionSet& subscription_set);
-#ifdef __i386__
-        std::aligned_storage<116, 4>::type m_subscription_set[1];
-#elif __x86_64__
-    #if defined(__clang__)
-        std::aligned_storage<184, 8>::type m_subscription_set[1];
-    #elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<192, 8>::type m_subscription_set[1];
-    #endif
-#elif __arm__
-        std::aligned_storage<136, 8>::type m_subscription_set[1];
-#elif __aarch64__
-#if defined(__clang__)
-        std::aligned_storage<184, 8>::type m_subscription_set[1];
-#elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<192, 8>::type m_subscription_set[1];
-#endif
-#elif _WIN32
-        #if _DEBUG
-        std::aligned_storage<208, 8>::type m_subscription_set[1];
-        #else
-        std::aligned_storage<192, 8>::type m_subscription_set[1];
-        #endif
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        internal::bridge::storage::MutableSyncSubscriptionSet m_subscription_set[1];
+#else
+        std::shared_ptr<sync::MutableSubscriptionSet> m_subscription_set;
 #endif
         std::reference_wrapper<internal::bridge::realm> m_realm;
         friend struct sync_subscription_set;
@@ -207,28 +197,10 @@ namespace realm {
     private:
         template <typename ...Ts>
         friend struct db;
-#ifdef __i386__
-        std::aligned_storage<60, 4>::type m_subscription_set[1];
-#elif __x86_64__
-    #if defined(__clang__)
-        std::aligned_storage<96, 8>::type m_subscription_set[1];
-    #elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<104, 8>::type m_subscription_set[1];
-    #endif
-#elif __arm__
-        std::aligned_storage<64, 8>::type m_subscription_set[1];
-#elif __aarch64__
-#if defined(__clang__)
-        std::aligned_storage<96, 8>::type m_subscription_set[1];
-#elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<104, 8>::type m_subscription_set[1];
-#endif
-#elif _WIN32
-#if _DEBUG
-        std::aligned_storage<120, 8>::type m_subscription_set[1];
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        internal::bridge::storage::SyncSubscriptionSet m_subscription_set[1];
 #else
-        std::aligned_storage<104, 8>::type m_subscription_set[1];
-#endif
+        std::shared_ptr<sync::SubscriptionSet> m_subscription_set;
 #endif
         std::reference_wrapper<internal::bridge::realm> m_realm;
     };

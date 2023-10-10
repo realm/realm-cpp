@@ -1,10 +1,11 @@
 #ifndef CPP_REALM_BRIDGE_DICTIONARY_HPP
 #define CPP_REALM_BRIDGE_DICTIONARY_HPP
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
-#include <functional>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm::object_store {
     class Dictionary;
@@ -106,16 +107,12 @@ namespace realm::internal::bridge {
 
         size_t size() const;
     private:
-#ifdef __i386__
-        std::aligned_storage<96, 4>::type m_dictionary[1];
-#elif __x86_64__
-        std::aligned_storage<144, 8>::type m_dictionary[1];
-#elif __arm__
-        std::aligned_storage<112, 8>::type m_dictionary[1];
-#elif __aarch64__
-        std::aligned_storage<144, 8>::type m_dictionary[1];
-#elif _WIN32
-        std::aligned_storage<144, 8>::type m_dictionary[1];
+        const CoreDictionary* get_dictionary() const;
+        CoreDictionary* get_dictionary();
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::CoreDictionary m_dictionary[1];
+#else
+        std::shared_ptr<CoreDictionary> m_dictionary;
 #endif
     };
 
@@ -142,18 +139,16 @@ namespace realm::internal::bridge {
         notification_token add_notification_callback(std::shared_ptr<collection_change_callback>&& cb);
         notification_token add_key_based_notification_callback(std::shared_ptr<dictionary_callback_wrapper>&& cb);
     private:
+        const Dictionary* get_dictionary() const;
+        Dictionary* get_dictionary();
+        friend inline Dictionary * get_dictionary(dictionary& lst);
+        friend inline const Dictionary* get_dictionary(const dictionary& lst);
         template <typename T>
         friend T get(dictionary&, const std::string&);
-#ifdef __i386__
-        std::aligned_storage<40, 4>::type m_dictionary[1];
-#elif __x86_64__
-        std::aligned_storage<80, 8>::type m_dictionary[1];
-#elif __arm__
-        std::aligned_storage<40, 4>::type m_dictionary[1];
-#elif __aarch64__
-        std::aligned_storage<80, 8>::type m_dictionary[1];
-#elif _WIN32
-        std::aligned_storage<80, 8>::type m_dictionary[1];
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::Dictionary m_dictionary[1];
+#else
+        std::shared_ptr<Dictionary> m_dictionary;
 #endif
     };
 

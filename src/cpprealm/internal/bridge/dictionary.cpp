@@ -1,6 +1,5 @@
 #include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/mixed.hpp>
-#include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
 
@@ -8,169 +7,220 @@
 #include <realm/object-store/results.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
-    static_assert(SizeCheck<40, sizeof(Dictionary)>{});
-    static_assert(SizeCheck<4, alignof(Dictionary)>{});
-#elif __x86_64__
-    static_assert(SizeCheck<80, sizeof(Dictionary)>{});
-    static_assert(SizeCheck<8, alignof(Dictionary)>{});
-#elif __arm__
-    static_assert(SizeCheck<40, sizeof(Dictionary)>{});
-    static_assert(SizeCheck<4, alignof(Dictionary)>{});
-#elif __aarch64__
-    static_assert(SizeCheck<80, sizeof(Dictionary)>{});
-    static_assert(SizeCheck<8, alignof(Dictionary)>{});
-#elif _WIN32
-    static_assert(SizeCheck<80, sizeof(Dictionary)>{});
-    static_assert(SizeCheck<8, alignof(Dictionary)>{});
-#endif
-
-#ifdef __i386__
-    static_assert(SizeCheck<96, sizeof(CoreDictionary)>{});
-    static_assert(SizeCheck<4, alignof(CoreDictionary)>{});
-#elif __x86_64__
-    static_assert(SizeCheck<144, sizeof(CoreDictionary)>{});
-    static_assert(SizeCheck<8, alignof(CoreDictionary)>{});
-#elif __arm__
-    static_assert(SizeCheck<112, sizeof(CoreDictionary)>{});
-    static_assert(SizeCheck<8, alignof(CoreDictionary)>{});
-#elif __aarch64__
-    static_assert(SizeCheck<144, sizeof(CoreDictionary)>{});
-    static_assert(SizeCheck<8, alignof(CoreDictionary)>{});
-#elif _WIN32
-    static_assert(SizeCheck<144, sizeof(CoreDictionary)>{});
-    static_assert(SizeCheck<8, alignof(CoreDictionary)>{});
-#endif
 
     core_dictionary::core_dictionary() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_dictionary) CoreDictionary();
+#else
+        m_dictionary = std::make_shared<CoreDictionary>();
+#endif
     }
     core_dictionary::core_dictionary(const core_dictionary &other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_dictionary) CoreDictionary(*reinterpret_cast<const CoreDictionary *>(&other.m_dictionary));
+#else
+        m_dictionary = other.m_dictionary;
+#endif
     }
     core_dictionary &core_dictionary::operator=(const core_dictionary &other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<CoreDictionary *>(&m_dictionary) = *reinterpret_cast<const CoreDictionary *>(&other.m_dictionary);
         }
+#else
+        m_dictionary = other.m_dictionary;
+#endif
         return *this;
     }
     core_dictionary::core_dictionary(core_dictionary &&other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_dictionary) CoreDictionary(std::move(*reinterpret_cast<CoreDictionary *>(&other.m_dictionary)));
-
+#else
+        m_dictionary = std::move(other.m_dictionary);
+#endif
     }
     core_dictionary &core_dictionary::operator=(core_dictionary &&other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<CoreDictionary *>(&m_dictionary) = std::move(*reinterpret_cast<CoreDictionary *>(&other.m_dictionary));
         }
+#else
+        m_dictionary = std::move(other.m_dictionary);
+#endif
         return *this;
     }
     core_dictionary::~core_dictionary() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         reinterpret_cast<CoreDictionary *>(&m_dictionary)->~CoreDictionary();
+#endif
     }
 
     core_dictionary::core_dictionary(const CoreDictionary& v) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_dictionary) CoreDictionary(v);
+#else
+        m_dictionary = std::make_shared<CoreDictionary>(v);
+#endif
     }
+
+    inline const CoreDictionary* core_dictionary::get_dictionary() const {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<const CoreDictionary*>(&m_dictionary);
+#else
+        return m_dictionary.get();
+#endif
+    }
+
+    inline CoreDictionary* core_dictionary::get_dictionary() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<CoreDictionary*>(&m_dictionary);
+#else
+        return m_dictionary.get();
+#endif
+    }
+
     core_dictionary::operator CoreDictionary() const {
-        return *reinterpret_cast<const CoreDictionary*>(&m_dictionary);
+        return *get_dictionary();
     }
 
     void core_dictionary::insert(const std::string& key, const mixed& value) {
-        reinterpret_cast<CoreDictionary*>(&m_dictionary)->insert(key, value.operator Mixed());
+        get_dictionary()->insert(key, value.operator Mixed());
     }
 
     void core_dictionary::insert(const std::string& key, const std::string& value) {
-        reinterpret_cast<CoreDictionary*>(&m_dictionary)->insert(key, value);
+        get_dictionary()->insert(key, value);
     }
 
     obj core_dictionary::create_and_insert_linked_object(const std::string& key, const internal::bridge::mixed& pk) {
-        Table& t = *(reinterpret_cast<CoreDictionary*>(&m_dictionary)->get_target_table());
+        Table& t = *get_dictionary()->get_target_table();
         auto o = t.create_object_with_primary_key(pk.operator Mixed());
-        reinterpret_cast<CoreDictionary*>(&m_dictionary)->insert(key, o.get_key());
+        get_dictionary()->insert(key, o.get_key());
         return o;
     }
 
     obj core_dictionary::create_and_insert_linked_object(const std::string& key) {
-        return reinterpret_cast<CoreDictionary*>(&m_dictionary)->create_and_insert_linked_object(key);
+        return get_dictionary()->create_and_insert_linked_object(key);
     }
 
     mixed core_dictionary::get(const std::string& key) const {
-        return reinterpret_cast<const CoreDictionary*>(&m_dictionary)->get(key);
+        return get_dictionary()->get(key);
     }
 
     void core_dictionary::erase(const std::string& key) {
-        reinterpret_cast<CoreDictionary*>(&m_dictionary)->erase(key);
+        get_dictionary()->erase(key);
     }
 
     obj core_dictionary::get_object(const std::string& key) {
-        return reinterpret_cast<CoreDictionary*>(&m_dictionary)->get_object(key);
+        return get_dictionary()->get_object(key);
     }
 
     size_t core_dictionary::size() const {
-        return reinterpret_cast<const CoreDictionary*>(&m_dictionary)->size();
+        return get_dictionary()->size();
     }
 
     std::pair<mixed, mixed> core_dictionary::get_pair(size_t ndx) const {
-        return reinterpret_cast<const CoreDictionary*>(&m_dictionary)->get_pair(ndx);
+        return get_dictionary()->get_pair(ndx);
     }
 
     size_t core_dictionary::find_any_key(const std::string& value) const noexcept {
-        return reinterpret_cast<const CoreDictionary*>(&m_dictionary)->find_any_key(value);
+        return get_dictionary()->find_any_key(value);
     }
 
     dictionary::dictionary() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_dictionary) Dictionary();
+#else
+        m_dictionary = std::make_shared<Dictionary>();
+#endif
+
     }
     dictionary::dictionary(const dictionary& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_dictionary) Dictionary(*reinterpret_cast<const Dictionary*>(&other.m_dictionary));
+#else
+        m_dictionary = other.m_dictionary;
+#endif
     }
 
     dictionary& dictionary::operator=(const dictionary& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<Dictionary*>(&m_dictionary) = *reinterpret_cast<const Dictionary*>(&other.m_dictionary);
         }
+#else
+        m_dictionary = other.m_dictionary;
+#endif
         return *this;
     }
 
     dictionary::dictionary(dictionary&& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_dictionary) Dictionary(std::move(*reinterpret_cast<Dictionary*>(&other.m_dictionary)));
+#else
+        m_dictionary = std::move(other.m_dictionary);
+#endif
     }
 
     dictionary& dictionary::operator=(dictionary&& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<Dictionary*>(&m_dictionary) = std::move(*reinterpret_cast<Dictionary*>(&other.m_dictionary));
         }
+#else
+        m_dictionary = std::move(other.m_dictionary);
+#endif
         return *this;
     }
 
     dictionary::~dictionary() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         reinterpret_cast<Dictionary*>(&m_dictionary)->~Dictionary();
+#endif
     }
     
     dictionary::dictionary(const Dictionary &v) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_dictionary) Dictionary(v);
+#else
+        m_dictionary = std::make_shared<Dictionary>(v);
+#endif
+    }
+
+    const Dictionary* dictionary::get_dictionary() const {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<const Dictionary*>(&m_dictionary);
+#else
+        return m_dictionary.get();
+#endif
+    }
+    Dictionary* dictionary::get_dictionary() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<Dictionary*>(&m_dictionary);
+#else
+        return m_dictionary.get();
+#endif
     }
 
     dictionary::operator Dictionary() const {
-        return *reinterpret_cast<const Dictionary*>(&m_dictionary);
+        return *get_dictionary();
     }
     size_t dictionary::size() const {
-        return reinterpret_cast<const Dictionary*>(&m_dictionary)->size();
+        return get_dictionary()->size();
     }
 
     void dictionary::insert(const std::string &key, const mixed &value) {
-        reinterpret_cast<Dictionary*>(&m_dictionary)->insert_any(key, static_cast<Mixed>(value.operator ::realm::Mixed()));
+        get_dictionary()->insert_any(key, static_cast<Mixed>(value.operator ::realm::Mixed()));
     }
 
     void dictionary::insert(const std::string &key, const std::string &value) {
-        reinterpret_cast<Dictionary*>(&m_dictionary)->insert(key, StringData(value));
+        get_dictionary()->insert(key, StringData(value));
     }
     void dictionary::clear() {
-        reinterpret_cast<Dictionary*>(&m_dictionary)->remove_all();
+        get_dictionary()->remove_all();
     }
 
     size_t dictionary::find(const std::string& key) {
-        return reinterpret_cast<Dictionary*>(&m_dictionary)->find_any(key);
+        return get_dictionary()->find_any(key);
     }
 
     void dictionary::remove_all() {
@@ -178,62 +228,78 @@ namespace realm::internal::bridge {
     }
 
     void dictionary::remove(const std::string& key) {
-        reinterpret_cast<Dictionary*>(&m_dictionary)->try_erase(key);
+        get_dictionary()->try_erase(key);
     }
 
     std::pair<std::string, mixed> dictionary::get_pair(size_t idx) {
-        auto pair = reinterpret_cast<Dictionary*>(&m_dictionary)->get_pair(idx);
+        auto pair = get_dictionary()->get_pair(idx);
         return { pair.first, static_cast<mixed>(pair.second) };
     }
 
     size_t dictionary::get_key_index(const std::string& key) {
-        Results keys = reinterpret_cast<Dictionary*>(&m_dictionary)->get_keys();
+        Results keys = get_dictionary()->get_keys();
         return keys.index_of(StringData(key));
+    }
+
+    inline Dictionary * get_dictionary(dictionary& d) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<Dictionary*>(&d.m_dictionary);
+#else
+        return d.m_dictionary.get();
+#endif
+    }
+
+    inline const Dictionary * get_dictionary(const dictionary& d) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<const Dictionary*>(&d.m_dictionary);
+#else
+        return d.m_dictionary.get();
+#endif
     }
 
     template <>
     std::string get(dictionary& dict, const std::string &key) {
-        return reinterpret_cast<Dictionary*>(&dict.m_dictionary)->get<StringData>(key);
+        return get_dictionary(dict)->get<StringData>(key);
     }
     template <>
     uuid get(dictionary& dict, const std::string &key) {
-        return reinterpret_cast<Dictionary*>(&dict.m_dictionary)->get<UUID>(key);
+        return get_dictionary(dict)->get<UUID>(key);
     }
     template <>
     object_id get(dictionary& dict, const std::string &key) {
-        return reinterpret_cast<Dictionary*>(&dict.m_dictionary)->get<ObjectId>(key);
+        return get_dictionary(dict)->get<ObjectId>(key);
     }
     template <>
     timestamp get(dictionary& dict, const std::string &key) {
-        return reinterpret_cast<Dictionary*>(&dict.m_dictionary)->get<Timestamp>(key);
+        return get_dictionary(dict)->get<Timestamp>(key);
     }
     template <>
     binary get(dictionary& dict, const std::string &key) {
-        return reinterpret_cast<Dictionary*>(&dict.m_dictionary)->get<BinaryData>(key);
+        return get_dictionary(dict)->get<BinaryData>(key);
     }
     template <>
     int64_t get(dictionary& dict, const std::string &key) {
-        return reinterpret_cast<Dictionary*>(&dict.m_dictionary)->get<Int>(key);
+        return get_dictionary(dict)->get<Int>(key);
     }
     template <>
     double get(dictionary& dict, const std::string &key) {
-        return reinterpret_cast<Dictionary*>(&dict.m_dictionary)->get<Double>(key);
+        return get_dictionary(dict)->get<Double>(key);
     }
     template <>
     obj_key get(dictionary& dict, const std::string &key) {
-        return reinterpret_cast<Dictionary*>(&dict.m_dictionary)->get<ObjKey>(key);
+        return get_dictionary(dict)->get<ObjKey>(key);
     }
     template <>
     obj get(dictionary& dict, const std::string &key) {
-        return reinterpret_cast<Dictionary*>(&dict.m_dictionary)->get_object(key);
+        return get_dictionary(dict)->get_object(key);
     }
     template <>
     mixed get(dictionary& dict, const std::string &key) {
-        return reinterpret_cast<Dictionary*>(&dict.m_dictionary)->get_any(key);
+        return get_dictionary(dict)->get_any(key);
     }
     template <>
     bool get(dictionary& dict, const std::string &key) {
-        return reinterpret_cast<Dictionary*>(&dict.m_dictionary)->get<Bool>(key);
+        return get_dictionary(dict)->get<Bool>(key);
     }
 
     notification_token dictionary::add_notification_callback(std::shared_ptr<collection_change_callback>&& cb) {
@@ -248,7 +314,7 @@ namespace realm::internal::bridge {
                 m_cb->after(v);
             }
         } ccb(std::move(cb));
-        return reinterpret_cast<Dictionary*>(&m_dictionary)->add_notification_callback(ccb);
+        return get_dictionary()->add_notification_callback(ccb);
     }
 
     notification_token dictionary::add_key_based_notification_callback(std::shared_ptr<dictionary_callback_wrapper>&& cb) {
@@ -277,10 +343,10 @@ namespace realm::internal::bridge {
                 }
             }
         } wrapper(std::move(cb));
-        return reinterpret_cast<Dictionary *>(&m_dictionary)->add_key_based_notification_callback(wrapper);
+        return get_dictionary()->add_key_based_notification_callback(wrapper);
     }
 
     obj dictionary::insert_embedded(const std::string &v) {
-        return reinterpret_cast<Dictionary*>(&m_dictionary)->insert_embedded(v);
+        return get_dictionary()->insert_embedded(v);
     }
 }

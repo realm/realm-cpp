@@ -20,7 +20,6 @@ TEST_CASE("basic_beta_performance", "[performance]") {
             });
         });
         CHECK(realm.objects<experimental::AllTypesObject>().size() == 1000);
-
     };
 
     BENCHMARK_ADVANCED("read 1000")(Catch::Benchmark::Chronometer meter) {

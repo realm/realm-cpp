@@ -15,7 +15,7 @@ This repository holds the source code for the C++ SDK Preview.
 Realm was built for mobile developers, with simplicity in mind. The idiomatic, object-oriented data model can save you thousands of lines of code.
 
 ```cpp
-#include <cpprealm/sdk.hpp>
+#include <cpprealm/experimental/sdk.hpp>
 
 using namespace realm::experimental;
 
@@ -115,11 +115,45 @@ The API reference is located [here](https://www.mongodb.com/docs/realm-sdks/cpp/
 
 ## Installing Realm
 
-### MacOS / Linux / Windows
+### Prerequisites
 
-Prerequisites:
+To build the Realm C++ SDK, you need CMake 3.20 or newer and a standard set of build tools. 
+This includes a C/C++ compiler and a build system like GNU make. Realm is thoroughly tested with both GCC and Clang. 
+It is compatible with GCC 8.3 and newer, as well as with Clang 9 and newer. Your compiler must support C++17.
 
-* git, cmake, cxx17
+### Ubuntu 18.04 or greater
+
+    sudo apt-get install build-essential
+    sudo apt-get install libcurl4-openssl-dev 
+    sudo apt-get install libuv1-dev
+    sudo apt-get install libprocps-dev
+    sudo apt-get install libssl-dev
+    sudo apt-get install zlib1g-dev
+    sudo apt-get install cmake
+
+- If you are using a GCC version <= 9 and encounter an SSL linking error add the `-DREALM_USE_SYSTEM_OPENSSL=ON` cmake option.
+
+### macOS
+
+On macOS, Clang is used as the C/C++ compiler by default. Clang is installed
+as part of Xcode. Xcode 13.1 or newer is required, and can be installed via
+the Mac App Store.
+
+Setting up a development environment can conveniently be achieved using a
+package manager called brew. See https://brew.sh for install instructions.
+
+    brew install cmake
+
+### Windows
+
+On Windows, navigate to the following websites in your browser
+to download the appropriate installers.
+
+- Visual Studio 2019: https://www.visualstudio.com/
+- CMake: https://cmake.org/download/
+
+
+### Building
 
 ```sh
 git submodule update --init --recursive
@@ -134,7 +168,7 @@ You can then link to your library with `-lcpprealm`.
 <b>Note:</b> If your target is Windows make sure to add the `MSVC_RUNTIME_LIBRARY` property to your target like so:
 ```
 set_property(TARGET My_Target PROPERTY
-      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>") # If building in release use `CONFIG:Release>:Release`
 ```
  
 <img style="width: 0px; height: 0px;" src="https://3eaz4mshcd.execute-api.us-east-1.amazonaws.com/prod?s=https://github.com/realm/realm-cocoa#README.md">

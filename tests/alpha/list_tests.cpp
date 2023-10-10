@@ -155,7 +155,7 @@ TEST_CASE("list", "[list]") {
            obj.list_int_col.pop_back();
        });
        CHECK(obj.list_int_col.size() == 2);
-       CHECK(obj.list_int_col.find(1) == cpprealm::npos);
+       CHECK(obj.list_int_col.find(1) == realm::npos);
 
        realm.write([&realm, &obj] {
            obj.list_int_col.erase(0);
@@ -205,7 +205,7 @@ TEST_CASE("list", "[list]") {
        obj.list_obj_col.push_back(o3);
        obj.list_obj_col.push_back(o4);
 
-       CHECK(obj.list_obj_col.find(o4) == cpprealm::npos);
+       CHECK(obj.list_obj_col.find(o4) == realm::npos);
        CHECK(obj.list_obj_col[3].str_col == o4.str_col);
 
        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
@@ -233,7 +233,7 @@ TEST_CASE("list", "[list]") {
            obj.list_obj_col.pop_back();
        });
        CHECK(obj.list_obj_col.size() == 4);
-       CHECK(obj.list_obj_col.find(o5) == cpprealm::npos);
+       CHECK(obj.list_obj_col.find(o5) == realm::npos);
 
        realm.write([&realm, &obj] {
            obj.list_obj_col.erase(0);
@@ -278,7 +278,7 @@ TEST_CASE("list", "[list]") {
        obj.list_embedded_obj_col.push_back(o3);
        obj.list_embedded_obj_col.push_back(o4);
 
-       CHECK(obj.list_embedded_obj_col.find(o4) == cpprealm::npos);
+       CHECK(obj.list_embedded_obj_col.find(o4) == realm::npos);
        CHECK(obj.list_embedded_obj_col[3].str_col == o4.str_col);
 
        auto realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded, Dog>(std::move(config));
@@ -306,7 +306,7 @@ TEST_CASE("list", "[list]") {
            obj.list_embedded_obj_col.pop_back();
        });
        CHECK(obj.list_embedded_obj_col.size() == 4);
-       CHECK(obj.list_embedded_obj_col.find(o5) == cpprealm::npos);
+       CHECK(obj.list_embedded_obj_col.find(o5) == realm::npos);
 
        realm.write([&obj] {
            obj.list_embedded_obj_col.erase(0);

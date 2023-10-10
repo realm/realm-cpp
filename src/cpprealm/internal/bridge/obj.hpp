@@ -7,14 +7,16 @@
 #include <memory>
 #include <optional>
 #include <string>
+
+#include <cpprealm/experimental/types.hpp>
 #include <cpprealm/internal/bridge/binary.hpp>
 #include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/decimal128.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
 #include <cpprealm/internal/bridge/object_id.hpp>
-#include <cpprealm/internal/bridge/decimal128.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm {
     class Group;
@@ -36,8 +38,6 @@ namespace realm {
         struct obj_link;
     }
     namespace internal::type_info {
-        template <typename T, std::enable_if_t<std::is_base_of_v<object_base<T>, T>>>
-        bridge::obj_key serialize(const T& o);
         template <typename, typename>
         struct type_info;
     }
@@ -209,7 +209,7 @@ namespace realm::internal::bridge {
                     }, experimental::managed<std::remove_pointer_t<ValueType>, void>::schema.ps);
                     v2.push_back(m_obj.get_key());
                 } else {
-                    v2.push_back(persisted<ValueType, void>::serialize(v));
+                    v2.push_back(::realm::experimental::serialize(v));
                 }
             }
             set_list_values(col_key, v2);
@@ -223,18 +223,16 @@ namespace realm::internal::bridge {
         obj create_and_set_linked_object(const col_key&);
         table_view get_backlink_view(table, col_key);
     private:
+        inline const Obj* get_obj() const;
+        inline Obj* get_obj();
+        friend inline const Obj* get_obj(const obj&);
+        friend inline Obj* get_obj(obj&);
         template <typename T>
         friend T get(const obj&, const col_key& col_key);
-#ifdef __i386__
-        std::aligned_storage<44, 4>::type m_obj[1];
-#elif __x86_64__
-        std::aligned_storage<64, 8>::type m_obj[1];
-#elif __arm__
-        std::aligned_storage<56, 8>::type m_obj[1];
-#elif __aarch64__
-        std::aligned_storage<64, 8>::type m_obj[1];
-#elif _WIN32
-        std::aligned_storage<64, 8>::type m_obj[1];
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::Obj m_obj[1];
+#else
+        std::shared_ptr<Obj> m_obj;
 #endif
     };
 

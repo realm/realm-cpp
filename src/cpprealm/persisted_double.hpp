@@ -21,7 +21,6 @@
 #define REALM_PERSISTED_DOUBLE_HPP
 
 #include <cpprealm/persisted.hpp>
-#include <cpprealm/persisted_custom.hpp>
 
 namespace realm {
 
@@ -99,7 +98,6 @@ namespace realm {
             }
         }
 
-    protected:
         static double serialize(double, const std::optional<internal::bridge::realm>& = std::nullopt);
 
         static double deserialize(double);

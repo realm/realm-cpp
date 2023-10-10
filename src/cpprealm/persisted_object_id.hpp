@@ -12,14 +12,11 @@ namespace realm {
         return stream << value.to_string();
     }
 
-    inline bool operator ==(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id == rhs.m_object_id; }
-    inline bool operator !=(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id != rhs.m_object_id; }
-
     template <>
     struct persisted<object_id> : persisted_primitive_base<object_id> {
         using persisted_primitive_base<object_id>::persisted_primitive_base;
 
-    protected:
+
         static internal::bridge::object_id serialize(const object_id&, const std::optional<internal::bridge::realm>& = std::nullopt);
         static object_id deserialize(const internal::bridge::object_id&);
 

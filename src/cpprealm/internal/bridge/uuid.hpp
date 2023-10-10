@@ -1,8 +1,9 @@
 #ifndef CPP_REALM_BRIDGE_UUID_HPP
 #define CPP_REALM_BRIDGE_UUID_HPP
 
-#include <string_view>
 #include <cpprealm/internal/bridge/utils.hpp>
+#include <string_view>
+#include <array>
 
 namespace realm {
     struct uuid;
@@ -12,11 +13,11 @@ namespace realm {
 namespace realm::internal::bridge {
     struct uuid : core_binding<UUID> {
         uuid();
-        uuid(const uuid& other) ;
-        uuid& operator=(const uuid& other) ;
-        uuid(uuid&& other);
-        uuid& operator=(uuid&& other);
-        ~uuid();
+        uuid(const uuid& other) = default;
+        uuid& operator=(const uuid& other) = default;
+        uuid(uuid&& other) = default;
+        uuid& operator=(uuid&& other) = default;
+        ~uuid() = default;
         uuid(const UUID&); //NOLINT(google-explicit-constructor);
         explicit uuid(const std::string&);
         uuid(const struct ::realm::uuid&); //NOLINT(google-explicit-constructor);
@@ -26,17 +27,7 @@ namespace realm::internal::bridge {
         [[nodiscard]] std::string to_base64() const;
         [[nodiscard]] std::array<uint8_t, 16> to_bytes() const;
     private:
-#ifdef __i386__
-        std::aligned_storage<16, 1>::type m_uuid[1];
-#elif __x86_64__
-        std::aligned_storage<16, 1>::type m_uuid[1];
-#elif __arm__
-        std::aligned_storage<16, 1>::type m_uuid[1];
-#elif __aarch64__
-        std::aligned_storage<16, 1>::type m_uuid[1];
-#elif _WIN32
-        std::aligned_storage<16, 1>::type m_uuid[1];
-#endif
+        std::array<uint8_t, 16> m_uuid;
         friend bool operator ==(const uuid&, const uuid&);
         friend bool operator !=(const uuid&, const uuid&);
         friend bool operator >(const uuid&, const uuid&);

@@ -21,7 +21,6 @@
 #define REALM_PERSISTED_INT_HPP
 
 #include <cpprealm/persisted.hpp>
-#include <cpprealm/persisted_custom.hpp>
 
 namespace realm {
     template <>
@@ -96,7 +95,6 @@ namespace realm {
                 this->unmanaged *= T(o);
             }
         }
-            protected:
         static int64_t serialize(int64_t, const std::optional<internal::bridge::realm>& = std::nullopt);
         static int64_t deserialize(int64_t);
 

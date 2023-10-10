@@ -133,14 +133,16 @@ namespace realm {
                                 *static_cast<persisted<T>*>(this),
                                 false));
             }
-        protected:
             union {
                 T unmanaged;
                 internal::bridge::list m_list;
             };
             void manage(internal::bridge::object *object,
                         internal::bridge::col_key &&col_key) override {
-                object->get_obj().set_list_values(col_key, unmanaged);
+                auto lst = object->get_list(col_key);
+                for (size_t i = 0; i < unmanaged.size(); i++) {
+                    lst.add(persisted<typename T::value_type>::serialize(unmanaged[i]));
+                }
                 assign_accessor(object, std::move(col_key));
             }
             void assign_accessor(internal::bridge::object *object,
@@ -172,7 +174,7 @@ namespace realm {
         }
         void push_back(const T& value)
         {
-            if (this->is_managed()) this->m_list.template add(value);
+            if (this->is_managed()) this->m_list.add(experimental::serialize(value));
             else this->unmanaged.push_back(value);
         }
         T operator[](size_t idx) const override
@@ -195,7 +197,7 @@ namespace realm {
                 if (it != this->unmanaged.end()) {
                     return it - this->unmanaged.begin();
                 } else {
-                    return cpprealm::npos;
+                    return realm::npos;
                 }
             }
         }
@@ -206,7 +208,6 @@ namespace realm {
                 this->unmanaged[pos] = a;
             }
         }
-    protected:
         __cpp_realm_friends
     };
 
@@ -267,7 +268,7 @@ namespace realm {
                 return this->m_list.find(a.m_object->get_obj().get_key());
             } else {
                 // unmanaged objects in vectors aren't equatable.
-                return cpprealm::npos;
+                return realm::npos;
             }
         }
 
@@ -358,7 +359,7 @@ namespace realm {
                 return this->m_list.find(a.m_object->get_obj().get_key());
             } else {
                 // unmanaged objects in vectors aren't equatable.
-                return cpprealm::npos;
+                return realm::npos;
             }
         }
 

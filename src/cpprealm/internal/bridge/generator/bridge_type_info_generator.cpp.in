@@ -1,0 +1,48 @@
+#if defined(_MSC_VER)
+#define _WINSOCKAPI_
+#endif
+
+@BRIDGE_TYPE_HEADER_DECLS@
+
+#undef KEY
+#if defined(__i386)
+# define KEY '_','_','i','3','8','6'
+#elif defined(__x86_64)
+# define KEY '_','_','x','8','6','_','6','4'
+#elif defined(__ppc__)
+# define KEY '_','_','p','p','c','_','_'
+#elif defined(__ppc64__)
+# define KEY '_','_','p','p','c','6','4','_','_'
+#elif defined(__aarch64__)
+# define KEY '_','_','a','a','r','c','h','6','4','_','_'
+#elif defined(__ARM_ARCH_7A__)
+# define KEY '_','_','A','R','M','_','A','R','C','H','_','7','A','_','_'
+#elif defined(__ARM_ARCH_7S__)
+# define KEY '_','_','A','R','M','_','A','R','C','H','_','7','S','_','_'
+#endif
+
+int main()
+{
+    int required = 0;
+
+    #define REALM_TYPE_INFO(NAME, EXPRESSION, ...) \
+        static char info_##NAME[] =  {'R', 'E', 'A', 'L', 'M', '_', 'T', 'Y', 'P', 'E', '_', 'I', 'N', 'F', 'O', ':', __VA_ARGS__,'[', \
+        ('0' + ((sizeof(EXPRESSION) / 10000)%10)), \
+        ('0' + ((sizeof(EXPRESSION) / 1000)%10)), \
+        ('0' + ((sizeof(EXPRESSION) / 100)%10)), \
+        ('0' + ((sizeof(EXPRESSION) / 10)%10)), \
+        ('0' +  (sizeof(EXPRESSION)    % 10)), \
+        ',', \
+        ('0' + ((alignof(EXPRESSION) / 10000)%10)), \
+        ('0' + ((alignof(EXPRESSION) / 1000)%10)), \
+        ('0' + ((alignof(EXPRESSION) / 100)%10)), \
+        ('0' + ((alignof(EXPRESSION) / 10)%10)), \
+        ('0' +  (alignof(EXPRESSION)    % 10)), \
+        ']', \
+        '\0'}; \
+        required += info_##NAME[0]
+
+    @TYPE_INFO_QUERY_DECLS@
+
+    return required;
+}

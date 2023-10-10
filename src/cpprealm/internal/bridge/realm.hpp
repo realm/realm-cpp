@@ -2,11 +2,12 @@
 #define CPP_REALM_BRIDGE_REALM_HPP
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-#include <map>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm {
     class Realm;
@@ -152,30 +153,12 @@ namespace realm::internal::bridge {
             void set_schema_version(uint64_t version);
             std::optional<schema> get_schema();
         private:
-#ifdef __i386__
-            std::aligned_storage<192, 8>::type m_config[1];
-#elif __x86_64__
-    #if defined(__clang__)
-            std::aligned_storage<368, 16>::type m_config[1];
-    #elif defined(__GNUC__) || defined(__GNUG__)
-            std::aligned_storage<368, 8>::type m_config[1];
-    #endif
-#elif __arm__
-            std::aligned_storage<192, 8>::type m_config[1];
-#elif __aarch64__
-    #if __ANDROID__
-        std::aligned_storage<368, 16>::type m_config[1];
-    #elif defined(__clang__)
-        std::aligned_storage<312, 8>::type m_config[1];
-    #elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<328, 8>::type m_config[1];
-    #endif
-#elif _WIN32
-        #if _DEBUG
-        std::aligned_storage<456, 8>::type m_config[1];
-        #else
-        std::aligned_storage<424, 8>::type m_config[1];
-        #endif
+            inline RealmConfig* get_config();
+            inline const RealmConfig* get_config() const;
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+            storage::Realm_Config m_config[1];
+#else
+            std::shared_ptr<RealmConfig> m_config;
 #endif
         };
 

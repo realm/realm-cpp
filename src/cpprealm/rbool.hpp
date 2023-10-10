@@ -2,7 +2,10 @@
 #define CPPREALM_RBOOL_HPP
 
 #include <cpprealm/schema.hpp>
+#include <cpprealm/experimental/db.hpp>
+
 #include <cpprealm/internal/bridge/query.hpp>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm::experimental {
     template<typename>
@@ -44,10 +47,6 @@ namespace realm::experimental {
         template <typename, typename ...> \
         friend struct realm::schemagen::schema; \
         template <typename> friend struct query;\
-        template <typename> \
-        friend struct persisted_base;     \
-        template <typename> \
-        friend struct persisted_primitive_base; \
         __friend_rbool_operators__(int64_t, >)  \
         __friend_rbool_operators__(int64_t, <) \
         __friend_rbool_operators__(int64_t, >=)   \
@@ -166,7 +165,11 @@ namespace realm {
         }
         rbool operator!() const {
             if (is_for_queries) {
-                new (&q) internal::bridge::query(q.negate());
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+                new(&q) internal::bridge::query(q.negate());
+#else
+                q = internal::bridge::query(q.negate());
+#endif
                 return *this;
             }
             return !b;
@@ -186,6 +189,21 @@ namespace realm {
                 b = r.b;
         }
     };
+
+    inline rbool operator &&(const rbool& lhs, const rbool& rhs) {
+        if (lhs.is_for_queries) {
+            lhs.q.and_query(rhs.q);
+            return lhs;
+        }
+        return lhs.b && rhs.b;
+    }
+    inline rbool operator ||(const rbool& lhs, const rbool& rhs) {
+        if (lhs.is_for_queries) {
+            lhs.q = lhs.q || rhs.q;
+            return lhs;
+        }
+        return lhs.b && rhs.b;
+    }
 }
 
 #endif //CPPREALM_RBOOL_HPP

@@ -217,15 +217,16 @@ struct RealmServer {
         body << credentials;
 
         auto do_request = [&]() {
-            return do_http_request({
-                    .method = realm::app::HttpMethod::post,
-                    .url = util::format("%1/api/admin/v3.0/auth/providers/%2/login", baas_url, "local-userpass"),
-                    .headers = {
-                            {"Content-Type", "application/json;charset=utf-8"},
-                            {"Accept",       "application/json"}
-                    },
-                    .body = body.str()
-            });
+            app::Request r;
+            r.method = realm::app::HttpMethod::post;
+            r.url = util::format("%1/api/admin/v3.0/auth/providers/%2/login", baas_url, "local-userpass");
+            r.headers = {
+                    {"Content-Type", "application/json;charset=utf-8"},
+                    {"Accept",       "application/json"}
+            };
+            r.body = body.str();
+
+            return do_http_request(std::move(r));
         };
 
         auto response = do_request();

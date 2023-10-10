@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm {
     class ObjectSchema;
@@ -38,28 +39,12 @@ namespace realm::internal::bridge {
         property property_for_name(const std::string&);
         bool operator==(const object_schema& rhs);
     private:
-#ifdef __i386__
-        std::aligned_storage<68, 4>::type m_schema[1];
-#elif __x86_64__
-    #if defined(__clang__)
-        std::aligned_storage<128, 8>::type m_schema[1];
-    #elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<152, 8>::type m_schema[1];
-    #endif
-#elif __arm__
-        std::aligned_storage<68, 4>::type m_schema[1];
-#elif __aarch64__
-#if defined(__clang__)
-        std::aligned_storage<128, 8>::type m_schema[1];
-#elif defined(__GNUC__) || defined(__GNUG__)
-        std::aligned_storage<152, 8>::type m_schema[1];
-#endif
-#elif _WIN32
-        #if _DEBUG
-        std::aligned_storage<192, 8>::type m_schema[1];
-        #else
-        std::aligned_storage<152, 8>::type m_schema[1];
-        #endif
+        ObjectSchema*  get_object_schema();
+        const ObjectSchema*  get_object_schema() const;
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::ObjectSchema m_schema[1];
+#else
+        std::shared_ptr<ObjectSchema> m_schema;
 #endif
     };
 }

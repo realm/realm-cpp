@@ -44,19 +44,6 @@ namespace realm::experimental {
     } \
 
 namespace realm {
-    namespace cpprealm {
-        constexpr size_t npos = size_t(-1);
-    }
-    namespace {
-        template<typename T>
-        using is_optional = internal::type_info::is_optional<T>;
-    }
-    namespace schemagen {
-        template <typename Class, typename ...Properties>
-        struct schema;
-        template <auto Ptr, bool IsPrimaryKey>
-        struct property;
-    }
 
 struct FieldValue;
 template <typename T, typename = void>
@@ -200,23 +187,6 @@ protected:
             new (&this->managed) internal::bridge::col_key(col_key);
         }
     };
-
-//// MARK: Equatable
-
-inline rbool operator &&(const rbool& lhs, const rbool& rhs) {
-    if (lhs.is_for_queries) {
-        lhs.q.and_query(rhs.q);
-        return lhs;
-    }
-    return lhs.b && rhs.b;
-}
-inline rbool operator ||(const rbool& lhs, const rbool& rhs) {
-    if (lhs.is_for_queries) {
-        lhs.q = lhs.q || rhs.q;
-        return lhs;
-    }
-    return lhs.b && rhs.b;
-}
 
 template <typename T>
 inline std::ostream& operator<< (std::ostream& stream, const persisted_primitive_base<T>& value)

@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 #include <optional>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm {
     class List;
@@ -59,10 +60,6 @@ namespace realm::internal::bridge {
         void add(const mixed &);
         void add(const obj_key &);
         void add(const timestamp &);
-        template <typename ValueType>
-        void add(const ValueType& v) {
-            add(persisted<ValueType, void>::serialize(v));
-        }
         obj add_embedded();
 
         void set(size_t pos, const int64_t &);
@@ -75,10 +72,6 @@ namespace realm::internal::bridge {
         void set(size_t pos, const mixed &);
         void set(size_t pos, const timestamp &);
         void set(size_t pos, const binary &);
-        template <typename ValueType>
-        void set(size_t pos, const ValueType& v) {
-            set(pos, persisted<ValueType, void>::serialize(v));
-        }
 
         size_t find(const int64_t &);
         size_t find(const bool &);
@@ -91,24 +84,18 @@ namespace realm::internal::bridge {
         size_t find(const timestamp &);
         size_t find(const binary&);
         size_t find(const obj_key&);
-        template <typename ValueType>
-        size_t find(const ValueType&v) {
-            return find(persisted<ValueType, void>::serialize(v));
-        }
         notification_token add_notification_callback(std::shared_ptr<collection_change_callback>);
     private:
         template <typename ValueType>
         friend ValueType get(const list&, size_t idx);
-#ifdef __i386__
-        std::aligned_storage<40, 4>::type m_list[1];
-#elif __x86_64__
-        std::aligned_storage<80, 8>::type m_list[1];
-#elif __arm__
-        std::aligned_storage<40, 4>::type m_list[1];
-#elif __aarch64__
-        std::aligned_storage<80, 8>::type m_list[1];
-#elif _WIN32
-        std::aligned_storage<80, 8>::type m_list[1];
+        friend inline List* get_list(list& lst);
+        friend inline const List* get_list(const list& lst);
+        inline ::realm::List* get_list();
+        inline const ::realm::List* get_list() const;
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::List m_list[1];
+#else
+        std::shared_ptr<::realm::List> m_list;
 #endif
     };
 

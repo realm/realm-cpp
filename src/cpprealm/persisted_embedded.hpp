@@ -122,6 +122,9 @@ namespace realm {
             }
             return m_property_object;
         }
+        static internal::bridge::obj_key serialize(const T& v) {
+            return v.m_object->get_obj().get_key();
+        }
     protected:
         void manage(internal::bridge::object* object,
                     internal::bridge::col_key&& col_key) final {
@@ -149,9 +152,6 @@ namespace realm {
             this->col_key = std::move(col_key);
         }
 
-        static internal::bridge::obj_key serialize(const T& v) {
-            return v.m_object->get_obj().get_key();
-        }
         std::optional<T> m_property_object;
         internal::bridge::col_key col_key;
         __cpp_realm_friends
@@ -184,6 +184,9 @@ namespace realm {
         T& operator * () {
             return *m_property_object;
         }
+        static internal::bridge::obj_key serialize(const T& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+            return v.m_object->get_obj().get_key();
+        }
     protected:
         void manage(internal::bridge::object* object,
                     internal::bridge::col_key&& col_key) final {
@@ -211,9 +214,6 @@ namespace realm {
             this->col_key = std::move(col_key);
         }
 
-        static internal::bridge::obj_key serialize(const T& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
-            return v.m_object->get_obj().get_key();
-        }
         std::optional<T> m_property_object;
 
         __cpp_realm_friends

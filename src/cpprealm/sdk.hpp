@@ -19,13 +19,16 @@
 #ifndef realm_sdk_hpp
 #define realm_sdk_hpp
 
+#include <cpprealm/alpha_support.hpp>
+
 #include <utility>
 
+#ifdef CPP_REALM_ENABLE_ALPHA_SDK
+#include <cpprealm/db.hpp>
 #include <cpprealm/persisted.hpp>
 #include <cpprealm/persisted_binary.hpp>
 #include <cpprealm/persisted_bool.hpp>
 #include <cpprealm/persisted_double.hpp>
-#include <cpprealm/persisted_custom.hpp>
 #include <cpprealm/persisted_embedded.hpp>
 #include <cpprealm/persisted_enum.hpp>
 #include <cpprealm/persisted_int.hpp>
@@ -37,13 +40,15 @@
 #include <cpprealm/persisted_uuid.hpp>
 #include <cpprealm/persisted_object_id.hpp>
 #include <cpprealm/persisted_decimal128.hpp>
+#endif
+
 #include <cpprealm/schema.hpp>
 #include <cpprealm/results.hpp>
 #include <cpprealm/notifications.hpp>
 #include <cpprealm/asymmetric_object.hpp>
 #include <cpprealm/object.hpp>
 #include <cpprealm/app.hpp>
-#include <cpprealm/db.hpp>
+#include <cpprealm/flex_sync.hpp>
 #include <cpprealm/thread_safe_reference.hpp>
 #include <cpprealm/rbool.hpp>
 

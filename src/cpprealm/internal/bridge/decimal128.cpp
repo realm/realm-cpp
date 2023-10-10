@@ -1,78 +1,59 @@
 #include <cpprealm/internal/bridge/decimal128.hpp>
-#include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/experimental/types.hpp>
 
 #include <realm/decimal128.hpp>
 
 namespace realm::internal::bridge {
-#ifdef __i386__
-    static_assert(SizeCheck<16, sizeof(::realm::Decimal128)>{});
-    static_assert(SizeCheck<4, alignof(::realm::Decimal128)>{});
-#elif __x86_64__
-    static_assert(SizeCheck<16, sizeof(::realm::Decimal128)>{});
-    static_assert(SizeCheck<8, alignof(::realm::Decimal128)>{});
-#elif __arm__
-    static_assert(SizeCheck<16, sizeof(::realm::Decimal128)>{});
-    static_assert(SizeCheck<8, alignof(::realm::Decimal128)>{});
-#elif __aarch64__
-    static_assert(SizeCheck<16, sizeof(::realm::Decimal128)>{});
-    static_assert(SizeCheck<8, alignof(::realm::Decimal128)>{});
-#elif _WIN32
-    static_assert(SizeCheck<16, sizeof(::realm::Decimal128)>{});
-    static_assert(SizeCheck<8, alignof(::realm::Decimal128)>{});
-#endif
 
-    decimal128::decimal128() {
-        new(&m_decimal) Decimal128();
+    inline void copy_values(uint64_t (&dest)[2], const uint64_t (&src)[2]) {
+        dest[0] = src[0];
+        dest[1] = src[1];
     }
+
     decimal128::decimal128(const decimal128& other) {
-        new (&m_decimal) Decimal128(*reinterpret_cast<const Decimal128*>(&other.m_decimal));
+        copy_values(m_decimal, other.m_decimal);
     }
 
     decimal128& decimal128::operator=(const decimal128& other) {
-        if (this != &other) {
-            *reinterpret_cast<Decimal128*>(&m_decimal) = *reinterpret_cast<const Decimal128*>(&other.m_decimal);
-        }
+        copy_values(m_decimal, other.m_decimal);
         return *this;
     }
 
     decimal128::decimal128(decimal128&& other) {
-        new (&m_decimal) Decimal128(std::move(*reinterpret_cast<Decimal128*>(&other.m_decimal)));
+        copy_values(m_decimal, std::move(other.m_decimal));
     }
 
     decimal128& decimal128::operator=(decimal128&& other) {
-        if (this != &other) {
-            *reinterpret_cast<Decimal128*>(&m_decimal) = std::move(*reinterpret_cast<Decimal128*>(&other.m_decimal));
-        }
+        copy_values(m_decimal, std::move(other.m_decimal));
         return *this;
     }
 
-    decimal128::~decimal128() {
-        reinterpret_cast<Decimal128*>(&m_decimal)->~Decimal128();
-    }
-
     decimal128::decimal128(const std::string &v) {
-        new(&m_decimal) Decimal128(v);
+        copy_values(m_decimal, Decimal128(v).raw()->w);
     }
 
     decimal128::decimal128(const double &v) {
-        new(&m_decimal) Decimal128(v);
+        copy_values(m_decimal, Decimal128(v).raw()->w);
     }
 
     decimal128::decimal128(const ::realm::decimal128 &v) {
-        new(&m_decimal) Decimal128(v.to_string());
+        copy_values(m_decimal, Decimal128(v.to_string()).raw()->w);
     }
 
     decimal128::decimal128(const Decimal128 &v) {
-        new(&m_decimal) Decimal128(v);
+        copy_values(m_decimal, Decimal128(v).raw()->w);
     }
 
     std::string decimal128::to_string() const {
-        return reinterpret_cast<const Decimal128 *>(&m_decimal)->to_string();
+        Decimal128::Bid128 bid128;
+        copy_values(bid128.w, m_decimal);
+        return Decimal128(std::move(bid128)).to_string();
     }
 
     bool decimal128::is_NaN() const {
-        return reinterpret_cast<const Decimal128 *>(&m_decimal)->is_nan();
+        Decimal128::Bid128 bid128;
+        copy_values(bid128.w, m_decimal);
+        return Decimal128(std::move(bid128)).is_nan();
     }
 
     decimal128::operator ::realm::decimal128() const {
@@ -80,48 +61,104 @@ namespace realm::internal::bridge {
     }
 
     decimal128::operator Decimal128() const {
-        return *reinterpret_cast<const Decimal128 *>(&m_decimal);
+        Decimal128::Bid128 bid128;
+        copy_values(bid128.w, m_decimal);
+        return Decimal128(std::move(bid128));
     }
 
     decimal128 decimal128::operator+(const decimal128& o) {
-        return reinterpret_cast<const Decimal128 *>(&m_decimal)->operator+(o.operator Decimal128());
+        Decimal128::Bid128 bid128;
+        copy_values(bid128.w, m_decimal);
+        auto tmp = Decimal128(std::move(bid128));
+        return tmp.operator+(o.operator Decimal128());
     }
     decimal128 decimal128::operator*(const decimal128& o) {
-        return reinterpret_cast<const Decimal128 *>(&m_decimal)->operator*(o.operator Decimal128());
+        Decimal128::Bid128 bid128;
+        copy_values(bid128.w, m_decimal);
+        auto tmp = Decimal128(std::move(bid128));
+        return tmp.operator*(o.operator Decimal128());
     }
     decimal128 decimal128::operator/(const decimal128& o) {
-        return reinterpret_cast<const Decimal128 *>(&m_decimal)->operator/(o.operator Decimal128());
+        Decimal128::Bid128 bid128;
+        copy_values(bid128.w, m_decimal);
+        auto tmp = Decimal128(std::move(bid128));
+        return tmp.operator/(o.operator Decimal128());
     }
     decimal128 decimal128::operator-(const decimal128& o) {
-        return reinterpret_cast<const Decimal128 *>(&m_decimal)->operator-(o.operator Decimal128());
+        Decimal128::Bid128 bid128;
+        copy_values(bid128.w, m_decimal);
+        auto tmp = Decimal128(std::move(bid128));
+        return tmp.operator-(o.operator Decimal128());
     }
 
     decimal128& decimal128::operator+=(const decimal128& o) {
-        new(&m_decimal) Decimal128(reinterpret_cast<Decimal128 *>(&m_decimal)->operator+=(o.operator Decimal128()));
+        Decimal128::Bid128 bid128;
+        copy_values(bid128.w, m_decimal);
+        auto tmp = Decimal128(std::move(bid128));
+        auto res = tmp.operator+=(o.operator Decimal128()).raw();
+        m_decimal[0] = res->w[0];
+        m_decimal[1] = res->w[1];
+        copy_values(m_decimal, res->w);
         return *this;
     }
     decimal128& decimal128::operator*=(const decimal128& o) {
-        new(&m_decimal) Decimal128(reinterpret_cast<Decimal128 *>(&m_decimal)->operator*=(o.operator Decimal128()));
+        Decimal128::Bid128 bid128;
+        copy_values(bid128.w, m_decimal);
+        auto tmp = Decimal128(std::move(bid128));
+        auto res = tmp.operator*=(o.operator Decimal128()).raw();
+        copy_values(m_decimal, res->w);
         return *this;
     }
     decimal128& decimal128::operator/=(const decimal128& o) {
-        new(&m_decimal) Decimal128(reinterpret_cast<Decimal128 *>(&m_decimal)->operator/=(o.operator Decimal128()));
+        Decimal128::Bid128 bid128;
+        copy_values(bid128.w, m_decimal);
+        auto tmp = Decimal128(std::move(bid128));
+        auto res = tmp.operator/=(o.operator Decimal128()).raw();
+        copy_values(m_decimal, res->w);
         return *this;
     }
     decimal128& decimal128::operator-=(const decimal128& o) {
-        new(&m_decimal) Decimal128(reinterpret_cast<Decimal128 *>(&m_decimal)->operator-=(o.operator Decimal128()));
+        Decimal128::Bid128 bid128;
+        copy_values(bid128.w, m_decimal);
+        auto tmp = Decimal128(std::move(bid128));
+        auto res = tmp.operator-=(o.operator Decimal128()).raw();
+        copy_values(m_decimal, res->w);
         return *this;
     }
 
-#define __cpp_realm_gen_decimal_op(op) \
-    bool operator op(const decimal128& a, const decimal128& b) { \
-        return *reinterpret_cast<const Decimal128*>(&a.m_decimal) op *reinterpret_cast<const Decimal128*>(&b.m_decimal); \
-    } \
+    bool operator ==(const decimal128& a, const decimal128& b) {
+        return a.m_decimal[0] == b.m_decimal[0] && a.m_decimal[1] == b.m_decimal[1];
+    }
 
-    __cpp_realm_gen_decimal_op(==)
-    __cpp_realm_gen_decimal_op(!=)
-    __cpp_realm_gen_decimal_op(>)
-    __cpp_realm_gen_decimal_op(<)
-    __cpp_realm_gen_decimal_op(>=)
-    __cpp_realm_gen_decimal_op(<=)
+    bool operator !=(const decimal128& a, const decimal128& b) {
+        return a.m_decimal[0] != b.m_decimal[0] || a.m_decimal[1] != b.m_decimal[1];
+    }
+
+    bool operator >(const decimal128& a, const decimal128& b) {
+        Decimal128 lhs, rhs;
+        copy_values(lhs.raw()->w, a.m_decimal);
+        copy_values(rhs.raw()->w, b.m_decimal);
+        return lhs > rhs;
+    }
+
+    bool operator <(const decimal128& a, const decimal128& b) {
+        Decimal128 lhs, rhs;
+        copy_values(lhs.raw()->w, a.m_decimal);
+        copy_values(rhs.raw()->w, b.m_decimal);
+        return lhs < rhs;
+    }
+
+    bool operator >=(const decimal128& a, const decimal128& b) {
+        Decimal128 lhs, rhs;
+        copy_values(lhs.raw()->w, a.m_decimal);
+        copy_values(rhs.raw()->w, b.m_decimal);
+        return lhs >= rhs;
+    }
+
+    bool operator <=(const decimal128& a, const decimal128& b) {
+        Decimal128 lhs, rhs;
+        copy_values(lhs.raw()->w, a.m_decimal);
+        copy_values(rhs.raw()->w, b.m_decimal);
+        return lhs <= rhs;
+    }
 }
