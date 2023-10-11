@@ -16,6 +16,7 @@ app_config.metadata_encryption_key = example_key;
 auto encrypted_app = realm::App(app_config);
 ```
 * Add ability to encrypt a Realm. Usage: `realm::config::set_encryption_key(const std::array<char, 64>&)`.
+* Add support for `std::set` in object models.
 
 ### Breaking Changes
 * `realm::App(const std::string &app_id, const std::optional<std::string> &base_url,

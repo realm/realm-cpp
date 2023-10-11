@@ -5,6 +5,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm {
     namespace object_store {
@@ -83,16 +84,12 @@ namespace realm::internal::bridge {
         size_t find(const obj_key&);
         notification_token add_notification_callback(std::shared_ptr<collection_change_callback>);
     private:
-#ifdef __i386__
-        std::aligned_storage<40, 4>::type m_set[1];
-#elif __x86_64__
-        std::aligned_storage<80, 8>::type m_set[1];
-#elif __arm__
-        std::aligned_storage<40, 4>::type m_set[1];
-#elif __aarch64__
-        std::aligned_storage<80, 8>::type m_set[1];
-#elif _WIN32
-        std::aligned_storage<80, 8>::type m_set[1];
+        const object_store::Set* get_set() const;
+        object_store::Set* get_set();
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        storage::Set m_set[1];
+#else
+        std::shared_ptr<object_store::Set> m_set;
 #endif
     };
 }

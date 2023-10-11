@@ -55,7 +55,7 @@ TEST_CASE("set", "[set]") {
         auto time = std::chrono::system_clock::now();
         auto time2 = time + time.time_since_epoch();
         test(&managed_obj.set_date_col, scenario, {time, time, time2, std::chrono::time_point<std::chrono::system_clock>()});
-        test(&managed_obj.set_mixed_col, scenario, { realm::mixed(42), realm::mixed(42), realm::mixed("24"), realm::mixed(realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"))});
+        test(&managed_obj.set_mixed_col, scenario, { realm::mixed((int64_t)42), realm::mixed((int64_t)42), realm::mixed("24"), realm::mixed(realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"))});
     }
 
     SECTION("find") {
@@ -94,7 +94,7 @@ TEST_CASE("set", "[set]") {
         auto time = std::chrono::system_clock::now();
         auto time2 = time + time.time_since_epoch();
         test(&managed_obj.set_date_col, scenario, {time, time, time2, std::chrono::time_point<std::chrono::system_clock>()});
-        test(&managed_obj.set_mixed_col, scenario, { realm::mixed(42), realm::mixed(42), realm::mixed("24"), realm::mixed(realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"))});
+        test(&managed_obj.set_mixed_col, scenario, { realm::mixed((int64_t)42), realm::mixed((int64_t)42), realm::mixed("24"), realm::mixed(realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"))});
 
         realm.write([&]() {
             managed_obj.set_bool_col.insert(true);
@@ -151,7 +151,7 @@ TEST_CASE("set", "[set]") {
         auto time = std::chrono::system_clock::now();
         auto time2 = time + time.time_since_epoch();
         test(&managed_obj.set_date_col, scenario, {time, time, time2, std::chrono::time_point<std::chrono::system_clock>()});
-        test(&managed_obj.set_mixed_col, scenario, { realm::mixed(42), realm::mixed(42), realm::mixed("24"), realm::mixed(realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"))});
+        test(&managed_obj.set_mixed_col, scenario, { realm::mixed((int64_t)42), realm::mixed((int64_t)42), realm::mixed("24"), realm::mixed(realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"))});
 
         realm.write([&]() {
             managed_obj.set_bool_col.insert(true);
@@ -218,7 +218,7 @@ TEST_CASE("set", "[set]") {
         auto time = std::chrono::system_clock::now();
         auto time2 = time + time.time_since_epoch();
         test(&managed_obj.set_date_col, scenario, {time, time, time2, std::chrono::time_point<std::chrono::system_clock>()});
-        test(&managed_obj.set_mixed_col, scenario, { realm::mixed(42), realm::mixed(42), realm::mixed("24"), realm::mixed(realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"))});
+        test(&managed_obj.set_mixed_col, scenario, { realm::mixed((int64_t)42), realm::mixed((int64_t)42), realm::mixed("24"), realm::mixed(realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"))});
 
         size_t callback_count = 0;
         auto token = managed_obj.set_bool_col.observe([&](auto&& c) {
@@ -304,8 +304,8 @@ TEST_CASE("set", "[set]") {
         test<&experimental::AllTypesObject::set_mixed_col,
              &experimental::managed<experimental::AllTypesObject>::set_mixed_col>(scenario,
                                                                                   std::vector<realm::mixed>({
-                 realm::mixed(42),
-                 realm::mixed(42),
+                 realm::mixed((int64_t)42),
+                 realm::mixed((int64_t)42),
                  realm::mixed("24"),
                  realm::mixed(realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"))}));
     }

@@ -6,142 +6,171 @@
 #include <cpprealm/internal/bridge/realm.hpp>
 
 #include <cpprealm/internal/bridge/table.hpp>
-#include <cpprealm/internal/type_info.hpp>
-
 #include <realm/object-store/set.hpp>
 
-namespace realm::internal::bridge {
-#ifdef __i386__
-    static_assert(SizeCheck<40, sizeof(object_store::Set)>{});
-    static_assert(SizeCheck<4, alignof(object_store::Set)>{});
-#elif __x86_64__
-    static_assert(SizeCheck<80, sizeof(object_store::Set)>{});
-    static_assert(SizeCheck<8, alignof(object_store::Set)>{});
-#elif __arm__
-    static_assert(SizeCheck<40, sizeof(object_store::Set)>{});
-    static_assert(SizeCheck<4, alignof(object_store::Set)>{});
-#elif __aarch64__
-    static_assert(SizeCheck<80, sizeof(object_store::Set)>{});
-    static_assert(SizeCheck<8, alignof(object_store::Set)>{});
-#elif _WIN32
-    static_assert(SizeCheck<80, sizeof(object_store::Set)>{});
-    static_assert(SizeCheck<8, alignof(object_store::Set)>{});
-#endif
+#include <realm/array_mixed.hpp>
+#include <realm/array_typed_link.hpp>
 
+namespace realm::internal::bridge {
     set::set() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_set) object_store::Set();
+#else
+        m_set = std::make_shared<object_store::Set>();
+#endif
     }
 
     set::set(const set& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_set) object_store::Set(*reinterpret_cast<const object_store::Set*>(&other.m_set));
+#else
+        m_set = other.m_set;
+#endif
     }
 
     set& set::operator=(const set& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<object_store::Set*>(&m_set) = *reinterpret_cast<const object_store::Set*>(&other.m_set);
         }
+#else
+        m_set = other.m_set;
+#endif
         return *this;
     }
 
     set::set(set&& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_set) object_store::Set(std::move(*reinterpret_cast<object_store::Set*>(&other.m_set)));
+#else
+        m_set = std::move(other.m_set);
+#endif
     }
 
     set& set::operator=(set&& other) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
             *reinterpret_cast<object_store::Set*>(&m_set) = std::move(*reinterpret_cast<object_store::Set*>(&other.m_set));
         }
+#else
+        m_set = std::move(other.m_set);
+#endif
         return *this;
     }
 
     set::~set() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         reinterpret_cast<object_store::Set*>(&m_set)->~Set();
+#endif
     }
 
     set::set(const object_store::Set &v) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_set) object_store::Set(v);
+#else
+        m_set = std::make_shared<object_store::Set>(v);
+#endif
     }
 
     set::set(const realm &realm,
                const obj &obj,
                const col_key& col_key) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_set) object_store::Set(realm.operator std::shared_ptr<Realm>(), obj, col_key);
+#else
+        m_set = std::make_shared<object_store::Set>(realm.operator std::shared_ptr<Realm>(), obj, col_key);
+#endif
+    }
+
+    const object_store::Set* set::get_set() const {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<const object_store::Set*>(&m_set);
+#else
+        return m_set.get();
+#endif
+    }
+    object_store::Set* set::get_set() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<object_store::Set*>(&m_set);
+#else
+        return m_set.get();
+#endif
     }
 
     mixed set::get_any(const size_t& i) const {
-        return reinterpret_cast<const object_store::Set*>(&m_set)->get_any(i);
+        return get_set()->get_any(i);
     }
 
     obj set::get_obj(const size_t& i) const {
-        return reinterpret_cast<const object_store::Set*>(&m_set)->get<Obj>(i);
+        return get_set()->get<Obj>(i);
     }
 
     set::operator object_store::Set() const {
-        return *reinterpret_cast<const object_store::Set*>(&m_set);
+        return *get_set();
     }
 
     table set::get_table() const {
-        return reinterpret_cast<const object_store::Set *>(&m_set)->get_table();
+        return get_set()->get_table();
     }
     size_t set::size() const {
-        return reinterpret_cast<const object_store::Set *>(&m_set)->size();
+        return get_set()->size();
     }
     void set::remove_all() {
-        reinterpret_cast<object_store::Set *>(&m_set)->remove_all();
+        get_set()->remove_all();
     }
 
     std::pair<size_t, bool> set::insert(const std::string &v) {
-        return reinterpret_cast<object_store::Set *>(&m_set)->insert(StringData(v));
+        return get_set()->insert(StringData(v));
     }
     std::pair<size_t, bool> set::insert(const int64_t &v) {
-        return reinterpret_cast<object_store::Set *>(&m_set)->insert(v);
+        return get_set()->insert(v);
     }
     std::pair<size_t, bool> set::insert(const double &v) {
-        return reinterpret_cast<object_store::Set *>(&m_set)->insert(v);
+        return get_set()->insert(v);
     }
     std::pair<size_t, bool> set::insert(const binary &v) {
-        return reinterpret_cast<object_store::Set *>(&m_set)->insert(static_cast<BinaryData>(v));
+        return get_set()->insert(v.operator BinaryData());
     }
     std::pair<size_t, bool> set::insert(const uuid &v) {
-        return reinterpret_cast<object_store::Set *>(&m_set)->insert(static_cast<UUID>(v));
+        return get_set()->insert(v.operator UUID());
     }
     std::pair<size_t, bool> set::insert(const object_id &v) {
-        return reinterpret_cast<object_store::Set *>(&m_set)->insert(static_cast<ObjectId>(v));
+        return get_set()->insert(v.operator ObjectId());
     }
     std::pair<size_t, bool> set::insert(const mixed &v) {
-        return reinterpret_cast<object_store::Set *>(&m_set)->insert(v.operator ::realm::Mixed());
+        return get_set()->insert(v.operator ::realm::Mixed());
     }
     std::pair<size_t, bool> set::insert(const obj_key &v) {
-        return reinterpret_cast<object_store::Set *>(&m_set)->insert(static_cast<ObjKey>(v));
+        return get_set()->insert(v.operator ObjKey());
     }
     std::pair<size_t, bool> set::insert(const timestamp &v) {
-        return reinterpret_cast<object_store::Set *>(&m_set)->insert(static_cast<Timestamp>(v));
+        return get_set()->insert(v.operator Timestamp());
     }
     std::pair<size_t, bool> set::insert(const bool &v) {
-        return reinterpret_cast<object_store::Set *>(&m_set)->insert(v);
+        return get_set()->insert(v);
     }
 
-    void set::remove(const int64_t &v) { reinterpret_cast<object_store::Set *>(&m_set)->remove(v); }
-    void set::remove(const bool &v) { reinterpret_cast<object_store::Set *>(&m_set)->remove(v); }
-    void set::remove(const double &v) { reinterpret_cast<object_store::Set *>(&m_set)->remove(v); }
-    void set::remove(const std::string &v) { reinterpret_cast<object_store::Set *>(&m_set)->remove(StringData(v)); }
-    void set::remove(const uuid &v) { reinterpret_cast<object_store::Set *>(&m_set)->remove(static_cast<UUID>(v)); }
-    void set::remove(const object_id &v) { reinterpret_cast<object_store::Set *>(&m_set)->remove(static_cast<ObjectId>(v)); }
-    void set::remove(const mixed &v) { reinterpret_cast<object_store::Set *>(&m_set)->remove(v.operator ::realm::Mixed()); }
-    void set::remove(const timestamp &v) { reinterpret_cast<object_store::Set *>(&m_set)->remove(static_cast<Timestamp>(v)); }
-    void set::remove(const binary& v) { reinterpret_cast<object_store::Set *>(&m_set)->remove(static_cast<BinaryData>(v)); }
-    void set::remove(const obj_key& v) { reinterpret_cast<object_store::Set *>(&m_set)->remove(static_cast<ObjKey>(v)); }
+    void set::remove(const int64_t &v) { get_set()->remove(v); }
+    void set::remove(const bool &v) { get_set()->remove(v); }
+    void set::remove(const double &v) { get_set()->remove(v); }
+    void set::remove(const std::string &v) { get_set()->remove(StringData(v)); }
+    void set::remove(const uuid &v) { get_set()->remove(v.operator UUID()); }
+    void set::remove(const object_id &v) { get_set()->remove(v.operator ObjectId()); }
+    void set::remove(const mixed &v) { get_set()->remove(v.operator ::realm::Mixed()); }
+    void set::remove(const timestamp &v) { get_set()->remove(v.operator Timestamp()); }
+    void set::remove(const binary& v) { get_set()->remove(v.operator BinaryData()); }
+    void set::remove(const obj_key& v) { get_set()->remove(v.operator ObjKey()); }
 
-    size_t set::find(const int64_t &v) { return reinterpret_cast<object_store::Set *>(&m_set)->find(v); }
-    size_t set::find(const bool &v) { return reinterpret_cast<object_store::Set *>(&m_set)->find(v); }
-    size_t set::find(const double &v) { return reinterpret_cast<object_store::Set *>(&m_set)->find(v); }
-    size_t set::find(const std::string &v) { return reinterpret_cast<object_store::Set *>(&m_set)->find(StringData(v)); }
-    size_t set::find(const uuid &v) { return reinterpret_cast<object_store::Set *>(&m_set)->find(static_cast<UUID>(v)); }
-    size_t set::find(const object_id &v) { return reinterpret_cast<object_store::Set *>(&m_set)->find(static_cast<ObjectId>(v)); }
-    size_t set::find(const mixed &v) { return reinterpret_cast<object_store::Set *>(&m_set)->find(v.operator ::realm::Mixed()); }
-    size_t set::find(const timestamp &v) { return reinterpret_cast<object_store::Set *>(&m_set)->find(static_cast<Timestamp>(v)); }
-    size_t set::find(const binary& v) { return reinterpret_cast<object_store::Set *>(&m_set)->find(static_cast<BinaryData>(v)); }
-    size_t set::find(const obj_key& v) { return reinterpret_cast<object_store::Set *>(&m_set)->find(static_cast<ObjKey>(v)); }
+    size_t set::find(const int64_t &v) { return get_set()->find(v); }
+    size_t set::find(const bool &v) { return get_set()->find(v); }
+    size_t set::find(const double &v) { return get_set()->find(v); }
+    size_t set::find(const std::string &v) { return get_set()->find(StringData(v)); }
+    size_t set::find(const uuid &v) { return get_set()->find(v.operator UUID()); }
+    size_t set::find(const object_id &v) { return get_set()->find(v.operator ObjectId()); }
+    size_t set::find(const mixed &v) { return get_set()->find(v.operator ::realm::Mixed()); }
+    size_t set::find(const timestamp &v) { return get_set()->find(v.operator Timestamp()); }
+    size_t set::find(const binary& v) { return get_set()->find(v.operator BinaryData()); }
+    size_t set::find(const obj_key& v) { return get_set()->find(v.operator ObjKey()); }
 
     notification_token set::add_notification_callback(std::shared_ptr<collection_change_callback> cb) {
         struct wrapper : CollectionChangeCallback {
@@ -155,6 +184,6 @@ namespace realm::internal::bridge {
                 m_cb->after(v);
             }
         } ccb(std::move(cb));
-        return reinterpret_cast<object_store::Set*>(&m_set)->add_notification_callback(ccb);
+        return get_set()->add_notification_callback(ccb);
     }
 }

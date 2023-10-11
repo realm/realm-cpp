@@ -11,16 +11,6 @@ namespace realm {
         return stream << value.to_string();
     }
 
-<<<<<<< HEAD
-=======
-    inline bool operator ==(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id == rhs.m_object_id; }
-    inline bool operator !=(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id != rhs.m_object_id; }
-    inline bool operator <(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id < rhs.m_object_id; }
-    inline bool operator >(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id > rhs.m_object_id; }
-    inline bool operator <=(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id <= rhs.m_object_id; }
-    inline bool operator >=(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id >= rhs.m_object_id; }
-
->>>>>>> e4939c5 (Begin adding std::set support for primitives)
     template <>
     struct persisted<object_id> : persisted_primitive_base<object_id> {
         using persisted_primitive_base<object_id>::persisted_primitive_base;
@@ -33,10 +23,6 @@ namespace realm {
         __cpp_realm_friends
     };
 
-    __cpp_realm_generate_operator(object_id, >, greater)
-    __cpp_realm_generate_operator(object_id, <, less)
-    __cpp_realm_generate_operator(object_id, >=, greater_equal)
-    __cpp_realm_generate_operator(object_id, <=, less_equal)
     __cpp_realm_generate_operator(object_id, ==, equal)
     __cpp_realm_generate_operator(object_id, !=, not_equal)
 }

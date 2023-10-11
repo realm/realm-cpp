@@ -73,14 +73,8 @@ namespace realm::experimental {
         }
         [[nodiscard]] std::set<T> detach() const {
             auto set = realm::internal::bridge::set(*m_realm, *m_obj, m_key);
-            using U = typename internal::type_info::type_info<T>::internal_type;
-
-            size_t count = set.size();
-            if (count == 0)
-                return std::set<T>();
-
             auto ret = std::set<T>();
-            for(size_t i = 0; i < count; i++) {
+            for(size_t i = 0; i < set.size(); i++) {
                 ret.insert(deserialize<T>(set.get_any(i)));
             }
             return ret;
@@ -126,7 +120,7 @@ namespace realm::experimental {
         {
             auto set = internal::bridge::set(*m_realm, *m_obj, m_key);
             size_t idx = set.find(serialize(v));
-            if (idx == cpprealm::npos)
+            if (idx == realm::npos)
                 return iterator(size(), this);
             return iterator(idx, this);
         }
@@ -323,7 +317,7 @@ namespace realm::experimental {
         {
             auto set = internal::bridge::set(*m_realm, *m_obj, m_key);
             size_t idx = set.find(v.m_obj.get_key());
-            if (idx == cpprealm::npos)
+            if (idx == realm::npos)
                 return iterator(size(), this);
             return iterator(idx, this);
         }
@@ -332,7 +326,7 @@ namespace realm::experimental {
         {
             auto set = internal::bridge::set(*m_realm, *m_obj, m_key);
             size_t idx = set.find(v.m_obj->get_key());
-            if (idx == cpprealm::npos)
+            if (idx == realm::npos)
                 return iterator(size(), this);
             return iterator(idx, this);
         }

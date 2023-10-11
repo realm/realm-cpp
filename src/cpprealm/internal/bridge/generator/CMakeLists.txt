@@ -35,6 +35,7 @@ set(BRIDGE_TYPES
     Query realm::Query
     Results realm::Results
     Schema realm::Schema
+    Set realm::object_store::Set
     SyncError realm::SyncError
     TableRef realm::TableRef
     TableView realm::TableView

@@ -10,8 +10,6 @@
 namespace realm::experimental {
     template<typename>
     struct primary_key;
-    template<typename, typename>
-    struct managed;
 
     template <typename T, typename = void>
     struct accessor {
@@ -326,8 +324,8 @@ namespace realm::experimental {
                 }
                 auto table = obj.get_target_table(key);
                 internal::bridge::obj m_obj;
-                if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
-                    auto pk = (*lnk).*(managed<T>::schema.primary_key().ptr);
+                if constexpr (managed<T, void>::schema.HasPrimaryKeyProperty) {
+                    auto pk = (*lnk).*(managed<T, void>::schema.primary_key().ptr);
                     m_obj = table.create_object_with_primary_key(realm::internal::bridge::mixed(serialize(pk.value)));
                 } else {
                     m_obj = table.create_object();
@@ -337,7 +335,7 @@ namespace realm::experimental {
                              m_obj, m_obj.get_table().get_column_key(p.name), realm,
                              (*lnk).*(std::decay_t<decltype(p)>::ptr)), ...);
                 }, managed<T, void>::schema.ps);
-                if (!managed<T>::schema.is_embedded_experimental()) {
+                if (!managed<T, void>::schema.is_embedded_experimental()) {
                     set.insert(m_obj.get_key());
                 }
             }

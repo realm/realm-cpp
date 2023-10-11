@@ -25,6 +25,10 @@ namespace realm {
 
     inline bool operator ==(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid == rhs.m_uuid; }
     inline bool operator !=(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid != rhs.m_uuid; }
+    inline bool operator >(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid > rhs.m_uuid; }
+    inline bool operator >=(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid >= rhs.m_uuid; }
+    inline bool operator <(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid < rhs.m_uuid; }
+    inline bool operator <=(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid <= rhs.m_uuid; }
 
     struct object_id {
         explicit object_id(const std::string &);
@@ -40,6 +44,10 @@ namespace realm {
 
     inline bool operator ==(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id == rhs.m_object_id; }
     inline bool operator !=(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id != rhs.m_object_id; }
+    inline bool operator <(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id < rhs.m_object_id; }
+    inline bool operator >(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id > rhs.m_object_id; }
+    inline bool operator <=(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id <= rhs.m_object_id; }
+    inline bool operator >=(const object_id& lhs, const object_id& rhs) { return lhs.m_object_id >= rhs.m_object_id; }
 
     struct decimal128 {
         explicit decimal128(const std::string &);

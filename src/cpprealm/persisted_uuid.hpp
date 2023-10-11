@@ -13,11 +13,6 @@ namespace realm {
         return stream << value.to_string();
     }
 
-    inline bool operator >(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid > rhs.m_uuid; }
-    inline bool operator <(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid < rhs.m_uuid; }
-    inline bool operator >=(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid >= rhs.m_uuid; }
-    inline bool operator <=(const uuid& lhs, const uuid& rhs) { return lhs.m_uuid <= rhs.m_uuid; }
-
     template <>
     struct persisted<uuid> : persisted_primitive_base<uuid> {
         using persisted_primitive_base<uuid>::persisted_primitive_base;
