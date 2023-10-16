@@ -189,8 +189,11 @@ namespace realm {
         std::promise<void> p;
         std::future<void> f = p.get_future();
         m_user->sync_manager()->app().lock()->log_out(m_user, [p = std::move(p)](auto err) mutable {
-            if (err) p.set_exception(std::make_exception_ptr(*err));
-            else p.set_value();
+            if (err) {
+                p.set_exception(std::make_exception_ptr(app_error(std::move(*err))));
+            } else {
+                p.set_value();
+            }
         });
         return f;
     }
@@ -231,8 +234,11 @@ namespace realm {
         std::promise<std::optional<bson::Bson>> p;
         std::future<std::optional<bson::Bson>> f = p.get_future();
         m_user->sync_manager()->app().lock()->call_function(name, arguments, [p = std::move(p)](std::optional<bson::Bson>&& bson, std::optional<app_error> err) mutable {
-            if (err) p.set_exception(std::make_exception_ptr(*err));
-            else p.set_value(std::move(bson));
+            if (err) {
+                p.set_exception(std::make_exception_ptr(app_error(std::move(*err))));
+            } else {
+                p.set_value(std::move(bson));
+            }
         });
         return f;
     }
@@ -253,8 +259,11 @@ namespace realm {
         std::promise<void> p;
         std::future<void> f = p.get_future();
         m_user->refresh_custom_data([p = std::move(p)](auto err) mutable {
-            if (err) p.set_exception(std::make_exception_ptr(*err));
-            else p.set_value();
+            if (err) {
+                p.set_exception(std::make_exception_ptr(app_error(std::move(*err))));
+            } else {
+                p.set_value();
+            }
         });
         return f;
     }
@@ -446,20 +455,27 @@ namespace realm {
     std::future<void> App::register_user(const std::string &username, const std::string &password) {
         std::promise<void> p;
         std::future<void> f = p.get_future();
-        m_app->template provider_client<app::App::UsernamePasswordProviderClient>().register_email(username,
-                                                                                                   password,
-                                                                                                   [p = std::move(p)](auto err) mutable {
-                                                                                                       if (err) p.set_exception(std::make_exception_ptr(*err));
-                                                                                                       else p.set_value();
-                                                                                                   });
+        m_app->template provider_client<app::App::UsernamePasswordProviderClient>()
+                .register_email(username,
+                               password,
+                               [p = std::move(p)](auto err) mutable {
+                                   if (err) {
+                                       p.set_exception(std::make_exception_ptr(app_error(std::move(*err))));
+                                   } else {
+                                       p.set_value();
+                                   }
+                               });
         return f;
     }
     std::future<user> App::login(const credentials& credentials) {
         std::promise<user> p;
         std::future<user> f = p.get_future();
         m_app->log_in_with_credentials(credentials, [p = std::move(p)](auto& u, auto err) mutable {
-            if (err) p.set_exception(std::make_exception_ptr(*err));
-            else p.set_value(user{std::move(u)});
+            if (err) {
+                p.set_exception(std::make_exception_ptr(app_error(std::move(*err))));
+            } else {
+                p.set_value(user{std::move(u)});
+            }
         });
         return f;
     }
@@ -468,7 +484,11 @@ namespace realm {
         m_app->log_in_with_credentials(
                 credentials,
                 [cb = std::move(callback)](auto &u, auto error) {
-                    cb(user{std::move(u)}, error ? std::optional<app_error>{app_error(std::move(*error))} : std::nullopt);
+                    if (error) {
+                        cb(user(), std::optional<app_error>{app_error(std::move(*error))});
+                    } else {
+                        cb(user(u), std::nullopt);
+                    }
                 });
     }
 
