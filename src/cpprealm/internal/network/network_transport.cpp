@@ -106,13 +106,16 @@ namespace realm::internal {
         DefaultSocket socket{service};
         socket.connect(ep);
 
+#if REALM_INCLUDE_CERTS
+        m_ssl_context.use_included_certificate_roots();
+#endif
+
         socket.ssl_stream.emplace(socket, m_ssl_context, Stream::client);
         socket.ssl_stream->set_host_name(host); // Throws
 
         socket.ssl_stream->set_verify_mode(VerifyMode::peer);
-        #if REALM_INCLUDE_CERTS
-        socket.ssl_stream->use_included_certificates();
-        #endif
+        auto logger = util::Logger::get_default_logger();
+        socket.ssl_stream->set_logger(logger.get());
 
         realm::sync::HTTPHeaders headers;
         for (auto& [k, v] : request.headers) {
@@ -131,9 +134,7 @@ namespace realm::internal {
             }
         }
 
-        std::shared_ptr<realm::util::StderrLogger> logger = std::make_shared<realm::util::StderrLogger>();
         realm::sync::HTTPClient<DefaultSocket> m_http_client = realm::sync::HTTPClient<DefaultSocket>(socket, logger);
-
         realm::sync::HTTPMethod method;
         switch (request.method) {
             case app::HttpMethod::get:
