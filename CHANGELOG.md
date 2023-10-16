@@ -1,9 +1,10 @@
-X.Y.Z Release notes (YYYY-MM-DD)
+0.3.1 Release notes (2022-10-16)
 =============================================================
 
 ### Fixed
 * Primary keys could be changed after an object was inserted (since 0.1.0)
 * Using a property type of vector of enums would cause a compilation error (since 0.1.0).
+* Fixed a bug preventing SSL handshake from completing successfully due to failed hostname verification when linking against BoringSSL. (PR #7034)
 
 ### Enhancements
 * The Sync metadata Realm is now encrypted by default on Apple platforms unless the `REALM_DISABLE_METADATA_ENCRYPTION` environment variable is set.
@@ -24,10 +25,10 @@ auto encrypted_app = realm::App(app_config);
    use `realm::App(const realm::App::configuration&);` instead.
 
 ### Compatibility
-* Fileformat: Generates files with format v22.
+* Fileformat: Generates files with format v23. Reads and automatically upgrade from fileformat v5.
 
 ### Internals
-* None
+* Upgraded to Core v13.23.1
 
 ----------------------------------------------
 

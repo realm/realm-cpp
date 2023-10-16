@@ -32,8 +32,8 @@ add_compile_definitions(REALM_INSTALL_LIBEXECDIR)
 add_compile_definitions(REALM_BUILD_LIB_ONLY)
 add_compile_definitions(REALM_VERSION_MAJOR=0)
 add_compile_definitions(REALM_VERSION_MINOR=3)
-add_compile_definitions(REALM_VERSION_PATCH=0)
-add_compile_definitions(REALM_VERSION_STRING="0.3.0")
+add_compile_definitions(REALM_VERSION_PATCH=1)
+add_compile_definitions(REALM_VERSION_STRING="0.3.1")
 
 # Check if the compiler is Clang or GCC >= 11
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "11.0"))

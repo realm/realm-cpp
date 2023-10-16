@@ -422,8 +422,8 @@ namespace realm {
             client_config.base_file_path = std::filesystem::current_path().make_preferred().generic_string();
         }
 #endif
-        client_config.user_agent_binding_info = "RealmCpp/0.0.1";
-        client_config.user_agent_application_info = config.app_id;
+        config.user_agent_binding_info = std::string("RealmCpp/") + std::string(REALM_VERSION_STRING);
+        config.user_agent_application_info = config.app_id;
 
         auto app_config = app::App::Config();
         app_config.app_id = config.app_id;
@@ -433,7 +433,7 @@ namespace realm {
 
         device_info.framework_name = "Realm Cpp",
         device_info.platform_version = "?",
-        device_info.sdk_version = "0.0.1",
+        device_info.sdk_version = REALM_VERSION_STRING,
         device_info.sdk = "Realm Cpp";
         app_config.device_info = std::move(device_info);
 
