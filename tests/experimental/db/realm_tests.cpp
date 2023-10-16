@@ -61,4 +61,19 @@ namespace realm::experimental {
         t.join();
         p.get_future().get();
     }
+
+    TEST_CASE("encrypted realm") {
+        std::array<char, 64> example_key = {0,0,0,0,0,0,0,0, 1,1,0,0,0,0,0,0, 2,2,0,0,0,0,0,0, 3,3,0,0,0,0,0,0, 4,4,0,0,0,0,0,0, 5,5,0,0,0,0,0,0, 6,6,0,0,0,0,0,0, 7,7,0,0,0,0,0,0};
+        realm_path path;
+
+        auto config = realm::db_config();
+        config.set_encryption_key(example_key);
+        config.set_path(path);
+        auto realm = experimental::db(config);
+
+        // Missing encryption key
+        auto config2 = realm::db_config();
+        config2.set_path(path);
+        REQUIRE_THROWS(experimental::db(config2));
+    }
 }

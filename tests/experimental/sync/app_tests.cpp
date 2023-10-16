@@ -6,7 +6,7 @@
 using namespace realm;
 
 TEST_CASE("app", "[sync]") {
-    auto app = realm::App(Admin::shared().cached_app_id(), Admin::shared().base_url());
+    auto app = realm::App(realm::App::configuration({Admin::shared().cached_app_id(), Admin::shared().base_url()}));
 
     SECTION("get_current_user") {
         auto user = app.login(realm::App::credentials::anonymous()).get();
@@ -31,7 +31,7 @@ TEST_CASE("app", "[sync]") {
 
     SECTION("clear_cached_apps") {
         auto temp_app_id = Admin::shared().create_app({"str_col", "_id"});
-        auto temp_app = realm::App(temp_app_id, Admin::shared().base_url());
+        auto temp_app = realm::App(realm::App::configuration({temp_app_id, Admin::shared().base_url()}));
         auto cached_app = temp_app.get_cached_app(temp_app_id, Admin::shared().base_url());
         CHECK(cached_app.has_value());
         app.clear_cached_apps();

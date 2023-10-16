@@ -68,7 +68,7 @@ static std::string create_jwt(const std::string& appId)
 }
 
 TEST_CASE("app", "[app]") {
-    auto app = realm::App(Admin::shared().cached_app_id(), Admin::shared().base_url());
+    auto app = realm::App(realm::App::configuration({Admin::shared().cached_app_id(), Admin::shared().base_url()}));
 
     SECTION("auth_providers_promise") {
         auto run_login = [&app](realm::App::credentials&& credentials) {

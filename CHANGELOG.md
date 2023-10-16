@@ -6,10 +6,21 @@ X.Y.Z Release notes (YYYY-MM-DD)
 * Using a property type of vector of enums would cause a compilation error (since 0.1.0).
 
 ### Enhancements
-* None
+* The Sync metadata Realm is now encrypted by default on Apple platforms unless the `REALM_DISABLE_METADATA_ENCRYPTION` environment variable is set.
+  To enable encryption on the metadata Realm on other platforms you must set an encryption key on `realm::App::configuration`.
+```cpp
+std::array<char, 64> example_key = {...};
+realm::App::configuration app_config;
+app_config.app_id = ...
+app_config.metadata_encryption_key = example_key;
+auto encrypted_app = realm::App(app_config);
+```
+* Add ability to encrypt a Realm. Usage: `realm::config::set_encryption_key(const std::array<char, 64>&)`.
 
 ### Breaking Changes
-* None
+* `realm::App(const std::string &app_id, const std::optional<std::string> &base_url,
+              const std::optional<std::string> &path, const std::optional<std::map<std::string, std::string>> &custom_http_headers)` has been deprecated.
+   use `realm::App(const realm::App::configuration&);` instead.
 
 ### Compatibility
 * Fileformat: Generates files with format v22.

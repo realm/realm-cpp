@@ -205,10 +205,21 @@ bool operator!=(const user& lhs, const user& rhs);
 
 class App {
 public:
+    struct configuration {
+        std::string app_id;
+        std::optional<std::string> base_url;
+        std::optional<std::string> path;
+        std::optional<std::map<std::string, std::string>> custom_http_headers;
+        std::optional<std::array<char, 64>> metadata_encryption_key;
+    };
+
+    [[deprecated("Use App(const configuration&) instead.")]]
     explicit App(const std::string& app_id,
                  const std::optional<std::string>& base_url = {},
                  const std::optional<std::string>& path = {},
                  const std::optional<std::map<std::string, std::string>>& custom_http_headers = {});
+
+    App(const configuration&);
 
     struct credentials {
         using auth_code = util::TaggedString<class auth_code_tag>;

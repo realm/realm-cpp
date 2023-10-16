@@ -6,7 +6,7 @@
 using namespace realm;
 
 TEST_CASE("flx_sync", "[sync]") {
-    auto app = realm::App(Admin::shared().cached_app_id(), Admin::shared().base_url());
+    auto app = realm::App(realm::App::configuration({Admin::shared().cached_app_id(), Admin::shared().base_url()}));
     SECTION("all") {
         app.get_sync_manager().set_log_level(logger::level::off);
         auto user = app.login(realm::App::credentials::anonymous()).get();
@@ -92,7 +92,7 @@ TEST_CASE("flx_sync", "[sync]") {
 }
 
 TEST_CASE("realm_is_populated_on_async_open", "[sync]") {
-    auto app = realm::App(Admin::shared().cached_app_id(), Admin::shared().base_url());
+    auto app = realm::App(realm::App::configuration({Admin::shared().cached_app_id(), Admin::shared().base_url()}));
     SECTION("all") {
         {
             auto user = app.login(realm::App::credentials::anonymous()).get();
