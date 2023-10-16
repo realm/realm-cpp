@@ -57,7 +57,7 @@ struct app_error {
     ~app_error();
     app_error(realm::app::AppError&& error); //NOLINT(google-explicit-constructor)
 
-    [[nodiscard]] std::string_view mesage() const;
+    [[nodiscard]] std::string_view message() const;
 
     [[nodiscard]] std::string_view link_to_server_logs() const;
 

@@ -3,11 +3,12 @@
 
 import PackageDescription
 
+let coreVersion = Version("13.23.1")
+
 var cxxSettings: [CXXSetting] = [
     .headerSearchPath("."),
     .headerSearchPath("../"),
     .define("REALM_ENABLE_SYNC", to: "1"),
-    .define("REALM_VERSION", to: "0.3.0"),
 
     .define("REALM_DEBUG", .when(configuration: .debug)),
     .define("REALM_NO_CONFIG"),
@@ -15,11 +16,16 @@ var cxxSettings: [CXXSetting] = [
     .define("REALM_ENABLE_ASSERTIONS", to: "1"),
     .define("REALM_ENABLE_ENCRYPTION", to: "1"),
 
-    .define("REALM_VERSION_MAJOR", to: "0"),
-    .define("REALM_VERSION_MINOR", to: "3"),
-    .define("REALM_VERSION_PATCH", to: "0"),
-    .define("REALM_VERSION_EXTRA", to: "\"\""),
-    .define("REALM_VERSION_STRING", to: "\"0.3.0\"")
+    .define("REALMCXX_VERSION_MAJOR", to: "0"),
+    .define("REALMCXX_VERSION_MINOR", to: "4"),
+    .define("REALMCXX_VERSION_PATCH", to: "0"),
+    .define("REALMCXX_VERSION_STRING", to: "\"0.4.0\""),
+    // Realm Core
+    .define("REALM_VERSION_MAJOR", to: String(coreVersion.major)),
+    .define("REALM_VERSION_MINOR", to: String(coreVersion.minor)),
+    .define("REALM_VERSION_PATCH", to: String(coreVersion.patch)),
+    .define("REALM_VERSION_EXTRA", to: "\"\(coreVersion.prereleaseIdentifiers.first ?? "")\""),
+    .define("REALM_VERSION_STRING", to: "\"\(coreVersion)\""),
 ]
 
 let testCxxSettings: [CXXSetting] = cxxSettings + [
@@ -65,7 +71,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/realm/realm-core.git", revision: "eb34d4cb210b5e5374717c512ea910e3cb7d0bba")
+        .package(url: "https://github.com/realm/realm-core.git", revision: "c569bec4d04da84030d94f376437bc4efda3686b")
     ],
     targets: [
         cppSdkTarget,

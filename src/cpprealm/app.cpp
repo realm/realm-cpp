@@ -1,6 +1,10 @@
 #include <cpprealm/app.hpp>
 #include <cpprealm/internal/generic_network_transport.hpp>
 
+#ifndef REALMCXX_VERSION_MAJOR
+#include <cpprealm/internal/version_numbers.hpp>
+#endif
+
 #include <realm/object-store/sync/app.hpp>
 #include <realm/object-store/sync/sync_manager.hpp>
 #include <realm/object-store/sync/sync_user.hpp>
@@ -64,7 +68,7 @@ namespace realm {
 #endif
     }
 
-    std::string_view app_error::mesage() const
+    std::string_view app_error::message() const
     {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const app::AppError *>(&m_error)->reason();
@@ -422,8 +426,8 @@ namespace realm {
             client_config.base_file_path = std::filesystem::current_path().make_preferred().generic_string();
         }
 #endif
-        config.user_agent_binding_info = std::string("RealmCpp/") + std::string(REALM_VERSION_STRING);
-        config.user_agent_application_info = config.app_id;
+        client_config.user_agent_binding_info = std::string("RealmCpp/") + std::string(REALMCXX_VERSION_STRING);
+        client_config.user_agent_application_info = config.app_id;
 
         auto app_config = app::App::Config();
         app_config.app_id = config.app_id;
@@ -433,7 +437,7 @@ namespace realm {
 
         device_info.framework_name = "Realm Cpp",
         device_info.platform_version = "?",
-        device_info.sdk_version = REALM_VERSION_STRING,
+        device_info.sdk_version = REALMCXX_VERSION_STRING,
         device_info.sdk = "Realm Cpp";
         app_config.device_info = std::move(device_info);
 

@@ -40,7 +40,7 @@ TEST_CASE("app", "[sync]") {
     }
 
     SECTION("error handling") {
-        auto dead_app = realm::App("NA", Admin::shared().base_url());
+        auto dead_app = realm::App(realm::App::configuration({"NA", Admin::shared().base_url()}));
         REQUIRE_THROWS_AS(dead_app.login(realm::App::credentials::anonymous()).get(), realm::app_error);
         REQUIRE_THROWS_AS(dead_app.register_user("", "").get(), realm::app_error);
 
@@ -50,7 +50,7 @@ TEST_CASE("app", "[sync]") {
             CHECK(e);
             error_promise.set_value(*e);
         });
-        CHECK(future.get().is_http_error());
+        CHECK(future.get().message().find("404 message: cannot find app using Client App ID 'NA'"));
 
         auto user = app.login(realm::App::credentials::anonymous()).get();
         user.log_out().get();
