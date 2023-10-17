@@ -465,4 +465,63 @@ TEST_CASE("list", "[list]") {
         std::vector<int64_t> as_value = managed_obj.list_int_col.detach();
         CHECK(as_value == std::vector<int64_t>{1, 2, 3});
     }
+
+    SECTION("iterator") {
+        auto realm = realm::experimental::db(std::move(config));
+        auto obj = realm::experimental::AllTypesObject();
+        auto managed_obj = realm.write([&]() {
+            return realm.add(std::move(obj));
+        });
+        realm.write([&]() {
+            managed_obj.list_int_col.push_back(1);
+            managed_obj.list_int_col.push_back(2);
+            managed_obj.list_int_col.push_back(3);
+        });
+        CHECK(managed_obj.list_int_col.size() == 3);
+
+        std::vector<int64_t> res;
+        for (const auto& x : managed_obj.list_int_col) {
+            res.push_back(x);
+        }
+        CHECK(res == std::vector<int64_t>({1, 2, 3}));
+        res.clear();
+
+        for (auto it = managed_obj.list_int_col.begin(); it != managed_obj.list_int_col.end(); ++it) {
+            res.push_back(*it);
+        }
+        CHECK(res == std::vector<int64_t>({1, 2, 3}));
+    }
+
+    SECTION("iterator managed objects") {
+        auto realm = realm::experimental::db(std::move(config));
+        auto obj = realm::experimental::AllTypesObject();
+        auto managed_obj = realm.write([&]() {
+            return realm.add(std::move(obj));
+        });
+
+        experimental::AllTypesObjectLink link;
+        link._id = 1;
+        link.str_col = "foo";
+
+        experimental::AllTypesObjectLink link2;
+        link2._id = 2;
+        link2.str_col = "bar";
+
+        realm.write([&]() {
+            managed_obj.list_obj_col.push_back(&link);
+            managed_obj.list_obj_col.push_back(&link2);
+        });
+
+        std::set<int64_t> res;
+        for (const auto& x : managed_obj.list_obj_col) {
+            res.insert(x._id);
+        }
+        CHECK(res == std::set<int64_t>({1, 2}));
+        res.clear();
+
+        for (auto it = managed_obj.list_obj_col.begin(); it != managed_obj.list_obj_col.end(); ++it) {
+            res.insert(it.operator*()._id);
+        }
+        CHECK(res == std::set<int64_t>({1, 2}));
+    }
 }

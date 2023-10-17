@@ -79,7 +79,8 @@ else()
             experimental/db/run_loop_tests.cpp
             experimental/db/string_tests.cpp
             experimental/db/performance_tests.cpp
-            experimental/db/numeric_tests.cpp)
+            experimental/db/numeric_tests.cpp
+            experimental/db/set_tests.cpp)
     target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
 
     if(ENABLE_ALPHA_SDK)

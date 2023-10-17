@@ -80,9 +80,9 @@ namespace realm::experimental {
                 m_obj = table.create_object();
             }
 
-            std::apply([&m_obj, &v](auto && ...p) {
+            std::apply([&m_obj, &v, this](auto && ...p) {
                 (accessor<typename std::decay_t<decltype(p)>::Result>::set(
-                        m_obj, m_obj.get_table().get_column_key(p.name), v.*(std::decay_t<decltype(p)>::ptr)
+                        m_obj, m_obj.get_table().get_column_key(p.name), m_realm, v.*(std::decay_t<decltype(p)>::ptr)
                 ), ...);
             }, managed<T>::schema.ps);
             auto m = managed<T>(std::move(m_obj), m_realm);

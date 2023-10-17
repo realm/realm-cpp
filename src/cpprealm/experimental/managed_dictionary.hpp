@@ -409,9 +409,9 @@ namespace realm::experimental {
                 m_obj = const_cast<box<managed<V*>> *>(this)->m_backing_map.create_and_insert_linked_object(const_cast<box<managed<V*>> *>(this)->m_key);
             }
 
-            std::apply([&m_obj, &o](auto && ...p) {
+            std::apply([&m_obj, &o, realm = this->m_realm](auto && ...p) {
                 (accessor<typename std::decay_t<decltype(p)>::Result>::set(
-                         m_obj, m_obj.get_table().get_column_key(p.name),
+                         m_obj, m_obj.get_table().get_column_key(p.name), realm,
                          (*o).*(std::decay_t<decltype(p)>::ptr)), ...);
             }, managed<V>::schema.ps);
             return *this;

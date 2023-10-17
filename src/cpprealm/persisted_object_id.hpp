@@ -6,7 +6,6 @@
 #include <cpprealm/experimental/types.hpp>
 namespace realm {
 
-
     inline std::ostream& operator<< (std::ostream& stream, const object_id& value)
     {
         return stream << value.to_string();
@@ -24,10 +23,6 @@ namespace realm {
         __cpp_realm_friends
     };
 
-    __cpp_realm_generate_operator(object_id, >, greater)
-    __cpp_realm_generate_operator(object_id, <, less)
-    __cpp_realm_generate_operator(object_id, >=, greater_equal)
-    __cpp_realm_generate_operator(object_id, <=, less_equal)
     __cpp_realm_generate_operator(object_id, ==, equal)
     __cpp_realm_generate_operator(object_id, !=, not_equal)
 }
