@@ -12,8 +12,26 @@ namespace realm::experimental {
                 return realm.add(AllTypesObject());
             });
 
-            realm.freeze();
+            //realm.freeze();
 
+
+            // List:
+            // testIsFrozen
+            // testFreezingObjectReturnsSelf
+            // testAccessFrozenObjectFromDifferentThread
+            // testObserveFrozenArray
+            // testQueryFrozenArray
+            // testFrozenListsDoNotUpdate
+
+            // Same for Map and Set
+
+
+            // testLinkingObjectsOnFrozenObject
+
+            // testMutateFrozenObject
+            // testFrozenObjectEquality
+
+            // Realm
         }
     }
 }
