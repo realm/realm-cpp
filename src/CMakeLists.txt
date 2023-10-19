@@ -93,6 +93,7 @@ set(HEADERS
     cpprealm/internal/bridge/binary.hpp
     cpprealm/internal/bridge/col_key.hpp
     cpprealm/internal/bridge/decimal128.hpp
+    cpprealm/internal/bridge/dictionary.hpp
     cpprealm/internal/bridge/list.hpp
     cpprealm/internal/bridge/lnklst.hpp
     cpprealm/internal/bridge/mixed.hpp
@@ -118,11 +119,13 @@ set(HEADERS
     cpprealm/internal/bridge/uuid.hpp
     cpprealm/internal/generic_network_transport.hpp
     cpprealm/internal/type_info.hpp
+    cpprealm/logger.hpp
+    cpprealm/notifications.hpp
+    cpprealm/object.hpp
     cpprealm/persisted.hpp
     cpprealm/rbool.hpp
     cpprealm/scheduler.hpp
     cpprealm/schema.hpp
-    cpprealm/task.hpp
     cpprealm/thread_safe_reference.hpp
     cpprealm/sdk.hpp
     cpprealm/alpha_support.hpp) # REALM_INSTALL_HEADERS
@@ -130,8 +133,8 @@ set(HEADERS
 if(ENABLE_ALPHA_SDK)
     list(APPEND HEADERS
             cpprealm/db.hpp
-            cpprealm/persisted.hpp
             cpprealm/persisted_binary.hpp
+            cpprealm/persisted_bool.hpp
             cpprealm/persisted_decimal128.hpp
             cpprealm/persisted_double.hpp
             cpprealm/persisted_embedded.hpp
