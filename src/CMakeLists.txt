@@ -1,5 +1,12 @@
 add_subdirectory(cpprealm/internal/bridge/generator)
 
+include(GetVersion)
+# Configure source code to use right version number
+configure_file(${PROJECT_SOURCE_DIR}/src/cpprealm/internal/version_numbers.hpp.in ${PROJECT_SOURCE_DIR}/src/cpprealm/internal/version_numbers.hpp)
+install(FILES version_numbers.hpp
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm
+        COMPONENT devel)
+
 add_custom_command(
     COMMAND ${CMAKE_COMMAND} -D SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/cpprealm/internal/bridge 
                              -D BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge

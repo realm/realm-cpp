@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(realm)
+project(RealmCxx)
 
 if("$ENV{REALM_CI}" OR REALM_USE_CCACHE)
     include(cmake/ccache.cmake)
@@ -15,9 +15,13 @@ else ()
 endif()
 
 set(REALM_BUILD_LIB_ONLY ON)
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(REALM_USE_SYSTEM_OPENSSL ON)
+    set(OPENSSL_USE_STATIC_LIBS OFF)
+endif()
+
 add_subdirectory(realm-core)
 
-set(REALM_INCLUDE_CERTS 0)
 set(REALM_NO_CONFIG)
 set(REALM_ENABLE_SYNC)
 set(REALM_NO_TESTS)
@@ -25,15 +29,20 @@ set(REALM_BUILD_LIB_ONLY)
 set(REALM_INSTALL_LIBEXECDIR)
 set(REALM_ENABLE_ENCRYPTION 1)
 
+list(APPEND CMAKE_MODULE_PATH
+        "${RealmCxx_SOURCE_DIR}/tools/cmake" # for GetVersion
+        "${RealmCxx_SOURCE_DIR}/realm-core/tools/cmake") # for GetGitRevisionDescription
+if(NOT DEFINED REALMCXX_VERSION)
+    # Get accurate git-describe version
+    include(GetGitRevisionDescription)
+    git_describe(REALMCXX_VERSION)
+endif()
+
 add_compile_definitions(REALM_NO_CONFIG)
 add_compile_definitions(REALM_ENABLE_SYNC)
 add_compile_definitions(REALM_ENABLE_ENCRYPTION)
 add_compile_definitions(REALM_INSTALL_LIBEXECDIR)
 add_compile_definitions(REALM_BUILD_LIB_ONLY)
-add_compile_definitions(REALM_VERSION_MAJOR=0)
-add_compile_definitions(REALM_VERSION_MINOR=3)
-add_compile_definitions(REALM_VERSION_PATCH=0)
-add_compile_definitions(REALM_VERSION_STRING="0.3.0")
 
 # Check if the compiler is Clang or GCC >= 11
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "11.0"))
@@ -51,13 +60,11 @@ if(NOT APPLE AND NOT WINDOWS_STORE AND NOT ANDROID)
     set(REALM_HAVE_UV 1)
 
     option(REALM_FETCH_MISSING_DEPENDENCIES "Download missing dependencies with CMake's FetchContent where possible" ON)
-    list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/realm-core/tools/cmake")
     if(REALM_FETCH_MISSING_DEPENDENCIES)
         find_package(LibUV)
     else()
         find_package(LibUV REQUIRED)
     endif()
-    list(POP_BACK CMAKE_MODULE_PATH)
     if(LibUV_FOUND)
         set(libuv_target LibUV::LibUV)
     elseif(REALM_FETCH_MISSING_DEPENDENCIES)
@@ -102,18 +109,22 @@ elseif(ANDROID)
 elseif(MSVC)
     target_sources(cpprealm PRIVATE src/cpprealm/internal/network/network_transport.cpp)
 else()
-    find_package(CURL REQUIRED)
-    target_link_libraries(cpprealm PUBLIC
-            CURL::libcurl stdc++fs
-            )
-    target_sources(cpprealm PRIVATE src/cpprealm/internal/curl/network_transport.cpp)
+    find_package(CURL)
+    if(NOT CURL_FOUND)
+        message(WARNING "CURL not found. Realm C++ will use internal networking components instead.")
+        target_sources(cpprealm PRIVATE src/cpprealm/internal/network/network_transport.cpp)
+    else()
+        target_link_libraries(cpprealm PUBLIC CURL::libcurl)
+        target_sources(cpprealm PRIVATE src/cpprealm/internal/curl/network_transport.cpp)
+    endif()
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+        target_link_libraries(cpprealm PRIVATE stdc++fs)
+    endif()
 endif()
 
 if(MSVC)
-    set_property(TARGET cpprealm PROPERTY
-      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    set_property(TARGET uv_a PROPERTY
-      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set_property(TARGET cpprealm PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set_property(TARGET uv_a PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
 if (NOT REALM_CPP_NO_TESTS)

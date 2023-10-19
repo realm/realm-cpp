@@ -264,7 +264,7 @@ struct RealmServer {
     RealmServer() = default;
 public:
     static void setup() {
-        if (system("./evergreen/install_baas.sh -w baas -b master") == -1) {
+        if (system("./evergreen/install_baas.sh -w baas -b 1eb31b87154cf7af6cbe50ab2732e2856ca499c7") == -1) {
             REALM_TERMINATE("Failed to run setup_baas.rb");
         }
     }

@@ -1,6 +1,10 @@
 #include <cpprealm/app.hpp>
 #include <cpprealm/internal/generic_network_transport.hpp>
 
+#ifndef REALMCXX_VERSION_MAJOR
+#include <cpprealm/internal/version_numbers.hpp>
+#endif
+
 #include <realm/object-store/sync/app.hpp>
 #include <realm/object-store/sync/sync_manager.hpp>
 #include <realm/object-store/sync/sync_user.hpp>
@@ -64,7 +68,7 @@ namespace realm {
 #endif
     }
 
-    std::string_view app_error::mesage() const
+    std::string_view app_error::message() const
     {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const app::AppError *>(&m_error)->reason();
@@ -189,8 +193,11 @@ namespace realm {
         std::promise<void> p;
         std::future<void> f = p.get_future();
         m_user->sync_manager()->app().lock()->log_out(m_user, [p = std::move(p)](auto err) mutable {
-            if (err) p.set_exception(std::make_exception_ptr(*err));
-            else p.set_value();
+            if (err) {
+                p.set_exception(std::make_exception_ptr(app_error(std::move(*err))));
+            } else {
+                p.set_value();
+            }
         });
         return f;
     }
@@ -231,8 +238,11 @@ namespace realm {
         std::promise<std::optional<bson::Bson>> p;
         std::future<std::optional<bson::Bson>> f = p.get_future();
         m_user->sync_manager()->app().lock()->call_function(name, arguments, [p = std::move(p)](std::optional<bson::Bson>&& bson, std::optional<app_error> err) mutable {
-            if (err) p.set_exception(std::make_exception_ptr(*err));
-            else p.set_value(std::move(bson));
+            if (err) {
+                p.set_exception(std::make_exception_ptr(app_error(std::move(*err))));
+            } else {
+                p.set_value(std::move(bson));
+            }
         });
         return f;
     }
@@ -253,8 +263,11 @@ namespace realm {
         std::promise<void> p;
         std::future<void> f = p.get_future();
         m_user->refresh_custom_data([p = std::move(p)](auto err) mutable {
-            if (err) p.set_exception(std::make_exception_ptr(*err));
-            else p.set_value();
+            if (err) {
+                p.set_exception(std::make_exception_ptr(app_error(std::move(*err))));
+            } else {
+                p.set_value();
+            }
         });
         return f;
     }
@@ -413,7 +426,7 @@ namespace realm {
             client_config.base_file_path = std::filesystem::current_path().make_preferred().generic_string();
         }
 #endif
-        client_config.user_agent_binding_info = "RealmCpp/0.0.1";
+        client_config.user_agent_binding_info = std::string("RealmCpp/") + std::string(REALMCXX_VERSION_STRING);
         client_config.user_agent_application_info = config.app_id;
 
         auto app_config = app::App::Config();
@@ -424,7 +437,7 @@ namespace realm {
 
         device_info.framework_name = "Realm Cpp",
         device_info.platform_version = "?",
-        device_info.sdk_version = "0.0.1",
+        device_info.sdk_version = REALMCXX_VERSION_STRING,
         device_info.sdk = "Realm Cpp";
         app_config.device_info = std::move(device_info);
 
@@ -446,20 +459,27 @@ namespace realm {
     std::future<void> App::register_user(const std::string &username, const std::string &password) {
         std::promise<void> p;
         std::future<void> f = p.get_future();
-        m_app->template provider_client<app::App::UsernamePasswordProviderClient>().register_email(username,
-                                                                                                   password,
-                                                                                                   [p = std::move(p)](auto err) mutable {
-                                                                                                       if (err) p.set_exception(std::make_exception_ptr(*err));
-                                                                                                       else p.set_value();
-                                                                                                   });
+        m_app->template provider_client<app::App::UsernamePasswordProviderClient>()
+                .register_email(username,
+                               password,
+                               [p = std::move(p)](auto err) mutable {
+                                   if (err) {
+                                       p.set_exception(std::make_exception_ptr(app_error(std::move(*err))));
+                                   } else {
+                                       p.set_value();
+                                   }
+                               });
         return f;
     }
     std::future<user> App::login(const credentials& credentials) {
         std::promise<user> p;
         std::future<user> f = p.get_future();
         m_app->log_in_with_credentials(credentials, [p = std::move(p)](auto& u, auto err) mutable {
-            if (err) p.set_exception(std::make_exception_ptr(*err));
-            else p.set_value(user{std::move(u)});
+            if (err) {
+                p.set_exception(std::make_exception_ptr(app_error(std::move(*err))));
+            } else {
+                p.set_value(user{std::move(u)});
+            }
         });
         return f;
     }
@@ -468,7 +488,11 @@ namespace realm {
         m_app->log_in_with_credentials(
                 credentials,
                 [cb = std::move(callback)](auto &u, auto error) {
-                    cb(user{std::move(u)}, error ? std::optional<app_error>{app_error(std::move(*error))} : std::nullopt);
+                    if (error) {
+                        cb(user(), std::optional<app_error>{app_error(std::move(*error))});
+                    } else {
+                        cb(user(u), std::nullopt);
+                    }
                 });
     }
 

@@ -20,7 +20,8 @@
       "inherits": "default",
       "generator": "Visual Studio 17 2022",
       "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": "$env{vcpkg_arch}-windows"
+        "VCPKG_TARGET_TRIPLET": "$env{vcpkg_arch}-windows",
+        "REALM_INCLUDE_CERTS": "ON"
       },
       "condition": {
         "lhs": "${hostSystemName}",

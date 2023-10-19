@@ -38,4 +38,22 @@ TEST_CASE("app", "[sync]") {
         cached_app = temp_app.get_cached_app(temp_app_id, Admin::shared().base_url());
         CHECK(cached_app.has_value() == false);
     }
+
+    SECTION("error handling") {
+        auto dead_app = realm::App(realm::App::configuration({"NA", Admin::shared().base_url()}));
+        REQUIRE_THROWS_AS(dead_app.login(realm::App::credentials::anonymous()).get(), realm::app_error);
+        REQUIRE_THROWS_AS(dead_app.register_user("", "").get(), realm::app_error);
+
+        std::promise<realm::app_error> error_promise;
+        std::future<realm::app_error> future = error_promise.get_future();
+        dead_app.login(realm::App::credentials::anonymous(), [&](realm::user, std::optional<realm::app_error> e) mutable {
+            CHECK(e);
+            error_promise.set_value(*e);
+        });
+        CHECK(future.get().message().find("404 message: cannot find app using Client App ID 'NA'"));
+
+        auto user = app.login(realm::App::credentials::anonymous()).get();
+        user.log_out().get();
+        REQUIRE_THROWS(user.log_out().get());
+    }
 }
