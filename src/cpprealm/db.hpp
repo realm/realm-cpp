@@ -30,7 +30,6 @@
 #include <cpprealm/logger.hpp>
 #include <cpprealm/results.hpp>
 #include <cpprealm/scheduler.hpp>
-#include <cpprealm/task.hpp>
 #include <cpprealm/thread_safe_reference.hpp>
 #include <utility>
 
