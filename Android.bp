@@ -14,7 +14,7 @@ license {
 }
 
 genrule {
-    name: "version_numbers.hpp",
+    name: "gen_realmcxx_version_numbers",
     srcs: [
         "dependencies.list",
         "src/cpprealm/internal/version_numbers.hpp.in",
@@ -36,7 +36,7 @@ cc_defaults {
         "-Wno-unused-local-typedef",
         "-Wno-unused-variable"
     ],
-    generated_headers: ["version_numbers.hpp"]
+    generated_headers: ["gen_realmcxx_version_numbers"]
 }
 
 cc_library_static {
@@ -48,7 +48,7 @@ cc_library_static {
         "src/cpprealm/internal/curl/**/*"
     ],
     export_include_dirs: ["src"],
-    export_generated_headers: ["version_numbers.hpp"],
+    export_generated_headers: ["gen_realmcxx_version_numbers"],
     static_libs: ["realm"],
     include_build_directory: false
 }

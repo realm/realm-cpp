@@ -4,7 +4,6 @@ source $1
 
 version_and_extra=( ${VERSION//-/ } )
 version_only=${version_and_extra[0]}
-extra=${version_and_extra[1]}
 
 semver=( ${version_only//./ } )
 major=${semver[0]}
