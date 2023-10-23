@@ -87,24 +87,63 @@ namespace realm::internal {
         size_t found2 = domain.find_first_of("/");
         const std::string host = domain.substr(found1 + 1, found2 - found1 - 1);
 
+
         realm::sync::network::Service service;
-        realm::sync::network::Endpoint ep;
-
-        try {
-            auto resolver = realm::sync::network::Resolver{service};
-            auto resolved = resolver.resolve(sync::network::Resolver::Query(host, "443"));
-            ep = *resolved.begin();
-        } catch (...) {
-            app::Response response;
-            response.http_status_code = 500;
-            completion_block(std::move(response));
-            return;
-        }
-
         using namespace realm::sync::network::ssl;
         Context m_ssl_context;
         DefaultSocket socket{service};
-        socket.connect(ep);
+
+
+        if (m_proxy_config) {
+            std::error_code e;
+            auto address = realm::sync::network::make_address(m_proxy_config->address, e);
+            if (e.value() != 0) {
+                app::Response response;
+                response.custom_status_code = util::error::operation_aborted;
+                completion_block(std::move(response));
+                return;
+            }
+            realm::sync::network::Endpoint ep = realm::sync::network::Endpoint(address, m_proxy_config->port);
+            socket.connect(ep);
+        } else {
+            realm::sync::network::Endpoint ep;
+            try {
+                auto resolver = realm::sync::network::Resolver{service};
+                auto resolved = resolver.resolve(sync::network::Resolver::Query(host, "443"));
+                ep = *resolved.begin();
+            } catch (...) {
+                app::Response response;
+                response.custom_status_code = util::error::operation_aborted;
+                completion_block(std::move(response));
+                return;
+            }
+            socket.connect(ep);
+        }
+
+        auto logger = util::Logger::get_default_logger();
+
+        if (m_proxy_config) {
+            realm::sync::HTTPRequest req;
+            req.method = realm::sync::HTTPMethod::Connect;
+            req.headers.emplace("Host", util::format("%1:%2", host, "443"));
+            realm::sync::HTTPClient<DefaultSocket> m_proxy_client = realm::sync::HTTPClient<DefaultSocket>(socket, logger);
+            auto handler = [&](realm::sync::HTTPResponse response, std::error_code ec) mutable {
+                if (ec && ec != util::error::operation_aborted) {
+                    return;
+                }
+
+                if (response.status != realm::sync::HTTPStatus::Ok) {
+                    return;
+                }
+                service.stop();
+            };
+
+            m_proxy_client.async_request(req, std::move(handler)); // Throws
+
+            service.run_until_stopped();
+            service.reset();
+        }
+
 
 #if REALM_INCLUDE_CERTS
         m_ssl_context.use_included_certificate_roots();
@@ -114,7 +153,6 @@ namespace realm::internal {
         socket.ssl_stream->set_host_name(host); // Throws
 
         socket.ssl_stream->set_verify_mode(VerifyMode::peer);
-        auto logger = util::Logger::get_default_logger();
         socket.ssl_stream->set_logger(logger.get());
 
         realm::sync::HTTPHeaders headers;
@@ -182,6 +220,11 @@ namespace realm::internal {
                         res.custom_status_code = 0;
                         cb(res);
                     });
+                } else {
+                    app::Response response;
+                    response.custom_status_code = util::error::operation_aborted;
+                    completion_block(std::move(response));
+                    return;
                 }
             };
             socket.async_handshake(std::move(handler)); // Throws
