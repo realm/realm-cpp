@@ -27,11 +27,15 @@
 #include <sys/sysctl.h>
 #include <sys/types.h>
 #include <unistd.h>
-#elif __linux__
+#elif __linux__ || __QNX__
 #include <fcntl.h>
 #include <ifaddrs.h>
 #include <iomanip>
+#include <net/if_dl.h>
+#if __linux__
 #include <netpacket/packet.h>
+#endif
+#include <sys/socket.h>
 #include <sys/utsname.h>
 #include <unistd.h>
 #endif
@@ -100,7 +104,7 @@ namespace realm {
         return hash_data(mac, 6);
     }
 
-    std::string get_host_os_verion() {
+    std::string get_host_os_version() {
         std::array<int, 2> mib = {{CTL_KERN, KERN_OSRELEASE}};
         size_t buffer_size;
         auto buffer = do_sysctl(&mib[0], mib.size(), &buffer_size);
@@ -127,7 +131,7 @@ namespace realm {
 
         return (info.kp_proc.p_flag & P_TRACED) != 0;
     }
-#elif __linux__
+#elif __linux__ || __QNX__
     std::string print_hex(unsigned char *bs, unsigned int len) {
         std::stringstream ss;
         for (size_t i = 0; i < len; i++) {
@@ -149,10 +153,17 @@ namespace realm {
             // For example the first available MAC maybe all zero values and we want to
             // avoid that scenario.
             for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-                if ((ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_PACKET)) {
-                    struct sockaddr_ll *s = (struct sockaddr_ll *) ifa->ifa_addr;
+                if ((ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_LINK)) {
+                    struct sockaddr_dl *s = reinterpret_cast<sockaddr_dl *>(ifa->ifa_addr);
+                    unsigned char *ll_addr = (unsigned char *) LLADDR(s);
+                    concatenated_mac_addresses += print_hex(ll_addr, s->sdl_alen);
+                }
+#if __linux__
+                else if ((ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_PACKET)) {
+                    struct sockaddr_ll *s = reinterpret_cast<const sockaddr_ll *>(ifa->ifa_addr);
                     concatenated_mac_addresses += print_hex(s->sll_addr, s->sll_halen);
                 }
+#endif
             }
             freeifaddrs(ifaddr);
         }
@@ -160,7 +171,7 @@ namespace realm {
         return std::to_string(std::hash<std::string>{}(concatenated_mac_addresses));
     }
 
-    std::string get_host_os_verion() {
+    std::string get_host_os_version() {
         struct utsname host_info;
         std::stringstream ss;
         if (uname(&host_info) == 0) {
@@ -207,7 +218,7 @@ namespace realm {
     std::string get_mac_address() {
         return "unknown";
     }
-    std::string get_host_os_verion() {
+    std::string get_host_os_version() {
         return "unknown";
     }
     bool debugger_attached() {
@@ -217,8 +228,8 @@ namespace realm {
     std::string get_mac_address() {
         return "unknown";
     }
-    std::string get_host_os_verion() {
-        return "unknown"
+    std::string get_host_os_version() {
+        return "unknown";
     }
     bool debugger_attached() {
         return false;
@@ -240,6 +251,8 @@ namespace realm {
         os_name = "macOS";
 #elif __linux__
         os_name = "Linux";
+#elif __QNX__
+        os_name = "QNX";
 #elif __FreeBSD__
         os_name = "FreeBSD";
 #elif __unix || __unix__
@@ -267,7 +280,7 @@ namespace realm {
                                 {"GCC Minor Version", __GNUC_MINOR__},
 #endif
                                 {"Host OS Type", os_name},
-                                {"Host OS Version", get_host_os_verion()}}}};
+                                {"Host OS Version", get_host_os_version()}}}};
 
         std::stringstream json_ss;
         json_ss << post_data;
