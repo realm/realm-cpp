@@ -25,6 +25,10 @@
 #include <realm/sync/network/http.hpp>
 #include <realm/sync/network/network.hpp>
 #include <realm/sync/noinst/client_impl_base.hpp>
+#include <realm/util/base64.hpp>
+
+#include <regex>
+
 
 namespace realm::internal {
     struct DefaultSocket : realm::sync::network::Socket {
@@ -78,46 +82,56 @@ namespace realm::internal {
         realm::sync::network::ReadAheadBuffer m_read_buffer;
     };
 
+    inline std::string host_from_url(const std::string& url) {
+        std::regex pattern("^(https?://)?([a-zA-Z0-9.-]+|\\[?[0-9a-fA-F:]+\\]?)(:[0-9]+)?(/.*)?$");
+        std::smatch matches;
+        if (std::regex_search(url, matches, pattern)) {
+            if (matches.size() > 2) {
+                return matches[2].str();
+            }
+        }
+        return "";
+    }
+
     void DefaultTransport::send_request_to_server(const app::Request& request,
                                                   util::UniqueFunction<void(const app::Response&)>&& completion_block) {
-        // Get the host name.
-        size_t found = request.url.find_first_of(":");
-        std::string domain = request.url.substr(found+3);
-        size_t found1 = domain.find_first_of(":");
-        size_t found2 = domain.find_first_of("/");
-        const std::string host = domain.substr(found1 + 1, found2 - found1 - 1);
-
+        std::string host = host_from_url(request.url);
 
         realm::sync::network::Service service;
         using namespace realm::sync::network::ssl;
         Context m_ssl_context;
         DefaultSocket socket{service};
 
-
-        if (m_proxy_config) {
-            std::error_code e;
-            auto address = realm::sync::network::make_address(m_proxy_config->address, e);
-            if (e.value() != 0) {
-                app::Response response;
-                response.custom_status_code = util::error::operation_aborted;
-                completion_block(std::move(response));
-                return;
-            }
-            realm::sync::network::Endpoint ep = realm::sync::network::Endpoint(address, m_proxy_config->port);
-            socket.connect(ep);
-        } else {
+        try {
             realm::sync::network::Endpoint ep;
-            try {
-                auto resolver = realm::sync::network::Resolver{service};
+            auto resolver = realm::sync::network::Resolver{service};
+            if (m_proxy_config) {
+                std::string proxy_address = host_from_url(m_proxy_config->address);
+                if (proxy_address.empty()) {
+                    std::error_code e;
+                    auto address = realm::sync::network::make_address(m_proxy_config->address, e);
+                    if (e.value() > 0) {
+                        app::Response response;
+                        response.custom_status_code = e.value();
+                        response.body = e.message();
+                        completion_block(std::move(response));
+                        return;
+                    }
+                    ep = realm::sync::network::Endpoint(address, m_proxy_config->port);
+                } else {
+                    auto resolved = resolver.resolve(sync::network::Resolver::Query(proxy_address, m_proxy_config->port));
+                    ep = *resolved.begin();
+                }
+            } else {
                 auto resolved = resolver.resolve(sync::network::Resolver::Query(host, "443"));
                 ep = *resolved.begin();
-            } catch (...) {
-                app::Response response;
-                response.custom_status_code = util::error::operation_aborted;
-                completion_block(std::move(response));
-                return;
             }
             socket.connect(ep);
+        } catch (...) {
+            app::Response response;
+            response.custom_status_code = util::error::operation_aborted;
+            completion_block(std::move(response));
+            return;
         }
 
         auto logger = util::Logger::get_default_logger();
@@ -126,13 +140,31 @@ namespace realm::internal {
             realm::sync::HTTPRequest req;
             req.method = realm::sync::HTTPMethod::Connect;
             req.headers.emplace("Host", util::format("%1:%2", host, "443"));
+            if (m_proxy_config->username_password) {
+                auto userpass = util::format("%1:%2", m_proxy_config->username_password->first, m_proxy_config->username_password->second);
+                std::string encoded_userpass;
+                encoded_userpass.resize(realm::util::base64_encoded_size(userpass.length()));
+                realm::util::base64_encode(userpass.data(), userpass.size(), encoded_userpass.data(), encoded_userpass.size());
+                req.headers.emplace("Proxy-Authorization", util::format("Basic %1", encoded_userpass));
+            }
+            if (m_custom_http_headers) {
+                for (auto& header : *m_custom_http_headers) {
+                    req.headers.emplace(header);
+                }
+            }
             realm::sync::HTTPClient<DefaultSocket> m_proxy_client = realm::sync::HTTPClient<DefaultSocket>(socket, logger);
-            auto handler = [&](realm::sync::HTTPResponse response, std::error_code ec) mutable {
+            auto handler = [&](realm::sync::HTTPResponse response, std::error_code ec) {
                 if (ec && ec != util::error::operation_aborted) {
+                    app::Response res;
+                    res.custom_status_code = util::error::operation_aborted;
+                    completion_block(std::move(res));
                     return;
                 }
 
                 if (response.status != realm::sync::HTTPStatus::Ok) {
+                    app::Response res;
+                    res.http_status_code = static_cast<uint16_t>(response.status);
+                    completion_block(std::move(res));
                     return;
                 }
                 service.stop();
@@ -143,7 +175,6 @@ namespace realm::internal {
             service.run_until_stopped();
             service.reset();
         }
-
 
 #if REALM_INCLUDE_CERTS
         m_ssl_context.use_included_certificate_roots();

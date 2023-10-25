@@ -55,6 +55,8 @@ namespace realm::internal::bridge {
                 enum class Type { HTTP, HTTPS } type;
                 std::string address;
                 port_type port;
+                // For basic authorization.
+                std::optional<std::pair<std::string, std::string>> username_password;
             };
 
             struct flx_sync_enabled {};

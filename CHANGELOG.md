@@ -9,6 +9,23 @@ X.Y.Z Release notes (YYYY-MM-DD)
   Subsequently, if you  can make a frozen Realm / Object live again by calling `thaw()`. 
   It is not recommended to have too many long-lived frozen Realm's / Objects in your application as it may balloon memory consumption.
 * Add ability to sort `experimental::results` / `managed<std::vector<T>>`. 
+* Add support for HTTP tunneling. Usage:
+```cpp
+    realm::proxy_config proxy_config;
+    proxy_config.type = realm::proxy_config_type::HTTP;
+    proxy_config.port = 8080;
+    proxy_config.address = "127.0.0.1";
+    proxy_config.username_password = {"username", "password"};
+
+    realm::App::configuration app_config;
+    app_config.proxy_configuration = proxy_config;
+    auto app = realm::App(app_config);
+    
+    auto user = app.get_current_user();
+    auto sync_config = user->flexible_sync_configuration();
+    sync_config.set_proxy_config(proxy_config);
+    auto synced_realm = experimental::db(sync_config);
+```
 
 ### Breaking Changes
 * None

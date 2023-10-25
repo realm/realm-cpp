@@ -37,6 +37,7 @@ namespace realm {
     using sync_config = internal::bridge::realm::sync_config;
     using db_config = internal::bridge::realm::config;
     using sync_session = internal::bridge::sync_session;
+    using status = internal::bridge::status;
 
 template <typename ...Ts>
 struct db {

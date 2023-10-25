@@ -51,6 +51,7 @@ let cppSdkTarget: Target = .target(
     publicHeadersPath: ".",
     cxxSettings: cxxSettings,
     linkerSettings: [
+        .linkedFramework("CFNetwork", .when(platforms: applePlatforms)),
         .linkedFramework("Foundation", .when(platforms: applePlatforms)),
         .linkedFramework("Security", .when(platforms: applePlatforms)),
     ])
@@ -71,7 +72,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/realm/realm-core.git", revision: "c569bec4d04da84030d94f376437bc4efda3686b")
+        .package(url: "https://github.com/realm/realm-core.git", revision: "ab8eaa654fe2ecd52dea215bcab613cd7f7659d8")
     ],
     targets: [
         cppSdkTarget,

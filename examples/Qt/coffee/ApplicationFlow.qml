@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
-import Coffee
-import io.mongo.barista 1.0
+import Barista
 
 ApplicationFlowForm {
     id: applicationFlow
