@@ -116,8 +116,14 @@ else()
 
 endif()
 
-target_link_libraries(cpprealm_sync_tests cpprealm Catch2::Catch2)
-target_link_libraries(cpprealm_db_tests cpprealm Catch2::Catch2)
+if (QNX)
+        # QNX doesn't include libc++fs by default
+        target_link_libraries(cpprealm_sync_tests cpprealm Catch2::Catch2 c++fs)
+        target_link_libraries(cpprealm_db_tests cpprealm Catch2::Catch2 c++fs)
+else()
+        target_link_libraries(cpprealm_sync_tests cpprealm Catch2::Catch2)
+        target_link_libraries(cpprealm_db_tests cpprealm Catch2::Catch2)
+endif()
 
 file(COPY ../realm-core/evergreen DESTINATION ./${CMAKE_BUILD_TYPE})
 file(MAKE_DIRECTORY baas)

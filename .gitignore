@@ -12,3 +12,4 @@ docs/html
 docs/latex
 # Generated files
 src/cpprealm/internal/version_numbers.hpp
+/build/
