@@ -19,8 +19,6 @@
 #include <cpprealm/app.hpp>
 #include <cpprealm/internal/generic_network_transport.hpp>
 
-#include <CFNetwork/CFProxySupport.h>
-
 #include <Foundation/NSData.h>
 #include <Foundation/NSURL.h>
 #include <Foundation/NSURLCache.h>
@@ -75,9 +73,9 @@ void DefaultTransport::send_request_to_server(const app::Request& request,
             NSString *proxyHost = @(m_proxy_config->address.c_str());
             NSInteger proxyPort = m_proxy_config->port;
             sessionConfiguration.connectionProxyDictionary = @{
-                (NSString *)kCFNetworkProxiesHTTPSEnable: @YES,
-                (NSString *)kCFNetworkProxiesHTTPSPort: @(proxyPort),
-                (NSString *)kCFNetworkProxiesHTTPSProxy: proxyHost,
+                @"HTTPSEnable": @YES,
+                @"HTTPSProxy": @(proxyPort),
+                @"HTTPSPort": proxyHost,
             };
             sessionConfiguration.requestCachePolicy = NSURLRequestCachePolicy::NSURLRequestReloadIgnoringLocalCacheData;
             urlRequest.cachePolicy = NSURLRequestCachePolicy::NSURLRequestReloadIgnoringLocalCacheData;

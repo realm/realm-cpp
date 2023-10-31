@@ -103,7 +103,6 @@ set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
 
 if (APPLE)
     target_sources(cpprealm PRIVATE src/cpprealm/internal/apple/network_transport.mm)
-    target_link_options(cpprealm INTERFACE "SHELL:-framework CFNetwork")
 elseif(ANDROID)
     set(REALM_ANDROID)
     target_sources(cpprealm PRIVATE src/cpprealm/internal/network/network_transport.cpp)
