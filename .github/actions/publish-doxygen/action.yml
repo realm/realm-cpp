@@ -25,7 +25,7 @@ runs:
         DOXYGEN_PROJECT_NUMBER: ${{ inputs.version }}
     - name: Fix doxygen titles for SEO
       shell: bash
-      run: bash /docs/fix-doxygen-titles.sh
+      run: bash docs/fix-doxygen-titles.sh
     - name: Upload docs
       uses: jakejarvis/s3-sync-action@master
       with:
@@ -34,5 +34,5 @@ runs:
         AWS_S3_BUCKET: ${{ inputs.AWS_S3_BUCKET }}
         AWS_ACCESS_KEY_ID: ${{ inputs.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
-        SOURCE_DIR: docs/html
+        SOURCE_DIR: docs/modified-doxygen-output
         DEST_DIR: docs/realm-sdks/cpp/${{ inputs.destination }}
