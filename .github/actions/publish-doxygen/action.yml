@@ -24,6 +24,7 @@ runs:
       env:
         DOXYGEN_PROJECT_NUMBER: ${{ inputs.version }}
     - name: Fix doxygen titles for SEO
+      shell: bash
       run: bash /docs/fix-doxygen-titles.sh
     - name: Upload docs
       uses: jakejarvis/s3-sync-action@master
