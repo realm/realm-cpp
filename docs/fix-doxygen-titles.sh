@@ -1,19 +1,18 @@
 #!/bin/bash -ex
 
+# Output this to a temp directory because we can't write to the html directory
+root_directory=$(dirname "$0")
+mkdir "$root_directory"/modified-doxygen-output
+
 # Assume doxygen was run first
-current_directory=$(dirname "$0")
+pushd "`dirname "$0"`"/html
+cp -R html modified-doxygen-output
 
-# Run this in a temp directory because we can't write to the html directory
-mkdir "$current_directory"/modified-doxygen-output
+popd
 
-find "$current_directory/html" -name "*.html" | while read ln
+find ."$root_directory"/modified-doxygen-output -name "*.html" | while read ln
 do
-  tempfile=$(mktemp)
-
   # Make the output SEO friendly by converting the "div" title to the proper "h1"
-  sed -e 's|<div class="title">\([^<]*\)</div>|<h1>\1</h1>|' "$ln" > "$tempfile"
-  filename=$(basename "$ln")
-
-  # Move the temp file to the modified-doxygen-output where we will upload it from
-  mv "$tempfile" "docs/modified-doxygen-output/$filename"
+  sed -i -e 's|<div class="title">\([^<]*\)</div>|<h1>\1</h1>|' "$ln"
 done
+find ."$root_directory"/modified-doxygen-output -iname "*.html-e" | xargs rm
