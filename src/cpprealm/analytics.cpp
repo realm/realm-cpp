@@ -17,7 +17,6 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include <cpprealm/analytics.hpp>
-#include <external/json/json.hpp>
 
 #if __APPLE__ || __MACH__
 #include <CommonCrypto/CommonDigest.h>
@@ -38,10 +37,9 @@
 
 #include <cpprealm/app.hpp>
 #include <cpprealm/internal/generic_network_transport.hpp>
+#include <cpprealm/internal/version_numbers.hpp>
 
 #include <realm/util/base64.hpp>
-
-#include <sstream>
 
 namespace realm {
 #if __APPLE__ || __MACH__
@@ -100,7 +98,7 @@ namespace realm {
         return hash_data(mac, 6);
     }
 
-    std::string get_host_os_verion() {
+    std::string get_host_os_version() {
         std::array<int, 2> mib = {{CTL_KERN, KERN_OSRELEASE}};
         size_t buffer_size;
         auto buffer = do_sysctl(&mib[0], mib.size(), &buffer_size);
@@ -160,7 +158,7 @@ namespace realm {
         return std::to_string(std::hash<std::string>{}(concatenated_mac_addresses));
     }
 
-    std::string get_host_os_verion() {
+    std::string get_host_os_version() {
         struct utsname host_info;
         std::stringstream ss;
         if (uname(&host_info) == 0) {
@@ -203,11 +201,11 @@ namespace realm {
 
         return false;
     }
-#elif _WIN32 || _WIN64
+#elif _WIN32
     std::string get_mac_address() {
         return "unknown";
     }
-    std::string get_host_os_verion() {
+    std::string get_host_os_version() {
         return "unknown";
     }
     bool debugger_attached() {
@@ -217,7 +215,7 @@ namespace realm {
     std::string get_mac_address() {
         return "unknown";
     }
-    std::string get_host_os_verion() {
+    std::string get_host_os_version() {
         return "unknown"
     }
     bool debugger_attached() {
@@ -231,59 +229,55 @@ namespace realm {
 #endif
         if (!debugger_attached() || getenv("REALM_DISABLE_ANALYTICS"))
             return;
-        std::string os_name;
 #ifdef _WIN32
-        os_name = "Windows 32-bit";
-#elif _WIN64
-        os_name = "Windows 64-bit";
+    #define OS_NAME "Windows";
 #elif __APPLE__ || __MACH__
-        os_name = "macOS";
+    #define OS_NAME "macOS";
 #elif __linux__
-        os_name = "Linux";
+    #define OS_NAME "Linux";
 #elif __FreeBSD__
-        os_name = "FreeBSD";
+    #define OS_NAME "FreeBSD";
 #elif __unix || __unix__
-        os_name = "Unix";
+    #define OS_NAME "Unix";
 #else
-        os_name = "Other";
+    #define OS_NAME "Other";
 #endif
 
-        auto mac_address = get_mac_address();
-        nlohmann::json post_data{
-                {"event", "Run"},
-                {"properties", {{"token", "ce0fac19508f6c8f20066d345d360fd0"}, {"distinct_id", mac_address}, {"Anonymized MAC Address", mac_address}, {"Anonymized Bundle ID", "unknown"}, {"Binding", "cpp"},
-#if __cplusplus >= 202002L
-                                {"Language", "cpp20"},
-#else
-                                {"Language", "cpp17"},
+#define STRINGIZE_DETAIL_(v) #v
+#define STRINGIZE(v) STRINGIZE_DETAIL_(v)
+        auto post_payload = R"(
+{
+    "event": "Run",
+    "properties": {
+        "token": "ce0fac19508f6c8f20066d345d360fd0",
+        "distinct_id": "%1",
+        "Anonymized MAC Address": "%1",
+        "Anonymized Bundle ID": "unknown",
+        "Binding": "cpp",)""\n"
+#if __cplusplus == 202002L
+        R"("Language": "cpp20",)""\n"
+#elif __cplusplus == 201703L
+        R"("Language": "cpp17",)""\n"
 #endif
-                                {"Realm Version", "0.0.0"},
-                                {"Target OS Type", "unknown"},
+        "\"Realm Version\": \"" REALMCXX_VERSION_STRING "\",\n"
 #if defined(__clang__)
-                                {"Clang Version", __clang_version__},
-                                {"Clang Major Version", __clang_major__},
+        "\"Clang Version\": \"" STRINGIZE(__clang_major__) "\",\n"
+        "\"Clang Minor Version\": \"" STRINGIZE(__clang_minor__) "\",\n"
 #elif defined(__GNUC__) || defined(__GNUG__)
-                                {"GCC Version", __GNUC__},
-                                {"GCC Minor Version", __GNUC_MINOR__},
+        "\"GCC Version\": \"" STRINGIZE(__GNUC__) "\",\n"
+        "\"GCC Minor Version\": \"" STRINGIZE(__GNUC_MINOR__) "\",\n"
 #endif
-                                {"Host OS Type", os_name},
-                                {"Host OS Version", get_host_os_verion()}}}};
-
-        std::stringstream json_ss;
-        json_ss << post_data;
-        auto json_str = json_ss.str();
+        "\"Host OS Type\": \"" OS_NAME "\",\n"
+        R"("Host OS Version": "%2")""\n"
+"}}";
+        auto json_str = util::format(post_payload, get_mac_address(), get_host_os_version());
         auto transport = std::make_unique<internal::DefaultTransport>();
 
         std::vector<char> buffer;
-        buffer.resize(5000);
-        realm::util::base64_encode(json_str.c_str(), json_str.size(),
-                                   buffer.data(), buffer.size());
-
-        size_t s = 0;
-        while (buffer[s] != '\0') {
-            s++;
-        }
-        buffer.resize(s);
+        buffer.resize(util::base64_encoded_size(json_str.size()));
+        auto encoded_size = util::base64_encode(json_str.c_str(), json_str.size(),
+                                                buffer.data(), buffer.size());
+        buffer.resize(encoded_size);
 
         auto base64_str = std::string(buffer.begin(), buffer.end());
         app::Request request;

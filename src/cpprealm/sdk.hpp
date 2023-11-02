@@ -40,10 +40,10 @@
 #include <cpprealm/persisted_uuid.hpp>
 #include <cpprealm/persisted_object_id.hpp>
 #include <cpprealm/persisted_decimal128.hpp>
+#include <cpprealm/results.hpp>
 #endif
 
 #include <cpprealm/schema.hpp>
-#include <cpprealm/results.hpp>
 #include <cpprealm/notifications.hpp>
 #include <cpprealm/asymmetric_object.hpp>
 #include <cpprealm/object.hpp>

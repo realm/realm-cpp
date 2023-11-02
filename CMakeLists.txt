@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.15)
 
 project(RealmCxx)
 
@@ -16,18 +16,11 @@ endif()
 
 set(REALM_BUILD_LIB_ONLY ON)
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(REALM_USE_SYSTEM_OPENSSL ON)
-    set(OPENSSL_USE_STATIC_LIBS OFF)
+    set(REALM_USE_SYSTEM_OPENSSL ON CACHE BOOL "Find OpenSSL installed on the system instead of using a prebuilt copy")
+    set(OPENSSL_USE_STATIC_LIBS OFF CACHE BOOL "Link statically against OpenSSL")
 endif()
 
 add_subdirectory(realm-core)
-
-set(REALM_NO_CONFIG)
-set(REALM_ENABLE_SYNC)
-set(REALM_NO_TESTS)
-set(REALM_BUILD_LIB_ONLY)
-set(REALM_INSTALL_LIBEXECDIR)
-set(REALM_ENABLE_ENCRYPTION 1)
 
 list(APPEND CMAKE_MODULE_PATH
         "${RealmCxx_SOURCE_DIR}/tools/cmake" # for GetVersion
@@ -37,12 +30,6 @@ if(NOT DEFINED REALMCXX_VERSION)
     include(GetGitRevisionDescription)
     git_describe(REALMCXX_VERSION)
 endif()
-
-add_compile_definitions(REALM_NO_CONFIG)
-add_compile_definitions(REALM_ENABLE_SYNC)
-add_compile_definitions(REALM_ENABLE_ENCRYPTION)
-add_compile_definitions(REALM_INSTALL_LIBEXECDIR)
-add_compile_definitions(REALM_BUILD_LIB_ONLY)
 
 # Check if the compiler is Clang or GCC >= 11
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "11.0"))
