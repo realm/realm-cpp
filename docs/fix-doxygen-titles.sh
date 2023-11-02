@@ -10,6 +10,6 @@ do
   # Make the output SEO friendly by converting the "div" title to the proper "h1"
   sed -i -e 's|<div class="title">\([^<]*\)</div>|<h1>\1</h1>|' "$ln"
 done
-find ./modified-doxygen-output -iname "*.html-e" | xargs rm
+find ./modified-doxygen-output -iname "*.html-e" -exec rm '{}' \:
 
 popd
