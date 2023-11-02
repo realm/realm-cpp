@@ -65,6 +65,9 @@ endforeach()
 
 configure_file(bridge_type_info_generator.cpp.in bridge_type_info_generator.cpp)
 add_library(BridgeTypeInfoGenerator STATIC ${CMAKE_CURRENT_BINARY_DIR}/bridge_type_info_generator.cpp)
+set_target_properties(BridgeTypeInfoGenerator PROPERTIES
+    INTERPROCEDURAL_OPTIMIZATION OFF
+)
 
 if(MSVC)
     target_compile_options(BridgeTypeInfoGenerator PRIVATE /O0)
