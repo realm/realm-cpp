@@ -224,7 +224,138 @@ namespace realm::experimental {
                 }
             }
             CHECK(count == 2);
+        }
 
+        SECTION("results_iterator") {
+            auto realm = db(std::move(config));
+
+            AllTypesObject obj;
+            obj.str_col = "foo";
+            obj._id = 1;
+
+            AllTypesObject obj2;
+            obj2.str_col = "bar";
+            obj2._id = 2;
+
+            realm.write([&realm, &obj, &obj2]() {
+                realm.add(std::move(obj));
+                realm.add(std::move(obj2));
+
+            });
+            auto results = realm.objects<AllTypesObject>();
+
+            size_t count = 0;
+            for (auto& o : results) {
+                count++;
+                if (count == 1) {
+                    CHECK(o._id == 1);
+                    CHECK(o.str_col == "foo");
+                } else {
+                    CHECK(o._id == 2);
+                    CHECK(o.str_col == "bar");
+                }
+            }
+            CHECK(count == 2);
+        }
+
+        SECTION("results_query") {
+            auto realm = db(std::move(config));
+
+            AllTypesObject obj;
+            obj.str_col = "foo";
+            obj._id = 1;
+
+            AllTypesObject obj2;
+            obj2.str_col = "bar";
+            obj2._id = 2;
+
+            realm.write([&realm, &obj, &obj2]() {
+                realm.add(std::move(obj));
+                realm.add(std::move(obj2));
+
+            });
+            auto results = realm.objects<AllTypesObject>();
+            auto queried_results = results.where([](auto& o) {
+                return o._id == 1;
+            });
+            CHECK(queried_results.size() == 1);
+            CHECK(queried_results[0]._id == 1);
+
+            auto queried_results_string = results.where("_id == $0", {2});
+            CHECK(queried_results_string.size() == 1);
+            CHECK(queried_results_string[0]._id == 2);
+
+            queried_results_string = results.where("_id == $0", {3});
+            CHECK(queried_results_string.size() == 0);
+        }
+
+        SECTION("results_sort") {
+            auto realm = db(std::move(config));
+
+            AllTypesObject obj;
+            obj.str_col = "foo";
+            obj._id = 1;
+
+            AllTypesObject obj2;
+            obj2.str_col = "bar";
+            obj2._id = 2;
+
+            realm.write([&realm, &obj, &obj2]() {
+                realm.add(std::move(obj));
+                realm.add(std::move(obj2));
+            });
+            auto sorted_results_ascending = realm.objects<AllTypesObject>().sort("str_col", true);
+            CHECK(sorted_results_ascending[0].str_col == "bar");
+            CHECK(sorted_results_ascending[1].str_col == "foo");
+            auto sorted_results_descending = realm.objects<AllTypesObject>().sort("str_col", false);
+            CHECK(sorted_results_descending[0].str_col == "foo");
+            CHECK(sorted_results_descending[1].str_col == "bar");
+
+            auto sorted_results_with_descriptors_ascending = realm.objects<AllTypesObject>().sort({{"str_col", true}, {"_id", true}});
+            CHECK(sorted_results_with_descriptors_ascending[0].str_col == "bar");
+            CHECK(sorted_results_with_descriptors_ascending[1].str_col == "foo");
+            auto sorted_results_with_descriptors_descending = realm.objects<AllTypesObject>().sort({{"str_col", false}, {"_id", false}});
+            CHECK(sorted_results_with_descriptors_descending[0].str_col == "foo");
+            CHECK(sorted_results_with_descriptors_descending[1].str_col == "bar");
+        }
+
+        SECTION("observe_results_derived_from_list") {
+            auto realm = db(std::move(config));
+
+            AllTypesObjectLink link;
+            link.str_col = "bar";
+            link._id = 1;
+
+            AllTypesObject obj;
+            obj.str_col = "foo";
+            obj._id = 1;
+            obj.list_obj_col.push_back(&link);
+
+            realm.write([&realm, &obj]() {
+                return realm.add(std::move(obj));
+            });
+
+            auto res = realm.objects<AllTypesObject>()[0].list_obj_col.where([](auto&& o) {
+                return o._id == 1;
+            });
+
+            int notification_count = 0;
+            auto token = res.observe([&notification_count](auto&& change) {
+                notification_count++;
+            });
+
+            realm.write([&realm, &res]() {
+                res[0].str_col = "foo";
+            });
+            realm.refresh();
+
+            realm.write([&realm, &res]() {
+                res[0].str_col = "bar";
+            });
+            realm.refresh();
+
+            CHECK(notification_count == 3);
+            token.unregister();
         }
     }
 }

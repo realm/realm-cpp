@@ -124,6 +124,8 @@ namespace realm::internal::bridge {
         query& equal(col_key column_key, bool value);
         query& not_equal(col_key column_key, bool value);
         using underlying = Query;
+
+        std::string description() const;
     private:
         inline Query* get_query();
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES

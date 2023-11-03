@@ -15,8 +15,15 @@ namespace realm {
 
 namespace realm::experimental {
 
+    using sort_descriptor = internal::bridge::sort_descriptor;
+
     template<typename>
     struct results;
+    template<typename T, typename Derived, typename ShouldEnable = void>
+    struct results_base;
+    template<typename T, typename Derived>
+    struct results_common_base;
+
 
     template<typename T>
     struct query : public T {
@@ -47,13 +54,22 @@ namespace realm::experimental {
         }
         template<typename>
         friend struct ::realm::experimental::results;
+        template<typename, typename, typename>
+        friend struct ::realm::experimental::results_base;
+        template<typename, typename>
+        friend struct ::realm::experimental::results_common_base;
+        template<typename, typename>
+        friend struct ::realm::experimental::managed;
         friend struct ::realm::mutable_sync_subscription_set;
     };
 
-    template<typename T>
-    struct results {
+    template<typename T, typename Derived>
+    struct results_common_base {
+        explicit results_common_base(internal::bridge::results &&parent)
+            : m_parent(parent) {
+        }
         struct results_change {
-            results<T> *collection;
+            Derived *collection;
             std::vector<uint64_t> deletions;
             std::vector<uint64_t> insertions;
             std::vector<uint64_t> modifications;
@@ -106,39 +122,42 @@ namespace realm::experimental {
             }
 
         private:
-            iterator(size_t idx, results<T> *parent)
+            iterator(size_t idx, Derived *parent)
                 : m_idx(idx), m_parent(parent) {
             }
 
             size_t m_idx;
-            results<T> *m_parent;
+            Derived *m_parent;
             managed<T, void> value;
 
             template<auto>
             friend struct linking_objects;
-            template<typename>
-            friend struct results;
+            template<typename, typename>
+            friend struct results_common_base;
         };
-        virtual ~results() = default;
+        virtual ~results_common_base() = default;
         iterator begin() {
-            return iterator(0, this);
+            return iterator(0, static_cast<Derived*>(this));
         }
 
         iterator end() {
-            return iterator(m_parent.size(), this);
+            return iterator(m_parent.size(), static_cast<Derived*>(this));
         }
 
         size_t size() {
             return m_parent.size();
         }
 
-        results<T> &where(const std::string &query, std::vector<internal::bridge::mixed> arguments) {
+        Derived& where(const std::string &query, const std::vector<realm::mixed>& arguments) {
+            std::vector<internal::bridge::mixed> mixed_args;
+            for(auto& a : arguments)
+                mixed_args.push_back(serialize(a));
             m_parent = internal::bridge::results(m_parent.get_realm(),
-                                                 m_parent.get_table().query(query, std::move(arguments)));
-            return dynamic_cast<results<T> &>(*this);
+                                                 m_parent.get_table().query(query, std::move(mixed_args)));
+            return static_cast<Derived&>(*this);
         }
 
-        results<T> &where(std::function<rbool(experimental::managed<T>&)>&& fn) {
+        Derived& where(std::function<rbool(experimental::managed<T>&)>&& fn) {
             static_assert(sizeof(managed<T>), "Must declare schema for T");
             auto realm = m_parent.get_realm();
             auto schema = realm.schema().find(experimental::managed<T>::schema.name);
@@ -148,16 +167,16 @@ namespace realm::experimental {
             auto q = realm::experimental::query<experimental::managed<T>>(builder, std::move(schema), realm);
             auto full_query = fn(q).q;
             m_parent = internal::bridge::results(m_parent.get_realm(), full_query);
-            return dynamic_cast<results &>(*this);
+            return static_cast<Derived&>(*this);
         }
 
         struct results_callback_wrapper : internal::bridge::collection_change_callback {
             std::function<void(results_change)> handler;
-            results<T> &collection;
+            Derived &collection;
             bool ignoreChangesInInitialNotification = true;
 
             results_callback_wrapper(std::function<void(results_change)> handler,
-                                     results<T> &collection)
+                                     Derived &collection)
                 : handler(handler), collection(collection) {}
 
             void before(const realm::internal::bridge::collection_change_set &c) override {}
@@ -190,11 +209,62 @@ namespace realm::experimental {
 
         internal::bridge::notification_token observe(std::function<void(results_change)> &&handler) {
             return m_parent.add_notification_callback(
-                    std::make_shared<results_callback_wrapper>(std::move(handler), dynamic_cast<results<T> &>(*this)));
+                    std::make_shared<results_callback_wrapper>(std::move(handler), static_cast<Derived&>(*this)));
         }
 
-        explicit results(internal::bridge::results &&parent)
-            : m_parent(parent) {
+        Derived freeze() {
+            auto frozen_realm = m_parent.get_realm().freeze();
+            return Derived(internal::bridge::results(frozen_realm, frozen_realm.table_for_object_type(managed<T>::schema.name)));
+        }
+
+        Derived thaw() {
+            auto thawed_realm = m_parent.get_realm().thaw();
+            return Derived(internal::bridge::results(thawed_realm, thawed_realm.table_for_object_type(managed<T>::schema.name)));
+        }
+
+        bool is_frozen() {
+            return m_parent.get_realm().is_frozen();
+        }
+
+        Derived& sort(const std::string& key_path, bool ascending) {
+            m_parent = m_parent.sort({{key_path, ascending}});
+            return static_cast<Derived&>(*this);
+        }
+
+        Derived& sort(const std::vector<sort_descriptor>& sort_descriptors) {
+            m_parent = m_parent.sort(sort_descriptors);
+            return static_cast<Derived&>(*this);
+        }
+
+    protected:
+        internal::bridge::results m_parent;
+        template <auto> friend struct linking_objects;
+    };
+
+    template<typename T, typename Derived>
+    struct results_base<T, Derived, std::enable_if_t<!managed<T>::is_object>> : public results_common_base<T, Derived> {
+        explicit results_base(internal::bridge::results &&parent)
+            : results_common_base<T, Derived>(std::move(parent)) {
+        }
+
+        T operator[](size_t index) {
+            if (index >= this->m_parent.size())
+                throw std::out_of_range("Index out of range.");
+
+            if constexpr (internal::type_info::is_variant_t<T>::value) {
+                return deserialize<T>(internal::bridge::get<internal::bridge::mixed>(this->m_parent, index));
+            } else if constexpr (std::is_enum_v<T>) {
+                return static_cast<T>(internal::bridge::get<int64_t>(this->m_parent, index));
+            }
+
+            return internal::bridge::get<T>(this->m_parent, index);
+        }
+    };
+
+    template<typename T, typename Derived>
+    struct results_base<T, Derived, std::enable_if_t<managed<T>::is_object>> : public results_common_base<T, Derived> {
+        explicit results_base(internal::bridge::results &&parent)
+            : results_common_base<T, Derived>(std::move(parent)) {
         }
 
         managed<T, void> operator[](size_t index) {
@@ -203,9 +273,13 @@ namespace realm::experimental {
             return managed<T, void>(internal::bridge::get<internal::bridge::obj>(this->m_parent, index), this->m_parent.get_realm());
         }
 
-    protected:
-        internal::bridge::results m_parent;
-        template <auto> friend struct linking_objects;
+    };
+
+    template<typename T>
+    struct results : public results_base<T, results<T>> {
+        explicit results(internal::bridge::results &&parent)
+            : results_base<T, results<T>>(std::move(parent)) {
+        }
     };
 
     template <auto ptr>
@@ -239,8 +313,8 @@ namespace realm::experimental {
         managed<Class> operator[](size_t idx) {
             return get_results()[idx];
         }
-    private:
 
+    private:
         results<Class> get_results() {
             auto table = m_obj->get_table();
             if (!table.is_valid(m_obj->get_key())) {

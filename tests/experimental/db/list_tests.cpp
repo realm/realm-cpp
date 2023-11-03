@@ -372,6 +372,9 @@ TEST_CASE("list", "[list]") {
         auto obj = realm.write([&]() {
             return realm.add(realm::experimental::AllTypesObject());
         });
+        auto object_id1 = realm::object_id::generate();
+        auto object_id2 = realm::object_id::generate();
+
         test_list(obj.list_int_col, std::vector<uint64_t>({1, 2}), realm);
         test_list(obj.list_bool_col, std::vector<uint8_t>({true, false}), realm);
         test_list(obj.list_double_col, std::vector<double>({1.23, 2.45}), realm);
@@ -381,6 +384,7 @@ TEST_CASE("list", "[list]") {
                   std::vector<realm::uuid>({realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120000"),
                                             realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002")}), realm);
         test_list(obj.list_binary_col, std::vector<std::vector<uint8_t>>({{0}, {1}}), realm);
+        test_list(obj.list_object_id_col, std::vector<object_id>({object_id1, object_id2}), realm);
         auto date_list_obj = realm::experimental::AllTypesObject();
         auto date1 = std::chrono::system_clock::now();
         auto date2 = date1 + std::chrono::hours(24);
@@ -523,5 +527,221 @@ TEST_CASE("list", "[list]") {
             res.insert(it.operator*()._id);
         }
         CHECK(res == std::set<int64_t>({1, 2}));
+    }
+
+    SECTION("query") {
+        auto realm = realm::experimental::db(std::move(config));
+        auto obj = realm::experimental::AllTypesObject();
+        auto managed_obj = realm.write([&]() {
+            return realm.add(std::move(obj));
+        });
+
+        experimental::AllTypesObjectLink link;
+        link._id = 1;
+        link.str_col = "foo";
+
+        experimental::AllTypesObjectLink link2;
+        link2._id = 2;
+        link2.str_col = "bar";
+
+        auto object_id1 = realm::object_id("000123450000ffbeef91906a");
+        auto object_id2 = realm::object_id("000123450000ffbeef91906b");
+        auto object_id3 = realm::object_id("000123450000ffbeef91906c");
+
+        auto date1 = std::chrono::system_clock::now();
+        auto date2 = date1 + std::chrono::hours(24);
+        auto date3 = date2 + std::chrono::hours(24);
+
+        realm.write([&]() {
+            managed_obj.list_obj_col.push_back(&link);
+            managed_obj.list_obj_col.push_back(&link2);
+
+            managed_obj.list_int_col.push_back(1);
+            managed_obj.list_int_col.push_back(2);
+            managed_obj.list_int_col.push_back(3);
+
+            managed_obj.list_bool_col.push_back(true);
+            managed_obj.list_bool_col.push_back(false);
+            managed_obj.list_bool_col.push_back(false);
+
+            managed_obj.list_double_col.push_back(1.23);
+            managed_obj.list_double_col.push_back(2.34);
+            managed_obj.list_double_col.push_back(4.56);
+
+            managed_obj.list_str_col.push_back("apple");
+            managed_obj.list_str_col.push_back("banana");
+            managed_obj.list_str_col.push_back("coconut");
+
+            managed_obj.list_uuid_col.push_back(realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120000"));
+            managed_obj.list_uuid_col.push_back(realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120001"));
+            managed_obj.list_uuid_col.push_back(realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"));
+
+            managed_obj.list_object_id_col.push_back(object_id1);
+            managed_obj.list_object_id_col.push_back(object_id2);
+            managed_obj.list_object_id_col.push_back(object_id3);
+
+            managed_obj.list_decimal_col.push_back(decimal128(1.23));
+            managed_obj.list_decimal_col.push_back(decimal128(2.34));
+            managed_obj.list_decimal_col.push_back(decimal128(3.45));
+
+            managed_obj.list_binary_col.push_back({0,0,0,0});
+            managed_obj.list_binary_col.push_back({0,0,0,1});
+            managed_obj.list_binary_col.push_back({0,0,0,2});
+
+            managed_obj.list_date_col.push_back(date1);
+            managed_obj.list_date_col.push_back(date2);
+            managed_obj.list_date_col.push_back(date3);
+
+            managed_obj.list_mixed_col.push_back(realm::mixed(1));
+            managed_obj.list_mixed_col.push_back(realm::mixed("foo"));
+            managed_obj.list_mixed_col.push_back(realm::mixed(date1));
+
+            managed_obj.list_enum_col.push_back(experimental::AllTypesObject::Enum::one);
+            managed_obj.list_enum_col.push_back(experimental::AllTypesObject::Enum::two);
+
+            realm::experimental::AllTypesObjectEmbedded embedded1;
+            embedded1.str_col = "apple";
+            realm::experimental::AllTypesObjectEmbedded embedded2;
+            embedded2.str_col = "banana";
+
+            managed_obj.list_embedded_obj_col.push_back(&embedded1);
+            managed_obj.list_embedded_obj_col.push_back(&embedded2);
+        });
+
+        auto object_results = managed_obj.list_obj_col.where([](auto & o) {
+            return o._id == 1;
+        });
+        CHECK(object_results[0]._id == 1);
+        CHECK(object_results.size() == 1);
+
+        auto object_results2 = managed_obj.list_obj_col.where("_id == $0", {1});
+        CHECK(object_results2[0]._id == 1);
+
+        auto sorted_object_results1 = managed_obj.list_obj_col.sort("str_col", true);
+        auto sorted_object_results2 = managed_obj.list_obj_col.sort({{"str_col", false}});
+        auto sorted_object_results_embedded1 = managed_obj.list_embedded_obj_col.sort("str_col", true);
+        auto sorted_object_results_embedded2 = managed_obj.list_embedded_obj_col.sort({{"str_col", false}});
+
+        CHECK(sorted_object_results1.size() == 2);
+        CHECK(sorted_object_results1[0].str_col == "bar");
+        CHECK(sorted_object_results1[1].str_col == "foo");
+        CHECK(sorted_object_results2.size() == 2);
+        CHECK(sorted_object_results2[0].str_col == "foo");
+        CHECK(sorted_object_results2[1].str_col == "bar");
+
+        CHECK(sorted_object_results_embedded1.size() == 2);
+        CHECK(sorted_object_results_embedded1[0].str_col == "apple");
+        CHECK(sorted_object_results_embedded1[1].str_col == "banana");
+        CHECK(sorted_object_results_embedded2.size() == 2);
+        CHECK(sorted_object_results_embedded2[0].str_col == "banana");
+        CHECK(sorted_object_results_embedded2[1].str_col == "apple");
+
+        auto sorted_object_results3 = managed_obj.list_int_col.sort(true);
+        CHECK(sorted_object_results3[0] == 1);
+        CHECK(sorted_object_results3[1] == 2);
+        CHECK(sorted_object_results3[2] == 3);
+
+        auto sorted_object_results4 = managed_obj.list_int_col.sort(false);
+        CHECK(sorted_object_results4[0] == 3);
+        CHECK(sorted_object_results4[1] == 2);
+        CHECK(sorted_object_results4[2] == 1);
+
+        auto sorted_object_results5 = managed_obj.list_bool_col.sort(true);
+        CHECK(sorted_object_results5[0] == false);
+        CHECK(sorted_object_results5[1] == false);
+        CHECK(sorted_object_results5[2] == true);
+
+        auto sorted_object_results6 = managed_obj.list_bool_col.sort(false);
+        CHECK(sorted_object_results6[0] == true);
+        CHECK(sorted_object_results6[1] == false);
+        CHECK(sorted_object_results6[2] == false);
+
+        auto sorted_object_results7 = managed_obj.list_double_col.sort(true);
+        CHECK(sorted_object_results7[0] == 1.23);
+        CHECK(sorted_object_results7[1] == 2.34);
+        CHECK(sorted_object_results7[2] == 4.56);
+
+        auto sorted_object_results8 = managed_obj.list_double_col.sort(false);
+        CHECK(sorted_object_results8[0] == 4.56);
+        CHECK(sorted_object_results8[1] == 2.34);
+        CHECK(sorted_object_results8[2] == 1.23);
+
+        auto sorted_object_results9 = managed_obj.list_str_col.sort(true);
+        CHECK(sorted_object_results9[0] == "apple");
+        CHECK(sorted_object_results9[1] == "banana");
+        CHECK(sorted_object_results9[2] == "coconut");
+
+        auto sorted_object_results10 = managed_obj.list_str_col.sort(false);
+        CHECK(sorted_object_results10[0] == "coconut");
+        CHECK(sorted_object_results10[1] == "banana");
+        CHECK(sorted_object_results10[2] == "apple");
+
+        auto sorted_object_results11 = managed_obj.list_uuid_col.sort(true);
+        CHECK(sorted_object_results11[0] == realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120000"));
+        CHECK(sorted_object_results11[1] == realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120001"));
+        CHECK(sorted_object_results11[2] == realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"));
+
+        auto sorted_object_results12 = managed_obj.list_uuid_col.sort(false);
+        CHECK(sorted_object_results12[0] == realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"));
+        CHECK(sorted_object_results12[1] == realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120001"));
+        CHECK(sorted_object_results12[2] == realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120000"));
+
+        auto sorted_object_results13 = managed_obj.list_object_id_col.sort(true);
+        CHECK(sorted_object_results13[0] == object_id1);
+        CHECK(sorted_object_results13[1] == object_id2);
+        CHECK(sorted_object_results13[2] == object_id3);
+
+        auto sorted_object_results14 = managed_obj.list_object_id_col.sort(false);
+        CHECK(sorted_object_results14[0] == object_id3);
+        CHECK(sorted_object_results14[1] == object_id2);
+        CHECK(sorted_object_results14[2] == object_id1);
+
+        auto sorted_object_results15 = managed_obj.list_decimal_col.sort(true);
+        CHECK(sorted_object_results15[0] == realm::decimal128(1.23));
+        CHECK(sorted_object_results15[1] == realm::decimal128(2.34));
+        CHECK(sorted_object_results15[2] == realm::decimal128(3.45));
+
+        auto sorted_object_results16 = managed_obj.list_decimal_col.sort(false);
+        CHECK(sorted_object_results16[0] == realm::decimal128(3.45));
+        CHECK(sorted_object_results16[1] == realm::decimal128(2.34));
+        CHECK(sorted_object_results16[2] == realm::decimal128(1.23));
+
+        auto sorted_object_results17 = managed_obj.list_binary_col.sort(true);
+        CHECK(sorted_object_results17[0] == std::vector<uint8_t>({0,0,0,0}));
+        CHECK(sorted_object_results17[1] == std::vector<uint8_t>({0,0,0,1}));
+        CHECK(sorted_object_results17[2] == std::vector<uint8_t>({0,0,0,2}));
+
+        auto sorted_object_results18 = managed_obj.list_binary_col.sort(false);
+        CHECK(sorted_object_results18[0] == std::vector<uint8_t>({0,0,0,2}));
+        CHECK(sorted_object_results18[1] == std::vector<uint8_t>({0,0,0,1}));
+        CHECK(sorted_object_results18[2] == std::vector<uint8_t>({0,0,0,0}));
+
+        auto sorted_object_results19 = managed_obj.list_date_col.sort(true);
+        CHECK(sorted_object_results19[0] == date1);
+        CHECK(sorted_object_results19[1] == date2);
+        CHECK(sorted_object_results19[2] == date3);
+
+        auto sorted_object_results20 = managed_obj.list_date_col.sort(false);
+        CHECK(sorted_object_results20[0] == date3);
+        CHECK(sorted_object_results20[1] == date2);
+        CHECK(sorted_object_results20[2] == date1);
+
+        auto sorted_object_results21 = managed_obj.list_mixed_col.sort(true);
+        CHECK(sorted_object_results21[0] == realm::mixed(1));
+        CHECK(sorted_object_results21[1] == realm::mixed("foo"));
+        CHECK(sorted_object_results21[2] == realm::mixed(date1));
+
+        auto sorted_object_results22 = managed_obj.list_mixed_col.sort(false);
+        CHECK(sorted_object_results22[0] == realm::mixed(date1));
+        CHECK(sorted_object_results22[1] == realm::mixed("foo"));
+        CHECK(sorted_object_results22[2] == realm::mixed(1));
+
+        auto sorted_object_results23 = managed_obj.list_enum_col.sort(true);
+        CHECK(sorted_object_results23[0] == experimental::AllTypesObject::Enum::one);
+        CHECK(sorted_object_results23[1] == experimental::AllTypesObject::Enum::two);
+
+        auto sorted_object_results24 = managed_obj.list_enum_col.sort(false);
+        CHECK(sorted_object_results24[0] == experimental::AllTypesObject::Enum::two);
+        CHECK(sorted_object_results24[1] == experimental::AllTypesObject::Enum::one);
     }
 }

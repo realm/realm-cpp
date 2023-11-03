@@ -16,6 +16,8 @@
 #include <cpprealm/scheduler.hpp>
 
 #include <realm/object-store/dictionary.hpp>
+#include <realm/object-store/object_store.hpp>
+
 #include <realm/object-store/schema.hpp>
 #include <realm/object-store/shared_realm.hpp>
 #include <realm/object-store/sync/sync_session.hpp>
@@ -367,6 +369,38 @@ namespace realm::internal::bridge {
 
     bool realm::refresh() {
         return m_realm->refresh();
+    }
+
+    bool realm::is_frozen() const {
+        return m_realm->is_frozen();
+    }
+
+    realm realm::freeze() {
+        m_realm->verify_thread();
+        if (is_frozen())
+            return *this;
+        realm realm;
+        realm.m_realm = m_realm->freeze();
+        realm.m_realm->read_group();
+        return realm;
+    }
+
+    realm realm::thaw() {
+        m_realm->verify_thread();
+        if (!is_frozen())
+            return *this;
+        auto config = m_realm->config();
+        config.cache = false;
+        return realm(std::move(config));
+    }
+
+    void realm::invalidate() {
+        m_realm->verify_thread();
+        m_realm->invalidate();
+    }
+
+    obj realm::import_copy_of(const obj& o) const {
+        return m_realm->import_copy_of(o.operator Obj());
     }
 
     [[nodiscard]] std::optional<sync_session> realm::get_sync_session() const {

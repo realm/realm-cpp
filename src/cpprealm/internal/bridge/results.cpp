@@ -7,6 +7,10 @@
 #include <realm/object-store/results.hpp>
 
 namespace realm::internal::bridge {
+    sort_descriptor::operator std::pair<std::string, bool>() const {
+        return {key_path, ascending};
+    }
+
     results::results() {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_results) Results();
@@ -99,12 +103,117 @@ namespace realm::internal::bridge {
 #endif
     }
 
+    results results::sort(const std::vector<sort_descriptor>& descriptors) {
+        std::vector<std::pair<std::string, bool>> results_descriptors;
+        results_descriptors.resize(descriptors.size());
+        std::transform(descriptors.begin(), descriptors.end(), results_descriptors.begin(),
+                       [](const sort_descriptor& sd) -> std::pair<std::string, bool>{
+            return sd.operator std::pair<std::string, bool>();
+        });
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<const Results*>(&m_results)->sort(results_descriptors);
+#else
+        return m_results->sort(results_descriptors);
+#endif
+    }
+
     template <>
     obj get(results& res, size_t v) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<Results*>(&res.m_results)->get(v);
 #else
         return res.m_results->get(v);
+#endif
+    }
+
+    template <>
+    int64_t get(results& res, size_t v) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<Results*>(&res.m_results)->get<int64_t>(v);
+#else
+        return res.m_results->get<int64_t>(v);
+#endif
+    }
+
+    template <>
+    bool get(results& res, size_t v) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<Results*>(&res.m_results)->get<bool>(v);
+#else
+        return res.m_results->get<bool>(v);
+#endif
+    }
+
+    template <>
+    double get(results& res, size_t v) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<Results*>(&res.m_results)->get<double>(v);
+#else
+        return res.m_results->get<double>(v);
+#endif
+    }
+
+    template <>
+    std::string get(results& res, size_t v) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<Results*>(&res.m_results)->get<StringData>(v);
+#else
+        return res.m_results->get<StringData>(v);
+#endif
+    }
+
+    template <>
+    ::realm::uuid get(results& res, size_t v) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return uuid(reinterpret_cast<Results*>(&res.m_results)->get<UUID>(v)).operator ::realm::uuid();
+#else
+        return uuid(res.m_results->get<UUID>(v)).operator ::realm::uuid();
+#endif
+    }
+
+    template <>
+    ::realm::object_id get(results& res, size_t v) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return object_id(reinterpret_cast<Results*>(&res.m_results)->get<ObjectId>(v)).operator ::realm::object_id();
+#else
+        return object_id(res.m_results->get<ObjectId>(v)).operator ::realm::object_id();
+#endif
+    }
+
+    template <>
+    ::realm::decimal128 get(results& res, size_t v) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return decimal128(reinterpret_cast<Results*>(&res.m_results)->get<Decimal128>(v)).operator ::realm::decimal128();
+#else
+        return decimal128(res.m_results->get<Decimal128>(v)).operator ::realm::decimal128();
+#endif
+    }
+
+    template <>
+    std::vector<uint8_t> get(results& res, size_t v) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return binary(reinterpret_cast<Results*>(&res.m_results)->get<BinaryData>(v)).operator std::vector<uint8_t>();
+#else
+        return binary(res.m_results->get<BinaryData>(v)).operator std::vector<uint8_t>();
+#endif
+    }
+
+    template <>
+    std::chrono::time_point<std::chrono::system_clock> get(results& res, size_t v) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return timestamp(reinterpret_cast<Results*>(&res.m_results)->get<Timestamp>(v)).operator std::chrono::time_point<std::chrono::system_clock>();
+#else
+        return timestamp(res.m_results->get<Timestamp>(v)).operator std::chrono::time_point<std::chrono::system_clock>();
+#endif
+    }
+
+
+    template <>
+    mixed get(results& res, size_t v) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return mixed(reinterpret_cast<Results*>(&res.m_results)->get<Mixed>(v));
+#else
+        return mixed(res.m_results->get<Mixed>(v));
 #endif
     }
 

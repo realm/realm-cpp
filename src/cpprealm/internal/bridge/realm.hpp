@@ -24,6 +24,7 @@ namespace realm::internal::bridge {
     struct table;
     struct dictionary;
     struct thread_safe_reference;
+    struct obj;
     struct object;
     struct async_open_task;
     struct sync_session;
@@ -192,6 +193,11 @@ namespace realm::internal::bridge {
         [[nodiscard]] std::shared_ptr<struct scheduler> scheduler() const;
         static async_open_task get_synchronized_realm(const config&);
         bool refresh();
+        bool is_frozen() const;
+        realm freeze(); // throws
+        realm thaw(); // throws
+        void invalidate();
+        obj import_copy_of(const obj&) const;
         [[nodiscard]] std::optional<sync_session> get_sync_session() const;
     private:
         std::shared_ptr<Realm> m_realm;

@@ -31,6 +31,8 @@ namespace realm::internal::bridge {
     struct table;
     struct notification_token;
     struct collection_change_callback;
+    struct results;
+    struct sort_descriptor;
 
     struct list {
         list();
@@ -84,6 +86,9 @@ namespace realm::internal::bridge {
         size_t find(const timestamp &);
         size_t find(const binary&);
         size_t find(const obj_key&);
+
+        results sort(const std::vector<sort_descriptor>&);
+
         notification_token add_notification_callback(std::shared_ptr<collection_change_callback>);
     private:
         template <typename ValueType>

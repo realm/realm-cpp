@@ -198,6 +198,14 @@ namespace realm::internal::bridge {
         return *this;
     }
 
+    std::string query::description() const {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<const Query *>(&m_query)->get_description();
+#else
+        return m_query->get_description();
+#endif
+    }
+
     __generate_query_operator_case_sensitive(equal, std::string_view)
     __generate_query_operator_case_sensitive(not_equal, std::string_view)
     __generate_query_operator_case_sensitive(contains, std::string_view)

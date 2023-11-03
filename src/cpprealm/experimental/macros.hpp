@@ -314,7 +314,8 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         static constexpr auto managed_pointers_names = std::array<std::string_view, std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value>{FOR_EACH(DECLARE_MANAGED_PROPERTY_NAME, cls, __VA_ARGS__)}; \
         internal::bridge::obj m_obj;\
         internal::bridge::realm m_realm;                                                           \
-        bool m_prepare_for_query = false;                                                           \
+        bool m_prepare_for_query = false;                                                          \
+        static constexpr bool is_object = true;                            \
         explicit managed(const internal::bridge::obj& obj,                 \
                          internal::bridge::realm realm)                  \
         : m_obj(std::move(obj))\
@@ -443,8 +444,18 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
             std::move(fn), this, m_object}; \
             return m_object->add_notification_callback( \
             std::make_shared<realm::experimental::ObjectChangeCallbackWrapper<managed>>(wrapper));                               \
-        }                      \
-        bool operator ==(const managed<cls>& other) const {                                                               \
+        }                                                                                          \
+        bool is_invalidated() {                                                                     \
+            return !m_obj.is_valid();                                                              \
+        }                                                                                          \
+        bool is_frozen() {                                                                     \
+            return m_realm.is_frozen();                                                              \
+        }                                                                                          \
+        managed<cls> freeze() {                                                                    \
+            auto realm = m_realm.freeze();                                                         \
+            return managed<cls>(realm.import_copy_of(m_obj), realm);                               \
+        }                                                                                         \
+        bool operator ==(const managed<cls>& other) const {                                        \
             auto& a = m_obj; \
             auto& b = other.m_obj; \
             \
@@ -465,9 +476,17 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
     \
             return a.get_table() == b->get_table() \
                    && a.get_key() == b->get_key(); \
-        }                                          \
-       bool operator < (const managed<cls>& rhs) const { return m_obj.get_key() < rhs.m_obj.get_key(); }  \
-    };                         \
+        }                                                                                          \
+        bool operator !=(const managed<cls>& other) const {                                        \
+           return !this->operator ==(other);                                                       \
+        }                                                                                          \
+        bool operator !=(const managed<cls*>& other) const {                                        \
+            return !this->operator ==(other);                                                      \
+        }                                                                                          \
+        bool operator < (const managed<cls>& rhs) const {                                          \
+            return m_obj.get_key() < rhs.m_obj.get_key();                                          \
+        }                                                                                          \
+    };                                                                                             \
     struct meta_schema_##cls {   \
         meta_schema_##cls() {                                                    \
             auto s = managed<cls>::schema.to_core_schema();                      \
