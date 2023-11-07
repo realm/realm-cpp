@@ -32,6 +32,7 @@
 
 #include <future>
 #include <utility>
+#include <iostream>
 
 namespace realm {
     using sync_session = internal::bridge::sync_session;

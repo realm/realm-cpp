@@ -123,6 +123,9 @@ namespace realm::internal::bridge {
     void object_schema::set_primary_key(const std::string &primary_key) {
         get_object_schema()->primary_key = primary_key;
     }
+    std::string object_schema::get_name() const {
+        return get_object_schema()->name;
+    }
     object_schema::operator ObjectSchema() const {
         return *get_object_schema();
     }

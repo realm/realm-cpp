@@ -146,6 +146,7 @@ namespace realm::internal::bridge {
             operator RealmConfig() const; //NOLINT(google-explicit-constructor)
             void set_path(const std::string&);
             void set_schema(const std::vector<object_schema>&);
+            void set_schema(const schema&);
             void set_schema_mode(schema_mode);
             void set_scheduler(const std::shared_ptr<struct scheduler>&);
             void set_sync_config(const std::optional<struct sync_config>&);
@@ -193,6 +194,8 @@ namespace realm::internal::bridge {
         static async_open_task get_synchronized_realm(const config&);
         bool refresh();
         [[nodiscard]] std::optional<sync_session> get_sync_session() const;
+        void delete_files();
+        void close();
     private:
         std::shared_ptr<Realm> m_realm;
         friend struct group;

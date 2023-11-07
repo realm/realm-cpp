@@ -33,6 +33,7 @@ namespace realm::internal::bridge {
         uint32_t table_key();
         void add_property(const property&);
 
+        std::string get_name() const;
         void set_name(const std::string& name);
         void set_primary_key(const std::string& primary_key);
         void set_object_type(object_type);

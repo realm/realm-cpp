@@ -206,6 +206,9 @@ namespace realm::internal::bridge {
         }
         get_config()->schema = v2;
     }
+    void realm::config::set_schema(const bridge::schema &v) {
+        get_config()->schema = v;
+    }
     void realm::config::set_schema_mode(schema_mode mode) {
         get_config()->schema_mode = static_cast<::realm::SchemaMode>(mode);
     }
@@ -382,5 +385,12 @@ namespace realm::internal::bridge {
 
     table realm::get_table(const uint32_t &key) {
         return m_realm->read_group().get_table(TableKey(key));
+    }
+
+    void realm::delete_files() {
+        m_realm->delete_files(m_realm->config().path);
+    }
+    void realm::close() {
+        m_realm->close();
     }
 }

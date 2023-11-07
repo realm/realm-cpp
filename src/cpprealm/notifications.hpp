@@ -32,6 +32,7 @@
 #include <any>
 #include <future>
 #include <utility>
+#include <optional>
 
 namespace realm {
 template <typename T>

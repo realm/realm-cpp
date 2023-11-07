@@ -109,7 +109,9 @@ namespace realm::internal::bridge {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const SyncError*>(&m_error)->status;
 #else
-        return m_error->status;
+        abort();
+//        return reinterpret_cast<const SyncError*>(&m_error)->m_status;
+//        return m_error->m_status;
 #endif
     }
 }

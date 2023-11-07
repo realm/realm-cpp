@@ -21,6 +21,8 @@
 
 #include <filesystem>
 #include <iostream>
+#include <optional>
+#include <future>
 
 #include <cpprealm/asymmetric_object.hpp>
 #include <cpprealm/flex_sync.hpp>

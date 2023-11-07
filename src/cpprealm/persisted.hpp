@@ -24,6 +24,8 @@
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/rbool.hpp>
 
+#include <optional>
+
 namespace realm::experimental {
     template<typename>
     struct box_base;
