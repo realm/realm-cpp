@@ -6,7 +6,7 @@ namespace realm::experimental {
 #define query_results_size(Cls, fn)  \
     realm.template objects<Cls>().where(fn).size()
 
-#define query_string_results_size(Cls, str, args...)  \
+#define query_string_results_size(Cls, str, args)  \
     realm.template objects<Cls>().where(str, args).size()
 
     TEST_CASE("query") {
@@ -49,16 +49,16 @@ namespace realm::experimental {
 
             // With literal as RHS.
             CHECK(query_results_size(AllTypesObject, [](auto &o) { return o._id == 123; }) == 1);
-            CHECK(query_string_results_size(AllTypesObject, "_id == $0", {123}) == 1);
+            CHECK(query_string_results_size(AllTypesObject, "_id == $0", {(int64_t)123}) == 1);
 
             CHECK(query_results_size(AllTypesObject, [](auto &o) { return o._id != 123; }) == 0);
-            CHECK(query_string_results_size(AllTypesObject, "_id != $0", {123}) == 0);
+            CHECK(query_string_results_size(AllTypesObject, "_id != $0", {(int64_t)123}) == 0);
 
             CHECK(query_results_size(AllTypesObject, [](auto &o) { return o.str_col == "foo bar"; }) == 1);
-            CHECK(query_string_results_size(AllTypesObject, "str_col == $0", {"foo bar"}) == 1);
+            CHECK(query_string_results_size(AllTypesObject, "str_col == $0", {std::string("foo bar")}) == 1);
 
             CHECK(query_results_size(AllTypesObject, [](auto &o) { return o.str_col != "foo bar"; }) == 0);
-            CHECK(query_string_results_size(AllTypesObject, "str_col != $0", {"foo bar"}) == 0);
+            CHECK(query_string_results_size(AllTypesObject, "str_col != $0", {std::string("foo bar")}) == 0);
 
             CHECK(query_results_size(AllTypesObject, [](auto &o) {
                       return o.binary_col == std::vector<uint8_t>({0, 1, 2, 3});
@@ -71,10 +71,10 @@ namespace realm::experimental {
             CHECK(query_string_results_size(AllTypesObject, "binary_col != $0", {std::vector<uint8_t>({0, 1, 2, 3})}) == 0);
 
             CHECK(query_results_size(AllTypesObject, [](auto &o) { return o.enum_col == AllTypesObject::Enum::two; }) == 1);
-            CHECK(query_string_results_size(AllTypesObject, "enum_col == $0", {static_cast<int>(AllTypesObject::Enum::two)}) == 1);
+            CHECK(query_string_results_size(AllTypesObject, "enum_col == $0", {static_cast<int64_t>(AllTypesObject::Enum::two)}) == 1);
 
             CHECK(query_results_size(AllTypesObject, [](auto &o) { return o.enum_col != AllTypesObject::Enum::two; }) == 0);
-            CHECK(query_string_results_size(AllTypesObject, "enum_col != $0", {static_cast<int>(AllTypesObject::Enum::two)}) == 0);
+            CHECK(query_string_results_size(AllTypesObject, "enum_col != $0", {static_cast<int64_t>(AllTypesObject::Enum::two)}) == 0);
 
             CHECK(query_results_size(AllTypesObject, [&date](auto &o) {
                       return o.date_col == std::chrono::system_clock::from_time_t(date);
@@ -98,7 +98,7 @@ namespace realm::experimental {
 
             auto objs = realm.objects<AllTypesObject>().where([](auto& o) { return o.opt_obj_col->str_col == "foo"; }).size();
             CHECK(objs == 1);
-            objs = realm.objects<AllTypesObject>().where("opt_obj_col.str_col == $0", {"foo"}).size();
+            objs = realm.objects<AllTypesObject>().where("opt_obj_col.str_col == $0", {std::string("foo")}).size();
             CHECK(objs == 1);
         }
 
@@ -122,28 +122,28 @@ namespace realm::experimental {
 
             // With literal as RHS.
             CHECK(query_results_size(AllTypesObject, [](auto &o) { return o._id > 123; }) == 0);
-            CHECK(query_string_results_size(AllTypesObject, "_id > $0", {123}) == 0);
+            CHECK(query_string_results_size(AllTypesObject, "_id > $0", {(int64_t)123}) == 0);
 
             CHECK(query_results_size(AllTypesObject, [](auto &o) { return o._id >= 123; }) == 1);
-            CHECK(query_string_results_size(AllTypesObject, "_id >= $0", {123}) == 1);
+            CHECK(query_string_results_size(AllTypesObject, "_id >= $0", {(int64_t) 123}) == 1);
 
             CHECK(query_results_size(AllTypesObject, [](auto &o) { return o._id < 123; }) == 0);
-            CHECK(query_string_results_size(AllTypesObject, "_id < $0", {123}) == 0);
+            CHECK(query_string_results_size(AllTypesObject, "_id < $0", {(int64_t) 123}) == 0);
 
             CHECK(query_results_size(AllTypesObject, [](auto &o) { return o._id <= 123; }) == 1);
-            CHECK(query_string_results_size(AllTypesObject, "_id <= $0", {123}) == 1);
+            CHECK(query_string_results_size(AllTypesObject, "_id <= $0", {(int64_t) 123}) == 1);
 
             CHECK(query_results_size(AllTypesObject, [](auto &o) { return o.enum_col > AllTypesObject::Enum::two; }) == 0);
-            CHECK(query_string_results_size(AllTypesObject, "enum_col > $0", {static_cast<int>(AllTypesObject::Enum::two)}) == 0);
+            CHECK(query_string_results_size(AllTypesObject, "enum_col > $0", {static_cast<int64_t>(AllTypesObject::Enum::two)}) == 0);
 
             CHECK(query_results_size(AllTypesObject, [](auto &o) { return o.enum_col >= AllTypesObject::Enum::two; }) == 1);
-            CHECK(query_string_results_size(AllTypesObject, "enum_col >= $0", {static_cast<int>(AllTypesObject::Enum::two)}) == 1);
+            CHECK(query_string_results_size(AllTypesObject, "enum_col >= $0", {static_cast<int64_t>(AllTypesObject::Enum::two)}) == 1);
 
             CHECK(query_results_size(AllTypesObject, [](auto &o) { return o.enum_col < AllTypesObject::Enum::two; }) == 0);
-            CHECK(query_string_results_size(AllTypesObject, "enum_col < $0", {static_cast<int>(AllTypesObject::Enum::two)}) == 0);
+            CHECK(query_string_results_size(AllTypesObject, "enum_col < $0", {static_cast<int64_t>(AllTypesObject::Enum::two)}) == 0);
 
             CHECK(query_results_size(AllTypesObject, [](auto &o) { return o.enum_col <= AllTypesObject::Enum::two; }) == 1);
-            CHECK(query_string_results_size(AllTypesObject, "enum_col <= $0", {static_cast<int>(AllTypesObject::Enum::two)}) == 1);
+            CHECK(query_string_results_size(AllTypesObject, "enum_col <= $0", {static_cast<int64_t>(AllTypesObject::Enum::two)}) == 1);
 
             CHECK(query_results_size(AllTypesObject, [&date](auto &o) {
                       return o.date_col > std::chrono::system_clock::from_time_t(date);
@@ -182,31 +182,31 @@ namespace realm::experimental {
                 return o._id == 123 && o.str_col != "John";
             });
             CHECK(results.size() == 0);
-            CHECK(query_string_results_size(AllTypesObject, "_id == $0 && str_col != $1", {123, "John"}) == 0);
+            CHECK(query_string_results_size(AllTypesObject, "_id == $0 && str_col != $1", std::vector<realm::mixed>({(int64_t)123, std::string("John")})) == 0);
 
             results = realm.objects<AllTypesObject>().where([](auto &o) {
                 return o._id == 123 || o.str_col != "John";
             });
             CHECK(results.size() == 1);
-            CHECK(query_string_results_size(AllTypesObject, "_id == $0 || str_col != $1", {123, "John"}) == 1);
+            CHECK(query_string_results_size(AllTypesObject, "_id == $0 || str_col != $1", std::vector<realm::mixed>({(int64_t)123, std::string("John")})) == 1);
 
             results = realm.objects<AllTypesObject>().where([](auto &o) {
                 return o._id == 123 && o.str_col == "John";
             });
             CHECK(results.size() == 1);
-            CHECK(query_string_results_size(AllTypesObject, "_id == $0 && str_col == $1", {123, "John"}) == 1);
+            CHECK(query_string_results_size(AllTypesObject, "_id == $0 && str_col == $1", std::vector<realm::mixed>({(int64_t)123, std::string("John")})) == 1);
 
             results = realm.objects<AllTypesObject>().where([](auto &o) {
                 return o._id == 123 && o.str_col == "John" || o.bool_col == true;
             });
             CHECK(results.size() == 1);
-            CHECK(query_string_results_size(AllTypesObject, "_id == $0 && str_col == $1  || bool_col == $2", {123, "John", true}) == 1);
+            CHECK(query_string_results_size(AllTypesObject, "_id == $0 && str_col == $1  || bool_col == $2", std::vector<realm::mixed>({(int64_t)123, std::string("John"), true})) == 1);
 
             results = realm.objects<AllTypesObject>().where([](auto &o) {
                 return o._id == 123 && o.str_col.contains("Jo") || o.bool_col == true;
             });
             CHECK(results.size() == 1);
-            CHECK(query_string_results_size(AllTypesObject, "_id == $0 && str_col CONTAINS $1  || bool_col == $2", {123, "John", true}) == 1);
+            CHECK(query_string_results_size(AllTypesObject, "_id == $0 && str_col CONTAINS $1  || bool_col == $2", std::vector<realm::mixed>({(int64_t)123, std::string("John"), true})) == 1);
 
             results = realm.objects<AllTypesObject>().where([](auto &o) {
                 return o.str_col.empty();
@@ -273,31 +273,31 @@ namespace realm::experimental {
                 return obj.opt_obj_col->str_col == "foo";
             });
             CHECK(res.size() == 1);
-            CHECK(query_string_results_size(AllTypesObject, "opt_obj_col.str_col == $0", {"foo"}) == 1);
+            CHECK(query_string_results_size(AllTypesObject, "opt_obj_col.str_col == $0", {std::string("foo")}) == 1);
 
             res = realm.objects<AllTypesObject>().where([](auto &obj) {
                 return obj.opt_obj_col->str_col == "bar";
             });
             CHECK(res.size() == 0);
-            CHECK(query_string_results_size(AllTypesObject, "opt_obj_col.str_col == $0", {"bar"}) == 0);
+            CHECK(query_string_results_size(AllTypesObject, "opt_obj_col.str_col == $0", {std::string("bar")}) == 0);
 
             res = realm.objects<AllTypesObject>().where([](auto &obj) {
                 return obj.opt_obj_col->str_col != "bar";
             });
             CHECK(res.size() == 1);
-            CHECK(query_string_results_size(AllTypesObject, "str_col != $0", {"bar"}) == 1);
+            CHECK(query_string_results_size(AllTypesObject, "str_col != $0", {std::string("bar")}) == 1);
 
             res = realm.objects<AllTypesObject>().where([](auto &obj) {
                 return obj.opt_obj_col->str_link_col->str_col == "bar";
             });
             CHECK(res.size() == 1);
-            CHECK(query_string_results_size(AllTypesObject, "opt_obj_col.str_link_col.str_col == $0", {"bar"}) == 1);
+            CHECK(query_string_results_size(AllTypesObject, "opt_obj_col.str_link_col.str_col == $0", {std::string("bar")}) == 1);
 
             res = realm.objects<AllTypesObject>().where([](auto &obj) {
                 return obj.opt_obj_col->str_link_col->str_col != "bar";
             });
             CHECK(res.size() == 0);
-            CHECK(query_string_results_size(AllTypesObject, "opt_obj_col.str_link_col.str_col != $0", {"bar"}) == 0);
+            CHECK(query_string_results_size(AllTypesObject, "opt_obj_col.str_link_col.str_col != $0", {std::string("bar")}) == 0);
         }
     }
 }

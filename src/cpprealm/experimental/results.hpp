@@ -241,8 +241,15 @@ namespace realm::experimental {
         template <auto> friend struct linking_objects;
     };
 
+    template<typename T>
+    using results_is_trivial = std::enable_if_t<!managed<T>::is_object && !std::is_enum_v<T> && !internal::type_info::is_variant_t<T>::value>;
+    template<typename T>
+    using results_is_enum = std::enable_if_t<!managed<T>::is_object && std::is_enum_v<T> && !internal::type_info::is_variant_t<T>::value>;
+    template<typename T>
+    using results_is_mixed = std::enable_if_t<!managed<T>::is_object && !std::is_enum_v<T> && internal::type_info::is_variant_t<T>::value>;
+
     template<typename T, typename Derived>
-    struct results_base<T, Derived, std::enable_if_t<!managed<T>::is_object>> : public results_common_base<T, Derived> {
+    struct results_base<T, Derived, results_is_trivial<T>> : public results_common_base<T, Derived> {
         explicit results_base(internal::bridge::results &&parent)
             : results_common_base<T, Derived>(std::move(parent)) {
         }
@@ -250,14 +257,33 @@ namespace realm::experimental {
         T operator[](size_t index) {
             if (index >= this->m_parent.size())
                 throw std::out_of_range("Index out of range.");
-
-            if constexpr (internal::type_info::is_variant_t<T>::value) {
-                return deserialize<T>(internal::bridge::get<internal::bridge::mixed>(this->m_parent, index));
-            } else if constexpr (std::is_enum_v<T>) {
-                return static_cast<T>(internal::bridge::get<int64_t>(this->m_parent, index));
-            }
-
             return internal::bridge::get<T>(this->m_parent, index);
+        }
+    };
+
+    template<typename T, typename Derived>
+    struct results_base<T, Derived, results_is_mixed<T>> : public results_common_base<T, Derived> {
+        explicit results_base(internal::bridge::results &&parent)
+            : results_common_base<T, Derived>(std::move(parent)) {
+        }
+
+        T operator[](size_t index) {
+            if (index >= this->m_parent.size())
+                throw std::out_of_range("Index out of range.");
+            return deserialize<T>(internal::bridge::get<internal::bridge::mixed>(this->m_parent, index));
+        }
+    };
+
+    template<typename T, typename Derived>
+    struct results_base<T, Derived, results_is_enum<T>> : public results_common_base<T, Derived> {
+        explicit results_base(internal::bridge::results &&parent)
+            : results_common_base<T, Derived>(std::move(parent)) {
+        }
+
+        T operator[](size_t index) {
+            if (index >= this->m_parent.size())
+                throw std::out_of_range("Index out of range.");
+            return static_cast<T>(internal::bridge::get<int64_t>(this->m_parent, index));
         }
     };
 
@@ -272,11 +298,11 @@ namespace realm::experimental {
                 throw std::out_of_range("Index out of range.");
             return managed<T, void>(internal::bridge::get<internal::bridge::obj>(this->m_parent, index), this->m_parent.get_realm());
         }
-
     };
 
     template<typename T>
     struct results : public results_base<T, results<T>> {
+        using value_type = T;
         explicit results(internal::bridge::results &&parent)
             : results_base<T, results<T>>(std::move(parent)) {
         }

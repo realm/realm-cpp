@@ -211,7 +211,7 @@ namespace realm::internal::bridge {
     template <>
     mixed get(results& res, size_t v) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        return mixed(reinterpret_cast<Results*>(&res.m_results)->get<Mixed>(v));
+        return mixed(reinterpret_cast<Results*>(&res.m_results)->get_any(v));
 #else
         return mixed(res.m_results->get<Mixed>(v));
 #endif

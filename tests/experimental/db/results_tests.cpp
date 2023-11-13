@@ -281,11 +281,11 @@ namespace realm::experimental {
             CHECK(queried_results.size() == 1);
             CHECK(queried_results[0]._id == 1);
 
-            auto queried_results_string = results.where("_id == $0", {2});
+            auto queried_results_string = results.where("_id == $0", {(int64_t)2});
             CHECK(queried_results_string.size() == 1);
             CHECK(queried_results_string[0]._id == 2);
 
-            queried_results_string = results.where("_id == $0", {3});
+            queried_results_string = results.where("_id == $0", {(int64_t)3});
             CHECK(queried_results_string.size() == 0);
         }
 

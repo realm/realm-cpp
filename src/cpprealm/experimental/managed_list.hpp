@@ -138,7 +138,7 @@ namespace realm::experimental {
 
         results<T> sort(bool ascending) {
             auto l = internal::bridge::list(*m_realm, *m_obj, m_key);
-            return results<T>(l.sort({{"self", ascending}}));
+            return ::realm::experimental::results<T>(l.sort(std::vector<internal::bridge::sort_descriptor>({{"self", ascending}})));
         }
     };
 
@@ -313,34 +313,34 @@ namespace realm::experimental {
             return token;
         }
 
-        results<T> where(const std::string &query, const std::vector<realm::mixed>& arguments) {
+        ::realm::experimental::results<T> where(const std::string &query, const std::vector<realm::mixed> &arguments) {
             std::vector<internal::bridge::mixed> mixed_args;
             for(auto& a : arguments)
                 mixed_args.push_back(serialize(a));
-            return results<T>(internal::bridge::results(*m_realm, m_obj->get_target_table(m_key).query(query, std::move(mixed_args))));
+            return ::realm::experimental::results<T>(internal::bridge::results(*m_realm, m_obj->get_target_table(m_key).query(query, std::move(mixed_args))));
         }
 
-        results<T> where(std::function<rbool(experimental::managed<T>&)>&& fn) {
+        ::realm::experimental::results<T> where(std::function<rbool(experimental::managed<T> &)> &&fn) {
             auto schema = m_realm->schema().find(experimental::managed<T>::schema.name);
             auto table_ref = m_obj->get_target_table(m_key);
             auto builder = internal::bridge::query(table_ref);
             auto q = realm::experimental::query<experimental::managed<T>>(builder, std::move(schema), *m_realm);
             auto full_query = fn(q).q;
-            return results<T>(internal::bridge::results(*m_realm, full_query));
+            return ::realm::experimental::results<T>(internal::bridge::results(*m_realm, full_query));
         }
 
-        results<T> sort(const std::string& key_path, bool ascending) {
+        ::realm::experimental::results<T> sort(const std::string &key_path, bool ascending) {
             auto schema = m_realm->schema().find(experimental::managed<T>::schema.name);
             auto group = m_realm->read_group();
             auto table_ref = group.get_table(schema.table_key());
-            return results<T>(internal::bridge::results(*m_realm, table_ref)).sort({{key_path, ascending}});
+            return ::realm::experimental::results<T>(internal::bridge::results(*m_realm, table_ref)).sort({{key_path, ascending}});
         }
 
-        results<T> sort(const std::vector<sort_descriptor>& sort_descriptors) {
+        ::realm::experimental::results<T> sort(const std::vector<internal::bridge::sort_descriptor> &sort_descriptors) {
             auto schema = m_realm->schema().find(experimental::managed<T>::schema.name);
             auto group = m_realm->read_group();
             auto table_ref = group.get_table(schema.table_key());
-            return results<T>(internal::bridge::results(*m_realm, table_ref)).sort(sort_descriptors);
+            return ::realm::experimental::results<T>(internal::bridge::results(*m_realm, table_ref)).sort(sort_descriptors);
         }
     };
 } // namespace realm::experimental

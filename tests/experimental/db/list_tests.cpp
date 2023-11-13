@@ -592,8 +592,8 @@ TEST_CASE("list", "[list]") {
             managed_obj.list_date_col.push_back(date2);
             managed_obj.list_date_col.push_back(date3);
 
-            managed_obj.list_mixed_col.push_back(realm::mixed(1));
-            managed_obj.list_mixed_col.push_back(realm::mixed("foo"));
+            managed_obj.list_mixed_col.push_back(realm::mixed((int64_t)1));
+            managed_obj.list_mixed_col.push_back(realm::mixed(std::string("foo")));
             managed_obj.list_mixed_col.push_back(realm::mixed(date1));
 
             managed_obj.list_enum_col.push_back(experimental::AllTypesObject::Enum::one);
@@ -614,11 +614,11 @@ TEST_CASE("list", "[list]") {
         CHECK(object_results[0]._id == 1);
         CHECK(object_results.size() == 1);
 
-        auto object_results2 = managed_obj.list_obj_col.where("_id == $0", {1});
+        auto object_results2 = managed_obj.list_obj_col.where("_id == $0", std::vector<realm::mixed>({realm::mixed((int64_t)1)}));
         CHECK(object_results2[0]._id == 1);
 
         auto sorted_object_results1 = managed_obj.list_obj_col.sort("str_col", true);
-        auto sorted_object_results2 = managed_obj.list_obj_col.sort({{"str_col", false}});
+        auto sorted_object_results2 = managed_obj.list_obj_col.sort(std::vector<realm::experimental::sort_descriptor>({{"str_col", false}}));
         auto sorted_object_results_embedded1 = managed_obj.list_embedded_obj_col.sort("str_col", true);
         auto sorted_object_results_embedded2 = managed_obj.list_embedded_obj_col.sort({{"str_col", false}});
 
@@ -727,14 +727,15 @@ TEST_CASE("list", "[list]") {
         CHECK(sorted_object_results20[2] == date1);
 
         auto sorted_object_results21 = managed_obj.list_mixed_col.sort(true);
-        CHECK(sorted_object_results21[0] == realm::mixed(1));
-        CHECK(sorted_object_results21[1] == realm::mixed("foo"));
+        CHECK(sorted_object_results21[0] == realm::mixed((int64_t)1));
+
+        CHECK(sorted_object_results21[1] == realm::mixed(std::string("foo")));
         CHECK(sorted_object_results21[2] == realm::mixed(date1));
 
         auto sorted_object_results22 = managed_obj.list_mixed_col.sort(false);
         CHECK(sorted_object_results22[0] == realm::mixed(date1));
-        CHECK(sorted_object_results22[1] == realm::mixed("foo"));
-        CHECK(sorted_object_results22[2] == realm::mixed(1));
+        CHECK(sorted_object_results22[1] == realm::mixed(std::string("foo")));
+        CHECK(sorted_object_results22[2] == realm::mixed((int64_t)1));
 
         auto sorted_object_results23 = managed_obj.list_enum_col.sort(true);
         CHECK(sorted_object_results23[0] == experimental::AllTypesObject::Enum::one);

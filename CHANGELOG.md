@@ -22,6 +22,28 @@ X.Y.Z Release notes (YYYY-MM-DD)
 =============================================================
 
 ### Fixed
+* None
+
+### Enhancements
+* Add support for Frozen Realm / Objects. An object can be made frozen by calling the `freeze()` method on the instance. Subsequently, if you can make a frozen Realm / Object live
+  again by calling `thaw()`. It is not recommended to have too many long-lived frozen Realm's / Objects in your application as it may balloon memory consumption.
+* Add ability to sort `experimental::results` / `managed<std::vector<T>>`. 
+
+### Breaking Changes
+* None
+
+### Compatibility
+* Fileformat: Generates files with format v23. Reads and automatically upgrade from fileformat v5.
+
+### Internals
+* None
+
+----------------------------------------------
+
+0.4.0 Release notes (2022-10-17)
+=============================================================
+
+### Fixed
 * Primary keys could be changed after an object was inserted (since 0.1.0)
 * Using a property type of vector of enums would cause a compilation error (since 0.1.0).
 * Fixed a bug preventing SSL handshake from completing successfully due to failed hostname verification when linking against BoringSSL. (PR #7034)

@@ -1,5 +1,5 @@
-#include "test_objects.hpp"
 #include "../../main.hpp"
+#include "test_objects.hpp"
 
 TEST_CASE("binary", "[binary]") {
     realm_path path;

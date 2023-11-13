@@ -3,11 +3,11 @@
 #include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/mixed.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
-#include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/results.hpp>
+#include <cpprealm/internal/bridge/table.hpp>
 
-#include "realm/object-store/shared_realm.hpp"
 #include <realm/object-store/list.hpp>
+#include "realm/object-store/shared_realm.hpp"
 #include <realm/object-store/results.hpp>
 
 namespace realm::internal::bridge {

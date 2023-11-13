@@ -1,5 +1,5 @@
-#include "test_objects.hpp"
 #include "../../main.hpp"
+#include "test_objects.hpp"
 #include <realm/object-store/shared_realm.hpp>
 
 namespace realm::experimental {

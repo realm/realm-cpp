@@ -1,5 +1,5 @@
-#include "test_objects.hpp"
 #include "../../main.hpp"
+#include "test_objects.hpp"
 
 namespace realm::experimental {
     TEST_CASE("frozen_realm") {
