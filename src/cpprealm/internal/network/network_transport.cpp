@@ -26,6 +26,7 @@
 #include <realm/sync/network/network.hpp>
 #include <realm/sync/noinst/client_impl_base.hpp>
 #include <realm/util/base64.hpp>
+#include <realm/util/uri.hpp>
 
 #include <regex>
 
@@ -82,20 +83,9 @@ namespace realm::internal {
         realm::sync::network::ReadAheadBuffer m_read_buffer;
     };
 
-    inline std::string host_from_url(const std::string& url) {
-        std::regex pattern("^(https?://)?([a-zA-Z0-9.-]+|\\[?[0-9a-fA-F:]+\\]?)(:[0-9]+)?(/.*)?$");
-        std::smatch matches;
-        if (std::regex_search(url, matches, pattern)) {
-            if (matches.size() > 2) {
-                return matches[2].str();
-            }
-        }
-        return "";
-    }
-
     void DefaultTransport::send_request_to_server(const app::Request& request,
                                                   util::UniqueFunction<void(const app::Response&)>&& completion_block) {
-        std::string host = host_from_url(request.url);
+        std::string host = realm::util::Uri(request.url).get_auth();
 
         realm::sync::network::Service service;
         using namespace realm::sync::network::ssl;
@@ -106,7 +96,7 @@ namespace realm::internal {
             realm::sync::network::Endpoint ep;
             auto resolver = realm::sync::network::Resolver{service};
             if (m_proxy_config) {
-                std::string proxy_address = host_from_url(m_proxy_config->address);
+                std::string proxy_address = realm::util::Uri(m_proxy_config->address).get_auth();
                 if (proxy_address.empty()) {
                     std::error_code e;
                     auto address = realm::sync::network::make_address(m_proxy_config->address, e);
@@ -146,11 +136,6 @@ namespace realm::internal {
                 encoded_userpass.resize(realm::util::base64_encoded_size(userpass.length()));
                 realm::util::base64_encode(userpass.data(), userpass.size(), encoded_userpass.data(), encoded_userpass.size());
                 req.headers.emplace("Proxy-Authorization", util::format("Basic %1", encoded_userpass));
-            }
-            if (m_custom_http_headers) {
-                for (auto& header : *m_custom_http_headers) {
-                    req.headers.emplace(header);
-                }
             }
             realm::sync::HTTPClient<DefaultSocket> m_proxy_client = realm::sync::HTTPClient<DefaultSocket>(socket, logger);
             auto handler = [&](realm::sync::HTTPResponse response, std::error_code ec) {

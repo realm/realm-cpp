@@ -52,7 +52,6 @@ namespace realm::internal::bridge {
 
             struct proxy_config {
                 using port_type = std::uint_fast16_t;
-                enum class Type { HTTP, HTTPS } type;
                 std::string address;
                 port_type port;
                 // For basic authorization.

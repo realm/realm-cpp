@@ -290,14 +290,7 @@ namespace realm::internal::bridge {
             SyncConfig::ProxyConfig core_config;
             core_config.address = config.address;
             core_config.port = config.port;
-            switch (config.type) {
-                case sync_config::proxy_config::Type::HTTP:
-                    core_config.type = SyncConfig::ProxyConfig::Type::HTTP;
-                    break;
-                case sync_config::proxy_config::Type::HTTPS:
-                    core_config.type = SyncConfig::ProxyConfig::Type::HTTPS;
-                    break;
-            }
+            core_config.type = SyncConfig::ProxyConfig::Type::HTTP;
             get_config()->sync_config->proxy_config = std::move(core_config);
         } else {
             throw std::logic_error("Proxy configuration can only be set on a config for a synced Realm.");

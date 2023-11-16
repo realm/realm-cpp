@@ -35,7 +35,6 @@
 
 namespace realm {
     using proxy_config = sync_config::proxy_config;
-    using proxy_config_type = sync_config::proxy_config::Type;
     using sync_session = internal::bridge::sync_session;
     class SyncUser;
 
