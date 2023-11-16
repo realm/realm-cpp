@@ -242,14 +242,14 @@ namespace realm::experimental {
     };
 
     template<typename T>
-    using results_is_trivial = std::enable_if_t<!managed<T>::is_object && !std::is_enum_v<T> && !internal::type_info::is_variant_t<T>::value>;
+    using results_is_primitive = std::enable_if_t<!managed<T>::is_object && !std::is_enum_v<T> && !internal::type_info::is_variant_t<T>::value>;
     template<typename T>
     using results_is_enum = std::enable_if_t<!managed<T>::is_object && std::is_enum_v<T> && !internal::type_info::is_variant_t<T>::value>;
     template<typename T>
     using results_is_mixed = std::enable_if_t<!managed<T>::is_object && !std::is_enum_v<T> && internal::type_info::is_variant_t<T>::value>;
 
     template<typename T, typename Derived>
-    struct results_base<T, Derived, results_is_trivial<T>> : public results_common_base<T, Derived> {
+    struct results_base<T, Derived, results_is_primitive<T>> : public results_common_base<T, Derived> {
         explicit results_base(internal::bridge::results &&parent)
             : results_common_base<T, Derived>(std::move(parent)) {
         }

@@ -7,8 +7,8 @@
 #include <cpprealm/internal/bridge/table.hpp>
 
 #include <realm/object-store/list.hpp>
-#include "realm/object-store/shared_realm.hpp"
 #include <realm/object-store/results.hpp>
+#include <realm/object-store/shared_realm.hpp>
 
 namespace realm::internal::bridge {
 

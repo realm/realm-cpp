@@ -110,7 +110,6 @@ void test_set(realm::experimental::managed<T>* property, Func f,
 
 TEST_CASE("set collection sync", "[set]") {
     auto app = realm::App(realm::App::configuration({Admin::shared().cached_app_id(), Admin::shared().base_url()}));
-
     SECTION("insert") {
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();

@@ -5,28 +5,9 @@ X.Y.Z Release notes (YYYY-MM-DD)
 * None
 
 ### Enhancements
-* None
-
-### Breaking Changes
-* None
-
-### Compatibility
-* Fileformat: Generates files with format v23. Reads and automatically upgrade from fileformat v5.
-
-### Internals
-* Upgraded to Core v13.23.4
-
-----------------------------------------------
-
-0.4.0 Release notes (2022-10-17)
-=============================================================
-
-### Fixed
-* None
-
-### Enhancements
-* Add support for Frozen Realm / Objects. An object can be made frozen by calling the `freeze()` method on the instance. Subsequently, if you can make a frozen Realm / Object live
-  again by calling `thaw()`. It is not recommended to have too many long-lived frozen Realm's / Objects in your application as it may balloon memory consumption.
+* Add support for Frozen Realm / Objects. An object can be made frozen by calling the `freeze()` method on the instance. 
+  Subsequently, if you  can make a frozen Realm / Object live again by calling `thaw()`. 
+  It is not recommended to have too many long-lived frozen Realm's / Objects in your application as it may balloon memory consumption.
 * Add ability to sort `experimental::results` / `managed<std::vector<T>>`. 
 
 ### Breaking Changes
@@ -36,7 +17,7 @@ X.Y.Z Release notes (YYYY-MM-DD)
 * Fileformat: Generates files with format v23. Reads and automatically upgrade from fileformat v5.
 
 ### Internals
-* None
+* Upgraded to Core v13.23.4
 
 ----------------------------------------------
 

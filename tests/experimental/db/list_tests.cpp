@@ -47,6 +47,7 @@ TEST_CASE("list", "[list]") {
         CHECK(obj.list_int_col[0] == 42);
 
         realm::experimental::AllTypesObjectLink o1;
+        o1._id = 0;
         o1.str_col = "Fido";
         obj.list_obj_col.push_back(&o1);
         CHECK(obj.list_obj_col[0]->str_col == "Fido");
