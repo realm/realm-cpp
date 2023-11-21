@@ -492,24 +492,79 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
     }));
     std::string mongodb_service_id(mongodb_service_response["_id"]);
 
-    bson::BsonDocument service_config = {
-        {"flexible_sync", bson::BsonDocument {
-            {"type", "flexible"},
-            {"state", "enabled"},
-            {"database_name", "test_data"},
-            {"queryable_fields_names", queryable_fields},
-            {"asymmetric_tables", bson::BsonArray({"AllTypesAsymmetricObject"})},
-            {"permissions", bson::BsonDocument{
-                {"rules",        bson::BsonDocument()},
-                {"defaultRoles", bson::BsonArray{bson::BsonDocument{
-                    {"name",      "all"},
-                    {"applyWhen", bson::BsonDocument()},
-                    {"read",      true},
-                    {"write",     true}
-                }}}
-            }}
-        }}
+    app["custom_user_data"].patch(bson::BsonDocument {
+        {"mongo_service_id", mongodb_service_id},
+        {"enabled", true},
+        {"database_name", "test_data"},
+        {"collection_name", "UserData"},
+        {"user_id_field", "user_id"},
+    });
+
+    bson::BsonDocument user_data_rule = {
+            {"database", "test_data"},
+            {"collection", "UserData"},
+            {"roles", bson::BsonArray {
+                              bson::BsonDocument {{"name", "default"},
+                                                 {"apply_when", {}},
+                                                 {"insert", true},
+                                                 {"delete", true},
+                                                 {"additional_fields", {}},
+                                                 {"document_filters", bson::BsonDocument({{"read", true}, {"write", true}})},
+                                                 {"read", true},
+                                                 {"write", true},
+                                                 {"insert", true},
+                                                 {"delete", true}
+                              }
+                      }
+            }
     };
+
+    bson::BsonDocument asymmetric_object_rule = {
+            {"database", app_name},
+            {"collection", "AllTypesAsymmetricObject"},
+            {"roles", bson::BsonArray {
+                              bson::BsonDocument{{"name", "default"},
+                                                 {"apply_when", {}},
+                                                 {"insert", true},
+                                                 {"delete", true},
+                                                 {"additional_fields", {}},
+                                                 {"document_filters", bson::BsonDocument({{"read", true}, {"write", true}})},
+                                                 {"read", true},
+                                                 {"write", true},
+                                                 {"insert", true},
+                                                 {"delete", true}}
+                      }
+            }
+    };
+
+    static_cast<void>(app["services"][static_cast<std::string>(mongodb_service_id)]["rules"].post(user_data_rule));
+    static_cast<void>(app["services"][static_cast<std::string>(mongodb_service_id)]["rules"].post(asymmetric_object_rule));
+
+    bson::BsonDocument service_config = {
+            {"flexible_sync", bson::BsonDocument {
+                                      {"type", "flexible"},
+                                      {"state", "enabled"},
+                                      {"database_name", "test_data"},
+                                      {"enabled", true},
+                                      {"is_recovery_mode_disabled", true},
+                                      {"queryable_fields_names", queryable_fields},
+                                      {"asymmetric_tables", bson::BsonArray({"AllTypesAsymmetricObject"})}
+
+                              }}
+    };
+
+    bson::BsonDocument default_rule = {{"roles", bson::BsonArray ({bson::BsonDocument({
+                                                 {"name", "all"},
+                                                 {"apply_when", {}},
+                                                 {"document_filters", bson::BsonDocument({{"read", true},  {"write", true} })  },
+                                                 {"write", true},
+                                                 {"read", true},
+                                                 {"insert", true},
+                                                 {"delete", true}
+                                         })
+                                    })}};
+
+    static_cast<void>(app["services"][mongodb_service_id]["default_rule"].post(default_rule));
 
     // The cluster linking must be separated from enabling sync because Atlas
     // takes a few seconds to provision a user for BaaS, meaning enabling sync
@@ -530,56 +585,6 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
         }
     }
 
-    auto config = app["sync"]["config"];
-    config.put({{"is_recovery_mode_disabled", true}});
-
-    bson::BsonDocument user_data_rule = {
-        {"database", "test_data"},
-        {"collection", "UserData"},
-        {"roles", bson::BsonArray {
-                      bson::BsonDocument {{"name", "default"},
-                                         {"apply_when", {}},
-                                         {"insert", true},
-                                         {"delete", true},
-                                         {"additional_fields", {}},
-                                         {"document_filters", bson::BsonDocument({{"read", true}, {"write", true}})},
-                                         {"read", true},
-                                         {"write", true},
-                                         {"insert", true},
-                                         {"delete", true}
-                              }
-                  }
-        }
-    };
-
-    bson::BsonDocument asymmetric_object_rule = {
-            {"database", app_name},
-            {"collection", "AllTypesAsymmetricObject"},
-            {"roles", bson::BsonArray {
-                    bson::BsonDocument{{"name", "default"},
-                                                 {"apply_when", {}},
-                                                 {"insert", true},
-                                                 {"delete", true},
-                                                 {"additional_fields", {}},
-                                                 {"document_filters", bson::BsonDocument({{"read", true}, {"write", true}})},
-                                                 {"read", true},
-                                                 {"write", true},
-                                                 {"insert", true},
-                                                 {"delete", true}}
-            }
-            }
-    };
-
-    static_cast<void>(app["services"][static_cast<std::string>(mongodb_service_id)]["rules"].post(user_data_rule));
-    static_cast<void>(app["services"][static_cast<std::string>(mongodb_service_id)]["rules"].post(asymmetric_object_rule));
-
-    app["custom_user_data"].patch(bson::BsonDocument {
-        {"mongo_service_id", mongodb_service_id},
-        {"enabled", true},
-        {"database_name", "test_data"},
-        {"collection_name", "UserData"},
-        {"user_id_field", "user_id"},
-    });
     app["sync"]["config"].put({{"development_mode_enabled", true}});
 
     return *static_cast<std::optional<std::string>>(info["client_app_id"]);

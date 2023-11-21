@@ -15,8 +15,7 @@ TEST_CASE("flexible_sync_beta", "[sync]") {
 
         auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
                                                               subs.clear();
-                                                          })
-                                      .get();
+                                                          }).get();
         CHECK(update_success == true);
         CHECK(synced_realm.subscriptions().size() == 0);
 
