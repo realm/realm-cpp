@@ -169,9 +169,7 @@ TEST_CASE("set collection sync", "[set]") {
 
         auto realm2 = realm::experimental::db(user2.flexible_sync_configuration());
         auto update_success2 = realm2.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                                  subs.add<experimental::AllTypesObject>("foo-strings", [](auto &obj) {
-                                                      return obj.str_col == "foo";
-                                                  });
+                                                  subs.add<experimental::AllTypesObject>("foo-strings");
                                                   subs.add<experimental::AllTypesObjectLink>("foo-link");
                                               }).get();
         CHECK(update_success2 == true);
