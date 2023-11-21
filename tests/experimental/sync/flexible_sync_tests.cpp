@@ -15,8 +15,7 @@ TEST_CASE("flexible_sync_beta", "[sync]") {
 
         auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
                                                               subs.clear();
-                                                          })
-                                      .get();
+                                                          }).get();
         CHECK(update_success == true);
         CHECK(synced_realm.subscriptions().size() == 0);
 
@@ -123,15 +122,16 @@ TEST_CASE("set collection sync", "[set]") {
         CHECK(realm.subscriptions().size() == 0);
 
         update_success = realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                                         subs.add<experimental::AllTypesObject>("foo-strings", [](auto &obj) {
-                                                             return obj.str_col == "foo";
-                                                         });
+                                                         subs.add<experimental::AllTypesObject>("foo-strings", [](auto& obj) {
+                                                              return obj._id == 123;
+                                                          });
                                                          subs.add<experimental::AllTypesObjectLink>("foo-link");
                                                      }).get();
         CHECK(update_success == true);
         CHECK(realm.subscriptions().size() == 2);
 
         auto obj = realm::experimental::AllTypesObject();
+        obj._id = 123;
 
         auto managed_obj = realm.write([&]() {
             return realm.add(std::move(obj));
@@ -139,6 +139,7 @@ TEST_CASE("set collection sync", "[set]") {
 
         auto scenario = [&](auto &p, auto &values, size_t expected_count) {
             realm.write([&]() {
+                p->clear();
                 for (auto v: values) {
                     p->insert(v);
                 }
@@ -152,14 +153,14 @@ TEST_CASE("set collection sync", "[set]") {
         test_set(&managed_obj.set_str_col, scenario, {"42", "42", "24", "-1"});
         test_set(&managed_obj.set_uuid_col, scenario, {realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120000"), realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120000"), realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120001"), realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002")});
         auto obj_id = realm::object_id::generate();
-        test_set(&managed_obj.set_object_id_col, scenario, {obj_id, obj_id, realm::object_id::generate(), realm::object_id::generate()});
+        test_set(&managed_obj.set_object_id_col, scenario, {obj_id, obj_id, realm::object_id::generate(), realm::object_id::generate()}); // here
 
         auto bin_data = std::vector<uint8_t>({1, 2, 3, 4});
         test_set(&managed_obj.set_binary_col, scenario, {bin_data, bin_data, std::vector<uint8_t>({1, 3, 4}), std::vector<uint8_t>({1})});
 
         auto time = std::chrono::system_clock::now();
         auto time2 = time + time.time_since_epoch();
-        test_set(&managed_obj.set_date_col, scenario, {time, time, time2, std::chrono::time_point<std::chrono::system_clock>()});
+        test_set(&managed_obj.set_date_col, scenario, {time, time, time2, std::chrono::time_point<std::chrono::system_clock>()}); // here
         test_set(&managed_obj.set_mixed_col, scenario, {realm::mixed((int64_t)42), realm::mixed((int64_t)42), realm::mixed("24"), realm::mixed(realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"))});
 
         test::wait_for_sync_uploads(user).get();
@@ -170,8 +171,8 @@ TEST_CASE("set collection sync", "[set]") {
 
         auto realm2 = realm::experimental::db(user2.flexible_sync_configuration());
         auto update_success2 = realm2.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                                  subs.add<experimental::AllTypesObject>("foo-strings", [](auto &obj) {
-                                                      return obj.str_col == "foo";
+                                                  subs.add<experimental::AllTypesObject>("foo-strings", [](auto& obj) {
+                                                      return obj._id == 123;
                                                   });
                                                   subs.add<experimental::AllTypesObjectLink>("foo-link");
                                               }).get();
