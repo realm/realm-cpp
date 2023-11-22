@@ -3,8 +3,13 @@ project(coffee LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 
+if(NOT DEFINED INSTALL_EXAMPLESDIR)
+    set(INSTALL_EXAMPLESDIR "examples")
+endif()
+
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}")
+
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
-add_subdirectory(../../../../realm-cpp realm-cpp)
 
 qt_add_executable(coffee
     main.cpp
@@ -15,18 +20,7 @@ set_target_properties(coffee PROPERTIES
     MACOSX_BUNDLE TRUE
 )
 
-qt_add_qml_module(Barista
-    URI Barista
-    VERSION 1.0
-    SOURCES coffee_manager.hpp realm_models.hpp coffee_manager.cpp imports/Coffee/Constants.qml
-    NO_PLUGIN
-    OUTPUT_TARGETS BARISTA_DEPS
-)
-
-target_link_libraries(Barista PUBLIC cpprealm)
-
 target_link_libraries(coffee PUBLIC
-    Barista
     Qt::Core
     Qt::Gui
     Qt::Qml
@@ -45,6 +39,7 @@ set(qml_resource_files
     "EmptyCupForm.ui.qml"
     "NavigationButton.ui.qml"
     "SideBar.qml"
+    "SideBarForm.ui.qml"
     "images/cup structure/coffee_cup_large.png"
     "images/cup structure/coffee_cup_outline.png"
     "images/cup structure/cup elements/coffee_cup_back.png"
@@ -76,4 +71,10 @@ qt6_add_resources(coffee "qml"
         "/"
     FILES
         ${qml_resource_files}
+)
+
+install(TARGETS coffee
+    RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
+    BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
+    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )

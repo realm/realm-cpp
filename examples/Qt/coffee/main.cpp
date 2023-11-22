@@ -3,7 +3,6 @@
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include "coffee_manager.hpp"
 
 int main(int argc, char *argv[])
 {
