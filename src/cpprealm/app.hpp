@@ -27,9 +27,6 @@
 #include <cpprealm/internal/bridge/sync_session.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 
-#include <realm/object-store/sync/app_credentials.hpp>
-#include <realm/object-store/util/bson/bson.hpp>
-
 #include <future>
 #include <utility>
 
@@ -44,6 +41,14 @@ namespace realm {
     }// namespace app
     namespace internal::bridge {
         struct sync_error;
+    }
+
+    namespace bson {
+        template <typename>
+        class IndexedMap;
+        class Bson;
+        using BsonDocument = IndexedMap<Bson>;
+        using BsonArray = std::vector<Bson>;
     }
 
 // MARK: User
@@ -203,6 +208,14 @@ struct user {
 
 bool operator==(const user& lhs, const user& rhs);
 bool operator!=(const user& lhs, const user& rhs);
+
+namespace util {
+    template <class T>
+    class TaggedString;
+}
+namespace app {
+    struct AppCredentials;
+}
 
 class App {
 public:

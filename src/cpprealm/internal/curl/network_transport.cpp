@@ -18,6 +18,9 @@
 
 #include <cpprealm/app.hpp>
 #include <cpprealm/internal/generic_network_transport.hpp>
+
+#include <realm/object-store/sync/generic_network_transport.hpp>
+
 #include <curl/curl.h>
 
 namespace realm::internal {
@@ -163,8 +166,14 @@ namespace realm::internal {
         }
     } // namespace
 
+    DefaultTransport::DefaultTransport(const std::optional<std::map<std::string, std::string>>& custom_http_headers,
+                                       const std::optional<bridge::realm::sync_config::proxy_config>& proxy_config) {
+        m_custom_http_headers = custom_http_headers;
+        m_proxy_config = proxy_config;
+    }
+
     void DefaultTransport::send_request_to_server(const app::Request& request,
-                                                  util::UniqueFunction<void(const app::Response&)>&& completion_block)
+                                                  std::function<void(const app::Response&)>&& completion_block)
     {
         if (m_custom_http_headers) {
             auto req_copy = request;

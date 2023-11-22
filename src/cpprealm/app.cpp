@@ -8,6 +8,7 @@
 #include <realm/object-store/sync/app.hpp>
 #include <realm/object-store/sync/sync_manager.hpp>
 #include <realm/object-store/sync/sync_user.hpp>
+#include <realm/object-store/util/bson/bson.hpp>
 
 #include <utility>
 
@@ -15,6 +16,26 @@ namespace realm {
     static_assert((int)user::state::logged_in == (int)SyncUser::State::LoggedIn);
     static_assert((int)user::state::logged_out == (int)SyncUser::State::LoggedOut);
     static_assert((int)user::state::removed == (int)SyncUser::State::Removed);
+
+    namespace internal {
+        struct CoreTransport : app::GenericNetworkTransport {
+            ~CoreTransport() = default;
+            CoreTransport(const std::optional<std::map<std::string, std::string>>& custom_http_headers = std::nullopt,
+                          const std::optional<bridge::realm::sync_config::proxy_config>& proxy_config = std::nullopt) {
+                m_transport = DefaultTransport(custom_http_headers, proxy_config);
+            }
+
+            void send_request_to_server(const app::Request& request,
+                                        util::UniqueFunction<void(const app::Response&)>&& completion) {
+                m_transport.send_request_to_server(request, [completion = completion.release()](const app::Response& response) {
+                    completion->call(response);
+                });
+            }
+
+        private:
+            DefaultTransport m_transport;
+        };
+    }
 
     app_error::app_error(const app_error& other) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
@@ -431,8 +452,7 @@ namespace realm {
 
         auto app_config = app::App::Config();
         app_config.app_id = config.app_id;
-        app_config.transport = std::make_shared<internal::DefaultTransport>(config.custom_http_headers,
-                                                                            config.proxy_configuration);
+        app_config.transport = std::make_shared<internal::CoreTransport>(config.custom_http_headers, config.proxy_configuration);
         app_config.base_url = config.base_url;
         auto device_info = app::App::Config::DeviceInfo();
 
