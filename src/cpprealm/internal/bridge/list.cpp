@@ -3,9 +3,12 @@
 #include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/mixed.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
+#include <cpprealm/internal/bridge/results.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
 
 #include <realm/object-store/list.hpp>
+#include <realm/object-store/results.hpp>
+#include <realm/object-store/shared_realm.hpp>
 
 namespace realm::internal::bridge {
 
@@ -115,6 +118,16 @@ namespace realm::internal::bridge {
 
     list::operator List() const {
         return *get_list();
+    }
+
+    results list::sort(const std::vector<sort_descriptor>& descriptors) {
+        std::vector<std::pair<std::string, bool>> results_descriptors;
+        results_descriptors.resize(descriptors.size());
+        std::transform(descriptors.begin(), descriptors.end(), results_descriptors.begin(),
+                       [](const sort_descriptor& sd) -> std::pair<std::string, bool>{
+                           return sd.operator std::pair<std::string, bool>();
+                       });
+        return get_list()->sort(results_descriptors);
     }
 
     table list::get_table() const {

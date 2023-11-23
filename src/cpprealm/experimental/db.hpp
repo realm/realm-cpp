@@ -173,13 +173,22 @@ namespace realm::experimental {
             return m;
         }
 
+        bool is_frozen() const;
+        db freeze();
+        db thaw();
+        void invalidate();
     private:
         friend struct ::realm::thread_safe_reference<experimental::db>;
         db(internal::bridge::realm&& r)
         {
             m_realm = std::move(r);
         }
+
+        std::unordered_map<std::string, internal::bridge::table> m_object_tables;
     };
+
+    bool operator==(const db&, const db&);
+    bool operator!=(const db&, const db&);
 
     template <typename ...Ts>
     inline db open(const db_config& config) {

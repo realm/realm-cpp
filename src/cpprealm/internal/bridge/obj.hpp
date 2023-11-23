@@ -120,7 +120,7 @@ namespace realm::internal::bridge {
         [[nodiscard]] table get_target_table(col_key) const noexcept;
         [[nodiscard]] bool is_null(const col_key& col_key) const;
         [[nodiscard]] bool is_valid() const;
-        obj get_linked_object(const col_key& col_key);
+        [[nodiscard]] obj get_linked_object(const col_key& col_key);
         template <typename T>
         T get(const col_key& col_key) const {
             if constexpr (is_optional<T>::value) {

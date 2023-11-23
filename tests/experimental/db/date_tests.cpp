@@ -1,5 +1,5 @@
-#include "test_objects.hpp"
 #include "../../main.hpp"
+#include "test_objects.hpp"
 
 TEST_CASE("date", "[date]") {
     realm_path path;

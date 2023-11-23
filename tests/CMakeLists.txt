@@ -35,7 +35,8 @@ if(MSVC)
             experimental/db/realm_tests.cpp
             experimental/db/results_tests.cpp
             experimental/db/run_loop_tests.cpp
-            experimental/db/string_tests.cpp)
+            experimental/db/string_tests.cpp
+            experimental/db/frozen_tests.cpp)
     target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
 
     set_property(TARGET cpprealm_sync_tests PROPERTY
@@ -80,7 +81,9 @@ else()
             experimental/db/string_tests.cpp
             experimental/db/performance_tests.cpp
             experimental/db/numeric_tests.cpp
-            experimental/db/set_tests.cpp)
+            experimental/db/set_tests.cpp
+            experimental/db/frozen_tests.cpp)
+
     target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
 
     if(ENABLE_ALPHA_SDK)

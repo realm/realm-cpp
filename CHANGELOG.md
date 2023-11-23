@@ -5,7 +5,10 @@ X.Y.Z Release notes (YYYY-MM-DD)
 * None
 
 ### Enhancements
-* None
+* Add support for Frozen Realm / Objects. An object can be made frozen by calling the `freeze()` method on the instance. 
+  Subsequently, if you  can make a frozen Realm / Object live again by calling `thaw()`. 
+  It is not recommended to have too many long-lived frozen Realm's / Objects in your application as it may balloon memory consumption.
+* Add ability to sort `experimental::results` / `managed<std::vector<T>>`. 
 
 ### Breaking Changes
 * None
