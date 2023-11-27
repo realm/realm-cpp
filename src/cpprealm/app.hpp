@@ -34,6 +34,7 @@
 #include <utility>
 
 namespace realm {
+    using proxy_config = sync_config::proxy_config;
     using sync_session = internal::bridge::sync_session;
     class SyncUser;
 
@@ -211,6 +212,7 @@ public:
         std::optional<std::string> path;
         std::optional<std::map<std::string, std::string>> custom_http_headers;
         std::optional<std::array<char, 64>> metadata_encryption_key;
+        std::optional<sync_config::proxy_config> proxy_configuration;
     };
 
     [[deprecated("Use App(const configuration&) instead.")]]

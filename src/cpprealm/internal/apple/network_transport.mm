@@ -21,8 +21,11 @@
 
 #include <Foundation/NSData.h>
 #include <Foundation/NSURL.h>
+#include <Foundation/NSURLCache.h>
 #include <Foundation/NSURLResponse.h>
 #include <Foundation/NSURLSession.h>
+
+#include <realm/util/base64.hpp>
 
 namespace realm::internal {
 void DefaultTransport::send_request_to_server(const app::Request& request,
@@ -63,7 +66,34 @@ void DefaultTransport::send_request_to_server(const app::Request& request,
             [urlRequest setHTTPBody:[[NSString stringWithCString:request.body.c_str() encoding:NSUTF8StringEncoding]
                     dataUsingEncoding:NSUTF8StringEncoding]];
         }
-        NSURLSession *session = [NSURLSession sharedSession];
+
+        NSURLSession *session;
+        if (m_proxy_config) {
+            NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration defaultSessionConfiguration];
+            NSString *proxyHost = @(m_proxy_config->address.c_str());
+            NSInteger proxyPort = m_proxy_config->port;
+            sessionConfiguration.connectionProxyDictionary = @{
+                @"HTTPSEnable": @YES,
+                @"HTTPSProxy": @(proxyPort),
+                @"HTTPSPort": proxyHost,
+            };
+            sessionConfiguration.requestCachePolicy = NSURLRequestCachePolicy::NSURLRequestReloadIgnoringLocalCacheData;
+            urlRequest.cachePolicy = NSURLRequestCachePolicy::NSURLRequestReloadIgnoringLocalCacheData;
+            [[NSURLCache sharedURLCache] removeAllCachedResponses];
+
+            session = [NSURLSession sessionWithConfiguration:sessionConfiguration];
+            if (m_proxy_config->username_password) {
+                auto userpass = util::format("%1:%2", m_proxy_config->username_password->first, m_proxy_config->username_password->second);
+                std::string encoded_userpass;
+                encoded_userpass.resize(realm::util::base64_encoded_size(userpass.length()));
+                realm::util::base64_encode(userpass.data(), userpass.size(), encoded_userpass.data(), encoded_userpass.size());
+                [urlRequest addValue:@(util::format("Basic %1", encoded_userpass).c_str()) forHTTPHeaderField:@"'Proxy-Authorization'"];
+            }
+
+        } else {
+            session = [NSURLSession sharedSession];
+        }
+
         NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:urlRequest
                                                     completionHandler:[request = std::move(request),
                                                                        completion_ptr = completion_block.release()](NSData *data, NSURLResponse *response, NSError *error) {

@@ -285,6 +285,18 @@ namespace realm::internal::bridge {
         }
     }
 
+    void realm::config::set_proxy_config(const sync_config::proxy_config& config) {
+        if (get_config()->sync_config) {
+            SyncConfig::ProxyConfig core_config;
+            core_config.address = config.address;
+            core_config.port = config.port;
+            core_config.type = SyncConfig::ProxyConfig::Type::HTTP;
+            get_config()->sync_config->proxy_config = std::move(core_config);
+        } else {
+            throw std::logic_error("Proxy configuration can only be set on a config for a synced Realm.");
+        }
+    }
+
     void realm::config::set_schema_version(uint64_t version) {
         get_config()->schema_version = version;
     }

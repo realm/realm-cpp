@@ -86,7 +86,8 @@ namespace realm::internal {
             return nitems * size;
         }
 
-        static app::Response do_http_request(const app::Request& request)
+        static app::Response do_http_request(const app::Request& request,
+                                             const std::optional<bridge::realm::sync_config::proxy_config>& proxy_config = std::nullopt)
         {
             CurlGlobalGuard curl_global_guard;
             auto curl = curl_easy_init();
@@ -103,6 +104,13 @@ namespace realm::internal {
      just as well be a https:// URL if that is what should receive the
      data. */
             curl_easy_setopt(curl, CURLOPT_URL, request.url.c_str());
+
+            if (proxy_config) {
+                curl_easy_setopt(curl, CURLOPT_PROXY, util::format("%1:%2", proxy_config->address, proxy_config->port).c_str());
+                curl_easy_setopt(curl, CURLOPT_HTTPPROXYTUNNEL, 1L);
+                if (proxy_config->username_password) {}
+                    curl_easy_setopt(curl, CURLOPT_PROXYUSERPWD, util::format("%1:%2", proxy_config->username_password->first, proxy_config->username_password->second).c_str());
+            }
 
             /* Now specify the POST data */
             if (request.method == app::HttpMethod::post) {
@@ -161,10 +169,10 @@ namespace realm::internal {
         if (m_custom_http_headers) {
             auto req_copy = request;
             req_copy.headers.insert(m_custom_http_headers->begin(), m_custom_http_headers->end());
-            completion_block(do_http_request(req_copy));
+            completion_block(do_http_request(req_copy, m_proxy_config));
             return;
         }
-        completion_block(do_http_request(request));
+        completion_block(do_http_request(request, m_proxy_config));
     }
 
 

@@ -431,7 +431,8 @@ namespace realm {
 
         auto app_config = app::App::Config();
         app_config.app_id = config.app_id;
-        app_config.transport = std::make_shared<internal::DefaultTransport>(config.custom_http_headers);
+        app_config.transport = std::make_shared<internal::DefaultTransport>(config.custom_http_headers,
+                                                                            config.proxy_configuration);
         app_config.base_url = config.base_url;
         auto device_info = app::App::Config::DeviceInfo();
 

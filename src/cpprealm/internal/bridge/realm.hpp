@@ -48,7 +48,29 @@ namespace realm::internal::bridge {
             RecoverOrDiscard,
         };
 
-        struct sync_config;
+        struct sync_config {
+
+            struct proxy_config {
+                using port_type = std::uint_fast16_t;
+                std::string address;
+                port_type port;
+                // For basic authorization.
+                std::optional<std::pair<std::string, std::string>> username_password;
+            };
+
+            struct flx_sync_enabled {};
+            sync_config() {}
+            sync_config(const std::shared_ptr<SyncUser> &user);
+            sync_config(const std::shared_ptr<SyncConfig> &);//NOLINT(google-explicit-constructor)
+            operator std::shared_ptr<SyncConfig>() const;    //NOLINT(google-explicit-constructor)
+            void set_client_resync_mode(client_resync_mode &&);
+            void set_stop_policy(sync_session_stop_policy &&);
+            void set_error_handler(std::function<void(const sync_session &, const sync_error &)> &&fn);
+
+        private:
+            std::shared_ptr<SyncConfig> m_config;
+        };
+
         struct config {
             // How to handle update_schema() being called on a file which has
             // already been initialized with a different schema
@@ -151,6 +173,7 @@ namespace realm::internal::bridge {
             void set_scheduler(const std::shared_ptr<struct scheduler>&);
             void set_sync_config(const std::optional<struct sync_config>&);
             void set_custom_http_headers(const std::map<std::string, std::string>& headers);
+            void set_proxy_config(const sync_config::proxy_config&);
             void set_schema_version(uint64_t version);
             void set_encryption_key(const std::array<char, 64>&);
             std::optional<schema> get_schema();
@@ -162,20 +185,6 @@ namespace realm::internal::bridge {
 #else
             std::shared_ptr<RealmConfig> m_config;
 #endif
-        };
-
-        struct sync_config {
-            struct flx_sync_enabled {};
-            sync_config() {}
-            sync_config(const std::shared_ptr<SyncUser> &user);
-            sync_config(const std::shared_ptr<SyncConfig> &);//NOLINT(google-explicit-constructor)
-            operator std::shared_ptr<SyncConfig>() const;    //NOLINT(google-explicit-constructor)
-            void set_client_resync_mode(client_resync_mode &&);
-            void set_stop_policy(sync_session_stop_policy &&);
-            void set_error_handler(std::function<void(const sync_session &, const sync_error &)> &&fn);
-
-        private:
-            std::shared_ptr<SyncConfig> m_config;
         };
 
         realm();
