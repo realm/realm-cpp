@@ -3,7 +3,7 @@
 
 import PackageDescription
 
-let coreVersion = Version("13.23.1")
+let coreVersion = Version("13.23.4")
 
 var cxxSettings: [CXXSetting] = [
     .headerSearchPath("."),
@@ -17,9 +17,9 @@ var cxxSettings: [CXXSetting] = [
     .define("REALM_ENABLE_ENCRYPTION", to: "1"),
 
     .define("REALMCXX_VERSION_MAJOR", to: "0"),
-    .define("REALMCXX_VERSION_MINOR", to: "4"),
+    .define("REALMCXX_VERSION_MINOR", to: "5"),
     .define("REALMCXX_VERSION_PATCH", to: "0"),
-    .define("REALMCXX_VERSION_STRING", to: "\"0.4.0\""),
+    .define("REALMCXX_VERSION_STRING", to: "\"0.5.0\""),
     // Realm Core
     .define("REALM_VERSION_MAJOR", to: String(coreVersion.major)),
     .define("REALM_VERSION_MINOR", to: String(coreVersion.minor)),
