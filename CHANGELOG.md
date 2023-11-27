@@ -1,8 +1,5 @@
-X.Y.Z Release notes (YYYY-MM-DD)
+0.5.0 Release notes (2023-11-27)
 =============================================================
-
-### Fixed
-* None
 
 ### Enhancements
 * Add support for Frozen Realm / Objects. An object can be made frozen by calling the `freeze()` method on the instance. 
@@ -26,9 +23,6 @@ X.Y.Z Release notes (YYYY-MM-DD)
     sync_config.set_proxy_config(proxy_config);
     auto synced_realm = experimental::db(sync_config);
 ```
-
-### Breaking Changes
-* None
 
 ### Compatibility
 * Fileformat: Generates files with format v23. Reads and automatically upgrade from fileformat v5.
