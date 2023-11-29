@@ -11,8 +11,6 @@ namespace realm::experimental {
         int64_t age;
         std::string name;
         std::string country;
-        std::string car_name;
-        realm::mixed car_name2;
     };
     REALM_SCHEMA(Person, _id, age, name, country)
 }
@@ -28,7 +26,9 @@ int main() {
     auto synced_realm = realm::experimental::db(std::move(config));
 
     auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                                          subs.add<realm::experimental::Person>("foo-strings");
+                                                          subs.add<realm::experimental::Person>("foo-strings", [](auto &obj) {
+                                                              return obj.country == "USA";
+                                                          });
                                                       }).get();
 
     synced_realm.write([&synced_realm]() {
@@ -36,7 +36,6 @@ int main() {
         o._id = realm::object_id::generate();
         o.name = "foo";
         o.country = "USA";
-        o.age = 123;
         synced_realm.add(std::move(o));
     });
 

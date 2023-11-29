@@ -6,7 +6,10 @@
 xcuserdata/
 DerivedData/
 Package.resolved
+**/.idea
+**/.vscode
 # Qt demo apps
-examples/*.pro.user
+examples/*/*.pro.user
+examples/*/CMakeLists.txt.user
 docs/html
 docs/latex
