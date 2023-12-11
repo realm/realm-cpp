@@ -1,3 +1,18 @@
+X.Y.Z Release notes (YYYY-MM-DD)
+=============================================================
+
+### Enhancements
+* Add ability to thaw a frozen managed object via `managed<T>::thaw()`.
+* Add ability to get the Realm associated with a managed object via `managed<T>::get_realm()`.
+
+### Compatibility
+* Fileformat: Generates files with format v23. Reads and automatically upgrade from fileformat v5.
+
+### Internals
+* None
+
+----------------------------------------------
+
 0.5.0 Release notes (2023-11-27)
 =============================================================
 

@@ -312,9 +312,6 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
            FOR_EACH(DECLARE_COND_UNMANAGED_TO_MANAGED, cls, __VA_ARGS__);  \
         } \
         static constexpr auto managed_pointers_names = std::array<std::string_view, std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value>{FOR_EACH(DECLARE_MANAGED_PROPERTY_NAME, cls, __VA_ARGS__)}; \
-        internal::bridge::obj m_obj;\
-        internal::bridge::realm m_realm;                                                           \
-        bool m_prepare_for_query = false;                                                          \
         static constexpr bool is_object = true;                            \
         explicit managed(const internal::bridge::obj& obj,                 \
                          internal::bridge::realm realm)                  \
@@ -454,7 +451,20 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         managed<cls> freeze() {                                                                    \
             auto realm = m_realm.freeze();                                                         \
             return managed<cls>(realm.import_copy_of(m_obj), realm);                               \
-        }                                                                                         \
+        }                                                                                          \
+        managed<cls> thaw() {                                                                      \
+            if (is_invalidated()) {                                                                \
+                throw std::runtime_error("Invalid objects cannot be thawed.");                     \
+            }                                                                                      \
+            if (!is_frozen()) {                                                                    \
+                return *this;                                                                      \
+            }                                                                                      \
+            auto thawed_realm = m_realm.thaw();                                                    \
+            return managed<cls>(thawed_realm.import_copy_of(m_obj), thawed_realm);                 \
+        }                                                                                          \
+        db get_realm() {                                                                           \
+            return db(m_realm);                                                                    \
+        }                                                                                          \
         bool operator ==(const managed<cls>& other) const {                                        \
             auto& a = m_obj; \
             auto& b = other.m_obj; \
@@ -462,7 +472,6 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
             if (m_realm != other.m_realm) { \
                 return false; \
             } \
-    \
             return a.get_table() == b.get_table() \
                    && a.get_key() == b.get_key(); \
         }                      \
@@ -480,12 +489,20 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         bool operator !=(const managed<cls>& other) const {                                        \
            return !this->operator ==(other);                                                       \
         }                                                                                          \
-        bool operator !=(const managed<cls*>& other) const {                                        \
+        bool operator !=(const managed<cls*>& other) const {                                       \
             return !this->operator ==(other);                                                      \
         }                                                                                          \
         bool operator < (const managed<cls>& rhs) const {                                          \
             return m_obj.get_key() < rhs.m_obj.get_key();                                          \
         }                                                                                          \
+    private:                                                                                       \
+        internal::bridge::obj m_obj;                                                               \
+        internal::bridge::realm m_realm;                                                           \
+        bool m_prepare_for_query = false;                                                          \
+        friend struct db;                                                                          \
+        template <typename, typename> friend struct managed;                                       \
+        template <typename, typename> friend struct box;                                           \
+        template <typename, typename> friend struct ::realm::thread_safe_reference;                \
     };                                                                                             \
     struct meta_schema_##cls {   \
         meta_schema_##cls() {                                                    \

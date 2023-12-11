@@ -177,14 +177,17 @@ namespace realm::experimental {
         db freeze();
         db thaw();
         void invalidate();
-    private:
         friend struct ::realm::thread_safe_reference<experimental::db>;
+        template <typename, typename> friend struct managed;
+    private:
         db(internal::bridge::realm&& r)
         {
             m_realm = std::move(r);
         }
-
-        std::unordered_map<std::string, internal::bridge::table> m_object_tables;
+        db(const internal::bridge::realm& r)
+        {
+            m_realm = r;
+        }
     };
 
     bool operator==(const db&, const db&);

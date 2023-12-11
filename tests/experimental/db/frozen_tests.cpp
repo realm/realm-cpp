@@ -120,7 +120,6 @@ namespace realm::experimental {
 
             auto thawed = frozen_realm.thaw();
             CHECK_FALSE(thawed.is_frozen());
-            CHECK(thawed.refresh());
             CHECK(thawed.objects<AllTypesObject>().size() == 1);
         }
 
@@ -290,6 +289,57 @@ namespace realm::experimental {
             CHECK_FALSE(thawed_results.is_frozen());
             dog = thawed_results[0];
             CHECK_FALSE(dog.is_frozen());
+        }
+
+        SECTION("frozen_object_thaw") {
+            auto realm = db(std::move(config));
+
+            auto managed_obj = realm.write([&realm]() {
+                Dog dog;
+                dog._id = 1;
+                dog.name = "Spot";
+
+                Person person;
+                person.name = "John";
+                person._id = 1;
+                person.dog = &dog;
+                return realm.add(std::move(person));
+            });
+
+            auto frozen_obj = managed_obj.freeze();
+            CHECK(frozen_obj.is_frozen());
+
+            auto thawed_obj =  frozen_obj.thaw();
+            CHECK_FALSE(thawed_obj.is_frozen());
+            auto thawed_realm = thawed_obj.get_realm();
+
+            CHECK_FALSE(thawed_realm.is_frozen());
+
+            thawed_realm.write([&thawed_obj]() {
+                thawed_obj.name = "Bob";
+            });
+
+            realm.refresh();
+
+            CHECK(managed_obj.name == "Bob");
+        }
+
+
+        SECTION("reuse_frozen_realm_from_thaw") {
+            auto realm = db(std::move(config));
+
+            auto managed_obj = realm.write([&realm]() {
+                return realm.add(AllTypesObject());
+            });
+            auto frozen_realm = realm.freeze();
+            CHECK(frozen_realm.is_frozen());
+
+            auto thawed = frozen_realm.thaw();
+            CHECK_FALSE(thawed.is_frozen());
+            thawed.write([&]() {
+                managed_obj.str_col = "bob";
+            });
+            CHECK(managed_obj.str_col == "bob");
         }
     }
 }

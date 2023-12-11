@@ -305,7 +305,7 @@ namespace realm::internal::bridge {
         auto key = std::vector<char>();
         key.resize(64);
         key.assign(encryption_key.begin(), encryption_key.end());
-        reinterpret_cast<RealmConfig*>(&m_config)->encryption_key = std::move(key);
+        get_config()->encryption_key = std::move(key);
     }
 
     realm::sync_config realm::config::sync_config() const {
@@ -402,7 +402,8 @@ namespace realm::internal::bridge {
         if (!is_frozen())
             return *this;
         auto config = m_realm->config();
-        config.cache = false;
+        config.cache = true;
+        config.scheduler = std::make_shared<internal_scheduler>(scheduler::make_default());
         return realm(std::move(config));
     }
 
