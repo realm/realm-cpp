@@ -41,6 +41,11 @@ TEST_CASE("app", "[sync]") {
 
     SECTION("error handling") {
         auto dead_app = realm::App(realm::App::configuration({"NA", Admin::shared().base_url()}));
+
+        auto a = realm::App::credentials::google(realm::App::credentials::id_token(""));
+
+        auto b = realm::App::credentials::function(realm::bson::BsonDocument());
+
         REQUIRE_THROWS_AS(dead_app.login(realm::App::credentials::anonymous()).get(), realm::app_error);
         REQUIRE_THROWS_AS(dead_app.register_user("", "").get(), realm::app_error);
 
