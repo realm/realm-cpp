@@ -27,7 +27,7 @@ class DrinkSelectionModel : public QAbstractTableModel
     Q_INVOKABLE QVariant data(const QModelIndex &index, int role) const override;
     QHash<int, QByteArray> roleNames() const override;
  private:
-   realm::experimental::managed<realm::experimental::CoffeeMachine> mMachine;
+   realm::managed<realm::CoffeeMachine> mMachine;
    realm::notification_token mToken;
 };
 
@@ -54,7 +54,7 @@ signals:
 
 private:
     realm::user mUser;
-    realm::experimental::managed<realm::experimental::CoffeeMachine> mCoffeeMachine;
+    realm::managed<realm::CoffeeMachine> mCoffeeMachine;
     QScopedPointer<DrinkSelectionModel> mDrinksTableModel;
     realm::notification_token mToken;
 };

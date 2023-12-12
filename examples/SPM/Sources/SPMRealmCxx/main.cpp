@@ -3,40 +3,38 @@
 #include <cpprealm/sdk.hpp>
 #include <cpprealm/experimental/sdk.hpp>
 
+#include <realm/util/cf_ptr.hpp>
 #include <CoreFoundation/CoreFoundation.h>
 
-namespace realm::experimental {
+namespace realm {
     struct Person {
-        realm::experimental::primary_key<realm::object_id> _id;
+        realm::primary_key<realm::object_id> _id;
         int64_t age;
         std::string name;
         std::string country;
-        std::string car_name;
-        realm::mixed car_name2;
     };
     REALM_SCHEMA(Person, _id, age, name, country)
 }
 
 
 int main() {
-    auto app_config = realm::App::configuration();
-    app_config.app_id = "ATLAS_DEVICE_SYNC_ID";
-    auto app = realm::App(std::move(app_config));
+    auto app = realm::App("MY_DEVICE_SYNC_APP_ID");
     auto user = app.login(realm::App::credentials::anonymous()).get();
     auto config = user.flexible_sync_configuration();
 
-    auto synced_realm = realm::experimental::db(std::move(config));
+    auto synced_realm = realm::db(std::move(config));
 
     auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                                          subs.add<realm::experimental::Person>("foo-strings");
+                                                          subs.add<realm::Person>("foo-strings", [](auto &obj) {
+                                                              return obj.country == "USA";
+                                                          });
                                                       }).get();
 
     synced_realm.write([&synced_realm]() {
-        realm::experimental::Person o;
+        realm::Person o;
         o._id = realm::object_id::generate();
         o.name = "foo";
         o.country = "USA";
-        o.age = 123;
         synced_realm.add(std::move(o));
     });
 
@@ -45,7 +43,7 @@ int main() {
 
     synced_realm.refresh();
 
-    auto results = synced_realm.objects<realm::experimental::Person>();
+    auto results = synced_realm.objects<realm::Person>();
     auto token = results.observe([](auto change) {
         std::cout << "collection changed " << change.collection->size() << " objects in collection" << "\n";
     });
@@ -55,7 +53,7 @@ int main() {
     std::cin >> name;
 
     synced_realm.write([&]() {
-        realm::experimental::Person p;
+        realm::Person p;
         p._id = realm::object_id::generate();
         p.name = name;
         p.country = "USA";

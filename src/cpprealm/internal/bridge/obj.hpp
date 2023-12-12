@@ -8,7 +8,7 @@
 #include <optional>
 #include <string>
 
-#include <cpprealm/experimental/types.hpp>
+#include "cpprealm/types.hpp"
 #include <cpprealm/internal/bridge/binary.hpp>
 #include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/decimal128.hpp>
@@ -41,12 +41,12 @@ namespace realm {
         template <typename, typename>
         struct type_info;
     }
-    namespace experimental {
-        template <typename, typename>
-        struct managed;
-        template <typename, typename>
-        struct accessor;
-    }
+
+    template <typename, typename>
+    struct managed;
+    template <typename, typename>
+    struct accessor;
+
     template <typename, typename>
     struct persisted;
 }
@@ -196,20 +196,20 @@ namespace realm::internal::bridge {
             for (auto v : values) {
                 if constexpr (std::is_pointer_v<ValueType>) {
                     internal::bridge::obj m_obj;
-                    if constexpr (experimental::managed<std::remove_pointer_t<ValueType>, void>::schema.HasPrimaryKeyProperty) {
-                        auto pk = (*v).*(experimental::managed<std::remove_pointer_t<ValueType>, void>::schema.primary_key().ptr);
+                    if constexpr (managed<std::remove_pointer_t<ValueType>, void>::schema.HasPrimaryKeyProperty) {
+                        auto pk = (*v).*(managed<std::remove_pointer_t<ValueType>, void>::schema.primary_key().ptr);
                         m_obj = this->get_table().create_object_with_primary_key(internal::bridge::mixed(serialize(pk.value)));
                     } else {
                         m_obj = m_obj = this->get_table().create_object();
                     }
                     std::apply([&m_obj, &v](auto && ...p) {
-                        (experimental::accessor<typename std::decay_t<decltype(p)>::Result, void>::set(
+                        (accessor<typename std::decay_t<decltype(p)>::Result, void>::set(
                                  m_obj, m_obj.get_table().get_column_key(p.name),
                                  (*v).*(std::decay_t<decltype(p)>::ptr)), ...);
-                    }, experimental::managed<std::remove_pointer_t<ValueType>, void>::schema.ps);
+                    }, managed<std::remove_pointer_t<ValueType>, void>::schema.ps);
                     v2.push_back(m_obj.get_key());
                 } else {
-                    v2.push_back(::realm::experimental::serialize(v));
+                    v2.push_back(::realm::serialize(v));
                 }
             }
             set_list_values(col_key, v2);

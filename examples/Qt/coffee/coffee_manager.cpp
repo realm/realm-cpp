@@ -6,19 +6,19 @@ CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
 {
     auto app = realm::App("qt-realm-coffee-dfvvc");
     mUser = app.login(realm::App::credentials::anonymous()).get();
-    auto realm = realm::experimental::db(mUser.flexible_sync_configuration());
+    auto realm = realm::db(mUser.flexible_sync_configuration());
     realm.subscriptions().update([](realm::mutable_sync_subscription_set& subs) {
         if (!subs.find("all")) {
-            subs.add<realm::experimental::CoffeeMachine>("all");
-            subs.add<realm::experimental::DrinkTemplate>("all_drinks");
+            subs.add<realm::CoffeeMachine>("all");
+            subs.add<realm::DrinkTemplate>("all_drinks");
         }
     }).get();
     realm.get_sync_session()->wait_for_download_completion().get();
     realm.refresh();
-    auto coffeeMachines = realm.objects<realm::experimental::CoffeeMachine>();
+    auto coffeeMachines = realm.objects<realm::CoffeeMachine>();
     if (coffeeMachines.size() == 0) {
         realm.write([&]() {
-            auto espresso = realm::experimental::DrinkTemplate();
+            auto espresso = realm::DrinkTemplate();
             espresso._id = realm::object_id::generate();
             espresso.name = "Espresso";
             espresso.chocolateQty = 0;
@@ -26,7 +26,7 @@ CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
             espresso.espressoQty = 5;
             auto managed_espresso = realm.add(std::move(espresso));
 
-            auto flatWhite = realm::experimental::DrinkTemplate();
+            auto flatWhite = realm::DrinkTemplate();
             flatWhite._id = realm::object_id::generate();
             flatWhite.name = "Flat   White";
             flatWhite.chocolateQty = 0;
@@ -34,7 +34,7 @@ CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
             flatWhite.espressoQty = 3;
             auto managed_flatWhite = realm.add(std::move(flatWhite));
 
-            auto cappucino = realm::experimental::DrinkTemplate();
+            auto cappucino = realm::DrinkTemplate();
             cappucino._id = realm::object_id::generate();
             cappucino.name = "Cappucino";
             cappucino.chocolateQty = 0;
@@ -42,7 +42,7 @@ CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
             cappucino.espressoQty = 3;
             auto managed_cappucino = realm.add(std::move(cappucino));
 
-            auto machine = realm::experimental::CoffeeMachine();
+            auto machine = realm::CoffeeMachine();
             machine._id = realm::object_id::generate();
             machine.location = "1st floor kitchen";
             machine.ownerId = realm::object_id::generate();
@@ -50,7 +50,7 @@ CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
             machine.espressoQty = 100;
             machine.milkQty = 100;
             machine.sugarQty = 100;
-            machine.state = realm::experimental::CoffeeMachine::State::OK;
+            machine.state = realm::CoffeeMachine::State::OK;
             auto managed_machine = realm.add(std::move(machine));
             managed_machine.availableDrinks.push_back(managed_espresso);
             managed_machine.availableDrinks.push_back(managed_flatWhite);
@@ -64,19 +64,19 @@ CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
     mToken = mCoffeeMachine.observe([&](auto&& change) {
         for (auto& change : change.property_changes) {
             if (change.name == "state") {
-                auto oldVal = std::get<realm::experimental::CoffeeMachine::State>(change.old_value.value());
-                auto newVal = std::get<realm::experimental::CoffeeMachine::State>(change.new_value.value());
+                auto oldVal = std::get<realm::CoffeeMachine::State>(change.old_value.value());
+                auto newVal = std::get<realm::CoffeeMachine::State>(change.new_value.value());
 
-                if (oldVal == realm::experimental::CoffeeMachine::State::NEEDS_ATTENTION && newVal == realm::experimental::CoffeeMachine::State::OK)
+                if (oldVal == realm::CoffeeMachine::State::NEEDS_ATTENTION && newVal == realm::CoffeeMachine::State::OK)
                 {
                     emit enableMachine();
                 }
-                else if (oldVal == realm::experimental::CoffeeMachine::State::MAINTENANCE_MODE && newVal == realm::experimental::CoffeeMachine::State::OK)
+                else if (oldVal == realm::CoffeeMachine::State::MAINTENANCE_MODE && newVal == realm::CoffeeMachine::State::OK)
                 {
                     emit enableMachine();
                 }
-                else if (oldVal == realm::experimental::CoffeeMachine::State::OK && (newVal == realm::experimental::CoffeeMachine::State::NEEDS_ATTENTION ||
-                                                                                     newVal == realm::experimental::CoffeeMachine::State::MAINTENANCE_MODE))
+                else if (oldVal == realm::CoffeeMachine::State::OK && (newVal == realm::CoffeeMachine::State::NEEDS_ATTENTION ||
+                                                                                 newVal == realm::CoffeeMachine::State::MAINTENANCE_MODE))
                 {
                     emit disableMachine();
                 }
@@ -95,7 +95,7 @@ void CoffeeMachineManager::prepareForBrew(const QString &)
 
 void CoffeeMachineManager::startBrew(const QString&, int64_t milkQty, int64_t espressoQty, int64_t sugarQty)
 {
-    auto realm = realm::experimental::db(mUser.flexible_sync_configuration());
+    auto realm = realm::db(mUser.flexible_sync_configuration());
     realm.write([&]() {
         mCoffeeMachine.espressoQty -= espressoQty;
         mCoffeeMachine.milkQty -= milkQty;
@@ -103,7 +103,7 @@ void CoffeeMachineManager::startBrew(const QString&, int64_t milkQty, int64_t es
     });
 }
 
-DrinkSelectionModel::DrinkSelectionModel(realm::experimental::managed<realm::experimental::CoffeeMachine>& machine) : mMachine(machine)
+DrinkSelectionModel::DrinkSelectionModel(realm::managed<realm::CoffeeMachine>& machine) : mMachine(machine)
 {
     mToken = mMachine.availableDrinks.observe([&](auto&&) {
         this->beginResetModel();

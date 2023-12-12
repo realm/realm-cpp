@@ -1,13 +1,13 @@
 #ifndef CPPREALM_RBOOL_HPP
 #define CPPREALM_RBOOL_HPP
 
+#include "db.hpp"
 #include <cpprealm/schema.hpp>
-#include <cpprealm/experimental/db.hpp>
 
 #include <cpprealm/internal/bridge/query.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 
-namespace realm::experimental {
+namespace realm {
     template<typename>
     struct box_base;
 }
@@ -41,8 +41,7 @@ namespace realm::experimental {
 
 #define __cpp_realm_friends \
         template <typename> \
-        friend struct realm::experimental::box_base; \
-        template <typename ...> \
+        friend struct realm::box_base; \
         friend struct db;                    \
         template <typename, typename ...> \
         friend struct realm::schemagen::schema; \
@@ -133,9 +132,7 @@ namespace realm::experimental {
     friend struct internal::bridge::obj;  \
     friend struct internal::bridge::list;    \
     friend struct internal::bridge::mixed; \
-    template <typename> friend struct object_base;\
-    template <typename> friend struct asymmetric_object;  \
-    template <typename, typename> friend struct results;                  \
+    template <typename> friend struct results;                  \
     template <typename TT> \
     friend inline typename std::enable_if<std::is_base_of<realm::object_base<TT>, TT>::value, std::ostream>::type& \
     operator<< (std::ostream& stream, const TT& object); \
@@ -148,7 +145,7 @@ namespace realm {
         bool is_for_queries = false;
         friend rbool operator&&(const rbool &lhs, const rbool &rhs);
 
-        template<typename T, typename>
+        template<typename T>
         friend struct results;
 
         friend rbool operator||(const rbool &lhs, const rbool &rhs);

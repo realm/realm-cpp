@@ -16,40 +16,34 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef realm_sdk_hpp
-#define realm_sdk_hpp
-
-#include <cpprealm/alpha_support.hpp>
+#ifndef CPPREALM_SDK_HPP
+#define CPPREALM_SDK_HPP
 
 #include <utility>
 
-#ifdef CPP_REALM_ENABLE_ALPHA_SDK
-#include <cpprealm/db.hpp>
-#include <cpprealm/persisted.hpp>
-#include <cpprealm/persisted_binary.hpp>
-#include <cpprealm/persisted_bool.hpp>
-#include <cpprealm/persisted_double.hpp>
-#include <cpprealm/persisted_embedded.hpp>
-#include <cpprealm/persisted_enum.hpp>
-#include <cpprealm/persisted_int.hpp>
-#include <cpprealm/persisted_list.hpp>
-#include <cpprealm/persisted_map.hpp>
-#include <cpprealm/persisted_mixed.hpp>
-#include <cpprealm/persisted_optional.hpp>
-#include <cpprealm/persisted_timestamp.hpp>
-#include <cpprealm/persisted_uuid.hpp>
-#include <cpprealm/persisted_object_id.hpp>
-#include <cpprealm/persisted_decimal128.hpp>
-#endif
-
 #include <cpprealm/schema.hpp>
-#include <cpprealm/results.hpp>
 #include <cpprealm/notifications.hpp>
-#include <cpprealm/asymmetric_object.hpp>
-#include <cpprealm/object.hpp>
 #include <cpprealm/app.hpp>
 #include <cpprealm/flex_sync.hpp>
 #include <cpprealm/thread_safe_reference.hpp>
 #include <cpprealm/rbool.hpp>
 
-#endif /* realm_sdk_hpp */
+#include "db.hpp"
+#include "link.hpp"
+#include "macros.hpp"
+#include "managed_binary.hpp"
+#include "managed_decimal.hpp"
+#include "managed_dictionary.hpp"
+#include "managed_list.hpp"
+#include "managed_mixed.hpp"
+#include "managed_numeric.hpp"
+#include "managed_objectid.hpp"
+#include "managed_primary_key.hpp"
+#include "managed_set.hpp"
+#include "managed_string.hpp"
+#include "managed_timestamp.hpp"
+#include "managed_uuid.hpp"
+#include "observation.hpp"
+#include "results.hpp"
+
+#endif /* CPPREALM_SDK_HPP */

@@ -19,7 +19,7 @@
 #ifndef CPP_REALM_APP_HPP
 #define CPP_REALM_APP_HPP
 
-#include <cpprealm/experimental/db.hpp>
+#include "db.hpp"
 
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/sync_error.hpp>

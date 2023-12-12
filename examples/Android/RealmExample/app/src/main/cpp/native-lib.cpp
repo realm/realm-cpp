@@ -1,9 +1,8 @@
 #include <jni.h>
 #include <string>
 #include <cpprealm/sdk.hpp>
-#include <cpprealm/experimental/sdk.hpp>
 
-namespace realm::experimental {
+namespace realm {
     struct Car {
     public:
         primary_key<int64_t> _id;
@@ -16,8 +15,8 @@ namespace realm::experimental {
 
 // Realm specific vars
 realm::notification_token token;
-realm::experimental::managed<realm::experimental::Car> m_car;
-std::unique_ptr<realm::experimental::db> synced_realm;
+realm::managed<realm::Car> m_car;
+std::unique_ptr<realm::db> synced_realm;
 
 // JNI specific vars
 jobject global_ref;
@@ -36,21 +35,21 @@ Java_com_mongodb_realmexample_MainActivity_setupRealm(JNIEnv * env, jobject act,
     auto app = realm::App("qt-car-demo-tdbmy", std::nullopt, path);
     realm::user user = app.login(realm::App::credentials::anonymous()).get();
 
-    synced_realm = std::make_unique<realm::experimental::db>(realm::experimental::db(user.flexible_sync_configuration()));
+    synced_realm = std::make_unique<realm::db>(realm::db(user.flexible_sync_configuration()));
 
     synced_realm->subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
         if (!subs.find("car")) {
-            subs.add<realm::experimental::Car>("car", [](auto& obj) {
+            subs.add<realm::Car>("car", [](auto& obj) {
                 return obj._id == 0;
             });
         }
     }).get();
 
     synced_realm->get_sync_session()->wait_for_download_completion().get();
-    auto cars = synced_realm->objects<realm::experimental::Car>();
+    auto cars = synced_realm->objects<realm::Car>();
 
     // Car with _id of 0 must already exist in Atlas.
-    m_car = realm::experimental::managed<realm::experimental::Car>(cars[0]);
+    m_car = realm::managed<realm::Car>(cars[0]);
     synced_realm->write([&]() {
         m_car.speed += 1.0;
     });

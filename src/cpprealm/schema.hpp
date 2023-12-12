@@ -19,32 +19,24 @@
 #ifndef realm_schema_hpp
 #define realm_schema_hpp
 
-#include <variant>
+#include "link.hpp"
 #include <cpprealm/internal/bridge/lnklst.hpp>
 #include <cpprealm/internal/bridge/object_schema.hpp>
-#include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/type_info.hpp>
-#include <cpprealm/experimental/link.hpp>
+#include <variant>
 
 #include <type_traits>
 #include <iostream>
 
 namespace realm {
-    template <typename, typename>
-    struct persisted;
-    template<typename>
-    struct asymmetric_object;
-
-
-    namespace experimental {
-        enum class BetaObjectType {
-            None,
-            TopLevel,
-            Embedded,
-            Asymmetric
-        };
-    }
+    enum class ObjectType {
+        None,
+        TopLevel,
+        Embedded,
+        Asymmetric
+    };
     namespace internal {
         template <typename T>
         struct ptr_type_extractor_base;
@@ -82,7 +74,7 @@ namespace realm {
         struct property {
             using Result = typename internal::persisted_type_extractor<typename internal::ptr_type_extractor<Ptr>::member_type>::Result;
             using VariantResult =
-                    std::conditional_t<std::is_pointer_v<Result>, experimental::managed<Result>, Result>;
+                    std::conditional_t<std::is_pointer_v<Result>, managed<Result>, Result>;
 
             using Class = typename internal::ptr_type_extractor<Ptr>::class_type;
             static constexpr auto ptr = Ptr;
@@ -109,16 +101,14 @@ namespace realm {
                                                     typename Result::value_type>) {
                         property.set_object_link(Result::value_type::schema.name);
                     } else if constexpr (std::is_pointer_v<typename Result::value_type>) {
-                        property.set_object_link(
-                                experimental::managed<std::remove_pointer_t<typename Result::value_type>, void>::schema.name);
+                        property.set_object_link(managed<std::remove_pointer_t<typename Result::value_type>, void>::schema.name);
                     }
                 } else if constexpr (realm::internal::type_info::is_set<Result>::value) {
                     if constexpr (std::is_base_of_v<object_base<typename Result::value_type>,
                                                     typename Result::value_type>) {
                         property.set_object_link(Result::value_type::schema.name);
                     } else if constexpr (std::is_pointer_v<typename Result::value_type>) {
-                        property.set_object_link(
-                                experimental::managed<std::remove_pointer_t<typename Result::value_type>, void>::schema.name);
+                        property.set_object_link(managed<std::remove_pointer_t<typename Result::value_type>, void>::schema.name);
                     }
                 } else if constexpr (realm::internal::type_info::is_map<Result>::value) {
                     if constexpr (internal::type_info::is_optional<typename Result::mapped_type>::value) {
@@ -126,12 +116,11 @@ namespace realm {
                             property.set_object_link(Result::mapped_type::value_type::schema.name);
                             property.set_type(type | internal::bridge::property::type::Nullable);
                         } else if constexpr (internal::type_info::is_link<typename Result::mapped_type::value_type>::value) {
-                            property.set_object_link(experimental::managed<std::remove_pointer_t<typename Result::mapped_type::value_type>, void>::schema.name);
+                            property.set_object_link(managed<std::remove_pointer_t<typename Result::mapped_type::value_type>, void>::schema.name);
                             property.set_type(type | internal::bridge::property::type::Nullable);
                         }
                     } else if constexpr (std::is_pointer_v<typename Result::mapped_type>) {
-                        property.set_object_link(
-                                experimental::managed<std::remove_pointer_t<typename Result::mapped_type>, void>::schema.name);
+                        property.set_object_link(managed<std::remove_pointer_t<typename Result::mapped_type>, void>::schema.name);
                         property.set_type(type | internal::bridge::property::type::Nullable);
                     }
                 } else if constexpr (internal::type_info::is_optional<Result>::value) {
@@ -141,7 +130,7 @@ namespace realm {
                     }
                 }
                 else if constexpr (std::is_pointer_v<Result>) {
-                    property.set_object_link(experimental::managed<typename std::remove_pointer_t<Result>, void>::schema.name);
+                    property.set_object_link(managed<typename std::remove_pointer_t<Result>, void>::schema.name);
                     property.set_type(type | internal::bridge::property::type::Nullable);
                 } else if constexpr (internal::type_info::is_backlink<Result>::value) {
                     return internal::bridge::property{};
@@ -208,9 +197,9 @@ namespace realm {
                   , ps(props) {
                 apply_name(props);
             }
-            explicit constexpr schema(const char *name_, experimental::BetaObjectType beta_object_type, std::tuple<Properties...>&& props)
+            explicit constexpr schema(const char *name_, ObjectType object_type, std::tuple<Properties...>&& props)
                 : name(name_)
-                  , ps(props), m_beta_object_type(beta_object_type) {
+                  , ps(props), m_object_type(object_type) {
                 apply_name(props);
             }
             template<size_t N, typename P>
@@ -232,11 +221,9 @@ namespace realm {
 
             using PrimaryKeyProperty = decltype(primary_key());
             static constexpr bool HasPrimaryKeyProperty = !std::is_void_v<PrimaryKeyProperty>;
-            static constexpr bool IsEmbedded = std::is_base_of_v<embedded_object<Class>, Class>;
-            static constexpr bool IsAsymmetric = std::is_base_of_v<asymmetric_object<Class>, Class>;
 
             bool is_embedded_experimental() const {
-                return m_beta_object_type == experimental::BetaObjectType::Embedded;
+                return m_object_type == ObjectType::Embedded;
             }
 
             [[nodiscard]] internal::bridge::object_schema to_core_schema() const {
@@ -255,16 +242,10 @@ namespace realm {
                 if constexpr (HasPrimaryKeyProperty) {
                     schema.set_primary_key(primary_key_name);
                 }
-                if constexpr (IsEmbedded) {
+                if (m_object_type == ObjectType::Embedded) {
                     schema.set_object_type(internal::bridge::object_schema::object_type::Embedded);
                 }
-                if constexpr (IsAsymmetric) {
-                    schema.set_object_type(internal::bridge::object_schema::object_type::TopLevelAsymmetric);
-                }
-                if (m_beta_object_type == experimental::BetaObjectType::Embedded) {
-                    schema.set_object_type(internal::bridge::object_schema::object_type::Embedded);
-                }
-                if (m_beta_object_type == experimental::BetaObjectType::Asymmetric) {
+                if (m_object_type == ObjectType::Asymmetric) {
                     schema.set_object_type(internal::bridge::object_schema::object_type::TopLevelAsymmetric);
                 }
                 return schema;
@@ -298,7 +279,7 @@ namespace realm {
             }
             template<size_t N, typename P>
             constexpr variant_t
-            property_value_for_name(std::string_view property_name, const experimental::managed<Class, void> &cls, P &property, bool excluding_collections = true) const {
+            property_value_for_name(std::string_view property_name, const managed<Class, void> &cls, P &property, bool excluding_collections = true) const {
                 if (excluding_collections &&
                     (property.type == realm::internal::bridge::property::type::Array || property.type == realm::internal::bridge::property::type::Dictionary)) {
                     return variant_t{std::monostate()};
@@ -306,7 +287,7 @@ namespace realm {
 
                 if constexpr (N + 1 == sizeof...(Properties)) {
                     if (property_name == std::string_view(names[N])) {
-                        auto ptr = experimental::managed<Class, void>::template unmanaged_to_managed_pointer(property.ptr);
+                        auto ptr = managed<Class, void>::template unmanaged_to_managed_pointer(property.ptr);
                         if constexpr (std::is_pointer_v<typename P::Result>) {
                             return (cls.*ptr);
                         } else {
@@ -316,7 +297,7 @@ namespace realm {
                     return variant_t{};
                 } else {
                     if (property_name == std::string_view(names[N])) {
-                        auto ptr = experimental::managed<Class, void>::template unmanaged_to_managed_pointer(property.ptr);
+                        auto ptr = managed<Class, void>::template unmanaged_to_managed_pointer(property.ptr);
                         if constexpr (std::is_pointer_v<typename P::Result>) {
                             return (cls.*ptr);
                         } else {
@@ -326,7 +307,7 @@ namespace realm {
                     return property_value_for_name<N + 1>(property_name, cls, std::get<N + 1>(properties));
                 }
             }
-            constexpr auto property_value_for_name(std::string_view property_name, const experimental::managed<Class, void> &cls, bool excluding_collections = true) const {
+            constexpr auto property_value_for_name(std::string_view property_name, const managed<Class, void> &cls, bool excluding_collections = true) const {
                 return property_value_for_name<0>(property_name, cls, std::get<0>(properties), excluding_collections);
             }
             constexpr auto property_value_for_name(std::string_view property_name, const Class &cls) const {
@@ -361,7 +342,7 @@ namespace realm {
                 return name_for_property<0>(ptr, std::get<0>(ps));
             }
         private:
-            experimental::BetaObjectType m_beta_object_type = experimental::BetaObjectType::None;
+            ObjectType m_object_type = ObjectType::None;
         };
     }
     template <auto Ptr, bool IsPrimaryKey = false>
@@ -389,7 +370,7 @@ namespace realm {
 
     template <typename ...T>
     static constexpr auto schema(const char * name,
-                                 experimental::BetaObjectType object_type,
+                                 ObjectType object_type,
                                  std::tuple<T...>&& props) {
         auto i = std::get<0>(props);
         using Cls = typename decltype(i)::Class;

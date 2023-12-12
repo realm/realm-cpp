@@ -66,6 +66,8 @@ X.Y.Z Release notes (YYYY-MM-DD)
   - `realm::App::credentails::function(const std::string&)`
   - `realm::App::user::call_function(const std::string&)`
   - `realm::App::user::custom_user_data()`
+* The `experimental` namespace has been removed and all types under it have been elevated to the `realm` namespace.
+* The Realm C++ 'Alpha' SDK has been removed. 
 
 ### Compatibility
 * Fileformat: Generates files with format v23. Reads and automatically upgrade from fileformat v5.

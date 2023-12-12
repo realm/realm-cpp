@@ -12,30 +12,30 @@ if(MSVC)
             main.cpp
             admin_utils.hpp
             admin_utils.cpp
-            experimental/sync/test_objects.hpp
-            experimental/sync/asymmetric_object_tests.cpp
-            experimental/sync/flexible_sync_tests.cpp)
+            sync/test_objects.hpp
+            sync/asymmetric_object_tests.cpp
+            sync/flexible_sync_tests.cpp)
 
     add_executable(cpprealm_db_tests
             main.hpp
             main.cpp
-            experimental/db/test_objects.hpp
-            experimental/db/binary_tests.cpp
-            experimental/db/date_tests.cpp
-            experimental/db/decimal_tests.cpp
-            experimental/db/embedded_object_tests.cpp
-            experimental/db/list_tests.cpp
-            experimental/db/map_tests.cpp
-            experimental/db/mixed_tests.cpp
-            experimental/db/object_id_tests.cpp
-            experimental/db/object_tests.cpp
-            experimental/db/optional_tests.cpp
-            experimental/db/query_tests.cpp
-            experimental/db/realm_tests.cpp
-            experimental/db/results_tests.cpp
-            experimental/db/run_loop_tests.cpp
-            experimental/db/string_tests.cpp
-            experimental/db/frozen_tests.cpp)
+            db/test_objects.hpp
+            db/binary_tests.cpp
+            db/date_tests.cpp
+            db/decimal_tests.cpp
+            db/embedded_object_tests.cpp
+            db/list_tests.cpp
+            db/map_tests.cpp
+            db/mixed_tests.cpp
+            db/object_id_tests.cpp
+            db/object_tests.cpp
+            db/optional_tests.cpp
+            db/query_tests.cpp
+            db/realm_tests.cpp
+            db/results_tests.cpp
+            db/run_loop_tests.cpp
+            db/string_tests.cpp
+            db/frozen_tests.cpp)
     target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
 
     set_property(TARGET cpprealm_sync_tests PROPERTY
@@ -53,75 +53,42 @@ else()
             main.cpp
             admin_utils.hpp
             admin_utils.cpp
-            experimental/sync/test_objects.hpp
-            experimental/sync/app_tests.cpp
-            experimental/sync/asymmetric_object_tests.cpp
-            experimental/sync/flexible_sync_tests.cpp
-            experimental/sync/client_reset_tests.cpp)
+            sync/test_objects.hpp
+            sync/asymmetric_object_tests.cpp
+            sync/flexible_sync_tests.cpp
+            sync/app_tests.cpp
+            sync/client_reset_tests.cpp)
 
     add_executable(cpprealm_db_tests
             main.hpp
             main.cpp
-            experimental/db/test_objects.hpp
-            experimental/db/binary_tests.cpp
-            experimental/db/date_tests.cpp
-            experimental/db/decimal_tests.cpp
-            experimental/db/embedded_object_tests.cpp
-            experimental/db/list_tests.cpp
-            experimental/db/map_tests.cpp
-            experimental/db/mixed_tests.cpp
-            experimental/db/object_id_tests.cpp
-            experimental/db/object_tests.cpp
-            experimental/db/optional_tests.cpp
-            experimental/db/query_tests.cpp
-            experimental/db/realm_tests.cpp
-            experimental/db/results_tests.cpp
-            experimental/db/run_loop_tests.cpp
-            experimental/db/string_tests.cpp
-            experimental/db/performance_tests.cpp
-            experimental/db/numeric_tests.cpp
-            experimental/db/set_tests.cpp
-            experimental/db/frozen_tests.cpp)
+            db/test_objects.hpp
+            db/binary_tests.cpp
+            db/date_tests.cpp
+            db/decimal_tests.cpp
+            db/embedded_object_tests.cpp
+            db/list_tests.cpp
+            db/map_tests.cpp
+            db/mixed_tests.cpp
+            db/object_id_tests.cpp
+            db/object_tests.cpp
+            db/optional_tests.cpp
+            db/query_tests.cpp
+            db/realm_tests.cpp
+            db/results_tests.cpp
+            db/run_loop_tests.cpp
+            db/string_tests.cpp
+            db/performance_tests.cpp
+            db/numeric_tests.cpp
+            db/set_tests.cpp
+            db/frozen_tests.cpp)
 
     target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
-
-    if(ENABLE_ALPHA_SDK)
-        add_executable(cpprealm_alpha_tests
-                main.hpp
-                main.cpp
-                admin_utils.hpp
-                admin_utils.cpp
-                alpha/str_tests.cpp
-                alpha/list_tests.cpp
-                alpha/query_tests.cpp
-                alpha/test_objects.hpp
-                alpha/date_tests.cpp
-                alpha/mixed_tests.cpp
-                alpha/results_tests.cpp
-                alpha/binary_tests.cpp
-                alpha/flx_sync_tests.cpp
-                alpha/app_tests.cpp
-                alpha/embedded_object_tests.cpp
-                alpha/opt_tests.cpp
-                alpha/run_loop_tests.cpp
-                alpha/map_tests.cpp
-                alpha/perf_tests.cpp
-                alpha/object_tests.cpp
-                alpha/object_id_tests.cpp
-                alpha/asymmetric_object_tests.cpp
-                alpha/realm_tests.cpp)
-
-        target_link_libraries(cpprealm_alpha_tests cpprealm Catch2::Catch2)
-        target_compile_definitions(cpprealm_alpha_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
-    endif()
 
 endif()
 
 target_link_libraries(cpprealm_sync_tests cpprealm Catch2::Catch2)
 target_link_libraries(cpprealm_db_tests cpprealm Catch2::Catch2)
-
-file(COPY ../realm-core/evergreen DESTINATION ./${CMAKE_BUILD_TYPE})
-file(MAKE_DIRECTORY baas)
 
 add_test(cpprealm_tests cpprealm_sync_tests cpprealm_db_tests)
 enable_testing()

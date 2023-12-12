@@ -1,7 +1,6 @@
 #ifndef REALM_TYPE_INFO_HPP
 #define REALM_TYPE_INFO_HPP
 
-#include <cpprealm/alpha_support.hpp>
 #include <cpprealm/internal/bridge/property.hpp>
 #include <cpprealm/internal/bridge/uuid.hpp>
 #include <cpprealm/internal/bridge/binary.hpp>
@@ -17,7 +16,7 @@
 #include <map>
 #include <vector>
 
-namespace realm::experimental {
+namespace realm {
     template <auto>
     struct linking_objects;
     template <typename>
@@ -97,14 +96,7 @@ namespace realm::internal::type_info {
                     return check_variant_types<N + 1, Variant>();
                 } else if constexpr (is_primitive<std::variant_alternative_t<N, Variant>>::value) {
                     return check_variant_types<N + 1, Variant>();
-                }
-#ifdef CPP_REALM_ENABLE_ALPHA_SDK
-                else if constexpr (std::is_base_of_v<object<std::variant_alternative_t<N, Variant>>, std::variant_alternative_t<N, Variant>>) {
-                    // TODO: Remove with alpha sdk.
-                    return check_variant_types<N + 1, Variant>();
-                }
-#endif
-                else {
+                } else {
                     return false;
                 }
             }
@@ -133,7 +125,7 @@ namespace realm::internal::type_info {
         }
     };
     template <auto T>
-    struct type_info<experimental::linking_objects<T>> {
+    struct type_info<linking_objects<T>> {
         using internal_type = bridge::obj_key;
         static constexpr bridge::property::type type() {
             return bridge::property::type::LinkingObjects | bridge::property::type::Array;
@@ -160,7 +152,7 @@ namespace realm::internal::type_info {
         static constexpr auto value = false;
     };
     template <auto T>
-    struct is_backlink<experimental::linking_objects<T>> : std::true_type {
+    struct is_backlink<linking_objects<T>> : std::true_type {
         static constexpr auto value = true;
     };
     template <>
@@ -303,13 +295,12 @@ namespace realm::internal::type_info {
         static constexpr auto value = false;
     };
     template <typename T>
-    struct is_experimental_primary_key<experimental::primary_key<T>> : std::true_type {
+    struct is_experimental_primary_key<primary_key<T>> : std::true_type {
         static constexpr auto value = true;
     };
 
-
     template <typename T>
-    struct type_info<experimental::primary_key<T>, void> {
+    struct type_info<primary_key<T>, void> {
         using internal_type = typename type_info<T>::internal_type;
         static constexpr bridge::property::type type() {
             return type_info<T>::type();
