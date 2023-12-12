@@ -27,9 +27,6 @@
 #include <cpprealm/internal/bridge/sync_session.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 
-#include <realm/object-store/sync/app_credentials.hpp>
-#include <realm/object-store/util/bson/bson.hpp>
-
 #include <future>
 #include <utility>
 
@@ -164,29 +161,29 @@ struct user {
      The custom data of the user.
      This is configured in your Atlas App Services app.
      */
-    [[nodiscard]] std::optional<bson::BsonDocument> custom_data() const;
+    [[nodiscard]] std::optional<std::string> custom_data() const;
 
     /**
      Calls the Atlas App Services function with the provided name and arguments.
 
      @param name The name of the Atlas App Services function to be called.
-     @param arguments The `BsonArray` of arguments to be provided to the function.
+     @param arguments The string represented extended json to be provided to the function.
      @param callback The completion handler to call when the function call is complete.
      This handler is executed on the thread the method was called from.
      */
-    void call_function(const std::string& name, const realm::bson::BsonArray& arguments,
-                       std::function<void(std::optional<bson::Bson>&&, std::optional<app_error>)> callback) const;
+    void call_function(const std::string& name, const std::string& args_ejson,
+                       std::function<void(std::optional<std::string>, std::optional<app_error>)> callback) const;
 
    /**
     Calls the Atlas App Services function with the provided name and arguments.
 
     @param name The name of the Atlas App Services function to be called.
-    @param arguments The `BsonArray` of arguments to be provided to the function.
+    @param arguments The string represented extended json to be provided to the function.
     @param callback The completion handler to call when the function call is complete.
     This handler is executed on the thread the method was called from.
     */
-    [[nodiscard]] std::future<std::optional<bson::Bson>> call_function(const std::string& name,
-                                                                       const realm::bson::BsonArray& arguments) const;
+    [[nodiscard]] std::future<std::optional<std::string>> call_function(const std::string& name,
+                                                                        const std::string& args_ejson) const;
 
     /**
      Refresh a user's custom data. This will, in effect, refresh the user's auth session.
@@ -203,6 +200,14 @@ struct user {
 
 bool operator==(const user& lhs, const user& rhs);
 bool operator!=(const user& lhs, const user& rhs);
+
+namespace util {
+    template <class T>
+    class TaggedString;
+}
+namespace app {
+    struct AppCredentials;
+}
 
 class App {
 public:
@@ -224,18 +229,15 @@ public:
     App(const configuration&);
 
     struct credentials {
-        using auth_code = util::TaggedString<class auth_code_tag>;
-        using id_token = util::TaggedString<class id_token_tag>;
-
         static credentials anonymous();
         static credentials api_key(const std::string& key);
         static credentials facebook(const std::string& access_token);
         static credentials apple(const std::string& id_token);
-        static credentials google(const auth_code& auth_code);
-        static credentials google(const id_token& id_token);
+        static credentials google_auth_code(const std::string& auth_code);
+        static credentials google_id_token(const std::string& id_token);
         static credentials custom(const std::string& token);
         static credentials username_password(const std::string& username, const std::string& password);
-        static credentials function(const bson::BsonDocument& payload);
+        static credentials function(const std::string& payload);
         credentials();
         credentials(const credentials& other) ;
         credentials& operator=(const credentials& other) ;

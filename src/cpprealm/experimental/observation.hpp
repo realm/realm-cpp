@@ -10,7 +10,6 @@
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/thread_safe_reference.hpp>
 
-#include <realm/object-store/util/scheduler.hpp>
 #include <iostream>
 #include <variant>
 

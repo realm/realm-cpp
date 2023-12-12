@@ -5,7 +5,18 @@
 #include <string_view>
 #include <string>
 #include <type_traits>
-#include <realm/utilities.hpp>
+
+#ifdef _WIN32
+
+#include <WinSock2.h>
+#include <intrin.h>
+#include <BaseTsd.h>
+
+#undef max // collides with numeric_limits::max called later in this header file
+#undef min // collides with numeric_limits::min called later in this header file
+#include <safeint.h>
+
+#endif // _WIN32
 
 #if __has_include(<cpprealm/internal/bridge/bridge_types.hpp>)
 #include <cpprealm/internal/bridge/bridge_types.hpp>

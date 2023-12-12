@@ -1,6 +1,5 @@
 #include "../../admin_utils.hpp"
 #include "../../main.hpp"
-#include "../../sync_test_utils.hpp"
 #include "test_objects.hpp"
 
 using namespace realm;
@@ -44,8 +43,9 @@ TEST_CASE("flexible_sync_beta", "[sync]") {
             synced_realm.add(std::move(o));
         });
 
-        test::wait_for_sync_uploads(user).get();
-        test::wait_for_sync_downloads(user).get();
+        synced_realm.get_sync_session()->wait_for_upload_completion().get();
+        synced_realm.get_sync_session()->wait_for_download_completion().get();
+
         synced_realm.refresh();
         auto objs = synced_realm.objects<experimental::AllTypesObject>();
 
@@ -70,8 +70,8 @@ TEST_CASE("flexible_sync_beta", "[sync]") {
             synced_realm.add(std::move(o));
         });
 
-        test::wait_for_sync_uploads(user).get();
-        test::wait_for_sync_downloads(user).get();
+        synced_realm.get_sync_session()->wait_for_upload_completion().get();
+        synced_realm.get_sync_session()->wait_for_download_completion().get();
 
         synced_realm.refresh();
         objs = synced_realm.objects<experimental::AllTypesObject>();
@@ -162,8 +162,8 @@ TEST_CASE("set collection sync", "[set]") {
         test_set(&managed_obj.set_date_col, scenario, {time, time, time2, std::chrono::time_point<std::chrono::system_clock>()}); // here
         test_set(&managed_obj.set_mixed_col, scenario, {realm::mixed((int64_t)42), realm::mixed((int64_t)42), realm::mixed("24"), realm::mixed(realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"))});
 
-        test::wait_for_sync_uploads(user).get();
-        test::wait_for_sync_downloads(user).get();
+        realm.get_sync_session()->wait_for_upload_completion().get();
+        realm.get_sync_session()->wait_for_download_completion().get();
 
         app.register_user("set_collection_sync@mongodb.com", "foobar").get();
         auto user2 = app.login(realm::App::credentials::username_password("set_collection_sync@mongodb.com", "foobar")).get();
@@ -177,7 +177,8 @@ TEST_CASE("set collection sync", "[set]") {
                                               }).get();
         CHECK(update_success2 == true);
         CHECK(realm2.subscriptions().size() == 2);
-        test::wait_for_sync_downloads(user2).get();
+        realm2.get_sync_session()->wait_for_upload_completion().get();
+        realm2.get_sync_session()->wait_for_download_completion().get();
         realm2.refresh();
         auto objs = realm2.objects<experimental::AllTypesObject>();
         CHECK(objs.size() == 1);

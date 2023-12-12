@@ -22,6 +22,7 @@
 #include <cpprealm/app.hpp>
 #include <cpprealm/internal/generic_network_transport.hpp>
 
+#include <realm/object-store/sync/generic_network_transport.hpp>
 #include <realm/sync/network/http.hpp>
 #include <realm/sync/network/network.hpp>
 #include <realm/sync/noinst/client_impl_base.hpp>
@@ -29,7 +30,6 @@
 #include <realm/util/uri.hpp>
 
 #include <regex>
-
 
 namespace realm::internal {
     struct DefaultSocket : realm::sync::network::Socket {
@@ -83,8 +83,14 @@ namespace realm::internal {
         realm::sync::network::ReadAheadBuffer m_read_buffer;
     };
 
+    DefaultTransport::DefaultTransport(const std::optional<std::map<std::string, std::string>>& custom_http_headers,
+                                       const std::optional<bridge::realm::sync_config::proxy_config>& proxy_config) {
+        m_custom_http_headers = custom_http_headers;
+        m_proxy_config = proxy_config;
+    }
+
     void DefaultTransport::send_request_to_server(const app::Request& request,
-                                                  util::UniqueFunction<void(const app::Response&)>&& completion_block) {
+                                                  std::function<void(const app::Response&)>&& completion_block) {
         std::string host = realm::util::Uri(request.url).get_auth();
 
         realm::sync::network::Service service;

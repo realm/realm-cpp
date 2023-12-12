@@ -25,11 +25,19 @@
 #include <Foundation/NSURLResponse.h>
 #include <Foundation/NSURLSession.h>
 
+#include <realm/object-store/sync/generic_network_transport.hpp>
 #include <realm/util/base64.hpp>
 
 namespace realm::internal {
-void DefaultTransport::send_request_to_server(const app::Request& request,
-                                              util::UniqueFunction<void(const app::Response&)>&& completion_block) {
+
+    DefaultTransport::DefaultTransport(const std::optional<std::map<std::string, std::string>>& custom_http_headers,
+                                       const std::optional<bridge::realm::sync_config::proxy_config>& proxy_config) {
+        m_custom_http_headers = custom_http_headers;
+        m_proxy_config = proxy_config;
+    }
+
+    void DefaultTransport::send_request_to_server(const app::Request& request,
+                                              std::function<void(const app::Response&)>&& completion_block) {
         NSURL* url = [NSURL URLWithString:[NSString stringWithCString:request.url.c_str()
                                                              encoding:NSUTF8StringEncoding]];
         NSMutableURLRequest *urlRequest = [[NSMutableURLRequest alloc] initWithURL:url];
@@ -96,8 +104,7 @@ void DefaultTransport::send_request_to_server(const app::Request& request,
 
         NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:urlRequest
                                                     completionHandler:[request = std::move(request),
-                                                                       completion_ptr = completion_block.release()](NSData *data, NSURLResponse *response, NSError *error) {
-            util::UniqueFunction<void(const app::Response&)>&& completion(completion_ptr);
+                                                                       completion = completion_block](NSData *data, NSURLResponse *response, NSError *error) {
             auto httpResponse = (NSHTTPURLResponse *)response;
             std::string body;
             if (data) {
