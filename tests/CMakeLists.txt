@@ -10,7 +10,6 @@ if(MSVC)
     add_executable(cpprealm_sync_tests
             main.hpp
             main.cpp
-            sync_test_utils.hpp
             admin_utils.hpp
             admin_utils.cpp
             experimental/sync/test_objects.hpp
@@ -52,7 +51,6 @@ else()
     add_executable(cpprealm_sync_tests
             main.hpp
             main.cpp
-            sync_test_utils.hpp
             admin_utils.hpp
             admin_utils.cpp
             experimental/sync/test_objects.hpp
@@ -92,7 +90,6 @@ else()
                 main.cpp
                 admin_utils.hpp
                 admin_utils.cpp
-                sync_test_utils.hpp
                 alpha/str_tests.cpp
                 alpha/list_tests.cpp
                 alpha/query_tests.cpp

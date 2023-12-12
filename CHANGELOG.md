@@ -4,12 +4,21 @@ X.Y.Z Release notes (YYYY-MM-DD)
 ### Enhancements
 * Add ability to thaw a frozen managed object via `managed<T>::thaw()`.
 * Add ability to get the Realm associated with a managed object via `managed<T>::get_realm()`.
+* None
+
+### Breaking Changes
+* `realm::App::credentials::google(auth_code)` has been renamed to `realm::App::credentials::google_auth_code(const std::string&)`
+* `realm::App::credentials::google(id_token)` has been renamed to `realm::App::credentials::google_id_token(const std::string&)`
+* The following API's that used `BSON` have been replaced with `std::string`
+  - `realm::App::credentails::function(const std::string&)`
+  - `realm::App::user::call_function(const std::string&)`
+  - `realm::App::user::custom_user_data()`
 
 ### Compatibility
 * Fileformat: Generates files with format v23. Reads and automatically upgrade from fileformat v5.
 
 ### Internals
-* None
+* Realm Core headers are no longer exposed through the Realm C++ SDK
 
 ----------------------------------------------
 
@@ -24,7 +33,6 @@ X.Y.Z Release notes (YYYY-MM-DD)
 * Add support for HTTP tunneling. Usage:
 ```cpp
     realm::proxy_config proxy_config;
-    proxy_config.type = realm::proxy_config_type::HTTP;
     proxy_config.port = 8080;
     proxy_config.address = "127.0.0.1";
     proxy_config.username_password = {"username", "password"};

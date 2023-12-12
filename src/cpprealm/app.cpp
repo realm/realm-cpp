@@ -223,13 +223,22 @@ namespace realm {
         return f;
     }
 
-    /**
-     The custom data of the user.
-     This is configured in your Atlas App Services app.
-     */
-    std::optional<bson::BsonDocument> user::custom_data() const
+    std::optional<std::string> user::custom_data() const
     {
-        return m_user->custom_data();
+        if (auto v = m_user->custom_data()) {
+            return bson::Bson(*v).to_string();
+        } else {
+            return std::nullopt;
+        }
+    }
+
+    void user::call_function(const std::string& name, const std::string& arguments,
+                             std::function<void(std::optional<std::string>, std::optional<app_error>)> callback) const
+    {
+        m_user->sync_manager()->app().lock()->call_function(m_user, name, arguments, std::nullopt, [cb = std::move(callback)](const std::string* bson_string,
+                                                                                                                              std::optional<app_error> err) {
+            cb(bson_string ? std::optional<std::string>(*bson_string) : std::nullopt, err);
+        });
     }
 
     /**
@@ -240,29 +249,17 @@ namespace realm {
      @param callback The completion handler to call when the function call is complete.
      This handler is executed on the thread the method was called from.
      */
-    void user::call_function(const std::string& name, const realm::bson::BsonArray& arguments,
-                             std::function<void(std::optional<bson::Bson>&&, std::optional<app_error>)> callback) const
+    std::future<std::optional<std::string>> user::call_function(const std::string& name, const std::string& arguments) const
     {
-        m_user->sync_manager()->app().lock()->call_function(name, arguments, std::move(callback));
-    }
+        std::promise<std::optional<std::string>> p;
+        std::future<std::optional<std::string>> f = p.get_future();
 
-    /**
-     Calls the Atlas App Services function with the provided name and arguments.
-
-     @param name The name of the Atlas App Services function to be called.
-     @param arguments The `BsonArray` of arguments to be provided to the function.
-     @param callback The completion handler to call when the function call is complete.
-     This handler is executed on the thread the method was called from.
-     */
-    std::future<std::optional<bson::Bson>> user::call_function(const std::string& name, const realm::bson::BsonArray& arguments) const
-    {
-        std::promise<std::optional<bson::Bson>> p;
-        std::future<std::optional<bson::Bson>> f = p.get_future();
-        m_user->sync_manager()->app().lock()->call_function(name, arguments, [p = std::move(p)](std::optional<bson::Bson>&& bson, std::optional<app_error> err) mutable {
+        m_user->sync_manager()->app().lock()->call_function(m_user, name, arguments, std::nullopt, [p = std::move(p)](const std::string* bson_string,
+                                                                                                                      std::optional<app_error> err) mutable {
             if (err) {
                 p.set_exception(std::make_exception_ptr(app_error(std::move(*err))));
             } else {
-                p.set_value(std::move(bson));
+                p.set_value(bson_string ? std::optional<std::string>(*bson_string) : std::nullopt);
             }
         });
         return f;
@@ -392,14 +389,14 @@ namespace realm {
     {
         return {app::AppCredentials::apple(id_token)};
     }
-    App::credentials App::credentials::google(const auth_code& auth_code)
+    App::credentials App::credentials::google_auth_code(const std::string& auth_code)
     {
-        app::AuthCode code{static_cast<std::string>(auth_code)};
+        app::AuthCode code{auth_code};
         return {app::AppCredentials::google(std::move(code))};
     }
-    App::credentials App::credentials::google(const id_token& id_token)
+    App::credentials App::credentials::google_id_token(const std::string& id_token)
     {
-        app::IdToken code{static_cast<std::string>(id_token)};
+        app::IdToken code{id_token};
         return {app::AppCredentials::google(std::move(code))};
     }
     App::credentials App::credentials::custom(const std::string& token)
@@ -410,7 +407,7 @@ namespace realm {
     {
         return credentials(app::AppCredentials::username_password(username, password));
     }
-    App::credentials App::credentials::function(const bson::BsonDocument& payload)
+    App::credentials App::credentials::function(const std::string& payload)
     {
         return credentials(app::AppCredentials::function(payload));
     }

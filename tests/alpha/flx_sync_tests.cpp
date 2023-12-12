@@ -1,7 +1,6 @@
 #include "../admin_utils.hpp"
 #include "../main.hpp"
 #include "test_objects.hpp"
-#include "../sync_test_utils.hpp"
 
 using namespace realm;
 
@@ -41,8 +40,9 @@ TEST_CASE("flx_sync", "[sync]") {
             synced_realm.add(std::move(o));
         });
 
-        test::wait_for_sync_uploads(user).get();
-        test::wait_for_sync_downloads(user).get();
+        synced_realm.get_sync_session()->wait_for_upload_completion().get();
+        synced_realm.get_sync_session()->wait_for_download_completion().get();
+
         synced_realm.write([]() {}); // refresh realm
         auto objs = synced_realm.objects<AllTypesObject>();
 
@@ -66,8 +66,8 @@ TEST_CASE("flx_sync", "[sync]") {
             synced_realm.add(std::move(o));
         });
 
-        test::wait_for_sync_uploads(user).get();
-        test::wait_for_sync_downloads(user).get();
+        synced_realm.get_sync_session()->wait_for_upload_completion().get();
+        synced_realm.get_sync_session()->wait_for_download_completion().get();
 
         synced_realm.refresh();
         objs = synced_realm.objects<AllTypesObject>();
@@ -82,8 +82,8 @@ TEST_CASE("flx_sync", "[sync]") {
         CHECK(sub3.object_class_name == "AllTypesObject");
         CHECK(sub3.query_string == "TRUEPREDICATE");
 
-        test::wait_for_sync_uploads(user).get();
-        test::wait_for_sync_downloads(user).get();
+        synced_realm.get_sync_session()->wait_for_upload_completion().get();
+        synced_realm.get_sync_session()->wait_for_download_completion().get();
 
         synced_realm.refresh();
         objs = synced_realm.objects<AllTypesObject>();
