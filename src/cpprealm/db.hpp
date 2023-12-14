@@ -106,7 +106,6 @@ struct db {
     template <typename T>
     void remove(T& object)
     {
-        //REALM_ASSERT(object.is_managed());
         if (!object.is_managed())
             throw std::runtime_error("Only managed objects can be removed");
         auto group = m_realm.read_group();

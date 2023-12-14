@@ -6,10 +6,25 @@ let sdkVersion = Version("0.5.0")
 let coreVersion = Version("13.23.4")
 
 var cxxSettings: [CXXSetting] = [
-   .define("REALMCXX_VERSION_MAJOR", to: String(sdkVersion.major)),
-   .define("REALMCXX_VERSION_MINOR", to: String(sdkVersion.minor)),
-   .define("REALMCXX_VERSION_PATCH", to: String(sdkVersion.patch)),
-   .define("REALMCXX_VERSION_STRING", to: "\"\(sdkVersion)\"")
+    .define("REALM_ENABLE_SYNC", to: "1"),
+
+    .define("REALM_DEBUG", .when(configuration: .debug)),
+    .define("REALM_NO_CONFIG"),
+    .define("REALM_INSTALL_LIBEXECDIR", to: ""),
+    .define("REALM_ENABLE_ASSERTIONS", to: "1"),
+    .define("REALM_ENABLE_ENCRYPTION", to: "1"),
+
+    .define("REALMCXX_VERSION_MAJOR", to: String(sdkVersion.major)),
+    .define("REALMCXX_VERSION_MINOR", to: String(sdkVersion.minor)),
+    .define("REALMCXX_VERSION_PATCH", to: String(sdkVersion.patch)),
+    .define("REALMCXX_VERSION_STRING", to: "\"\(sdkVersion)\""),
+
+    // Realm Core
+    .define("REALM_VERSION_MAJOR", to: String(coreVersion.major)),
+    .define("REALM_VERSION_MINOR", to: String(coreVersion.minor)),
+    .define("REALM_VERSION_PATCH", to: String(coreVersion.patch)),
+    .define("REALM_VERSION_EXTRA", to: "\"\(coreVersion.prereleaseIdentifiers.first ?? "")\""),
+    .define("REALM_VERSION_STRING", to: "\"\(coreVersion)\""),
 ]
 
 let applePlatforms: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS]
@@ -49,7 +64,7 @@ let package = Package(
         .package(url: "https://github.com/realm/realm-core.git", exact: coreVersion)
     ],
     targets: [
-cppSdkTarget,
+        cppSdkTarget,
         .target(
             name: "Catch2Generated",
             path: "realm-core/external/generated",
@@ -89,9 +104,7 @@ cppSdkTarget,
                 .copy("setup_baas.rb"),
                 .copy("dependencies.list"),
                 .copy("config_overrides.json")],
-            cxxSettings: testCxxSettings + [
-                .define("REALM_DISABLE_METADATA_ENCRYPTION")
-            ]
+            cxxSettings: cxxSettings
         )
     ],
     cxxLanguageStandard: .cxx17

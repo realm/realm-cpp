@@ -156,7 +156,7 @@ public:
             }
         });
         if (err < 0) {
-            throw std::runtime_error(realm::util::format("uv_async_init failed: %1", uv_strerror(err)));
+            throw std::runtime_error("uv_async_init failed");
         }
         m_handle->data = new Data;
     }
@@ -181,7 +181,7 @@ public:
         return true;
     }
 
-    void invoke(realm::Function<void()> &&fn) override {
+    void invoke(std::function<void()> &&fn) override {
         auto &data = *static_cast<Data *>(m_handle->data);
         data.queue.push(std::move(fn));
         uv_async_send(m_handle.get());
