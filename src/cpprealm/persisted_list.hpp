@@ -197,7 +197,7 @@ namespace realm {
                 if (it != this->unmanaged.end()) {
                     return it - this->unmanaged.begin();
                 } else {
-                    return realm::npos;
+                    return realm::not_in_collection;
                 }
             }
         }
@@ -268,7 +268,7 @@ namespace realm {
                 return this->m_list.find(a.m_object->get_obj().get_key());
             } else {
                 // unmanaged objects in vectors aren't equatable.
-                return realm::npos;
+                return realm::not_in_collection;
             }
         }
 
@@ -359,7 +359,7 @@ namespace realm {
                 return this->m_list.find(a.m_object->get_obj().get_key());
             } else {
                 // unmanaged objects in vectors aren't equatable.
-                return realm::npos;
+                return realm::not_in_collection;
             }
         }
 

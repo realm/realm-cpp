@@ -65,8 +65,10 @@ namespace realm::internal::bridge {
         }
 
         ~internal_scheduler() override = default;
-        void invoke(util::UniqueFunction<void ()> &&fn) override {
-            m_scheduler->invoke(std::move(fn));
+        void invoke(util::UniqueFunction<void()> &&fn) override {
+            m_scheduler->invoke([f = fn.release()]() {
+                f->call();
+            });
         }
 
         bool is_on_thread() const noexcept override {
@@ -316,7 +318,7 @@ namespace realm::internal::bridge {
         // Invoke the given function on the scheduler's thread.
         //
         // This function can be called from any thread.
-        void invoke(Function<void()> &&fn) final {
+        void invoke(std::function<void()> &&fn) final {
             s->invoke(std::move(fn));
         }
 

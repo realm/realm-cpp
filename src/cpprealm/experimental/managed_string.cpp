@@ -122,7 +122,7 @@ namespace realm::experimental {
             query.contains(this->m_key, std::string(rhs));
             return query;
         }
-        return detach().find(rhs) != realm::npos;
+        return detach().find(rhs) != realm::not_in_collection;
     }
 
     rbool managed_string::empty() const noexcept {

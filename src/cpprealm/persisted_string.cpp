@@ -21,9 +21,9 @@ namespace realm {
             query.contains(managed, s);
             return query;
         } else if (is_managed()) {
-            return m_object->get_obj().get<std::string>(managed).find(s) != realm::npos;
+            return m_object->get_obj().get<std::string>(managed).find(s) != realm::not_in_collection;
         } else {
-            return unmanaged.find(s) != realm::npos;
+            return unmanaged.find(s) != realm::not_in_collection;
         }
     }
 

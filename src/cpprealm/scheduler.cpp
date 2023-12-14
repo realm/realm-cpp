@@ -53,8 +53,10 @@ namespace realm {
     struct platform_default_scheduler final : public scheduler {
         platform_default_scheduler() = default;
         ~platform_default_scheduler() final = default;
-        void invoke(Function<void ()> &&fn) override {
-            m_scheduler->invoke(std::move(fn));
+        void invoke(std::function<void()> &&fn) override {
+            m_scheduler->invoke([f = std::move(fn)]() {
+                f();
+            });
         }
         [[nodiscard]] bool is_on_thread() const noexcept override {
             return m_scheduler->is_on_thread();

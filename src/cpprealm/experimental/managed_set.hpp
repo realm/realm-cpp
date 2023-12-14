@@ -120,7 +120,7 @@ namespace realm::experimental {
         {
             auto set = internal::bridge::set(*m_realm, *m_obj, m_key);
             size_t idx = set.find(serialize(v));
-            if (idx == realm::npos)
+            if (idx == realm::not_in_collection)
                 return iterator(size(), this);
             return iterator(idx, this);
         }
@@ -317,7 +317,7 @@ namespace realm::experimental {
         {
             auto set = internal::bridge::set(*m_realm, *m_obj, m_key);
             size_t idx = set.find(v.m_obj.get_key());
-            if (idx == realm::npos)
+            if (idx == realm::not_in_collection)
                 return iterator(size(), this);
             return iterator(idx, this);
         }
@@ -326,7 +326,7 @@ namespace realm::experimental {
         {
             auto set = internal::bridge::set(*m_realm, *m_obj, m_key);
             size_t idx = set.find(v.m_obj->get_key());
-            if (idx == realm::npos)
+            if (idx == realm::not_in_collection)
                 return iterator(size(), this);
             return iterator(idx, this);
         }
