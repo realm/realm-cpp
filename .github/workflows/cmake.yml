@@ -538,13 +538,13 @@ jobs:
 
   build-linux-sync-no-curl:
     runs-on: ubuntu-20.04
-    name: Linux Sync ${{ matrix.configuration }} (${{ matrix.compiler.name }} ${{ matrix.compiler.version }})
+    name: Linux Sync No Curl ${{ matrix.configuration }} (${{ matrix.compiler.name }} ${{ matrix.compiler.version }})
     strategy:
       fail-fast: false
       matrix:
         compiler:
-          - name: gcc
-            version: 8
+          - name: clang
+            version: 15
         configuration:
           - Debug
           - Release
