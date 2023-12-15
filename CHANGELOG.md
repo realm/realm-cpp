@@ -1,10 +1,13 @@
 X.Y.Z Release notes (YYYY-MM-DD)
 =============================================================
 
+### Fixed
+* Platforms using the RealmCore network transport would get 
+  a connection failure each time a network request is made. (since 0.5.0)
+
 ### Enhancements
 * Add ability to thaw a frozen managed object via `managed<T>::thaw()`.
 * Add ability to get the Realm associated with a managed object via `managed<T>::get_realm()`.
-* None
 
 ### Breaking Changes
 * `realm::App::credentials::google(auth_code)` has been renamed to `realm::App::credentials::google_auth_code(const std::string&)`
