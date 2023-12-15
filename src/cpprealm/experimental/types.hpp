@@ -11,6 +11,9 @@
 #include <cpprealm/internal/type_info.hpp>
 
 namespace realm {
+
+    const size_t not_in_collection = -1;
+
     struct uuid {
         explicit uuid(const std::string &);
         uuid() = default;

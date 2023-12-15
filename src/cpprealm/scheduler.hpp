@@ -6,14 +6,6 @@
 #include <queue>
 
 namespace realm {
-namespace util {
-    template <typename Function>
-    class UniqueFunction;
-}
-
-template <typename Fn>
-using Function = util::UniqueFunction<Fn>;
-
     struct scheduler {
         static std::shared_ptr<scheduler> make_default();
 
@@ -22,7 +14,7 @@ using Function = util::UniqueFunction<Fn>;
         // Invoke the given function on the scheduler's thread.
         //
         // This function can be called from any thread.
-        virtual void invoke(Function<void()> &&) = 0;
+        virtual void invoke(std::function<void()> &&) = 0;
 
         // Check if the caller is currently running on the scheduler's thread.
         //

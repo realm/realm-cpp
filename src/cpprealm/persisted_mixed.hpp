@@ -43,7 +43,7 @@ namespace realm {
 
         mixed_data_type get_data_type() const {
             if (!this->m_object) {
-                REALM_TERMINATE("Object must be managed to check `data_type`.");
+                throw std::runtime_error("Object must be managed to check `data_type`.");
             }
             internal::bridge::mixed val = this->m_object->get_obj().template get<typename internal::type_info::type_info<T>::internal_type>(
                     this->managed);
@@ -95,7 +95,7 @@ namespace realm {
                 case internal::bridge::data_type::Decimal:
                     return static_cast<decimal128>(static_cast<internal::bridge::decimal128>(value));
                 case internal::bridge::data_type::TypedLink:
-                    REALM_TERMINATE("Objects stored in mixed properties must be accessed via `get_object_value()`");
+                    throw std::runtime_error("Objects stored in mixed properties must be accessed via `get_object_value()`");
                 default: abort();
             }
         }
@@ -151,7 +151,7 @@ namespace realm {
             query.equal(a.managed, b);
             return query;
         }
-        REALM_TERMINATE("Mixed property must be managed for queries.");
+        throw std::runtime_error("Mixed property must be managed for queries.");
     }
 
     template <template <typename ...> typename Variant, typename ...Ts>
@@ -163,7 +163,7 @@ namespace realm {
             query.not_equal(a.managed, b);
             return query;
         }
-        REALM_TERMINATE("Mixed property must be managed for queries.");
+        throw std::runtime_error("Mixed property must be managed for queries.");
     }
     template <typename T>
     inline std::ostream& operator<< (std::ostream& stream, const persisted<T, std::enable_if_t<realm::internal::type_info::MixedPersistableConcept<T>::value>>& value)

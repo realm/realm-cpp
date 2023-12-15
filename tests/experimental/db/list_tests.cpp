@@ -132,7 +132,7 @@ TEST_CASE("list", "[list]") {
             managed_obj.list_int_col.pop_back();
         });
         CHECK(managed_obj.list_int_col.size() == 2);
-        CHECK(managed_obj.list_int_col.find(1) == realm::npos);
+        CHECK(managed_obj.list_int_col.find(1) == realm::not_in_collection);
 
         realm.write([&realm, &managed_obj] {
             managed_obj.list_int_col.erase(0);
@@ -208,7 +208,7 @@ TEST_CASE("list", "[list]") {
         auto managed_o6 = realm.write([&realm, &o6] {
             return realm.add(std::move(o6));
         });
-        CHECK(managed_obj.list_obj_col.find(managed_o6) == realm::npos);
+        CHECK(managed_obj.list_obj_col.find(managed_o6) == realm::not_in_collection);
 
         realm.write([&realm, &managed_obj] {
             managed_obj.list_obj_col.erase(0);
@@ -274,7 +274,7 @@ TEST_CASE("list", "[list]") {
             managed_obj.list_embedded_obj_col.pop_back();
         });
         CHECK(managed_obj.list_embedded_obj_col.size() == 4);
-        CHECK(managed_obj.list_embedded_obj_col.find(managed_o5) == realm::npos);
+        CHECK(managed_obj.list_embedded_obj_col.find(managed_o5) == realm::not_in_collection);
 
         realm.write([&managed_obj] {
             managed_obj.list_embedded_obj_col.erase(0);

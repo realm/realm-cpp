@@ -3,6 +3,8 @@
 #include <functional>
 #include <mutex>
 
+#include <realm/util/features.h>
+
 #if REALM_HAVE_UV
 #include <uv.h>
 #elif REALM_PLATFORM_APPLE
@@ -14,15 +16,15 @@
 
 class InvocationQueue {
 public:
-    void push(realm::Function<void()>&&);
+    void push(std::function<void()>&&);
     void invoke_all();
 
 private:
     std::mutex m_mutex;
-    std::vector<realm::Function<void()>> m_functions;
+    std::vector<std::function<void()>> m_functions;
 };
 
-void InvocationQueue::push(realm::Function<void()>&& fn)
+void InvocationQueue::push(std::function<void()>&& fn)
 {
     std::lock_guard lock(m_mutex);
     m_functions.push_back(std::move(fn));
@@ -30,7 +32,7 @@ void InvocationQueue::push(realm::Function<void()>&& fn)
 
 void InvocationQueue::invoke_all()
 {
-    std::vector<realm::Function<void()>> functions;
+    std::vector<std::function<void()>> functions;
     {
         std::lock_guard lock(m_mutex);
         functions.swap(m_functions);
@@ -52,7 +54,7 @@ public:
     RunLoopScheduler(CFRunLoopRef run_loop = nullptr);
     ~RunLoopScheduler();
 
-    void invoke(realm::Function<void()>&&) override;
+    void invoke(std::function<void()>&&) override;
 
     bool is_on_thread() const noexcept override;
     bool is_same_as(const scheduler* other) const noexcept override;
@@ -101,7 +103,7 @@ RunLoopScheduler::~RunLoopScheduler()
     CFRelease(m_runloop);
 }
 
-void RunLoopScheduler::invoke(realm::Function<void()>&& fn)
+void RunLoopScheduler::invoke(std::function<void()>&& fn)
 {
     m_queue.queue.push(std::move(fn));
 
@@ -155,7 +157,7 @@ public:
             }
         });
         if (err < 0) {
-            throw std::runtime_error(realm::util::format("uv_async_init failed: %1", uv_strerror(err)));
+            throw std::runtime_error("uv_async_init failed");
         }
         m_handle->data = new Data;
     }
@@ -180,7 +182,7 @@ public:
         return true;
     }
 
-    void invoke(realm::Function<void()> &&fn) override {
+    void invoke(std::function<void()> &&fn) override {
         auto &data = *static_cast<Data *>(m_handle->data);
         data.queue.push(std::move(fn));
         uv_async_send(m_handle.get());
