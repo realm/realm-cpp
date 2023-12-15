@@ -543,8 +543,8 @@ jobs:
       fail-fast: false
       matrix:
         compiler:
-          - name: clang
-            version: 15
+          - name: gcc
+            version: 8
         configuration:
           - Debug
           - Release
