@@ -245,15 +245,15 @@ TEST_CASE("set", "[set]") {
     SECTION("detach()") {
 
         auto scenario = [&](auto unmanaged_ptr, auto managed_ptr, auto& values, size_t expected_count) {
-            auto realm = realm::db(std::move(config));
+            auto realm = realm::db(config);
             auto obj = realm::AllTypesObject();
 
             for (auto& v : values) {
                 (obj.*unmanaged_ptr).insert(v);
             }
 
-            auto managed_obj = r.write([&]() {
-                return r.add(std::move(obj));
+            auto managed_obj = realm.write([&]() {
+                return realm.add(std::move(obj));
             });
 
             auto other = (managed_obj.*managed_ptr).detach();
