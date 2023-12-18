@@ -1,4 +1,4 @@
-X.Y.Z Release notes (YYYY-MM-DD)
+0.6.0 Release notes (2023-12-18)
 =============================================================
 
 ### Fixed
@@ -22,6 +22,7 @@ X.Y.Z Release notes (YYYY-MM-DD)
 
 ### Internals
 * Realm Core headers are no longer exposed through the Realm C++ SDK
+* Upgraded to Core v13.24.1
 
 ----------------------------------------------
 

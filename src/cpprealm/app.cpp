@@ -8,7 +8,7 @@
 #include <realm/object-store/sync/app.hpp>
 #include <realm/object-store/sync/sync_manager.hpp>
 #include <realm/object-store/sync/sync_user.hpp>
-#include <realm/object-store/util/bson/bson.hpp>
+#include <realm/util/bson/bson.hpp>
 
 #include <utility>
 

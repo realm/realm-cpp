@@ -19,7 +19,9 @@ namespace realm::experimental {
 
 
 int main() {
-    auto app = realm::App("ATLAS_DEVICE_SYNC_ID");
+    auto app_config = realm::App::configuration();
+    app_config.app_id = "ATLAS_DEVICE_SYNC_ID";
+    auto app = realm::App(std::move(app_config));
     auto user = app.login(realm::App::credentials::anonymous()).get();
     auto config = user.flexible_sync_configuration();
 
