@@ -4,6 +4,8 @@
 #include <catch2/catch_all.hpp>
 #include <cpprealm/sdk.hpp>
 
+#include <random>
+
 struct realm_path {
     template<typename T = std::mt19937>
     auto random_generator() -> T {
