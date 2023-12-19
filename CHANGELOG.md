@@ -1,3 +1,14 @@
+0.6.1 Release notes (2023-12-19)
+=============================================================
+
+### Fixed
+* Building the Realm C++ SDK as an external library as part of AOSP would fail (since 0.5.0).
+
+### Internals
+* Upgraded to Core v13.25.0
+
+----------------------------------------------
+
 0.6.0 Release notes (2023-12-18)
 =============================================================
 

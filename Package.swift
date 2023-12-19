@@ -2,8 +2,8 @@
 
 import PackageDescription
 
-let sdkVersion = Version("0.6.0")
-let coreVersion = Version("13.24.1")
+let sdkVersion = Version("0.6.1")
+let coreVersion = Version("13.25.0")
 
 var cxxSettings: [CXXSetting] = [
     .define("REALM_ENABLE_SYNC", to: "1"),
