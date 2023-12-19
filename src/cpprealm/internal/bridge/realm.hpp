@@ -220,6 +220,8 @@ namespace realm::internal::bridge {
         bool is_frozen() const;
         realm freeze(); // throws
         realm thaw(); // throws
+        void close();
+        bool is_closed();
         void invalidate();
         obj import_copy_of(const obj&) const;
         [[nodiscard]] std::optional<sync_session> get_sync_session() const;

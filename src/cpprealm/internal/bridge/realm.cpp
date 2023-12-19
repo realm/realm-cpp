@@ -430,6 +430,14 @@ namespace realm::internal::bridge {
         return realm(std::move(config));
     }
 
+    void realm::close() {
+        m_realm->close();
+    }
+
+    bool realm::is_closed() {
+        return m_realm->is_closed();
+    }
+
     void realm::invalidate() {
         m_realm->verify_thread();
         m_realm->invalidate();

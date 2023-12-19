@@ -176,6 +176,8 @@ namespace realm::experimental {
         db freeze();
         db thaw();
         void invalidate();
+        void close();
+        bool is_closed();
         friend struct ::realm::thread_safe_reference<experimental::db>;
         template <typename, typename> friend struct managed;
         friend struct db_config;

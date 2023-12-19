@@ -76,4 +76,26 @@ namespace realm::experimental {
         config2.set_path(path);
         REQUIRE_THROWS(experimental::db(config2));
     }
+
+    TEST_CASE("close realm") {
+        realm_path path;
+        realm::db_config config;
+        config.set_path(path);
+        auto realm = db(std::move(config));
+
+        AllTypesObject obj;
+        obj.str_col = "John";
+        obj._id = 1;
+        AllTypesObjectLink obj_link;
+        obj_link.str_col = "Fido";
+        obj.opt_obj_col = &obj_link;
+
+        auto managed_obj = realm.write([&realm, &obj] {
+            return realm.add(std::move(obj));
+        });
+
+        realm.close();
+        CHECK(managed_obj.is_invalidated());
+        CHECK(realm.is_closed());
+    }
 }

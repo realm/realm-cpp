@@ -21,6 +21,14 @@ namespace realm::experimental {
         m_realm.invalidate();
     }
 
+    void db::close() {
+        m_realm.close();
+    }
+
+    bool db::is_closed() {
+        return m_realm.is_closed();
+    }
+
     bool operator==(const db& lhs, const db& rhs) {
         return lhs.m_realm == rhs.m_realm;
     }
