@@ -32,6 +32,7 @@ public:
     { }
 
     app::Response request(app::HttpMethod method, bson::BsonDocument&& body = {}) const;
+    app::Response request(app::HttpMethod method, const std::string& body) const;
 
     [[nodiscard]] bson::Bson get() const {
         return bson::parse(request(app::HttpMethod::get).body);
@@ -76,9 +77,12 @@ struct Session {
     std::string create_app(bson::BsonArray queryable_fields = {}, std::string name = "test", bool is_asymmetric = false);
     [[nodiscard]] std::string cached_app_id() const;
     void cache_app_id(const std::string& app_id);
+    void trigger_client_reset(int64_t file_ident);
 private:
     const std::string m_base_url;
     const std::string m_access_token;
+    const std::string m_group_id;
+    std::string m_app_id;
     const std::optional<std::string> m_cluster_name;
     std::optional<std::string> m_cached_app_id;
 

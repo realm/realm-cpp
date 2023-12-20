@@ -12,6 +12,7 @@
 #include <cpprealm/experimental/results.hpp>
 #include <cpprealm/experimental/types.hpp>
 
+#include <cpprealm/internal/bridge/status.hpp>
 #include <cpprealm/internal/bridge/sync_session.hpp>
 
 #include <filesystem>
@@ -34,6 +35,7 @@ namespace realm {
     using sync_config = internal::bridge::realm::sync_config;
     using db_config = internal::bridge::realm::config;
     using sync_session = internal::bridge::sync_session;
+    using sync_error = internal::bridge::sync_error;
 
     struct sync_subscription_set;
 }
@@ -177,7 +179,9 @@ namespace realm::experimental {
         void invalidate();
         friend struct ::realm::thread_safe_reference<experimental::db>;
         template <typename, typename> friend struct managed;
-    private:
+        friend struct db_config;
+        template<typename T> friend void db_config::set_client_reset_handler(const client_reset_mode_test<T>&) ;
+        private:
         db(internal::bridge::realm&& r)
         {
             m_realm = std::move(r);
@@ -217,6 +221,41 @@ namespace realm::experimental {
 }
 
 namespace realm {
+
+    namespace client_reset {
+        struct manual : internal::bridge::realm::client_reset_mode_test<experimental::db> {
+            manual() {
+                m_mode = internal::bridge::realm::client_reset_mode::manual;
+            };
+        };
+
+        struct discard_unsynced_changes : internal::bridge::realm::client_reset_mode_test<experimental::db> {
+            explicit discard_unsynced_changes(std::function<void(experimental::db local)> before,
+                                              std::function<void(experimental::db local, experimental::db remote)> after) {
+                m_before = std::move(before);
+                m_after = std::move(after);
+                m_mode = internal::bridge::realm::client_reset_mode::discard_local;
+            }
+        };
+
+        struct recover_unsynced_changes : internal::bridge::realm::client_reset_mode_test<experimental::db> {
+            explicit recover_unsynced_changes(std::function<void(experimental::db local)> before,
+                                              std::function<void(experimental::db local, experimental::db remote)> after) {
+                m_before = std::move(before);
+                m_after = std::move(after);
+                m_mode = internal::bridge::realm::client_reset_mode::recover;
+            }
+        };
+
+        struct recover_or_discard_unsynced_changes : internal::bridge::realm::client_reset_mode_test<experimental::db> {
+            explicit recover_or_discard_unsynced_changes(std::function<void(experimental::db local)> before,
+                                                         std::function<void(experimental::db local, experimental::db remote)> after) {
+                m_before = std::move(before);
+                m_after = std::move(after);
+                m_mode = internal::bridge::realm::client_reset_mode::recover_or_discard;
+            }
+        };
+    }
 
     template <typename T>
     struct thread_safe_reference<T, std::enable_if_t<sizeof(experimental::managed<T>) != 0>> {

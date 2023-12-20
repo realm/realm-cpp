@@ -29,14 +29,19 @@
 #include <filesystem>
 
 namespace realm::internal::bridge {
-    static_assert((uint8_t)realm::config::schema_mode::Automatic == (uint8_t)::realm::SchemaMode::Automatic);
-    static_assert((uint8_t)realm::config::schema_mode::Immutable == (uint8_t)::realm::SchemaMode::Immutable);
-    static_assert((uint8_t)realm::config::schema_mode::ReadOnly == (uint8_t)::realm::SchemaMode::ReadOnly);
-    static_assert((uint8_t)realm::config::schema_mode::SoftResetFile == (uint8_t)::realm::SchemaMode::SoftResetFile);
-    static_assert((uint8_t)realm::config::schema_mode::HardResetFile == (uint8_t)::realm::SchemaMode::HardResetFile);
-    static_assert((uint8_t)realm::config::schema_mode::AdditiveDiscovered == (uint8_t)::realm::SchemaMode::AdditiveDiscovered);
-    static_assert((uint8_t)realm::config::schema_mode::AdditiveExplicit == (uint8_t)::realm::SchemaMode::AdditiveExplicit);
-    static_assert((uint8_t)realm::config::schema_mode::Manual == (uint8_t)::realm::SchemaMode::Manual);
+    static_assert((uint8_t)realm::config::schema_mode::automatic == (uint8_t)::realm::SchemaMode::Automatic);
+    static_assert((uint8_t)realm::config::schema_mode::immutable == (uint8_t)::realm::SchemaMode::Immutable);
+    static_assert((uint8_t)realm::config::schema_mode::read_only == (uint8_t)::realm::SchemaMode::ReadOnly);
+    static_assert((uint8_t)realm::config::schema_mode::soft_reset_file == (uint8_t)::realm::SchemaMode::SoftResetFile);
+    static_assert((uint8_t)realm::config::schema_mode::hard_reset_file == (uint8_t)::realm::SchemaMode::HardResetFile);
+    static_assert((uint8_t)realm::config::schema_mode::additive_discovered == (uint8_t)::realm::SchemaMode::AdditiveDiscovered);
+    static_assert((uint8_t)realm::config::schema_mode::additive_explicit == (uint8_t)::realm::SchemaMode::AdditiveExplicit);
+    static_assert((uint8_t)realm::config::schema_mode::manual == (uint8_t)::realm::SchemaMode::Manual);
+
+    static_assert((uint8_t)realm::client_reset_mode::discard_local == (uint8_t)::realm::ClientResyncMode::DiscardLocal);
+    static_assert((uint8_t)realm::client_reset_mode::manual == (uint8_t)::realm::ClientResyncMode::Manual);
+    static_assert((uint8_t)realm::client_reset_mode::recover == (uint8_t)::realm::ClientResyncMode::Recover);
+    static_assert((uint8_t)realm::client_reset_mode::recover_or_discard == (uint8_t)::realm::ClientResyncMode::RecoverOrDiscard);
 
     class null_logger : public ::realm::logger {
     public:
@@ -310,6 +315,22 @@ namespace realm::internal::bridge {
         get_config()->encryption_key = std::move(key);
     }
 
+    void realm::config::set_client_reset_mode(enum client_reset_mode mode) {
+        get_config()->sync_config->client_resync_mode = static_cast<ClientResyncMode>(mode);
+    }
+
+    void realm::config::before_client_reset(std::function<void(realm old_realm)> callback) {
+        get_config()->sync_config->notify_before_client_reset = [cb = std::move(callback)](::realm::SharedRealm old) {
+            cb(realm(old));
+        };
+    }
+    void realm::config::after_client_reset(std::function<void(realm local_realm, realm remote_realm)> callback) {
+        get_config()->sync_config->notify_after_client_reset = [cb = std::move(callback)](::realm::SharedRealm local,
+                                                                                          ::realm::ThreadSafeReference remote, bool) {
+            cb(realm(local), realm(::realm::Realm::get_shared_realm(std::move(remote))));
+        };
+    }
+
     realm::sync_config realm::config::sync_config() const {
         return get_config()->sync_config;
     }
@@ -369,7 +390,7 @@ namespace realm::internal::bridge {
         m_config->stop_policy = static_cast<SyncSessionStopPolicy>(v);
     }
 
-    void realm::sync_config::set_client_resync_mode(realm::client_resync_mode &&v) {
+    void realm::sync_config::set_client_reset_mode(realm::client_reset_mode &&v) {
         m_config->client_resync_mode = static_cast<ClientResyncMode>(v);
     }
 

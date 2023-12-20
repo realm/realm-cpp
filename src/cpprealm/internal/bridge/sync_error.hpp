@@ -2,6 +2,7 @@
 #define CPP_REALM_BRIDGE_SYNC_ERROR_HPP
 
 #include <cpprealm/internal/bridge/mixed.hpp>
+#include <cpprealm/internal/bridge/status.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 
 #include <unordered_map>
@@ -11,7 +12,6 @@ namespace realm {
 }
 
 namespace realm::internal::bridge {
-    struct status;
 
     struct compensating_write_error_info {
         std::string object_name;

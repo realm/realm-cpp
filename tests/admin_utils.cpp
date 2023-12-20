@@ -24,6 +24,7 @@
 #include <cpprealm/internal/generic_network_transport.hpp>
 
 #include "admin_utils.hpp"
+#include "external/json/json.hpp"
 
 namespace {
 using namespace realm;
@@ -283,6 +284,12 @@ app::Response Admin::Endpoint::request(app::HttpMethod method, bson::BsonDocumen
     std::stringstream ss;
     ss << body;
     auto body_str = ss.str();
+
+    return request(method, body_str);
+}
+
+app::Response Admin::Endpoint::request(app::HttpMethod method, const std::string& body) const
+{
     std::string url = m_url + "?bypass_service_change=DestructiveSyncProtocolVersionIncrease";
 
     auto request = app::Request();
@@ -292,7 +299,7 @@ app::Response Admin::Endpoint::request(app::HttpMethod method, bson::BsonDocumen
             {"Authorization", "Bearer " + m_access_token},
             {"Content-Type", "application/json;charset=utf-8"},
             {"Accept", "application/json"}};
-    request.body = std::move(body_str);
+    request.body = std::move(body);
     auto response = do_http_request(std::move(request));
 
     if (response.http_status_code >= 400) {
@@ -305,8 +312,10 @@ app::Response Admin::Endpoint::request(app::HttpMethod method, bson::BsonDocumen
 Admin::Session::Session(const std::string& baas_url, const std::string& access_token, const std::string& group_id, std::optional<std::string> cluster_name)
 : group(util::format("%1/api/admin/v3.0/groups/%2", baas_url, group_id), access_token)
 , apps(group["apps"])
+, m_group_id(group_id)
 , m_cluster_name(std::move(cluster_name))
 , m_base_url(baas_url)
+, m_access_token(access_token)
 {
 
 }
@@ -314,10 +323,12 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
 std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::string app_name, bool is_asymmetric) {
     auto info = static_cast<bson::BsonDocument>(apps.post({{"name", app_name}}));
     app_name = static_cast<std::string>(info["client_app_id"]);
+
     if (m_cluster_name) {
         app_name += "-" + *m_cluster_name;
     }
     auto app_id = static_cast<std::string>(info["_id"]);
+    m_app_id = app_id;
 
     auto app = apps[app_id];
 
@@ -632,6 +643,15 @@ Admin::Session Admin::Session::atlas(const std::string& baas_url, std::string pr
     std::string access_token = authenticate(baas_url, "mongodb-cloud", std::move(credentials));
 
     return Session(baas_url, access_token, std::move(project_id), std::move(cluster_name));
+}
+
+void Admin::Session::trigger_client_reset(int64_t file_ident) {
+    auto private_apps = Endpoint("http://localhost:9090/api/private/v1.0/groups/" + m_group_id + "/apps", m_access_token);
+    auto json = nlohmann::json{{"file_ident", file_ident}};
+
+    std::stringstream ss;
+    ss << json;
+    private_apps[m_app_id]["sync"]["force_reset"].request(app::HttpMethod::put, ss.str());
 }
 
 static Admin::Session make_default_session() {
