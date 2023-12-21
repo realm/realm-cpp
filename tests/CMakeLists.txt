@@ -6,8 +6,44 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-if(MSVC)
-    add_executable(cpprealm_sync_tests
+add_executable(cpprealm_sync_tests
+        main.hpp
+        main.cpp
+        admin_utils.hpp
+        admin_utils.cpp
+        experimental/sync/test_objects.hpp
+        experimental/sync/asymmetric_object_tests.cpp
+        experimental/sync/flexible_sync_tests.cpp
+        experimental/sync/app_tests.cpp)
+
+add_executable(cpprealm_db_tests
+        main.hpp
+        main.cpp
+        experimental/db/test_objects.hpp
+        experimental/db/binary_tests.cpp
+        experimental/db/date_tests.cpp
+        experimental/db/decimal_tests.cpp
+        experimental/db/embedded_object_tests.cpp
+        experimental/db/list_tests.cpp
+        experimental/db/map_tests.cpp
+        experimental/db/mixed_tests.cpp
+        experimental/db/object_id_tests.cpp
+        experimental/db/object_tests.cpp
+        experimental/db/optional_tests.cpp
+        experimental/db/query_tests.cpp
+        experimental/db/realm_tests.cpp
+        experimental/db/results_tests.cpp
+        experimental/db/run_loop_tests.cpp
+        experimental/db/string_tests.cpp
+        experimental/db/performance_tests.cpp
+        experimental/db/numeric_tests.cpp
+        experimental/db/set_tests.cpp
+        experimental/db/frozen_tests.cpp)
+
+target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
+
+if(ENABLE_ALPHA_SDK)
+    add_executable(cpprealm_alpha_tests
             main.hpp
             main.cpp
             admin_utils.hpp
@@ -86,6 +122,7 @@ else()
     target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
 
 endif()
+
 
 target_link_libraries(cpprealm_sync_tests cpprealm Catch2::Catch2)
 target_link_libraries(cpprealm_db_tests cpprealm Catch2::Catch2)

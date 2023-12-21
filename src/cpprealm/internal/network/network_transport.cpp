@@ -144,7 +144,7 @@ namespace realm::internal {
                     }
                     ep = realm::sync::network::Endpoint(address, m_proxy_config->port);
                 } else {
-                    auto resolved = resolver.resolve(sync::network::Resolver::Query(proxy_address, m_proxy_config->port));
+                    auto resolved = resolver.resolve(sync::network::Resolver::Query(proxy_address, std::to_string(m_proxy_config->port)));
                     ep = *resolved.begin();
                 }
             } else {
