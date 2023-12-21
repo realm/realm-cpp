@@ -40,6 +40,17 @@ add_executable(cpprealm_db_tests
         experimental/db/set_tests.cpp
         experimental/db/frozen_tests.cpp)
 
+if(MSVC)
+    set_property(TARGET cpprealm_sync_tests PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+    set_property(TARGET cpprealm_db_tests PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+    set_property(TARGET Catch2 PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
 
 if(ENABLE_ALPHA_SDK)
