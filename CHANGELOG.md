@@ -1,3 +1,31 @@
+X.Y.Z Release notes (YYYY-MM-DD)
+=============================================================
+
+### Fixed
+* None
+
+### Enhancements
+* Add the following methods for control over the sync session state:
+  - `realm::sync_session::pause()`
+  - `realm::sync_session::resume()`
+  - `realm::sync_session::reconnect()`
+  - `realm::sync_session::state()`
+  - `realm::sync_session::connection_state()`
+  - `realm::sync_session::observe_connection_change(std::function<void(enum connection_state old_state, 
+                                                                       enum connection_state new_state)>&& callback)`
+  - `realm::sync_session::unregister_connection_change_observer(uint64_t token)`
+
+### Breaking Changes
+* None
+
+### Compatibility
+* Fileformat: Generates files with format v23. Reads and automatically upgrade from fileformat v5.
+
+### Internals
+* None
+
+----------------------------------------------
+
 0.6.1 Release notes (2023-12-19)
 =============================================================
 
