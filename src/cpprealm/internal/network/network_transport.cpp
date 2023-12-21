@@ -68,6 +68,24 @@ namespace realm::internal {
             }
         }
 
+        size_t read(char* buffer, std::size_t size, std::error_code& ec)
+        {
+            if (ssl_stream) {
+                return ssl_stream->read(buffer, size, m_read_buffer, ec);
+            } else {
+                return realm::sync::network::Socket::read(buffer, size, m_read_buffer, ec);
+            }
+        }
+
+        size_t read_util(char* buffer, std::size_t size, char delim, std::error_code& ec)
+        {
+            if (ssl_stream) {
+                return ssl_stream->read_until(buffer, size, delim, m_read_buffer, ec);
+            } else {
+                return realm::sync::network::Socket::read_until(buffer, size, delim, m_read_buffer, ec);
+            }
+        }
+
         template <class H>
         void async_handshake(H handler)
         {
@@ -107,9 +125,10 @@ namespace realm::internal {
         using namespace realm::sync::network::ssl;
         Context m_ssl_context;
         DefaultSocket socket{service};
+        realm::sync::network::Endpoint ep;
+        const bool is_localhost = (host == "localhost");
 
         try {
-            realm::sync::network::Endpoint ep;
             auto resolver = realm::sync::network::Resolver{service};
             if (m_proxy_config) {
                 std::string proxy_address = host_from_url(m_proxy_config->address);
@@ -129,7 +148,7 @@ namespace realm::internal {
                     ep = *resolved.begin();
                 }
             } else {
-                auto resolved = resolver.resolve(sync::network::Resolver::Query(host, "443"));
+                auto resolved = resolver.resolve(sync::network::Resolver::Query(host, is_localhost ? "9090" : "443"));
                 ep = *resolved.begin();
             }
             socket.connect(ep);
@@ -181,11 +200,13 @@ namespace realm::internal {
         m_ssl_context.use_included_certificate_roots();
 #endif
 
-        socket.ssl_stream.emplace(socket, m_ssl_context, Stream::client);
-        socket.ssl_stream->set_host_name(host); // Throws
+        if (!is_localhost) {
+            socket.ssl_stream.emplace(socket, m_ssl_context, Stream::client);
+            socket.ssl_stream->set_host_name(host); // Throws
 
-        socket.ssl_stream->set_verify_mode(VerifyMode::peer);
-        socket.ssl_stream->set_logger(logger.get());
+            socket.ssl_stream->set_verify_mode(VerifyMode::peer);
+            socket.ssl_stream->set_logger(logger.get());
+        }
 
         realm::sync::HTTPHeaders headers;
         for (auto& [k, v] : request.headers) {
@@ -215,6 +236,9 @@ namespace realm::internal {
                 break;
             case app::HttpMethod::post:
                 method = realm::sync::HTTPMethod::Post;
+                break;
+            case app::HttpMethod::patch:
+                method = realm::sync::HTTPMethod::Patch;
                 break;
             case app::HttpMethod::del:
                 method = realm::sync::HTTPMethod::Delete;
@@ -259,9 +283,14 @@ namespace realm::internal {
                     return;
                 }
             };
-            socket.async_handshake(std::move(handler)); // Throws
+            if (is_localhost) {
+                handler(std::error_code());
+            } else {
+                socket.async_handshake(std::move(handler)); // Throws
+            }
         });
 
         service.run();
     }
 }
+

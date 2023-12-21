@@ -102,7 +102,7 @@ target_link_libraries(cpprealm PUBLIC Realm::ObjectStore)
 set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
 
 if (APPLE)
-    target_sources(cpprealm PRIVATE src/cpprealm/internal/apple/network_transport.mm)
+    target_sources(cpprealm PRIVATE src/cpprealm/internal/network/network_transport.cpp)
 elseif(ANDROID)
     set(REALM_ANDROID)
     target_sources(cpprealm PRIVATE src/cpprealm/internal/network/network_transport.cpp)
