@@ -29,6 +29,7 @@
 #include <realm/util/base64.hpp>
 
 #include <regex>
+#include <iostream>
 
 namespace realm::internal {
     struct DefaultSocket : realm::sync::network::Socket {
@@ -265,10 +266,13 @@ namespace realm::internal {
                     req.headers = headers;
                     req.path = request.url;
                     req.body = request.body.empty() ? std::nullopt : std::optional<std::string>(request.body);
+                    std::cout << "REQUEST URL: " << req.path << "\n";
+
 
                     m_http_client.async_request(std::move(req), [cb = std::move(completion_block)](const realm::sync::HTTPResponse& r, const std::error_code& e) {
                         app::Response res;
                         res.body = r.body ? *r.body : "";
+                        std::cout << "BODY: " << res.body << "\n";
                         for (auto& [k, v] : r.headers)  {
                             res.headers[k] = v;
                         }
