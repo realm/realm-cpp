@@ -77,7 +77,7 @@ namespace realm::internal {
             }
         }
 
-        size_t read_util(char* buffer, std::size_t size, char delim, std::error_code& ec)
+        size_t read_until(char* buffer, std::size_t size, char delim, std::error_code& ec)
         {
             if (ssl_stream) {
                 return ssl_stream->read_until(buffer, size, delim, m_read_buffer, ec);
