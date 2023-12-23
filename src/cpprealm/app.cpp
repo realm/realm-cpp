@@ -37,6 +37,14 @@ namespace realm {
         };
     }
 
+    app_error::app_error() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        new (&m_error) app::AppError(realm::ErrorCodes::Error::UnknownError, "");
+#else
+        m_error = app::AppError(realm::ErrorCodes::Error::UnknownError, "");
+#endif
+    }
+
     app_error::app_error(const app_error& other) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_error) app::AppError(*reinterpret_cast<const app::AppError*>(&other.m_error));
