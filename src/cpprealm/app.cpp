@@ -41,7 +41,7 @@ namespace realm {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_error) app::AppError(realm::ErrorCodes::Error::UnknownError, "");
 #else
-        m_error = app::AppError(realm::ErrorCodes::Error::UnknownError, "");
+        m_error = std::make_shared<app::AppError>(realm::ErrorCodes::Error::UnknownError, "");
 #endif
     }
 
