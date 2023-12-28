@@ -4,7 +4,7 @@
 namespace realm::experimental {
     TEST_CASE("optional") {
         realm_path path;
-        db_config config;
+        realm::db_config config;
         config.set_path(path);
         SECTION("unmanaged_managed_optional_get_set") {
             AllTypesObject obj;

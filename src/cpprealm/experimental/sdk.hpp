@@ -17,6 +17,7 @@
 #include <cpprealm/experimental/results.hpp>
 #include <cpprealm/experimental/link.hpp>
 #include <cpprealm/experimental/observation.hpp>
+#include <cpprealm/experimental/client_reset.hpp>
 #include <cpprealm/experimental/db.hpp>
 
 #endif //CPPREALM_EXPERIMENTAL_SDK_HPP

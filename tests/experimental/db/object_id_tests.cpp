@@ -5,7 +5,7 @@ using namespace realm;
 
 TEST_CASE("object_id", "[object_id]") {
     realm_path path;
-    db_config config;
+    realm::db_config config;
     config.set_path(path);
     SECTION("unmanaged_managed_object_id", "[object_id]") {
         auto realm = experimental::db(std::move(config));

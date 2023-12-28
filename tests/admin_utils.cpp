@@ -320,7 +320,7 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
 
 }
 
-std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::string app_name, bool is_asymmetric) {
+std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::string app_name, bool is_asymmetric, bool disable_recovery_mode) {
     auto info = static_cast<bson::BsonDocument>(apps.post({{"name", app_name}}));
     app_name = static_cast<std::string>(info["client_app_id"]);
 
@@ -557,7 +557,7 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
                                       {"state", "enabled"},
                                       {"database_name", "test_data"},
                                       {"enabled", true},
-                                      {"is_recovery_mode_disabled", true},
+                                      {"is_recovery_mode_disabled", disable_recovery_mode},
                                       {"queryable_fields_names", queryable_fields},
                                       {"asymmetric_tables", bson::BsonArray({"AllTypesAsymmetricObject"})}
 
@@ -646,7 +646,7 @@ Admin::Session Admin::Session::atlas(const std::string& baas_url, std::string pr
 }
 
 void Admin::Session::trigger_client_reset(int64_t file_ident) {
-    auto private_apps = Endpoint("http://localhost:9090/api/private/v1.0/groups/" + m_group_id + "/apps", m_access_token);
+    auto private_apps = Endpoint(m_base_url + "/api/private/v1.0/groups/" + m_group_id + "/apps", m_access_token);
     auto json = nlohmann::json{{"file_ident", file_ident}};
 
     std::stringstream ss;

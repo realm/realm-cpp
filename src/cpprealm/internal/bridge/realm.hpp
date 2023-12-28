@@ -18,6 +18,7 @@ namespace realm {
 }
 
 namespace realm::internal::bridge {
+    template<typename T> struct client_reset_mode_base;
     struct group;
     struct schema;
     struct object_schema;
@@ -70,17 +71,6 @@ namespace realm::internal::bridge {
         private:
             std::shared_ptr<SyncConfig> m_config;
         };
-
-        struct config;
-        template<typename T>
-        struct client_reset_mode_test {
-        protected:
-            std::function<void(T local)> m_before;
-            std::function<void(T local, T remote)> m_after;
-            internal::bridge::realm::client_reset_mode m_mode;
-            friend struct internal::bridge::realm::config;
-        };
-
 
         struct config {
             // How to handle update_schema() being called on a file which has
@@ -190,12 +180,12 @@ namespace realm::internal::bridge {
             std::optional<schema> get_schema();
 
             template<typename T>
-            void set_client_reset_handler(const client_reset_mode_test<T>& handler) {
+            void set_client_reset_handler(const client_reset_mode_base<T>& handler) {
                 before_client_reset([fn = std::move(handler.m_before)](realm local_realm) {
-                    fn(local_realm);
+                    fn(local_realm.freeze());
                 });
                 after_client_reset([fn = std::move(handler.m_after)](realm local_realm, realm remote_realm) {
-                    fn(local_realm, remote_realm);
+                    fn(local_realm.freeze(), remote_realm);
                 });
                 set_client_reset_mode(handler.m_mode);
             }
@@ -239,6 +229,15 @@ namespace realm::internal::bridge {
     private:
         std::shared_ptr<Realm> m_realm;
         friend struct group;
+    };
+
+    template<typename T>
+    struct client_reset_mode_base {
+    protected:
+        std::function<void(T local)> m_before;
+        std::function<void(T local, T remote)> m_after;
+        internal::bridge::realm::client_reset_mode m_mode;
+        friend struct internal::bridge::realm::config;
     };
 
     template <typename T>

@@ -11,7 +11,7 @@ namespace realm::experimental {
 
     TEST_CASE("query") {
         realm_path path;
-        db_config config;
+        realm::db_config config;
         config.set_path(path);
         SECTION("tsq_basic_comparison", "[query]") {
             auto realm = db(std::move(config));

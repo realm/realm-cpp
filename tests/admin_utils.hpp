@@ -74,7 +74,7 @@ struct Session {
 
     const std::string& base_url() const { return m_base_url; }
 
-    std::string create_app(bson::BsonArray queryable_fields = {}, std::string name = "test", bool is_asymmetric = false);
+    std::string create_app(bson::BsonArray queryable_fields = {}, std::string name = "test", bool is_asymmetric = false, bool disable_recovery_mode = true);
     [[nodiscard]] std::string cached_app_id() const;
     void cache_app_id(const std::string& app_id);
     void trigger_client_reset(int64_t file_ident);

@@ -5,7 +5,7 @@ using namespace realm;
 
 TEST_CASE("numerics", "[numerics]") {
     realm_path path;
-    db_config config;
+    realm::db_config config;
     config.set_path(path);
     SECTION("unmanaged_managed_mixed_get_set", "[mixed]") {
         auto obj = experimental::AllTypesObject();

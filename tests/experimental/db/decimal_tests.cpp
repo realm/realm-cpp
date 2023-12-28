@@ -5,7 +5,7 @@ using namespace realm;
 
 TEST_CASE("decimal128_tests", "[decimal128]") {
     realm_path path;
-    db_config config;
+    realm::db_config config;
     config.set_path(path);
     SECTION("decimal_basics", "[decimal128]") {
         auto realm = experimental::db(std::move(config));

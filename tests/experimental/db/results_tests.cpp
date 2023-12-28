@@ -5,7 +5,7 @@ namespace realm::experimental {
 
     TEST_CASE("results", "[results]") {
         realm_path path;
-        db_config config;
+        realm::db_config config;
         config.set_path(path);
         SECTION("results_notifications") {
             auto realm = db(std::move(config));

@@ -18,7 +18,7 @@ void test(Func f, std::vector<T>&& values, size_t&& expected_count = 3) {
 
 TEST_CASE("set", "[set]") {
     realm_path path;
-    db_config config;
+    realm::db_config config;
     config.set_path(path);
 
     SECTION("insert") {

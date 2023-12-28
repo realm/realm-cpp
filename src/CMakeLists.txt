@@ -21,6 +21,7 @@ add_custom_command(
 set(SOURCES
     cpprealm/analytics.cpp
     cpprealm/app.cpp
+    cpprealm/experimental/client_reset.cpp
     cpprealm/experimental/db.cpp
     cpprealm/experimental/managed_binary.cpp
     cpprealm/experimental/managed_decimal.cpp
@@ -69,6 +70,7 @@ set(HEADERS
     cpprealm/app.hpp
     cpprealm/asymmetric_object.hpp
     cpprealm/experimental/accessors.hpp
+    cpprealm/experimental/client_reset.hpp
     cpprealm/experimental/db.hpp
     cpprealm/experimental/link.hpp
     cpprealm/experimental/macros.hpp

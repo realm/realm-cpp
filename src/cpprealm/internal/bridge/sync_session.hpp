@@ -95,6 +95,8 @@ namespace realm {
              this method does nothing.
              */
             void unregister_connection_change_observer(uint64_t token);
+
+            operator std::weak_ptr<SyncSession>();
         private:
             std::weak_ptr<SyncSession> m_session;
             sync_session(const std::shared_ptr<SyncSession> &);
