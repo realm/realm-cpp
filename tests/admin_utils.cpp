@@ -53,6 +53,7 @@ static std::string authenticate(const std::string& baas_url, const std::string& 
     request.body = body.str();
 
     auto result = do_http_request(std::move(request));
+    std::cout << "BODY: " << result.body << "\n" << "Status Code " << result.http_status_code << "\n";
     if (result.http_status_code != 200) {
         REALM_TERMINATE(util::format("Unable to authenticate at %1 with provider '%2': %3", baas_url, provider_type, result.body).c_str());
     }
