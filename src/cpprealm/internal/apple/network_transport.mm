@@ -106,6 +106,9 @@ namespace realm::internal {
                                                     completionHandler:[request = std::move(request),
                                                                        completion = completion_block](NSData *data, NSURLResponse *response, NSError *error) {
             auto httpResponse = (NSHTTPURLResponse *)response;
+            NSLog(@"%@", response.description);
+            NSLog(@"%@", error);
+
             std::string body;
             if (data) {
                 body = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] cStringUsingEncoding:NSUTF8StringEncoding];
