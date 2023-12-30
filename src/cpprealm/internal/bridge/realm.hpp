@@ -15,6 +15,17 @@ namespace realm {
     struct SyncConfig;
     struct scheduler;
     class SyncUser;
+
+    enum class client_reset_mode: uint8_t {
+        // Fire a client reset error
+        manual,
+        // Discard local changes, without disrupting accessors or closing the Realm
+        discard_local,
+        // Attempt to recover unsynchronized but committed changes.
+        recover,
+        // Attempt recovery and if that fails, discard local.
+        recover_or_discard,
+    };
 }
 
 namespace realm::internal::bridge {
@@ -38,17 +49,6 @@ namespace realm::internal::bridge {
             after_changes_uploaded, // Once all Realms/Sessions go out of scope, wait for uploads to complete and stop.
         };
 
-        enum class client_reset_mode: uint8_t {
-            // Fire a client reset error
-            manual,
-            // Discard local changes, without disrupting accessors or closing the Realm
-            discard_local,
-            // Attempt to recover unsynchronized but committed changes.
-            recover,
-            // Attempt recovery and if that fails, discard local.
-            recover_or_discard,
-        };
-
         struct sync_config {
 
             struct proxy_config {
@@ -64,7 +64,6 @@ namespace realm::internal::bridge {
             sync_config(const std::shared_ptr<SyncUser> &user);
             sync_config(const std::shared_ptr<SyncConfig> &);//NOLINT(google-explicit-constructor)
             operator std::shared_ptr<SyncConfig>() const;    //NOLINT(google-explicit-constructor)
-            void set_client_reset_mode(client_reset_mode &&);
             void set_stop_policy(sync_session_stop_policy &&);
             void set_error_handler(std::function<void(const sync_session &, const sync_error &)> &&fn);
 
@@ -189,13 +188,11 @@ namespace realm::internal::bridge {
                 });
                 set_client_reset_mode(handler.m_mode);
             }
-
-
+            enum client_reset_mode get_client_reset_mode() const;
+        private:
             void set_client_reset_mode(enum client_reset_mode mode);
             void before_client_reset(std::function<void(realm old_realm)> callback);
             void after_client_reset(std::function<void(realm local_realm, realm remote_realm)> callback);
-
-        private:
             inline RealmConfig* get_config();
             inline const RealmConfig* get_config() const;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
@@ -236,7 +233,7 @@ namespace realm::internal::bridge {
     protected:
         std::function<void(T local)> m_before;
         std::function<void(T local, T remote)> m_after;
-        internal::bridge::realm::client_reset_mode m_mode;
+        ::realm::client_reset_mode m_mode;
         friend struct internal::bridge::realm::config;
     };
 

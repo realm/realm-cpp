@@ -38,10 +38,10 @@ namespace realm::internal::bridge {
     static_assert((uint8_t)realm::config::schema_mode::additive_explicit == (uint8_t)::realm::SchemaMode::AdditiveExplicit);
     static_assert((uint8_t)realm::config::schema_mode::manual == (uint8_t)::realm::SchemaMode::Manual);
 
-    static_assert((uint8_t)realm::client_reset_mode::discard_local == (uint8_t)::realm::ClientResyncMode::DiscardLocal);
-    static_assert((uint8_t)realm::client_reset_mode::manual == (uint8_t)::realm::ClientResyncMode::Manual);
-    static_assert((uint8_t)realm::client_reset_mode::recover == (uint8_t)::realm::ClientResyncMode::Recover);
-    static_assert((uint8_t)realm::client_reset_mode::recover_or_discard == (uint8_t)::realm::ClientResyncMode::RecoverOrDiscard);
+    static_assert((uint8_t)client_reset_mode::discard_local == (uint8_t)::realm::ClientResyncMode::DiscardLocal);
+    static_assert((uint8_t)client_reset_mode::manual == (uint8_t)::realm::ClientResyncMode::Manual);
+    static_assert((uint8_t)client_reset_mode::recover == (uint8_t)::realm::ClientResyncMode::Recover);
+    static_assert((uint8_t)client_reset_mode::recover_or_discard == (uint8_t)::realm::ClientResyncMode::RecoverOrDiscard);
 
     class null_logger : public ::realm::logger {
     public:
@@ -315,6 +315,10 @@ namespace realm::internal::bridge {
         get_config()->encryption_key = std::move(key);
     }
 
+    enum ::realm::client_reset_mode realm::config::get_client_reset_mode() const {
+        return static_cast<enum ::realm::client_reset_mode>(get_config()->sync_config->client_resync_mode);
+    }
+
     void realm::config::set_client_reset_mode(enum client_reset_mode mode) {
         get_config()->sync_config->client_resync_mode = static_cast<ClientResyncMode>(mode);
     }
@@ -388,10 +392,6 @@ namespace realm::internal::bridge {
 
     void realm::sync_config::set_stop_policy(realm::sync_session_stop_policy &&v) {
         m_config->stop_policy = static_cast<SyncSessionStopPolicy>(v);
-    }
-
-    void realm::sync_config::set_client_reset_mode(realm::client_reset_mode &&v) {
-        m_config->client_resync_mode = static_cast<ClientResyncMode>(v);
     }
 
     realm::sync_config::sync_config(const std::shared_ptr<SyncUser> &user) {

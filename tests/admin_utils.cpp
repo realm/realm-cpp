@@ -321,16 +321,16 @@ Admin::Session::Session(const std::string& baas_url, const std::string& access_t
 }
 
 std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::string app_name, bool is_asymmetric, bool disable_recovery_mode) {
+    recovery_mode_disabled = disable_recovery_mode;
     auto info = static_cast<bson::BsonDocument>(apps.post({{"name", app_name}}));
     app_name = static_cast<std::string>(info["client_app_id"]);
 
     if (m_cluster_name) {
         app_name += "-" + *m_cluster_name;
     }
-    auto app_id = static_cast<std::string>(info["_id"]);
-    m_app_id = app_id;
+    m_app_id = static_cast<std::string>(info["_id"]);
 
-    auto app = apps[app_id];
+    auto app = apps[m_app_id];
 
     static_cast<void>(app["secrets"].post({
         { "name", "customTokenKey" },
@@ -419,6 +419,38 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
            )"
     }}));
 
+    static_cast<void>(app["functions"].post({
+            {"name", "deleteAllTypesObjects"},
+            {"private", false},
+            {"can_evaluate", {}},
+            {"source",
+             R"(
+               exports = async function(data) {
+                   const user = context.user;
+                   const mongodb = context.services.get(")" + util::format("db-%1", app_name) + R"(");
+                   const objectCollection = mongodb.db(")" + util::format("test_data") + R"(").collection("AllTypesObject");
+                   doc = await objectCollection.deleteMany({});
+                   return doc;
+               };
+           )"
+            }}));
+
+    static_cast<void>(app["functions"].post({
+            {"name", "getAllTypesObjects"},
+            {"private", false},
+            {"can_evaluate", {}},
+            {"source",
+             R"(
+               exports = async function(data) {
+                   const user = context.user;
+                   const mongodb = context.services.get(")" + util::format("db-%1", app_name) + R"(");
+                   const objectCollection = mongodb.db(")" + util::format("test_data") + R"(").collection("AllTypesObject");
+                   doc = await objectCollection.find({});
+                   return doc;
+               };
+           )"
+            }}));
+
     bson::BsonDocument userData = {
         {"schema", bson::BsonDocument {
                        {"properties", bson::BsonDocument {
@@ -502,6 +534,7 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
         {"config", mongodb_service_config}
     }));
     std::string mongodb_service_id(mongodb_service_response["_id"]);
+    m_service_id = mongodb_service_id;
 
     app["custom_user_data"].patch(bson::BsonDocument {
         {"mongo_service_id", mongodb_service_id},
@@ -557,7 +590,7 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
                                       {"state", "enabled"},
                                       {"database_name", "test_data"},
                                       {"enabled", true},
-                                      {"is_recovery_mode_disabled", disable_recovery_mode},
+                                      {"is_recovery_mode_disabled", recovery_mode_disabled},
                                       {"queryable_fields_names", queryable_fields},
                                       {"asymmetric_tables", bson::BsonArray({"AllTypesAsymmetricObject"})}
 
@@ -631,7 +664,7 @@ Admin::Session Admin::Session::local(std::optional<std::string> baas_url)
     auto roles = static_cast<bson::BsonArray>(parsed_response["roles"]);
     auto group_id = static_cast<std::string>(static_cast<bson::BsonDocument>(roles[0])["group_id"]);
 
-    return Session(base_url, access_token, group_id);
+    return Session(base_url, access_token, group_id, std::nullopt);
 }
 
 Admin::Session Admin::Session::atlas(const std::string& baas_url, std::string project_id, std::string cluster_name, std::string api_key, std::string private_api_key)
@@ -645,13 +678,40 @@ Admin::Session Admin::Session::atlas(const std::string& baas_url, std::string pr
     return Session(baas_url, access_token, std::move(project_id), std::move(cluster_name));
 }
 
-void Admin::Session::trigger_client_reset(int64_t file_ident) {
-    auto private_apps = Endpoint(m_base_url + "/api/private/v1.0/groups/" + m_group_id + "/apps", m_access_token);
-    auto json = nlohmann::json{{"file_ident", file_ident}};
+void Admin::Session::enable_sync() {
+    bson::BsonDocument service_config = {
+        {"flexible_sync", bson::BsonDocument {
+                                  {"state", "enabled"},
+                                  {"is_recovery_mode_disabled", recovery_mode_disabled},
+                                  {"enabled", true}}}
+    };
 
-    std::stringstream ss;
-    ss << json;
-    private_apps[m_app_id]["sync"]["force_reset"].request(app::HttpMethod::put, ss.str());
+    apps[m_app_id]["services"][m_service_id]["config"].patch(std::move(service_config));
+    for (int i = 0; i < 5; ++i) {
+        auto c = apps[m_app_id]["services"][m_service_id]["config"].get();
+        if (c.to_string().find("enabled") != std::string::npos) {
+            return;
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+    std::runtime_error("Sync could not be enabled in time.");
+}
+void Admin::Session::disable_sync() {
+    bson::BsonDocument service_config = {
+        {"flexible_sync", bson::BsonDocument {
+                                  {"state", "disabled"},
+                                  {"enabled", false}}}
+    };
+
+    apps[m_app_id]["services"][m_service_id]["config"].patch(std::move(service_config));
+    for (int i = 0; i < 5; ++i) {
+        auto c = apps[m_app_id]["services"][m_service_id]["config"].get();
+        if (c.to_string().find("disabled") != std::string::npos) {
+            return;
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+    std::runtime_error("Sync could not be disabled in time.");
 }
 
 static Admin::Session make_default_session() {

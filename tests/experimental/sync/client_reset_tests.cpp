@@ -15,7 +15,49 @@ void simulate_client_reset_error_for_session(sync_session&& session) {
     SyncSession::OnlyForTesting::handle_error(*raw_session, std::move(error));
 }
 
+void prepare_realm(const realm::db_config& flx_sync_config, const user& sync_user) {
+    sync_user.call_function("deleteAllTypesObjects", "[]").get();
+    auto synced_realm = experimental::db(flx_sync_config);
+    auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
+                                                          subs.add<experimental::AllTypesObject>("foo-strings");
+                                                          subs.add<experimental::AllTypesObjectLink>("foo-link");
+                                                      }).get();
+    CHECK(update_success == true);
+    CHECK(synced_realm.subscriptions().size() == 2);
+
+    synced_realm.write([&synced_realm]() {
+        experimental::AllTypesObject o;
+        o._id = 1;
+        o.str_col = "foo";
+        synced_realm.add(std::move(o));
+    });
+
+    synced_realm.get_sync_session()->wait_for_upload_completion();
+    auto documents = sync_user.call_function("getAllTypesObjects", "[]").get();
+    for (;;) {
+        if (documents->find("_id") != std::string::npos) {
+            break;
+        }
+        documents = sync_user.call_function("getAllTypesObjects", "[]").get();
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+
+    auto session = synced_realm.get_sync_session()->operator std::weak_ptr<::realm::SyncSession>().lock().get();
+    session->pause();
+    Admin::shared().disable_sync();
+    // Add an object to the local realm that won't be synced due to the suspend
+    synced_realm.write([&synced_realm]() {
+        experimental::AllTypesObject o;
+        o._id = 2;
+        o.str_col = "local only";
+        synced_realm.add(std::move(o));
+    });
+    synced_realm.refresh();
+    Admin::shared().enable_sync();
+};
+
 TEST_CASE("client_reset", "[sync]") {
+
     SECTION("error handler") {
         auto app = realm::App(realm::App::configuration({Admin::shared().create_app({"str_col", "_id"}), Admin::shared().base_url()}));
         app.get_sync_manager().set_log_level(logger::level::all);
@@ -78,22 +120,25 @@ TEST_CASE("client_reset", "[sync]") {
         });
 
         auto session = synced_realm.get_sync_session()->operator std::weak_ptr<::realm::SyncSession>().lock().get();
-        auto file_ident = realm::SyncSession::OnlyForTesting::get_file_ident(*session).ident;
-
         session->pause();
-        Admin::shared().trigger_client_reset(file_ident);
+        Admin::shared().disable_sync();
+        synced_realm.write([&synced_realm]() {
+            experimental::AllTypesObject o;
+            o._id = 2;
+            o.str_col = "local only";
+            synced_realm.add(std::move(o));
+        });
+        Admin::shared().enable_sync();
+        session->resume();
 
-        if (f.wait_for(std::chrono::milliseconds(15000)) == std::future_status::ready) {
-            f.get();
-        } else {
-            std::runtime_error("Timeout exceeded");
-        }
+        CHECK(f.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
     }
 
     SECTION("discard_unsynced_changes") {
         auto app = realm::App(realm::App::configuration({Admin::shared().create_app({"str_col", "_id"}, "test", false, false), Admin::shared().base_url()}));
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
+
         auto flx_sync_config = user.flexible_sync_configuration();
 
         std::promise<void> before_handler_promise;
@@ -104,61 +149,32 @@ TEST_CASE("client_reset", "[sync]") {
         auto before_handler = [&](experimental::db before) {
             auto results = before.objects<experimental::AllTypesObject>();
             CHECK(results.size() == 2);
+            CHECK(before.is_frozen());
             before_handler_promise.set_value();
         };
 
         auto after_handler = [&](experimental::db local, experimental::db remote) {
             auto results_local = local.objects<experimental::AllTypesObject>();
+            CHECK(local.is_frozen());
             CHECK(results_local.size() == 2);
 
             auto results_remote = remote.objects<experimental::AllTypesObject>();
-            CHECK(results_remote.size() == 1);
+            CHECK(!remote.is_frozen());
             CHECK(results_remote[0].str_col == "foo");
+            CHECK(results_remote.size() == 1);
             after_handler_promise.set_value();
         };
 
         flx_sync_config.set_client_reset_handler(client_reset::discard_unsynced_changes(before_handler, after_handler));
-
-        {
-            auto synced_realm = experimental::db(flx_sync_config);
-
-            auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                                                  subs.add<experimental::AllTypesObject>("foo-strings");
-                                                                  subs.add<experimental::AllTypesObjectLink>("foo-link");
-                                                              }).get();
-            CHECK(update_success == true);
-            CHECK(synced_realm.subscriptions().size() == 2);
-
-            synced_realm.write([&synced_realm]() {
-                experimental::AllTypesObject o;
-                o._id = 1;
-                o.str_col = "foo";
-                synced_realm.add(std::move(o));
-            });
-
-            synced_realm.get_sync_session()->wait_for_upload_completion();
-
-            auto session = synced_realm.get_sync_session()->operator std::weak_ptr<::realm::SyncSession>().lock().get();
-            auto file_ident = realm::SyncSession::OnlyForTesting::get_file_ident(*session).ident;
-
-            session->pause();
-            Admin::shared().trigger_client_reset(file_ident);
-            // Add an object to the local realm that won't be synced due to the suspend
-            synced_realm.write([&synced_realm]() {
-                experimental::AllTypesObject o;
-                o._id = 2;
-                o.str_col = "local only";
-                synced_realm.add(std::move(o));
-            });
-        }
+        prepare_realm(flx_sync_config, user);
 
         auto synced_realm2 = experimental::db(flx_sync_config);
         synced_realm2.refresh();
         // The AllTypesObject created locally with _id=2 should have been discarded,
         // while the one from the server _id=1 should be present
 
-        CHECK(before_handler_future.wait_for(std::chrono::milliseconds(15000)) == std::future_status::ready);
-        CHECK(after_handler_future.wait_for(std::chrono::milliseconds(15000)) == std::future_status::ready);
+        CHECK(before_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
+        CHECK(after_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
     }
 
     SECTION("recover_or_discard_unsynced_changes") {
@@ -191,46 +207,15 @@ TEST_CASE("client_reset", "[sync]") {
 
         flx_sync_config.set_client_reset_handler(client_reset::recover_or_discard_unsynced_changes(before_handler, after_handler));
 
-        {
-            auto synced_realm = experimental::db(flx_sync_config);
-
-            auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                                                  subs.add<experimental::AllTypesObject>("foo-strings");
-                                                                  subs.add<experimental::AllTypesObjectLink>("foo-link");
-                                                              }).get();
-            CHECK(update_success == true);
-            CHECK(synced_realm.subscriptions().size() == 2);
-
-            synced_realm.write([&synced_realm]() {
-                experimental::AllTypesObject o;
-                o._id = 1;
-                o.str_col = "foo";
-                synced_realm.add(std::move(o));
-            });
-
-            synced_realm.get_sync_session()->wait_for_upload_completion();
-
-            auto session = synced_realm.get_sync_session()->operator std::weak_ptr<::realm::SyncSession>().lock().get();
-            auto file_ident = realm::SyncSession::OnlyForTesting::get_file_ident(*session).ident;
-
-            session->pause();
-            Admin::shared().trigger_client_reset(file_ident);
-            // Add an object to the local realm that won't be synced due to the suspend
-            synced_realm.write([&synced_realm]() {
-                experimental::AllTypesObject o;
-                o._id = 2;
-                o.str_col = "local only";
-                synced_realm.add(std::move(o));
-            });
-        }
+        prepare_realm(flx_sync_config, user);
 
         auto synced_realm2 = experimental::db(flx_sync_config);
         synced_realm2.refresh();
         // The AllTypesObject created locally with _id=2 should be present as it should be recovered,
         // while the one from the server _id=1 should be present
 
-        CHECK(before_handler_future.wait_for(std::chrono::milliseconds(15000)) == std::future_status::ready);
-        CHECK(after_handler_future.wait_for(std::chrono::milliseconds(15000)) == std::future_status::ready);
+        CHECK(before_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
+        CHECK(after_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
     }
 
     SECTION("recover_unsynced_changes") {
@@ -263,46 +248,15 @@ TEST_CASE("client_reset", "[sync]") {
 
         flx_sync_config.set_client_reset_handler(client_reset::recover_unsynced_changes(before_handler, after_handler));
 
-        {
-            auto synced_realm = experimental::db(flx_sync_config);
-
-            auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                                                  subs.add<experimental::AllTypesObject>("foo-strings");
-                                                                  subs.add<experimental::AllTypesObjectLink>("foo-link");
-                                                              }).get();
-            CHECK(update_success == true);
-            CHECK(synced_realm.subscriptions().size() == 2);
-
-            synced_realm.write([&synced_realm]() {
-                experimental::AllTypesObject o;
-                o._id = 1;
-                o.str_col = "foo";
-                synced_realm.add(std::move(o));
-            });
-
-            synced_realm.get_sync_session()->wait_for_upload_completion();
-
-            auto session = synced_realm.get_sync_session()->operator std::weak_ptr<::realm::SyncSession>().lock().get();
-            auto file_ident = realm::SyncSession::OnlyForTesting::get_file_ident(*session).ident;
-
-            session->pause();
-            Admin::shared().trigger_client_reset(file_ident);
-            // Add an object to the local realm that won't be synced due to the suspend
-            synced_realm.write([&synced_realm]() {
-                experimental::AllTypesObject o;
-                o._id = 2;
-                o.str_col = "local only";
-                synced_realm.add(std::move(o));
-            });
-        }
+        prepare_realm(flx_sync_config, user);
 
         auto synced_realm2 = experimental::db(flx_sync_config);
         synced_realm2.refresh();
         // The object created locally and the object created on the server
         // should both be integrated into the new realm file.
 
-        CHECK(before_handler_future.wait_for(std::chrono::milliseconds(15000)) == std::future_status::ready);
-        CHECK(after_handler_future.wait_for(std::chrono::milliseconds(15000)) == std::future_status::ready);
+        CHECK(before_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
+        CHECK(after_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
     }
 
     SECTION("recover_unsynced_changes_with_failure") {
@@ -331,42 +285,11 @@ TEST_CASE("client_reset", "[sync]") {
 
         flx_sync_config.set_client_reset_handler(client_reset::recover_unsynced_changes(before_handler, after_handler));
 
-        {
-            auto synced_realm = experimental::db(flx_sync_config);
-
-            auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                                                  subs.add<experimental::AllTypesObject>("foo-strings");
-                                                                  subs.add<experimental::AllTypesObjectLink>("foo-link");
-                                                              }).get();
-            CHECK(update_success == true);
-            CHECK(synced_realm.subscriptions().size() == 2);
-
-            synced_realm.write([&synced_realm]() {
-                experimental::AllTypesObject o;
-                o._id = 1;
-                o.str_col = "foo";
-                synced_realm.add(std::move(o));
-            });
-
-            synced_realm.get_sync_session()->wait_for_upload_completion();
-
-            auto session = synced_realm.get_sync_session()->operator std::weak_ptr<::realm::SyncSession>().lock().get();
-            auto file_ident = realm::SyncSession::OnlyForTesting::get_file_ident(*session).ident;
-
-            session->pause();
-            Admin::shared().trigger_client_reset(file_ident);
-            // Add an object to the local realm that won't be synced due to the suspend
-            synced_realm.write([&synced_realm]() {
-                experimental::AllTypesObject o;
-                o._id = 2;
-                o.str_col = "local only";
-                synced_realm.add(std::move(o));
-            });
-        }
-
+        prepare_realm(flx_sync_config, user);
         auto synced_realm2 = experimental::db(flx_sync_config);
         synced_realm2.refresh();
 
-        CHECK(error_handler_future.wait_for(std::chrono::milliseconds(15000)) == std::future_status::ready);
+        CHECK(error_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
     }
+
 }

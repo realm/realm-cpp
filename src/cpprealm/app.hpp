@@ -140,7 +140,6 @@ struct user {
             std::cerr<<"sync error: "<<error.message()<<std::endl;
         });
         config.set_path(sync_manager().path_for_realm(config.sync_config()));
-        config.sync_config().set_client_reset_mode(realm::internal::bridge::realm::client_reset_mode::manual);
         config.sync_config().set_stop_policy(realm::internal::bridge::realm::sync_session_stop_policy::after_changes_uploaded);
         config.set_schema_mode(realm::internal::bridge::realm::config::schema_mode::additive_discovered);
         return config;
