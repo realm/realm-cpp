@@ -54,9 +54,10 @@ else()
             admin_utils.hpp
             admin_utils.cpp
             experimental/sync/test_objects.hpp
+            experimental/sync/app_tests.cpp
             experimental/sync/asymmetric_object_tests.cpp
             experimental/sync/flexible_sync_tests.cpp
-            experimental/sync/app_tests.cpp)
+            experimental/sync/client_reset_tests.cpp)
 
     add_executable(cpprealm_db_tests
             main.hpp

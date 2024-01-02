@@ -89,6 +89,10 @@ namespace realm::internal::bridge {
         return f;
     }
 
+    sync_session::operator std::weak_ptr<SyncSession>() {
+        return m_session;
+    }
+
     sync_session::sync_session(const std::shared_ptr<SyncSession> &v) {
         m_session = v;
     }

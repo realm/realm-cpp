@@ -15,9 +15,21 @@ namespace realm {
     struct SyncConfig;
     struct scheduler;
     class SyncUser;
+
+    enum class client_reset_mode: uint8_t {
+        // Fire a client reset error
+        manual,
+        // Discard unsynced local changes, without disrupting accessors or closing the Realm
+        discard_unsynced,
+        // Attempt to recover unsynchronized but committed changes.
+        recover,
+        // Attempt recovery and if that fails, discard local.
+        recover_or_discard,
+    };
 }
 
 namespace realm::internal::bridge {
+    template<typename T> struct client_reset_mode_base;
     struct group;
     struct schema;
     struct object_schema;
@@ -31,21 +43,10 @@ namespace realm::internal::bridge {
     struct sync_error;
 
     struct realm {
-        enum class sync_session_stop_policy {
-            Immediately,          // Immediately stop the session as soon as all Realms/Sessions go out of scope.
-            LiveIndefinitely,     // Never stop the session.
-            AfterChangesUploaded, // Once all Realms/Sessions go out of scope, wait for uploads to complete and stop.
-        };
-
-        enum class client_resync_mode : unsigned char {
-            // Fire a client reset error
-            Manual,
-            // Discard local changes, without disrupting accessors or closing the Realm
-            DiscardLocal,
-            // Attempt to recover unsynchronized but committed changes.
-            Recover,
-            // Attempt recovery and if that fails, discard local.
-            RecoverOrDiscard,
+        enum class sync_session_stop_policy: uint8_t {
+            immediately,          // Immediately stop the session as soon as all Realms/Sessions go out of scope.
+            live_indefinitely,     // Never stop the session.
+            after_changes_uploaded, // Once all Realms/Sessions go out of scope, wait for uploads to complete and stop.
         };
 
         struct sync_config {
@@ -63,7 +64,6 @@ namespace realm::internal::bridge {
             sync_config(const std::shared_ptr<SyncUser> &user);
             sync_config(const std::shared_ptr<SyncConfig> &);//NOLINT(google-explicit-constructor)
             operator std::shared_ptr<SyncConfig>() const;    //NOLINT(google-explicit-constructor)
-            void set_client_resync_mode(client_resync_mode &&);
             void set_stop_policy(sync_session_stop_policy &&);
             void set_error_handler(std::function<void(const sync_session &, const sync_error &)> &&fn);
 
@@ -90,13 +90,13 @@ namespace realm::internal::bridge {
                 // This mode allows using schemata with different subsets of tables
                 // on different threads, but the tables which are shared must be
                 // identical.
-                Automatic,
+                automatic,
 
                 // Open the file in immutable mode. Schema version must match the
                 // version in the file, and all tables present in the file must
                 // exactly match the specified schema, except for indexes. Tables
                 // are allowed to be missing from the file.
-                Immutable,
+                immutable,
 
                 // Open the Realm in read-only mode, transactions are not allowed to
                 // be performed on the Realm instance. The schema of the existing Realm
@@ -107,7 +107,7 @@ namespace realm::internal::bridge {
                 // mode, sync Realm can be opened with ReadOnly mode. Changes
                 // can be made to the Realm file through another writable Realm instance.
                 // Thus, notifications are also allowed in this mode.
-                ReadOnly,
+                read_only,
 
                 // If the schema version matches and the only schema changes are new
                 // tables and indexes being added or removed, apply the changes to
@@ -118,11 +118,11 @@ namespace realm::internal::bridge {
                 // This mode allows using schemata with different subsets of tables
                 // on different threads, but the tables which are shared must be
                 // identical.
-                SoftResetFile,
+                soft_reset_file,
 
                 // Delete the file and recreate it from scratch.
                 // The migration function is not used.
-                HardResetFile,
+                hard_reset_file,
 
                 // The only changes allowed are to add new tables, add columns to
                 // existing tables, and to add or remove indexes from existing
@@ -137,14 +137,14 @@ namespace realm::internal::bridge {
                 //
                 // This mode allows updating the schema with additive changes even
                 // if the Realm is already open on another thread.
-                AdditiveDiscovered,
+                additive_discovered,
 
                 // The same additive properties as AdditiveDiscovered, except
                 // in this mode, all classes in the schema have been explicitly
                 // included by the user. This means that stricter schema checks are
                 // run such as throwing an error when an embedded object type which
                 // is not linked from any top level object types is included.
-                AdditiveExplicit,
+                additive_explicit,
 
                 // Verify that the schema version has increased, call the migration
                 // function, and then verify that the schema now matches.
@@ -152,7 +152,7 @@ namespace realm::internal::bridge {
                 //
                 // This mode requires that all threads and processes which open a
                 // file use identical schemata.
-                Manual
+                manual
             };
             config();
             config(const config& other) ;
@@ -177,7 +177,22 @@ namespace realm::internal::bridge {
             void set_schema_version(uint64_t version);
             void set_encryption_key(const std::array<char, 64>&);
             std::optional<schema> get_schema();
+
+            template<typename T>
+            void set_client_reset_handler(const client_reset_mode_base<T>& handler) {
+                before_client_reset([fn = std::move(handler.m_before)](realm local_realm) {
+                    fn(local_realm.freeze());
+                });
+                after_client_reset([fn = std::move(handler.m_after)](realm local_realm, realm remote_realm) {
+                    fn(local_realm.freeze(), remote_realm);
+                });
+                set_client_reset_mode(handler.m_mode);
+            }
+            enum client_reset_mode get_client_reset_mode() const;
         private:
+            void set_client_reset_mode(enum client_reset_mode mode);
+            void before_client_reset(std::function<void(realm old_realm)> callback);
+            void after_client_reset(std::function<void(realm local_realm, realm remote_realm)> callback);
             inline RealmConfig* get_config();
             inline const RealmConfig* get_config() const;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
@@ -211,6 +226,15 @@ namespace realm::internal::bridge {
     private:
         std::shared_ptr<Realm> m_realm;
         friend struct group;
+    };
+
+    template<typename T>
+    struct client_reset_mode_base {
+    protected:
+        std::function<void(T local)> m_before;
+        std::function<void(T local, T remote)> m_after;
+        ::realm::client_reset_mode m_mode;
+        friend struct internal::bridge::realm::config;
     };
 
     template <typename T>

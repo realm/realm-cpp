@@ -34,6 +34,7 @@ namespace realm {
     using sync_config = internal::bridge::realm::sync_config;
     using db_config = internal::bridge::realm::config;
     using sync_session = internal::bridge::sync_session;
+    using sync_error = internal::bridge::sync_error;
 
     struct sync_subscription_set;
 }
@@ -177,7 +178,10 @@ namespace realm::experimental {
         void invalidate();
         friend struct ::realm::thread_safe_reference<experimental::db>;
         template <typename, typename> friend struct managed;
-    private:
+        friend struct db_config;
+        template<typename T>
+        friend void internal::bridge::realm::config::set_client_reset_handler(const client_reset_mode_base<T>&);
+        private:
         db(internal::bridge::realm&& r)
         {
             m_realm = std::move(r);
@@ -192,7 +196,7 @@ namespace realm::experimental {
     bool operator!=(const db&, const db&);
 
     template <typename ...Ts>
-    inline db open(const db_config& config) {
+    inline db open(const realm::db_config& config) {
         auto config_copy = config;
         if constexpr (sizeof...(Ts) == 0) {
             config_copy.set_schema(db::schemas);
@@ -205,7 +209,7 @@ namespace realm::experimental {
     }
     template <typename ...Ts>
     inline db open(const std::string& path, const std::shared_ptr<scheduler>& scheduler = scheduler::make_default()) {
-        return open<Ts...>(db_config(path, scheduler));
+        return open<Ts...>(realm::db_config(path, scheduler));
     }
 
     template <typename T>
@@ -258,7 +262,8 @@ namespace realm {
         internal::bridge::thread_safe_reference m_tsr;
         friend struct experimental::db;
     };
-}
+
+} // namespace realm
 
 
 #endif //CPPREALM_EXPERIMENTAL_DB_HPP

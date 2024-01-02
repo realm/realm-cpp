@@ -24,6 +24,7 @@
 #include <cpprealm/internal/generic_network_transport.hpp>
 
 #include "admin_utils.hpp"
+#include "external/json/json.hpp"
 
 namespace {
 using namespace realm;
@@ -283,6 +284,12 @@ app::Response Admin::Endpoint::request(app::HttpMethod method, bson::BsonDocumen
     std::stringstream ss;
     ss << body;
     auto body_str = ss.str();
+
+    return request(method, body_str);
+}
+
+app::Response Admin::Endpoint::request(app::HttpMethod method, const std::string& body) const
+{
     std::string url = m_url + "?bypass_service_change=DestructiveSyncProtocolVersionIncrease";
 
     auto request = app::Request();
@@ -292,7 +299,7 @@ app::Response Admin::Endpoint::request(app::HttpMethod method, bson::BsonDocumen
             {"Authorization", "Bearer " + m_access_token},
             {"Content-Type", "application/json;charset=utf-8"},
             {"Accept", "application/json"}};
-    request.body = std::move(body_str);
+    request.body = std::move(body);
     auto response = do_http_request(std::move(request));
 
     if (response.http_status_code >= 400) {
@@ -305,21 +312,25 @@ app::Response Admin::Endpoint::request(app::HttpMethod method, bson::BsonDocumen
 Admin::Session::Session(const std::string& baas_url, const std::string& access_token, const std::string& group_id, std::optional<std::string> cluster_name)
 : group(util::format("%1/api/admin/v3.0/groups/%2", baas_url, group_id), access_token)
 , apps(group["apps"])
+, m_group_id(group_id)
 , m_cluster_name(std::move(cluster_name))
 , m_base_url(baas_url)
+, m_access_token(access_token)
 {
 
 }
 
-std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::string app_name, bool is_asymmetric) {
+std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::string app_name, bool is_asymmetric, bool disable_recovery_mode) {
+    recovery_mode_disabled = disable_recovery_mode;
     auto info = static_cast<bson::BsonDocument>(apps.post({{"name", app_name}}));
     app_name = static_cast<std::string>(info["client_app_id"]);
+
     if (m_cluster_name) {
         app_name += "-" + *m_cluster_name;
     }
-    auto app_id = static_cast<std::string>(info["_id"]);
+    m_app_id = static_cast<std::string>(info["_id"]);
 
-    auto app = apps[app_id];
+    auto app = apps[m_app_id];
 
     static_cast<void>(app["secrets"].post({
         { "name", "customTokenKey" },
@@ -408,6 +419,38 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
            )"
     }}));
 
+    static_cast<void>(app["functions"].post({
+            {"name", "deleteClientResetObjects"},
+            {"private", false},
+            {"can_evaluate", {}},
+            {"source",
+             R"(
+               exports = async function(data) {
+                   const user = context.user;
+                   const mongodb = context.services.get(")" + util::format("db-%1", app_name) + R"(");
+                   const objectCollection = mongodb.db(")" + util::format("test_data") + R"(").collection("client_reset_obj");
+                   doc = await objectCollection.deleteMany({});
+                   return doc;
+               };
+           )"
+            }}));
+
+    static_cast<void>(app["functions"].post({
+            {"name", "insertClientResetObject"},
+            {"private", false},
+            {"can_evaluate", {}},
+            {"source",
+             R"(
+               exports = async function(data) {
+                   const user = context.user;
+                   const mongodb = context.services.get(")" + util::format("db-%1", app_name) + R"(");
+                   const objectCollection = mongodb.db(")" + util::format("test_data") + R"(").collection("client_reset_obj");
+                   doc = await objectCollection.insertOne({ _id: 1, str_col: 'remote obj' });
+                   return doc;
+               };
+           )"
+            }}));
+
     bson::BsonDocument userData = {
         {"schema", bson::BsonDocument {
                        {"properties", bson::BsonDocument {
@@ -491,6 +534,7 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
         {"config", mongodb_service_config}
     }));
     std::string mongodb_service_id(mongodb_service_response["_id"]);
+    m_service_id = mongodb_service_id;
 
     app["custom_user_data"].patch(bson::BsonDocument {
         {"mongo_service_id", mongodb_service_id},
@@ -546,7 +590,7 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
                                       {"state", "enabled"},
                                       {"database_name", "test_data"},
                                       {"enabled", true},
-                                      {"is_recovery_mode_disabled", true},
+                                      {"is_recovery_mode_disabled", recovery_mode_disabled},
                                       {"queryable_fields_names", queryable_fields},
                                       {"asymmetric_tables", bson::BsonArray({"AllTypesAsymmetricObject"})}
 
@@ -620,7 +664,7 @@ Admin::Session Admin::Session::local(std::optional<std::string> baas_url)
     auto roles = static_cast<bson::BsonArray>(parsed_response["roles"]);
     auto group_id = static_cast<std::string>(static_cast<bson::BsonDocument>(roles[0])["group_id"]);
 
-    return Session(base_url, access_token, group_id);
+    return Session(base_url, access_token, group_id, std::nullopt);
 }
 
 Admin::Session Admin::Session::atlas(const std::string& baas_url, std::string project_id, std::string cluster_name, std::string api_key, std::string private_api_key)
@@ -632,6 +676,42 @@ Admin::Session Admin::Session::atlas(const std::string& baas_url, std::string pr
     std::string access_token = authenticate(baas_url, "mongodb-cloud", std::move(credentials));
 
     return Session(baas_url, access_token, std::move(project_id), std::move(cluster_name));
+}
+
+void Admin::Session::enable_sync() {
+    bson::BsonDocument service_config = {
+        {"flexible_sync", bson::BsonDocument {
+                                  {"state", "enabled"},
+                                  {"is_recovery_mode_disabled", recovery_mode_disabled},
+                                  {"enabled", true}}}
+    };
+
+    apps[m_app_id]["services"][m_service_id]["config"].patch(std::move(service_config));
+    for (int i = 0; i < 5; ++i) {
+        auto c = apps[m_app_id]["services"][m_service_id]["config"].get();
+        if (c.to_string().find("enabled") != std::string::npos) {
+            return;
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+    std::runtime_error("Sync could not be enabled in time.");
+}
+void Admin::Session::disable_sync() {
+    bson::BsonDocument service_config = {
+        {"flexible_sync", bson::BsonDocument {
+                                  {"state", "disabled"},
+                                  {"enabled", false}}}
+    };
+
+    apps[m_app_id]["services"][m_service_id]["config"].patch(std::move(service_config));
+    for (int i = 0; i < 5; ++i) {
+        auto c = apps[m_app_id]["services"][m_service_id]["config"].get();
+        if (c.to_string().find("disabled") != std::string::npos) {
+            return;
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+    std::runtime_error("Sync could not be disabled in time.");
 }
 
 static Admin::Session make_default_session() {

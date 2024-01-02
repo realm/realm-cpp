@@ -5,7 +5,7 @@ namespace realm::experimental {
 
     TEST_CASE("string", "[str]") {
         realm_path path;
-        db_config config;
+        realm::db_config config;
         config.set_path(path);
 
         SECTION("managed_str_get_set", "[str]") {

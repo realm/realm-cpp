@@ -75,28 +75,22 @@ namespace realm::internal::bridge {
 #endif
     }
 
-    inline bool status::is_ok() const noexcept {
+    bool status::is_ok() const noexcept {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const Status*>(&m_status)->is_ok();
 #else
         return m_status->is_ok();
 #endif
     }
-    inline const std::string& status::reason() const noexcept {
+    const std::string& status::reason() const noexcept {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const Status*>(&m_status)->reason();
 #else
         return m_status->reason();
 #endif
     }
-    inline error_codes::error status::code() const noexcept {
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        return static_cast<error_codes::error>(reinterpret_cast<const Status*>(&m_status)->code());
-#else
-        return static_cast<error_codes::error>(m_status->code());
-#endif
-    }
-    inline std::string_view status::code_string() const noexcept {
+
+    std::string_view status::code_string() const noexcept {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const Status*>(&m_status)->code_string();
 #else

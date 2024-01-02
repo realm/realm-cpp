@@ -14,7 +14,14 @@ X.Y.Z Release notes (YYYY-MM-DD)
   - `realm::sync_session::observe_connection_change(std::function<void(enum connection_state old_state, 
                                                                        enum connection_state new_state)>&& callback)`
   - `realm::sync_session::unregister_connection_change_observer(uint64_t token)`
-
+* Add support for the following client reset modes:
+  - `realm::client_reset::manual()`
+  - `realm::client_reset::discard_unsynced_changes(std::function<void(experimental::db local)> before, 
+                                                   std::function<void(experimental::db local, experimental::db remote)> after)`
+  - `realm::client_reset::recover_unsynced_changes(std::function<void(experimental::db local)> before,
+                                                   std::function<void(experimental::db local, experimental::db remote)> after)`
+  - `realm::client_reset::recover_or_discard_unsynced_changes(std::function<void(experimental::db local)> before,
+                                                              std::function<void(experimental::db local, experimental::db remote)> after)`
 ### Breaking Changes
 * None
 
