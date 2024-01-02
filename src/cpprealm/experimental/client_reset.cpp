@@ -16,7 +16,7 @@ namespace realm {
                                                            std::function<void(experimental::db local, experimental::db remote)> after) {
             m_before = std::move(before);
             m_after = std::move(after);
-            m_mode = client_reset_mode::discard_local;
+            m_mode = client_reset_mode::discard_unsynced;
         }
 
         recover_unsynced_changes::recover_unsynced_changes(std::function<void(experimental::db local)> before,
@@ -33,4 +33,5 @@ namespace realm {
             m_mode = client_reset_mode::recover_or_discard;
         }
     }
-}
+
+} //namespace realm

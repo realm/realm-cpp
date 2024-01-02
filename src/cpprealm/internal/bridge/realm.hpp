@@ -19,8 +19,8 @@ namespace realm {
     enum class client_reset_mode: uint8_t {
         // Fire a client reset error
         manual,
-        // Discard local changes, without disrupting accessors or closing the Realm
-        discard_local,
+        // Discard unsynced local changes, without disrupting accessors or closing the Realm
+        discard_unsynced,
         // Attempt to recover unsynchronized but committed changes.
         recover,
         // Attempt recovery and if that fails, discard local.

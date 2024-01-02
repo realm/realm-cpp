@@ -69,12 +69,8 @@ TEST_CASE("client_reset", "[sync]") {
         });
 
         simulate_client_reset_error_for_session(*synced_realm.get_sync_session());
-
-        if (f.wait_for(std::chrono::milliseconds(15000)) == std::future_status::ready) {
-            f.get();
-        } else {
-            std::runtime_error("Timeout exceeded");
-        }
+        CHECK(flx_sync_config.get_client_reset_mode() == realm::client_reset_mode::manual);
+        CHECK(f.wait_for(std::chrono::milliseconds(15000)) == std::future_status::ready);
     }
 
     SECTION("manual handler") {
@@ -121,7 +117,7 @@ TEST_CASE("client_reset", "[sync]") {
         });
         Admin::shared().enable_sync();
         session->resume();
-
+        CHECK(flx_sync_config.get_client_reset_mode() == realm::client_reset_mode::manual);
         CHECK(f.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
     }
 
@@ -159,11 +155,11 @@ TEST_CASE("client_reset", "[sync]") {
         flx_sync_config.set_client_reset_handler(client_reset::discard_unsynced_changes(before_handler, after_handler));
         prepare_realm(flx_sync_config, user);
 
-        auto synced_realm2 = experimental::db(flx_sync_config);
-        synced_realm2.refresh();
+        auto synced_realm = experimental::db(flx_sync_config);
+        synced_realm.refresh();
         // The client_reset_object created locally with _id=2 should have been discarded,
         // while the one from the server _id=1 should be present
-
+        CHECK(flx_sync_config.get_client_reset_mode() == realm::client_reset_mode::discard_unsynced);
         CHECK(before_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
         CHECK(after_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
     }
@@ -200,11 +196,11 @@ TEST_CASE("client_reset", "[sync]") {
 
         prepare_realm(flx_sync_config, user);
 
-        auto synced_realm2 = experimental::db(flx_sync_config);
-        synced_realm2.refresh();
+        auto synced_realm = experimental::db(flx_sync_config);
+        synced_realm.refresh();
         // The client_reset_object created locally with _id=2 should be present as it should be recovered,
         // while the one from the server _id=1 should be present
-
+        CHECK(flx_sync_config.get_client_reset_mode() == realm::client_reset_mode::recover_or_discard);
         CHECK(before_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
         CHECK(after_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
     }
@@ -241,11 +237,11 @@ TEST_CASE("client_reset", "[sync]") {
 
         prepare_realm(flx_sync_config, user);
 
-        auto synced_realm2 = experimental::db(flx_sync_config);
-        synced_realm2.refresh();
+        auto synced_realm = experimental::db(flx_sync_config);
+        synced_realm.refresh();
         // The object created locally and the object created on the server
         // should both be integrated into the new realm file.
-
+        CHECK(flx_sync_config.get_client_reset_mode() == realm::client_reset_mode::recover);
         CHECK(before_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
         CHECK(after_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
     }
@@ -259,7 +255,7 @@ TEST_CASE("client_reset", "[sync]") {
         std::promise<void> error_handler_promise;
         std::future<void> error_handler_future = error_handler_promise.get_future();
 
-        flx_sync_config.sync_config().set_error_handler([&error_handler_promise](sync_session session, sync_error error){
+        flx_sync_config.sync_config().set_error_handler([&error_handler_promise, &flx_sync_config](sync_session session, sync_error error) {
             CHECK(error.message().find("A client reset is required but the server does not permit recovery for this client") != std::string::npos);
             CHECK(error.get_status().reason().find("A client reset is required but the server does not permit recovery for this client") != std::string::npos);
             CHECK(error.is_client_reset_requested());
@@ -279,7 +275,7 @@ TEST_CASE("client_reset", "[sync]") {
         prepare_realm(flx_sync_config, user);
         auto synced_realm2 = experimental::db(flx_sync_config);
         synced_realm2.refresh();
-
+        CHECK(flx_sync_config.get_client_reset_mode() == realm::client_reset_mode::recover);
         CHECK(error_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
     }
 

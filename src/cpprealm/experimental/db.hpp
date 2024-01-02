@@ -221,6 +221,7 @@ namespace realm::experimental {
 }
 
 namespace realm {
+
     template <typename T>
     struct thread_safe_reference<T, std::enable_if_t<sizeof(experimental::managed<T>) != 0>> {
         explicit thread_safe_reference(const experimental::managed<T>& object)
@@ -261,7 +262,8 @@ namespace realm {
         internal::bridge::thread_safe_reference m_tsr;
         friend struct experimental::db;
     };
-}
+
+} // namespace realm
 
 
 #endif //CPPREALM_EXPERIMENTAL_DB_HPP

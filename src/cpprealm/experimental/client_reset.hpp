@@ -76,7 +76,8 @@ namespace realm {
                                                          std::function<void(experimental::db local, experimental::db remote)> after);
         };
     }
-}
+
+} // namespace realm
 
 
 #endif//CPPREALM_EXPERIMENTAL_CLIENT_RESET_HPP

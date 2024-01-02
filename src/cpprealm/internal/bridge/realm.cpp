@@ -38,7 +38,7 @@ namespace realm::internal::bridge {
     static_assert((uint8_t)realm::config::schema_mode::additive_explicit == (uint8_t)::realm::SchemaMode::AdditiveExplicit);
     static_assert((uint8_t)realm::config::schema_mode::manual == (uint8_t)::realm::SchemaMode::Manual);
 
-    static_assert((uint8_t)client_reset_mode::discard_local == (uint8_t)::realm::ClientResyncMode::DiscardLocal);
+    static_assert((uint8_t)client_reset_mode::discard_unsynced == (uint8_t)::realm::ClientResyncMode::DiscardLocal);
     static_assert((uint8_t)client_reset_mode::manual == (uint8_t)::realm::ClientResyncMode::Manual);
     static_assert((uint8_t)client_reset_mode::recover == (uint8_t)::realm::ClientResyncMode::Recover);
     static_assert((uint8_t)client_reset_mode::recover_or_discard == (uint8_t)::realm::ClientResyncMode::RecoverOrDiscard);
