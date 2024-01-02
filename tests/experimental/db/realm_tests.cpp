@@ -98,4 +98,35 @@ namespace realm::experimental {
         CHECK(managed_obj.is_invalidated());
         CHECK(realm.is_closed());
     }
+
+    TEST_CASE("compact on launch") {
+        realm_path path;
+
+        auto config = realm::db_config();
+        config.set_path(path);
+        size_t compact_run_count = 0;
+        config.should_compact_on_launch([&compact_run_count](uint64_t total_bytes, uint64_t used_bytes) {
+            compact_run_count++;
+            return true;
+        });
+        {
+            auto realm = experimental::db(config);
+            realm.write([&]() {
+                for (int64_t i = 0; i < 200; ++i) {
+                    experimental::AllTypesObject o;
+                    o._id = i;
+                    realm.add(std::move(o));
+                }
+            });
+        }
+        auto file_size_before = std::filesystem::file_size(path.path);
+        CHECK(compact_run_count == 1);
+        std::thread([&] {
+            auto other_realm = experimental::db(config);
+        }).join();
+
+        auto file_size_after = std::filesystem::file_size(path.path);
+        CHECK(compact_run_count == 2);
+        CHECK(file_size_before > file_size_after);
+    }
 }
