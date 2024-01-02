@@ -22,6 +22,9 @@ X.Y.Z Release notes (YYYY-MM-DD)
                                                    std::function<void(experimental::db local, experimental::db remote)> after)`
   - `realm::client_reset::recover_or_discard_unsynced_changes(std::function<void(experimental::db local)> before,
                                                               std::function<void(experimental::db local, experimental::db remote)> after)`
+* Add `realm::experimental::db::close()` for closing an open Realm.
+* Add `realm::experimental::db::is_closed()` for checking if a Realm is closed.
+
 ### Breaking Changes
 * None
 
