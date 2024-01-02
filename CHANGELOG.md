@@ -24,6 +24,7 @@ X.Y.Z Release notes (YYYY-MM-DD)
                                                               std::function<void(experimental::db local, experimental::db remote)> after)`
 * Add `realm::experimental::db::close()` for closing an open Realm.
 * Add `realm::experimental::db::is_closed()` for checking if a Realm is closed.
+* Add support for manual compaction via `realm::db_config::should_compact_on_launch(std::function<bool(uint64_t total_bytes, uint64_t unused_bytes)>&&)`.
 
 ### Breaking Changes
 * None
