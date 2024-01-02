@@ -10,6 +10,7 @@
 
 #include "cpprealm/internal/bridge/sync_session.hpp"
 #include "cpprealm/internal/bridge/thread_safe_reference.hpp"
+#include <cpprealm/internal/bridge/sync_session.hpp>
 
 #include "scheduler.hpp"
 
@@ -37,6 +38,7 @@ namespace realm {
     using sync_config = internal::bridge::realm::sync_config;
     using db_config = internal::bridge::realm::config;
     using sync_session = internal::bridge::sync_session;
+    using sync_error = internal::bridge::sync_error;
 
     struct sync_subscription_set;
 
@@ -181,8 +183,12 @@ namespace realm {
         db freeze();
         db thaw();
         void invalidate();
+        void close();
+        bool is_closed();
         friend struct ::realm::thread_safe_reference<db>;
         template <typename, typename> friend struct managed;
+        template<typename T>
+        friend void internal::bridge::realm::config::set_client_reset_handler(const client_reset_mode_base<T>&);
     private:
         db(internal::bridge::realm&& r)
         {

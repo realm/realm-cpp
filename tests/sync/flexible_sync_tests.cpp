@@ -192,21 +192,21 @@ TEST_CASE("pause_resume_sync", "[sync]") {
         auto user = app.login(realm::App::credentials::anonymous()).get();
 
         auto flx_sync_config = user.flexible_sync_configuration();
-        auto synced_realm = experimental::db(flx_sync_config);
+        auto synced_realm = db(flx_sync_config);
         auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
                                                               subs.clear();
                                                           }).get();
         CHECK(update_success == true);
         update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                                         subs.add<experimental::AllTypesObject>("foo-strings");
-                                                         subs.add<experimental::AllTypesObjectLink>("foo-link");
+                                                         subs.add<AllTypesObject>("foo-strings");
+                                                         subs.add<AllTypesObjectLink>("foo-link");
                                                      })
                                  .get();
         CHECK(update_success == true);
 
         auto wait_for_state = [](enum realm::sync_session::connection_state expected_state,
-                                 const experimental::db& realm,
-                                 std::function<void(const experimental::db&)> fn) {
+                                 const db& realm,
+                                 std::function<void(const db&)> fn) {
             std::promise<void> p;
             std::future<void> f = p.get_future();
             auto token = realm.get_sync_session()->observe_connection_change([&]
@@ -225,12 +225,12 @@ TEST_CASE("pause_resume_sync", "[sync]") {
             }
         };
 
-        wait_for_state(realm::sync_session::connection_state::disconnected, synced_realm, [](const experimental::db& realm) {
+        wait_for_state(realm::sync_session::connection_state::disconnected, synced_realm, [](const db& realm) {
             realm.get_sync_session()->pause();
         });
         CHECK(synced_realm.get_sync_session()->state() == realm::sync_session::state::paused);
 
-        wait_for_state(realm::sync_session::connection_state::connected, synced_realm, [](const experimental::db& realm) {
+        wait_for_state(realm::sync_session::connection_state::connected, synced_realm, [](const db& realm) {
             realm.get_sync_session()->resume();
         });
         CHECK(synced_realm.get_sync_session()->state() == realm::sync_session::state::active);

@@ -1,5 +1,5 @@
-#include "../../admin_utils.hpp"
-#include "../../main.hpp"
+#include "../admin_utils.hpp"
+#include "../main.hpp"
 #include "test_objects.hpp"
 
 #include <realm/object-store/sync/sync_session.hpp>
@@ -8,7 +8,7 @@
 
 using namespace realm;
 
-namespace realm::experimental {
+namespace realm {
     struct client_reset_obj {
         primary_key<int64_t> _id;
         std::string str_col;
@@ -26,9 +26,9 @@ void simulate_client_reset_error_for_session(sync_session&& session) {
 
 void prepare_realm(const realm::db_config& flx_sync_config, const user& sync_user) {
     sync_user.call_function("deleteClientResetObjects", "[]").get();
-    auto synced_realm = experimental::db(flx_sync_config);
+    auto synced_realm = db(flx_sync_config);
     auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                                          subs.add<experimental::client_reset_obj>("foo-strings");
+                                                          subs.add<client_reset_obj>("foo-strings");
                                                       }).get();
     CHECK(update_success == true);
     CHECK(synced_realm.subscriptions().size() == 1);
@@ -39,7 +39,7 @@ void prepare_realm(const realm::db_config& flx_sync_config, const user& sync_use
     Admin::shared().disable_sync();
     // Add an object to the local realm that won't be synced due to the suspend
     synced_realm.write([&synced_realm]() {
-        experimental::client_reset_obj o;
+        client_reset_obj o;
         o._id = 2;
         o.str_col = "local only";
         synced_realm.add(std::move(o));
@@ -55,7 +55,7 @@ TEST_CASE("client_reset", "[sync]") {
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
-        auto synced_realm = experimental::db(flx_sync_config);
+        auto synced_realm = db(flx_sync_config);
 
         std::promise<void> p;
         std::future<void> f = p.get_future();
@@ -78,17 +78,17 @@ TEST_CASE("client_reset", "[sync]") {
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
-        flx_sync_config.set_client_reset_handler(client_reset::manual());
-        auto synced_realm = experimental::db(flx_sync_config);
+        flx_sync_config.set_client_reset_handler(realm::client_reset::manual());
+        auto synced_realm = db(flx_sync_config);
 
         auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                                         subs.add<experimental::client_reset_obj>("foo-strings");
+                                                         subs.add<client_reset_obj>("foo-strings");
                                                      }).get();
         CHECK(update_success == true);
         CHECK(synced_realm.subscriptions().size() == 1);
 
         synced_realm.write([&synced_realm]() {
-            experimental::client_reset_obj o;
+            client_reset_obj o;
             o._id = 1;
             o.str_col = "foo";
             synced_realm.add(std::move(o));
@@ -110,7 +110,7 @@ TEST_CASE("client_reset", "[sync]") {
         session->pause();
         Admin::shared().disable_sync();
         synced_realm.write([&synced_realm]() {
-            experimental::client_reset_obj o;
+            client_reset_obj o;
             o._id = 2;
             o.str_col = "local only";
             synced_realm.add(std::move(o));
@@ -133,29 +133,29 @@ TEST_CASE("client_reset", "[sync]") {
         std::promise<void> after_handler_promise;
         std::future<void> after_handler_future = after_handler_promise.get_future();
 
-        auto before_handler = [&](experimental::db before) {
-            auto results = before.objects<experimental::client_reset_obj>();
+        auto before_handler = [&](db before) {
+            auto results = before.objects<client_reset_obj>();
             CHECK(results.size() == 1);
             CHECK(before.is_frozen());
             before_handler_promise.set_value();
         };
 
-        auto after_handler = [&](experimental::db local, experimental::db remote) {
-            auto results_local = local.objects<experimental::client_reset_obj>();
+        auto after_handler = [&](db local, db remote) {
+            auto results_local = local.objects<client_reset_obj>();
             CHECK(local.is_frozen());
             CHECK(results_local.size() == 1);
 
-            auto results_remote = remote.objects<experimental::client_reset_obj>();
+            auto results_remote = remote.objects<client_reset_obj>();
             CHECK(!remote.is_frozen());
             CHECK(results_remote[0].str_col == "remote obj");
             CHECK(results_remote.size() == 1);
             after_handler_promise.set_value();
         };
 
-        flx_sync_config.set_client_reset_handler(client_reset::discard_unsynced_changes(before_handler, after_handler));
+        flx_sync_config.set_client_reset_handler(realm::client_reset::discard_unsynced_changes(before_handler, after_handler));
         prepare_realm(flx_sync_config, user);
 
-        auto synced_realm = experimental::db(flx_sync_config);
+        auto synced_realm = db(flx_sync_config);
         synced_realm.refresh();
         // The client_reset_object created locally with _id=2 should have been discarded,
         // while the one from the server _id=1 should be present
@@ -175,28 +175,28 @@ TEST_CASE("client_reset", "[sync]") {
         std::promise<void> after_handler_promise;
         std::future<void> after_handler_future = after_handler_promise.get_future();
 
-        auto before_handler = [&](experimental::db before) {
-            auto results = before.objects<experimental::client_reset_obj>();
+        auto before_handler = [&](db before) {
+            auto results = before.objects<client_reset_obj>();
             CHECK(results.size() == 1);
             CHECK(before.is_frozen());
             before_handler_promise.set_value();
         };
 
-        auto after_handler = [&](experimental::db local, experimental::db remote) {
-            auto results_local = local.objects<experimental::client_reset_obj>();
+        auto after_handler = [&](db local, db remote) {
+            auto results_local = local.objects<client_reset_obj>();
             CHECK(results_local.size() == 1);
             CHECK(local.is_frozen());
 
-            auto results_remote = remote.objects<experimental::client_reset_obj>();
+            auto results_remote = remote.objects<client_reset_obj>();
             CHECK(results_remote.size() == 2);
             after_handler_promise.set_value();
         };
 
-        flx_sync_config.set_client_reset_handler(client_reset::recover_or_discard_unsynced_changes(before_handler, after_handler));
+        flx_sync_config.set_client_reset_handler(realm::client_reset::recover_or_discard_unsynced_changes(before_handler, after_handler));
 
         prepare_realm(flx_sync_config, user);
 
-        auto synced_realm = experimental::db(flx_sync_config);
+        auto synced_realm = db(flx_sync_config);
         synced_realm.refresh();
         // The client_reset_object created locally with _id=2 should be present as it should be recovered,
         // while the one from the server _id=1 should be present
@@ -216,28 +216,28 @@ TEST_CASE("client_reset", "[sync]") {
         std::promise<void> after_handler_promise;
         std::future<void> after_handler_future = after_handler_promise.get_future();
 
-        auto before_handler = [&](experimental::db before) {
-            auto results = before.objects<experimental::client_reset_obj>();
+        auto before_handler = [&](db before) {
+            auto results = before.objects<client_reset_obj>();
             CHECK(results.size() == 1);
             CHECK(before.is_frozen());
             before_handler_promise.set_value();
         };
 
-        auto after_handler = [&](experimental::db local, experimental::db remote) {
-            auto results_local = local.objects<experimental::client_reset_obj>();
+        auto after_handler = [&](db local, db remote) {
+            auto results_local = local.objects<client_reset_obj>();
             CHECK(results_local.size() == 1);
             CHECK(local.is_frozen());
 
-            auto results_remote = remote.objects<experimental::client_reset_obj>();
+            auto results_remote = remote.objects<client_reset_obj>();
             CHECK(results_remote.size() == 2);
             after_handler_promise.set_value();
         };
 
-        flx_sync_config.set_client_reset_handler(client_reset::recover_unsynced_changes(before_handler, after_handler));
+        flx_sync_config.set_client_reset_handler(realm::client_reset::recover_unsynced_changes(before_handler, after_handler));
 
         prepare_realm(flx_sync_config, user);
 
-        auto synced_realm = experimental::db(flx_sync_config);
+        auto synced_realm = db(flx_sync_config);
         synced_realm.refresh();
         // The object created locally and the object created on the server
         // should both be integrated into the new realm file.
@@ -262,18 +262,18 @@ TEST_CASE("client_reset", "[sync]") {
             error_handler_promise.set_value();
         });
 
-        auto before_handler = [&](experimental::db before) {
+        auto before_handler = [&](db before) {
             FAIL("Should not be called when automatic recovery fails");
         };
 
-        auto after_handler = [&](experimental::db local, experimental::db remote) {
+        auto after_handler = [&](db local, db remote) {
             FAIL("Should not be called when automatic recovery fails");
         };
 
-        flx_sync_config.set_client_reset_handler(client_reset::recover_unsynced_changes(before_handler, after_handler));
+        flx_sync_config.set_client_reset_handler(realm::client_reset::recover_unsynced_changes(before_handler, after_handler));
 
         prepare_realm(flx_sync_config, user);
-        auto synced_realm2 = experimental::db(flx_sync_config);
+        auto synced_realm2 = db(flx_sync_config);
         synced_realm2.refresh();
         CHECK(flx_sync_config.get_client_reset_mode() == realm::client_reset_mode::recover);
         CHECK(error_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);

@@ -37,7 +37,7 @@ static app::Response do_http_request(app::Request &&request) {
     return p.get_future().get();
 }
 
-static std::string authenticate(const std::string& baas_url, const std::string& provider_type, bson::BsonDocument&& credentials)
+static std::pair<std::string, std::string> authenticate(const std::string& baas_url, const std::string& provider_type, bson::BsonDocument&& credentials)
 {
     std::stringstream body;
     body << credentials;
@@ -54,7 +54,7 @@ static std::string authenticate(const std::string& baas_url, const std::string& 
         REALM_TERMINATE(util::format("Unable to authenticate at %1 with provider '%2': %3", baas_url, provider_type, result.body).c_str());
     }
     auto parsed_response = static_cast<bson::BsonDocument>(bson::parse(result.body));
-    return static_cast<std::string>(parsed_response["access_token"]);
+    return {static_cast<std::string>(parsed_response["access_token"]), static_cast<std::string>(parsed_response["refresh_token"])};
 }
 
 } // namespace
@@ -89,18 +89,20 @@ app::Response Admin::Endpoint::request(app::HttpMethod method, const std::string
     return response;
 }
 
-Admin::Session::Session(const std::string& baas_url, const std::string& access_token, const std::string& group_id, std::optional<std::string> cluster_name)
+Admin::Session::Session(const std::string& baas_url, const std::string& access_token, const std::string& refresh_token, const std::string& group_id, std::optional<std::string> cluster_name)
 : group(util::format("%1/api/admin/v3.0/groups/%2", baas_url, group_id), access_token)
 , apps(group["apps"])
 , m_group_id(group_id)
 , m_cluster_name(std::move(cluster_name))
 , m_base_url(baas_url)
 , m_access_token(access_token)
+, m_refresh_token(refresh_token)
 {
 
 }
 
 std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::string app_name, bool is_asymmetric, bool disable_recovery_mode) {
+    refresh_access_token();
     recovery_mode_disabled = disable_recovery_mode;
     auto info = static_cast<bson::BsonDocument>(apps.post({{"name", app_name}}));
     app_name = static_cast<std::string>(info["client_app_id"]);
@@ -432,19 +434,19 @@ Admin::Session Admin::Session::local(std::optional<std::string> baas_url)
         {"username", "unique_user@domain.com"},
         {"password", "password"}
     };
-    std::string access_token = authenticate(base_url, "local-userpass", std::move(credentials));
+    std::pair<std::string, std::string> tokens = authenticate(base_url, "local-userpass", std::move(credentials));
 
     app::Request request;
     request.url = base_url + "/api/admin/v3.0/auth/profile";
     request.headers = {
-            {"Authorization", "Bearer " + access_token}};
+            {"Authorization", "Bearer " + tokens.first}};
 
     auto result = do_http_request(std::move(request));
     auto parsed_response = static_cast<bson::BsonDocument>(bson::parse(result.body));
     auto roles = static_cast<bson::BsonArray>(parsed_response["roles"]);
     auto group_id = static_cast<std::string>(static_cast<bson::BsonDocument>(roles[0])["group_id"]);
 
-    return Session(base_url, access_token, group_id, std::nullopt);
+    return Session(base_url, tokens.first, tokens.second, group_id, std::nullopt);
 }
 
 Admin::Session Admin::Session::atlas(const std::string& baas_url, std::string project_id, std::string cluster_name, std::string api_key, std::string private_api_key)
@@ -453,9 +455,9 @@ Admin::Session Admin::Session::atlas(const std::string& baas_url, std::string pr
         {"username", std::move(api_key)},
         {"apiKey", std::move(private_api_key)}
     };
-    std::string access_token = authenticate(baas_url, "mongodb-cloud", std::move(credentials));
+    std::pair<std::string, std::string> tokens = authenticate(baas_url, "mongodb-cloud", std::move(credentials));
 
-    return Session(baas_url, access_token, std::move(project_id), std::move(cluster_name));
+    return Session(baas_url, tokens.first, tokens.second, std::move(project_id), std::move(cluster_name));
 }
 
 void Admin::Session::enable_sync() {
@@ -514,6 +516,25 @@ static Admin::Session make_default_session() {
     } else {
         return Admin::Session::local();
     }
+}
+
+void Admin::Session::refresh_access_token() {
+    std::stringstream body;
+    auto request = app::Request();
+    request.method = realm::app::HttpMethod::post;
+    request.url = util::format("%1/api/admin/v3.0/auth/session", m_base_url);
+    request.headers = {
+            {"Content-Type", "application/json;charset=utf-8"},
+            {"Accept", "application/json"},
+            {"Authorization", util::format("Bearer %1", m_refresh_token)}};
+    request.body = body.str();
+
+    auto result = do_http_request(std::move(request));
+    if (result.http_status_code >= 400) {
+        REALM_TERMINATE("Unable to refresh access token");
+    }
+    auto parsed_response = static_cast<bson::BsonDocument>(bson::parse(result.body));
+    m_access_token = static_cast<std::string>(parsed_response["access_token"]);
 }
 
 Admin::Session& Admin::shared() {

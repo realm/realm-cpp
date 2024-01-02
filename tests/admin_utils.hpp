@@ -79,9 +79,11 @@ struct Session {
     void cache_app_id(const std::string& app_id);
     void enable_sync();
     void disable_sync();
+    void refresh_access_token();
 private:
     const std::string m_base_url;
-    const std::string m_access_token;
+    std::string m_access_token;
+    std::string m_refresh_token;
     const std::string m_group_id;
     const std::optional<std::string> m_cluster_name;
     std::optional<std::string> m_cached_app_id; // client app id
@@ -89,7 +91,7 @@ private:
     std::string m_app_id;
     bool recovery_mode_disabled = false;
 
-    Session(const std::string& baas_url, const std::string& access_token, const std::string& group_id, std::optional<std::string> cluster_name = std::nullopt);
+    Session(const std::string& baas_url, const std::string& access_token, const std::string& refresh_token, const std::string& group_id, std::optional<std::string> cluster_name = std::nullopt);
 };
 
 Session& shared();
