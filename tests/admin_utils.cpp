@@ -420,7 +420,7 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
     }}));
 
     static_cast<void>(app["functions"].post({
-            {"name", "deleteAllTypesObjects"},
+            {"name", "deleteClientResetObjects"},
             {"private", false},
             {"can_evaluate", {}},
             {"source",
@@ -428,7 +428,7 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
                exports = async function(data) {
                    const user = context.user;
                    const mongodb = context.services.get(")" + util::format("db-%1", app_name) + R"(");
-                   const objectCollection = mongodb.db(")" + util::format("test_data") + R"(").collection("AllTypesObject");
+                   const objectCollection = mongodb.db(")" + util::format("test_data") + R"(").collection("client_reset_obj");
                    doc = await objectCollection.deleteMany({});
                    return doc;
                };
@@ -436,7 +436,7 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
             }}));
 
     static_cast<void>(app["functions"].post({
-            {"name", "getAllTypesObjects"},
+            {"name", "insertClientResetObject"},
             {"private", false},
             {"can_evaluate", {}},
             {"source",
@@ -444,8 +444,8 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
                exports = async function(data) {
                    const user = context.user;
                    const mongodb = context.services.get(")" + util::format("db-%1", app_name) + R"(");
-                   const objectCollection = mongodb.db(")" + util::format("test_data") + R"(").collection("AllTypesObject");
-                   doc = await objectCollection.find({});
+                   const objectCollection = mongodb.db(")" + util::format("test_data") + R"(").collection("client_reset_obj");
+                   doc = await objectCollection.insertOne({ _id: 1, str_col: 'remote obj' });
                    return doc;
                };
            )"

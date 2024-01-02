@@ -8,6 +8,15 @@
 
 using namespace realm;
 
+namespace realm::experimental {
+    struct client_reset_obj {
+        primary_key<int64_t> _id;
+        std::string str_col;
+    };
+
+    REALM_SCHEMA(client_reset_obj, _id, str_col);
+}
+
 void simulate_client_reset_error_for_session(sync_session&& session) {
     realm::sync::SessionErrorInfo error = {{realm::ErrorCodes::BadChangeset, "Not a real error message"}, true};
     error.server_requests_action = realm::sync::ProtocolErrorInfo::Action::ClientReset;
@@ -16,38 +25,21 @@ void simulate_client_reset_error_for_session(sync_session&& session) {
 }
 
 void prepare_realm(const realm::db_config& flx_sync_config, const user& sync_user) {
-    sync_user.call_function("deleteAllTypesObjects", "[]").get();
+    sync_user.call_function("deleteClientResetObjects", "[]").get();
     auto synced_realm = experimental::db(flx_sync_config);
     auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                                          subs.add<experimental::AllTypesObject>("foo-strings");
-                                                          subs.add<experimental::AllTypesObjectLink>("foo-link");
+                                                          subs.add<experimental::client_reset_obj>("foo-strings");
                                                       }).get();
     CHECK(update_success == true);
-    CHECK(synced_realm.subscriptions().size() == 2);
-
-    synced_realm.write([&synced_realm]() {
-        experimental::AllTypesObject o;
-        o._id = 1;
-        o.str_col = "foo";
-        synced_realm.add(std::move(o));
-    });
-
-    synced_realm.get_sync_session()->wait_for_upload_completion();
-    auto documents = sync_user.call_function("getAllTypesObjects", "[]").get();
-    for (;;) {
-        if (documents->find("_id") != std::string::npos) {
-            break;
-        }
-        documents = sync_user.call_function("getAllTypesObjects", "[]").get();
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-    }
+    CHECK(synced_realm.subscriptions().size() == 1);
+    sync_user.call_function("insertClientResetObject", "[]").get();
 
     auto session = synced_realm.get_sync_session()->operator std::weak_ptr<::realm::SyncSession>().lock().get();
     session->pause();
     Admin::shared().disable_sync();
     // Add an object to the local realm that won't be synced due to the suspend
     synced_realm.write([&synced_realm]() {
-        experimental::AllTypesObject o;
+        experimental::client_reset_obj o;
         o._id = 2;
         o.str_col = "local only";
         synced_realm.add(std::move(o));
@@ -94,14 +86,13 @@ TEST_CASE("client_reset", "[sync]") {
         auto synced_realm = experimental::db(flx_sync_config);
 
         auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                                         subs.add<experimental::AllTypesObject>("foo-strings");
-                                                         subs.add<experimental::AllTypesObjectLink>("foo-link");
+                                                         subs.add<experimental::client_reset_obj>("foo-strings");
                                                      }).get();
         CHECK(update_success == true);
-        CHECK(synced_realm.subscriptions().size() == 2);
+        CHECK(synced_realm.subscriptions().size() == 1);
 
         synced_realm.write([&synced_realm]() {
-            experimental::AllTypesObject o;
+            experimental::client_reset_obj o;
             o._id = 1;
             o.str_col = "foo";
             synced_realm.add(std::move(o));
@@ -123,7 +114,7 @@ TEST_CASE("client_reset", "[sync]") {
         session->pause();
         Admin::shared().disable_sync();
         synced_realm.write([&synced_realm]() {
-            experimental::AllTypesObject o;
+            experimental::client_reset_obj o;
             o._id = 2;
             o.str_col = "local only";
             synced_realm.add(std::move(o));
@@ -147,20 +138,20 @@ TEST_CASE("client_reset", "[sync]") {
         std::future<void> after_handler_future = after_handler_promise.get_future();
 
         auto before_handler = [&](experimental::db before) {
-            auto results = before.objects<experimental::AllTypesObject>();
-            CHECK(results.size() == 2);
+            auto results = before.objects<experimental::client_reset_obj>();
+            CHECK(results.size() == 1);
             CHECK(before.is_frozen());
             before_handler_promise.set_value();
         };
 
         auto after_handler = [&](experimental::db local, experimental::db remote) {
-            auto results_local = local.objects<experimental::AllTypesObject>();
+            auto results_local = local.objects<experimental::client_reset_obj>();
             CHECK(local.is_frozen());
-            CHECK(results_local.size() == 2);
+            CHECK(results_local.size() == 1);
 
-            auto results_remote = remote.objects<experimental::AllTypesObject>();
+            auto results_remote = remote.objects<experimental::client_reset_obj>();
             CHECK(!remote.is_frozen());
-            CHECK(results_remote[0].str_col == "foo");
+            CHECK(results_remote[0].str_col == "remote obj");
             CHECK(results_remote.size() == 1);
             after_handler_promise.set_value();
         };
@@ -170,7 +161,7 @@ TEST_CASE("client_reset", "[sync]") {
 
         auto synced_realm2 = experimental::db(flx_sync_config);
         synced_realm2.refresh();
-        // The AllTypesObject created locally with _id=2 should have been discarded,
+        // The client_reset_object created locally with _id=2 should have been discarded,
         // while the one from the server _id=1 should be present
 
         CHECK(before_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
@@ -189,18 +180,18 @@ TEST_CASE("client_reset", "[sync]") {
         std::future<void> after_handler_future = after_handler_promise.get_future();
 
         auto before_handler = [&](experimental::db before) {
-            auto results = before.objects<experimental::AllTypesObject>();
-            CHECK(results.size() == 2);
+            auto results = before.objects<experimental::client_reset_obj>();
+            CHECK(results.size() == 1);
             CHECK(before.is_frozen());
             before_handler_promise.set_value();
         };
 
         auto after_handler = [&](experimental::db local, experimental::db remote) {
-            auto results_local = local.objects<experimental::AllTypesObject>();
-            CHECK(results_local.size() == 2);
+            auto results_local = local.objects<experimental::client_reset_obj>();
+            CHECK(results_local.size() == 1);
             CHECK(local.is_frozen());
 
-            auto results_remote = remote.objects<experimental::AllTypesObject>();
+            auto results_remote = remote.objects<experimental::client_reset_obj>();
             CHECK(results_remote.size() == 2);
             after_handler_promise.set_value();
         };
@@ -211,7 +202,7 @@ TEST_CASE("client_reset", "[sync]") {
 
         auto synced_realm2 = experimental::db(flx_sync_config);
         synced_realm2.refresh();
-        // The AllTypesObject created locally with _id=2 should be present as it should be recovered,
+        // The client_reset_object created locally with _id=2 should be present as it should be recovered,
         // while the one from the server _id=1 should be present
 
         CHECK(before_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
@@ -230,18 +221,18 @@ TEST_CASE("client_reset", "[sync]") {
         std::future<void> after_handler_future = after_handler_promise.get_future();
 
         auto before_handler = [&](experimental::db before) {
-            auto results = before.objects<experimental::AllTypesObject>();
-            CHECK(results.size() == 2);
+            auto results = before.objects<experimental::client_reset_obj>();
+            CHECK(results.size() == 1);
             CHECK(before.is_frozen());
             before_handler_promise.set_value();
         };
 
         auto after_handler = [&](experimental::db local, experimental::db remote) {
-            auto results_local = local.objects<experimental::AllTypesObject>();
-            CHECK(results_local.size() == 2);
+            auto results_local = local.objects<experimental::client_reset_obj>();
+            CHECK(results_local.size() == 1);
             CHECK(local.is_frozen());
 
-            auto results_remote = remote.objects<experimental::AllTypesObject>();
+            auto results_remote = remote.objects<experimental::client_reset_obj>();
             CHECK(results_remote.size() == 2);
             after_handler_promise.set_value();
         };
