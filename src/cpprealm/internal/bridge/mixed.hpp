@@ -33,9 +33,6 @@
 namespace realm {
     class Mixed;
 
-    template<typename T>
-    struct object_base;
-
     using mixed = std::variant<
             std::monostate,
             int64_t,

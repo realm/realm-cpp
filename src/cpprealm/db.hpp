@@ -169,13 +169,6 @@ namespace realm {
 
         ::realm::sync_subscription_set subscriptions();
 
-        /**
-        An object encapsulating an Atlas App Services "session". Sessions represent the
-        communication between the client (and a local Realm file on disk), and the server
-
-        Sessions are always created by the SDK and vended out through various APIs. The
-        lifespans of sessions associated with Realms are managed automatically.
-        */
         std::optional<sync_session> get_sync_session() const {
             return m_realm.get_sync_session();
         }

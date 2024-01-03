@@ -74,14 +74,6 @@ namespace realm::internal::type_info {
     struct is_map<std::map<std::string, T>> : std::true_type {
         using value_type = T;
     };
-    template <typename T, typename = void>
-    struct persisted;
-    template <typename T, typename = void>
-    struct is_persisted : std::false_type {
-    };
-    template <typename T>
-    struct is_persisted<persisted<T>> : std::true_type {
-    };
     template <typename, typename>
     struct managed;
     template <typename T, typename = void>
@@ -277,13 +269,6 @@ namespace realm::internal::type_info {
 
         static constexpr auto type() {
             return bridge::property::type::Mixed | bridge::property::type::Nullable;
-        }
-    };
-    template <typename T>
-    struct type_info<T, std::enable_if_t<std::is_base_of_v<object_base<T>, T>>> {
-        using internal_type = bridge::obj_key;
-        static constexpr bridge::property::type type() {
-            return bridge::property::type::Object;
         }
     };
     template <typename T>

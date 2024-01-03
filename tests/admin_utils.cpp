@@ -17,6 +17,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
+#include <sstream>
 #include <thread>
 #include <cpprealm/internal/generic_network_transport.hpp>
 

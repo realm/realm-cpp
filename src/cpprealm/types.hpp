@@ -281,17 +281,7 @@ namespace realm {
         return std::visit([&](auto&& arg) {
             using StoredType = std::decay_t<decltype(arg)>;
             using M = typename internal::type_info::type_info<StoredType>::internal_type;
-            if constexpr (std::is_base_of_v<object<StoredType>, StoredType>) {
-                StoredType o = std::get<StoredType>(v);
-                if (!arg.m_object) {
-                    auto actual_schema = realm->schema().find(StoredType::schema.name);
-                    auto table = const_cast<internal::bridge::realm&>(*realm).get_table(actual_schema.table_key());
-                    o.manage(table, *realm);
-                }
-                return internal::bridge::mixed(o.m_object->get_obj().get_key());
-            } else {
-                return internal::bridge::mixed(M(arg));
-            }
+            return internal::bridge::mixed(M(arg));
         }, v);
     }
 

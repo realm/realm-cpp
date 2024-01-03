@@ -29,10 +29,6 @@ namespace realm {
     namespace object_store {
         class Set;
     }
-    template <typename>
-    struct object;
-    template <typename, typename>
-    struct persisted;
 }
 
 namespace realm::internal::bridge {

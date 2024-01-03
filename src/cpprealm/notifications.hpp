@@ -30,8 +30,6 @@
 
 namespace realm {
 template <typename T>
-struct object_base;
-template <typename T>
 struct ObjectChange;
 
 /**

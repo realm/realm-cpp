@@ -27,12 +27,6 @@
 
 namespace realm {
     class List;
-    template <typename>
-    struct object;
-    template <typename>
-    struct embedded_object;
-    template <typename, typename>
-    struct persisted;
 }
 
 namespace realm::internal::bridge {

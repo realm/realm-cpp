@@ -47,8 +47,6 @@ namespace realm {
     class Query;
     struct ColKey;
     class LnkLst;
-    template <typename T>
-    struct object_base;
     struct NotificationToken;
 
     namespace internal::bridge {
@@ -64,9 +62,6 @@ namespace realm {
     struct managed;
     template <typename, typename>
     struct accessor;
-
-    template <typename, typename>
-    struct persisted;
 }
 
 namespace realm::internal::bridge {
@@ -141,16 +136,7 @@ namespace realm::internal::bridge {
         [[nodiscard]] obj get_linked_object(const col_key& col_key);
         template <typename T>
         T get(const col_key& col_key) const {
-            if constexpr (is_optional<T>::value) {
-                if (is_null(col_key)) {
-                    return std::nullopt;
-                }
-                return
-                    persisted<typename T::value_type, void>::deserialize
-                            (internal::bridge::get<typename type_info::type_info<typename T::value_type, void>::internal_type>(*this, col_key));
-            } else {
-                return internal::bridge::get<T>(*this, col_key);
-            }
+            return internal::bridge::get<T>(*this, col_key);
         }
 
         template <typename T>
