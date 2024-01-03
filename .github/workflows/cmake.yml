@@ -226,7 +226,7 @@ jobs:
 
       - name: Test
         working-directory: .build/cmake-preset-${{ matrix.preset }}/tests/${{ matrix.configuration }}/
-        run: ./cpprealm_sync_tests "~client-reset"
+        run: ./cpprealm_sync_tests "~client_reset"
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
@@ -380,7 +380,7 @@ jobs:
 
       - name: Test
         working-directory: .build/cmake-preset-linux/tests/${{ matrix.configuration }}/
-        run: ./cpprealm_sync_tests "~client-reset"
+        run: ./cpprealm_sync_tests "~client_reset"
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
