@@ -2,6 +2,7 @@
 #define REALM_MODELS_HPP
 
 #include <cpprealm/sdk.hpp>
+#include <cpprealm/sdk.hpp>
 
 namespace realm {
     struct DrinkTemplate {

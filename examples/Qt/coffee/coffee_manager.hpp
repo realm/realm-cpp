@@ -21,7 +21,7 @@ class DrinkSelectionModel : public QAbstractTableModel
         MilkQty,
         EspressoQty
     };
-    DrinkSelectionModel(realm::experimental::managed<realm::experimental::CoffeeMachine>& machine);
+    DrinkSelectionModel(realm::managed<realm::CoffeeMachine>& machine);
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     Q_INVOKABLE QVariant data(const QModelIndex &index, int role) const override;

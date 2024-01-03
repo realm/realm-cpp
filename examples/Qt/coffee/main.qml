@@ -4,8 +4,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Barista
 import Coffee
-import io.mongo.barista 1.0
 
 ApplicationWindow {
     visible: true

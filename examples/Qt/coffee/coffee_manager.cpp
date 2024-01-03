@@ -4,7 +4,9 @@
 CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
     : QObject{parent}
 {
-    auto app = realm::App("qt-realm-coffee-dfvvc");
+    auto app_config = realm::App::configuration();
+    app_config.app_id = "MY_DEVICE_SYNC_ID";
+    auto app = realm::App(app_config);
     mUser = app.login(realm::App::credentials::anonymous()).get();
     auto realm = realm::db(mUser.flexible_sync_configuration());
     realm.subscriptions().update([](realm::mutable_sync_subscription_set& subs) {
@@ -76,7 +78,7 @@ CoffeeMachineManager::CoffeeMachineManager(QObject *parent)
                     emit enableMachine();
                 }
                 else if (oldVal == realm::CoffeeMachine::State::OK && (newVal == realm::CoffeeMachine::State::NEEDS_ATTENTION ||
-                                                                                 newVal == realm::CoffeeMachine::State::MAINTENANCE_MODE))
+                                                                       newVal == realm::CoffeeMachine::State::MAINTENANCE_MODE))
                 {
                     emit disableMachine();
                 }

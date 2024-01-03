@@ -21,45 +21,23 @@ class MainActivity : AppCompatActivity() {
         // can create a folder to store the Realm files.
         setupRealm(this.filesDir.path)
 
-        binding.forwardButton.setOnClickListener {
-            moveForward()
+        binding.incrementButton.setOnClickListener {
+            incrementCounter()
         }
 
-        binding.reverseButton.setOnClickListener {
-            moveBack()
-        }
-
-        binding.leftButton.setOnClickListener {
-            moveLeft()
-        }
-
-        binding.rightButton.setOnClickListener {
-            moveRight()
-        }
-
-        binding.colorButton.setOnClickListener {
-            changeColor()
-        }
-
-        binding.resetButton.setOnClickListener {
-            resetCar()
+        binding.decrementButton.setOnClickListener {
+            decrementCounter()
         }
     }
 
-    fun carNotificationRecieved(changed_property: String) {
+    fun counterNotificationRecieved(changed_property: String) {
         binding.sampleText.text = changed_property
     }
 
     external fun setupRealm(path: String)
     // Movement methods
-    external fun moveForward()
-    external fun moveBack()
-    external fun moveLeft()
-    external fun moveRight()
-    // Customization methods
-    external fun changeColor()
-    // Reset Car
-    external fun resetCar()
+    external fun incrementCounter()
+    external fun decrementCounter()
 
     companion object {
         // Used to load the 'realmexample' library on application startup.
