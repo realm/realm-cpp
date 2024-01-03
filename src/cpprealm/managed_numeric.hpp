@@ -1,8 +1,8 @@
 #ifndef CPPREALM_MANAGED_NUMERIC_HPP
 #define CPPREALM_MANAGED_NUMERIC_HPP
 
-#include "macros.hpp"
-#include "rbool.hpp"
+#include <cpprealm/macros.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm {
     template<>

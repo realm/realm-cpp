@@ -1,8 +1,8 @@
 #ifndef CPPREALM_MANAGED_TIMESTAMP_HPP
 #define CPPREALM_MANAGED_TIMESTAMP_HPP
 
-#include "cpprealm/internal/bridge/timestamp.hpp"
-#include "macros.hpp"
+#include <cpprealm/internal/bridge/timestamp.hpp>
+#include <cpprealm/macros.hpp>
 
 namespace realm {
     class rbool;

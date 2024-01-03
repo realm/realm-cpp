@@ -1,10 +1,10 @@
 #ifndef CPPREALM_MANAGED_LIST_HPP
 #define CPPREALM_MANAGED_LIST_HPP
 
-#include "macros.hpp"
-#include "notifications.hpp"
-#include "observation.hpp"
-#include "types.hpp"
+#include <cpprealm/macros.hpp>
+#include <cpprealm/notifications.hpp>
+#include <cpprealm/observation.hpp>
+#include <cpprealm/types.hpp>
 
 namespace realm {
 

@@ -1,10 +1,10 @@
 #ifndef CPPREALM_MANAGED_OBJECTID_HPP
 #define CPPREALM_MANAGED_OBJECTID_HPP
 
-#include "macros.hpp"
-#include "types.hpp"
+#include <cpprealm/macros.hpp>
+#include <cpprealm/types.hpp>
 
-#include "cpprealm/internal/bridge/object_id.hpp"
+#include <cpprealm/internal/bridge/object_id.hpp>
 
 namespace realm {
     class rbool;

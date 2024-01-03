@@ -1,5 +1,5 @@
-#include "db.hpp"
-#include "flex_sync.hpp"
+#include <cpprealm/db.hpp>
+#include <cpprealm/flex_sync.hpp>
 
 namespace realm {
     ::realm::sync_subscription_set db::subscriptions() {

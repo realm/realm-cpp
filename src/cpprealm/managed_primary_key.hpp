@@ -1,7 +1,7 @@
 #ifndef CPPREALM_MANAGED_PRIMARY_KEY_HPP
 #define CPPREALM_MANAGED_PRIMARY_KEY_HPP
 
-#include "rbool.hpp"
+#include <cpprealm/rbool.hpp>
 
 namespace realm {
         template <typename, typename>

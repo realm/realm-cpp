@@ -1,5 +1,5 @@
-#include "managed_objectid.hpp"
-#include "rbool.hpp"
+#include <cpprealm/managed_objectid.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm {
     __cpprealm_build_query(==, equal, realm::object_id);

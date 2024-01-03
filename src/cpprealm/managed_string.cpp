@@ -1,6 +1,6 @@
-#include "managed_string.hpp"
-#include "db.hpp"
-#include "rbool.hpp"
+#include <cpprealm/managed_string.hpp>
+#include <cpprealm/db.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm {
     using managed_string = managed<std::string>;

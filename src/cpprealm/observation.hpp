@@ -1,45 +1,19 @@
 #ifndef CPPREALM_OBSERVATION_HPP
 #define CPPREALM_OBSERVATION_HPP
 
-#include "cpprealm/internal/bridge/list.hpp"
-#include "cpprealm/internal/bridge/obj.hpp"
-#include "cpprealm/internal/bridge/object.hpp"
-#include "cpprealm/internal/bridge/realm.hpp"
-#include "macros.hpp"
+#include <cpprealm/internal/bridge/list.hpp>
+#include <cpprealm/internal/bridge/obj.hpp>
+#include <cpprealm/internal/bridge/object.hpp>
+#include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/macros.hpp>
 
-#include "cpprealm/internal/bridge/table.hpp"
-#include "cpprealm/internal/bridge/thread_safe_reference.hpp"
+#include <cpprealm/internal/bridge/table.hpp>
+#include <cpprealm/internal/bridge/thread_safe_reference.hpp>
 
 #include <iostream>
 #include <variant>
 
 namespace realm {
-//    template<typename T>
-//    struct PropertyChange {
-//        /**
-//         The name of the property which changed.
-//        */
-//        std::string name;
-//
-//        /**
-//         Value of the property before the change occurred. This is not supplied if
-//         the change happened on the same thread as the notification and for `List`
-//         properties.
-//
-//         For object properties this will give the object which was previously
-//         linked to, but that object will have its new values and not the values it
-//         had before the changes. This means that `previousValue` may be a deleted
-//         object, and you will need to check `isInvalidated` before accessing any
-//         of its properties.
-//        */
-//        std::optional<typename decltype(T::schema)::variant_t> old_value;
-//
-//        /**
-//         The value of the property after the change occurred. This is not supplied
-//         for `List` properties and will always be nil.
-//        */
-//        std::optional<typename decltype(T::schema)::variant_t> new_value;
-//    };
 
     template<typename T>
     struct object_change {

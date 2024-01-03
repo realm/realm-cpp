@@ -6,9 +6,9 @@
 #include <set>
 #include <stdexcept>
 
-#include "cpprealm/internal/bridge/realm.hpp"
-#include "cpprealm/internal/bridge/schema.hpp"
-#include "cpprealm/internal/type_info.hpp"
+#include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/internal/bridge/schema.hpp>
+#include <cpprealm/internal/type_info.hpp>
 
 namespace realm {
 

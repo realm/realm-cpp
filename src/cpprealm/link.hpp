@@ -1,9 +1,9 @@
 #ifndef CPPREALM_BRIDGE_LINK_HPP
 #define CPPREALM_BRIDGE_LINK_HPP
 
-#include "cpprealm/accessors.hpp"
-#include "cpprealm/internal/type_info.hpp"
-#include "macros.hpp"
+#include <cpprealm/accessors.hpp>
+#include <cpprealm/internal/type_info.hpp>
+#include <cpprealm/macros.hpp>
 
 namespace realm {
     template <typename, typename>

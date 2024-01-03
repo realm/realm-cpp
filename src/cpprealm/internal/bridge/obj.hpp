@@ -8,7 +8,7 @@
 #include <optional>
 #include <string>
 
-#include "cpprealm/types.hpp"
+#include <cpprealm/types.hpp>
 #include <cpprealm/internal/bridge/binary.hpp>
 #include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/decimal128.hpp>

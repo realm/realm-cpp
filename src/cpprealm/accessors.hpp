@@ -1,11 +1,11 @@
 #ifndef CPPREALM_ACCESSORS_HPP
 #define CPPREALM_ACCESSORS_HPP
 
-#include "cpprealm/internal/bridge/lnklst.hpp"
-#include "cpprealm/internal/bridge/obj.hpp"
-#include "cpprealm/internal/bridge/realm.hpp"
-#include "cpprealm/internal/bridge/table.hpp"
-#include "types.hpp"
+#include <cpprealm/internal/bridge/lnklst.hpp>
+#include <cpprealm/internal/bridge/obj.hpp>
+#include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/internal/bridge/table.hpp>
+#include <cpprealm/types.hpp>
 
 namespace realm {
     template<typename>

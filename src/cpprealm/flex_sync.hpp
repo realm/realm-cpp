@@ -28,8 +28,8 @@
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 
-#include "macros.hpp"
-#include "results.hpp"
+#include <cpprealm/macros.hpp>
+#include <cpprealm/results.hpp>
 #include <cpprealm/rbool.hpp>
 
 namespace realm {

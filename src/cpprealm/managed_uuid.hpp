@@ -1,8 +1,8 @@
 #ifndef CPPREALM_MANAGED_UUID_HPP
 #define CPPREALM_MANAGED_UUID_HPP
 
-#include "macros.hpp"
-#include "types.hpp"
+#include <cpprealm/macros.hpp>
+#include <cpprealm/types.hpp>
 
 namespace realm {
     class rbool;

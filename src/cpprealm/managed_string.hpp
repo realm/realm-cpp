@@ -1,7 +1,7 @@
 #ifndef CPPREALM_MANAGED_STRING_HPP
 #define CPPREALM_MANAGED_STRING_HPP
 
-#include "macros.hpp"
+#include <cpprealm/macros.hpp>
 
 namespace realm {
     class rbool;

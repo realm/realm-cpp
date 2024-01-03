@@ -1,10 +1,10 @@
 #ifndef CPPREALM_MANAGED_DICTIONARY_HPP
 #define CPPREALM_MANAGED_DICTIONARY_HPP
 
-#include "cpprealm/accessors.hpp"
-#include "macros.hpp"
-#include "notifications.hpp"
-#include "observation.hpp"
+#include <cpprealm/accessors.hpp>
+#include <cpprealm/macros.hpp>
+#include <cpprealm/notifications.hpp>
+#include <cpprealm/observation.hpp>
 
 namespace realm {
 

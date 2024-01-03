@@ -1,5 +1,5 @@
-#include "managed_uuid.hpp"
-#include "rbool.hpp"
+#include <cpprealm/managed_uuid.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm {
     __cpprealm_build_query(==, equal, realm::uuid)

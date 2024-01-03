@@ -1,9 +1,9 @@
 #ifndef CPPREALM_MANAGED_MIXED_HPP
 #define CPPREALM_MANAGED_MIXED_HPP
 
-#include "macros.hpp"
-#include "rbool.hpp"
-#include "types.hpp"
+#include <cpprealm/macros.hpp>
+#include <cpprealm/rbool.hpp>
+#include <cpprealm/types.hpp>
 
 namespace realm {
     template <typename T>

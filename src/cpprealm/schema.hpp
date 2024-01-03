@@ -19,7 +19,7 @@
 #ifndef realm_schema_hpp
 #define realm_schema_hpp
 
-#include "link.hpp"
+#include <cpprealm/link.hpp>
 #include <cpprealm/internal/bridge/lnklst.hpp>
 #include <cpprealm/internal/bridge/object_schema.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>

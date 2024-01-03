@@ -1,12 +1,12 @@
 #ifndef CPPREALM_RESULTS_HPP
 #define CPPREALM_RESULTS_HPP
 
-#include "cpprealm/internal/bridge/mixed.hpp"
-#include "cpprealm/internal/bridge/query.hpp"
-#include "cpprealm/internal/bridge/results.hpp"
-#include "cpprealm/internal/bridge/table.hpp"
-#include "macros.hpp"
-#include "schema.hpp"
+#include <cpprealm/internal/bridge/mixed.hpp>
+#include <cpprealm/internal/bridge/query.hpp>
+#include <cpprealm/internal/bridge/results.hpp>
+#include <cpprealm/internal/bridge/table.hpp>
+#include <cpprealm/macros.hpp>
+#include <cpprealm/schema.hpp>
 
 namespace realm {
     class rbool;

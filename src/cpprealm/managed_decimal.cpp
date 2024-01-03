@@ -1,6 +1,6 @@
-#include "managed_decimal.hpp"
-#include "cpprealm/internal/bridge/decimal128.hpp"
-#include "rbool.hpp"
+#include <cpprealm/managed_decimal.hpp>
+#include <cpprealm/internal/bridge/decimal128.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm {
     __cpprealm_build_query(==, equal, realm::decimal128);

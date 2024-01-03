@@ -1,5 +1,5 @@
-#include "managed_timestamp.hpp"
-#include "rbool.hpp"
+#include <cpprealm/managed_timestamp.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm {
     __cpprealm_build_query(==, equal, std::chrono::time_point<std::chrono::system_clock>);

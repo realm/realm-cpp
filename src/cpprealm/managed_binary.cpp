@@ -1,5 +1,5 @@
-#include "managed_binary.hpp"
-#include "rbool.hpp"
+#include <cpprealm/managed_binary.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm {
     std::vector<uint8_t> managed<std::vector<uint8_t>>::detach() const {

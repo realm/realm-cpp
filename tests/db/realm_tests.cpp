@@ -110,10 +110,10 @@ namespace realm {
             return true;
         });
         {
-            auto realm = experimental::db(config);
+            auto realm = db(config);
             realm.write([&]() {
                 for (int64_t i = 0; i < 200; ++i) {
-                    experimental::AllTypesObject o;
+                    AllTypesObject o;
                     o._id = i;
                     realm.add(std::move(o));
                 }
@@ -122,7 +122,7 @@ namespace realm {
         auto file_size_before = std::filesystem::file_size(path.path);
         CHECK(compact_run_count == 1);
         std::thread([&] {
-            auto other_realm = experimental::db(config);
+            auto other_realm = db(config);
         }).join();
 
         auto file_size_after = std::filesystem::file_size(path.path);

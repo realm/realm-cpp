@@ -1,7 +1,7 @@
 #ifndef CPPREALM_RBOOL_HPP
 #define CPPREALM_RBOOL_HPP
 
-#include "db.hpp"
+#include <cpprealm/db.hpp>
 #include <cpprealm/schema.hpp>
 
 #include <cpprealm/internal/bridge/query.hpp>

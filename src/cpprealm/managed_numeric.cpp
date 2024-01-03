@@ -1,4 +1,4 @@
-#include "managed_numeric.hpp"
+#include <cpprealm/managed_numeric.hpp>
 
 namespace realm {
     __cpprealm_build_query(==, equal, bool)

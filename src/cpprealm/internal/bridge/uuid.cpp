@@ -1,6 +1,6 @@
 #include <cpprealm/internal/bridge/uuid.hpp>
 
-#include "cpprealm/types.hpp"
+#include <cpprealm/types.hpp>
 #include <realm/uuid.hpp>
 
 namespace realm::internal::bridge {

@@ -1,4 +1,4 @@
-#include "managed_primary_key.hpp"
+#include <cpprealm/managed_primary_key.hpp>
 
 namespace realm {
 
