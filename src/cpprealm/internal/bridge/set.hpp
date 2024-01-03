@@ -108,4 +108,4 @@ namespace realm::internal::bridge {
     };
 }
 
-#endif //CPP_EALM_BRIDGE_SET_HPP
+#endif //CPPREALM_BRIDGE_SET_HPP

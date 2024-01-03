@@ -73,7 +73,7 @@ int main() {
 
 #if REALM_HAVE_UV
     uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-#elif REALM_PLATFORM_APPLE
+#elif __APPLE__
     CFRunLoopRun();
 #else
 #error "No EventLoop implementation selected"
