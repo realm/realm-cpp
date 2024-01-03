@@ -16,8 +16,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef CPP_REALM_APP_HPP
-#define CPP_REALM_APP_HPP
+#ifndef CPPREALM_APP_HPP
+#define CPPREALM_APP_HPP
 
 #include <cpprealm/db.hpp>
 
@@ -268,4 +268,4 @@ private:
 };
 
 }
-#endif /* CPP_REALM_APP_HPP */
+#endif /* CPPREALM_APP_HPP */

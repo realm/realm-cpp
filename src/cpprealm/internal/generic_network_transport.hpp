@@ -16,8 +16,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef realm_cpp_generic_network_transport
-#define realm_cpp_generic_network_transport
+#ifndef CPPREALM_GENERIC_NETWORK_TRANSPORT_CPP
+#define CPPREALM_GENERIC_NETWORK_TRANSPORT_CPP
 
 #include <cpprealm/internal/bridge/realm.hpp>
 
@@ -49,4 +49,4 @@ private:
 
 } // namespace realm
 
-#endif //realm_cpp_generic_network_transport
+#endif //CPPREALM_GENERIC_NETWORK_TRANSPORT_CPP

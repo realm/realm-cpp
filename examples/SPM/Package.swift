@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "SPMRealmCxx",
+    name: "RealmCppExample",
     platforms: [.macOS(.v11)],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -14,7 +14,7 @@ let package = Package(
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .executableTarget(
-            name: "SPMRealmCxx",
+            name: "RealmCppExample",
             dependencies: [
                 .product(name: "realm-cpp-sdk", package: "realm-cpp")
             ])

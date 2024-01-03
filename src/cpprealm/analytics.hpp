@@ -16,8 +16,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef REALM_ANALYTICS_HPP
-#define REALM_ANALYTICS_HPP
+#ifndef CPPREALM_ANALYTICS_HPP
+#define CPPREALM_ANALYTICS_HPP
 
 // Asynchronously submits build information to Realm if running in
 // DEBUG mode.
@@ -54,4 +54,4 @@ namespace realm {
     };
 } // namespace realm
 
-#endif //REALM_ANALYTICS_HPP
+#endif //CPPREALM_ANALYTICS_HPP

@@ -16,27 +16,23 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef realm_thread_safe_reference_hpp
-#define realm_thread_safe_reference_hpp
+#ifndef CPPREALM_THREAD_SAFE_REFERENCE_HPP
+#define CPPREALM_THREAD_SAFE_REFERENCE_HPP
 
-//#include <future>
-//#include <queue>
-//#include <iostream>
-//
-//#include <cpprealm/internal/bridge/obj.hpp>
-//#include <cpprealm/internal/bridge/thread_safe_reference.hpp>
+#include <cpprealm/internal/bridge/thread_safe_reference.hpp>
 
-//#include <cpprealm/experimental/db.hpp>
+#include <cpprealm/db.hpp>
 
+namespace realm {
 
-//template <typename T, typename = void>
-//struct thread_safe_reference;
-//
-//}
+    template <typename T>
+    struct thread_safe_reference<T> {
+        explicit thread_safe_reference(const managed<T>& object)
+            : m_tsr(internal::bridge::thread_safe_reference(internal::bridge::object(object.m_realm, object.m_obj))) { }
+    private:
+        internal::bridge::thread_safe_reference m_tsr;
+        friend struct db;
+    };
+}
 
-
-
-
-
-
-#endif /* realm_thread_safe_reference.hpp */
+#endif /* CPPREALM_THREAD_SAFE_REFERENCE_HPP */

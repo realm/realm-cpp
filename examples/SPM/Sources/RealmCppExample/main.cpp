@@ -1,9 +1,7 @@
 #include <stdio.h>
 
 #include <cpprealm/sdk.hpp>
-#include <cpprealm/experimental/sdk.hpp>
 
-#include <realm/util/cf_ptr.hpp>
 #include <CoreFoundation/CoreFoundation.h>
 
 namespace realm {
@@ -18,15 +16,17 @@ namespace realm {
 
 
 int main() {
-    auto app = realm::App("MY_DEVICE_SYNC_APP_ID");
+    auto app_config = realm::App::configuration();
+    app_config.app_id = "MY_DEVICE_SYNC_APP_ID";
+    auto app = realm::App(app_config);
     auto user = app.login(realm::App::credentials::anonymous()).get();
     auto config = user.flexible_sync_configuration();
 
     auto synced_realm = realm::db(std::move(config));
 
     auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
-                                                          subs.add<realm::Person>("foo-strings", [](auto &obj) {
-                                                              return obj.country == "USA";
+                                                          subs.add<realm::Person>("country", [](auto &obj) {
+                                                              return obj.country == "USA" || obj.country == "IE";
                                                           });
                                                       }).get();
 

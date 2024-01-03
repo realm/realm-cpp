@@ -16,8 +16,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef realm_schema_hpp
-#define realm_schema_hpp
+#ifndef CPPREALM_SCHEMA_HPP
+#define CPPREALM_SCHEMA_HPP
 
 #include <cpprealm/link.hpp>
 #include <cpprealm/internal/bridge/lnklst.hpp>
@@ -378,4 +378,4 @@ namespace realm {
     }
 }
 
-#endif /* realm_schema_hpp */
+#endif /* CPPREALM_SCHEMA_HPP */

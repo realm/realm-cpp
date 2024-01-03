@@ -16,8 +16,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef flex_sync_hpp
-#define flex_sync_hpp
+#ifndef CPPREALM_FLEXIBLE_SYNC_HPP
+#define CPPREALM_FLEXIBLE_SYNC_HPP
 
 #include <future>
 #include <type_traits>
@@ -177,4 +177,4 @@ namespace realm {
 
 } // namespace realm
 
-#endif /* flex_sync_hpp */
+#endif /* CPPREALM_FLEXIBLE_SYNC_HPP */
