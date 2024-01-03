@@ -291,11 +291,11 @@ namespace realm::internal::type_info {
     };
 
     template <typename T>
-    struct is_experimental_primary_key : std::false_type {
+    struct is_primary_key : std::false_type {
         static constexpr auto value = false;
     };
     template <typename T>
-    struct is_experimental_primary_key<primary_key<T>> : std::true_type {
+    struct is_primary_key<primary_key<T>> : std::true_type {
         static constexpr auto value = true;
     };
 

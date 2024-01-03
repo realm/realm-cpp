@@ -3,7 +3,7 @@
 
 using namespace realm;
 
-TEST_CASE("basic_beta_performance", "[performance]") {
+TEST_CASE("basic_performance", "[performance]") {
     BENCHMARK_ADVANCED("write 1000")(Catch::Benchmark::Chronometer meter) {
         realm_path path;
         realm::db_config config;

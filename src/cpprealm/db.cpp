@@ -36,4 +36,4 @@ namespace realm {
         return lhs.m_realm != rhs.m_realm;
     }
 
-} // namespace realm::experimental
+} // namespace realm

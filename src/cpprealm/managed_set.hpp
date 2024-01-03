@@ -256,7 +256,7 @@ namespace realm {
                          m_obj, m_obj.get_table().get_column_key(p.name), realm,
                          (*value).*(std::decay_t<decltype(p)>::ptr)), ...);
             }, managed<T, void>::schema.ps);
-            if (!managed<T>::schema.is_embedded_experimental()) {
+            if (!managed<T>::schema.is_embedded()) {
                 set.insert(m_obj.get_key());
             }
             std::pair<size_t, bool> res = set.insert(m_obj.get_key());

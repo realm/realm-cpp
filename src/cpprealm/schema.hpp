@@ -78,7 +78,7 @@ namespace realm {
 
             using Class = typename internal::ptr_type_extractor<Ptr>::class_type;
             static constexpr auto ptr = Ptr;
-            static constexpr bool is_primary_key = IsPrimaryKey || internal::type_info::is_experimental_primary_key<Result>::value;
+            static constexpr bool is_primary_key = IsPrimaryKey || internal::type_info::is_primary_key<Result>::value;
             internal::bridge::property::type type;
             const char* name = "";
 
@@ -222,7 +222,7 @@ namespace realm {
             using PrimaryKeyProperty = decltype(primary_key());
             static constexpr bool HasPrimaryKeyProperty = !std::is_void_v<PrimaryKeyProperty>;
 
-            bool is_embedded_experimental() const {
+            bool is_embedded() const {
                 return m_object_type == ObjectType::Embedded;
             }
 

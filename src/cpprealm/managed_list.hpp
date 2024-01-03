@@ -248,7 +248,7 @@ namespace realm {
             if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
                 auto pk = (*value).*(managed<T>::schema.primary_key().ptr);
                 m_obj = table.create_object_with_primary_key(realm::internal::bridge::mixed(serialize(pk.value)));
-            } else if (managed<T>::schema.is_embedded_experimental()) {
+            } else if (managed<T>::schema.is_embedded()) {
                 m_obj = list.add_embedded();
             } else {
                 m_obj = table.create_object();
@@ -258,14 +258,14 @@ namespace realm {
                          m_obj, m_obj.get_table().get_column_key(p.name), realm,
                          (*value).*(std::decay_t<decltype(p)>::ptr)), ...);
             }, managed<T, void>::schema.ps);
-            if (!managed<T>::schema.is_embedded_experimental()) {
+            if (!managed<T>::schema.is_embedded()) {
                 list.add(m_obj.get_key());
             }
         }
         void push_back(const managed<T>& value)
         {
             auto list = internal::bridge::list(*m_realm, *m_obj, m_key);
-            if (!managed<T>::schema.is_embedded_experimental()) {
+            if (!managed<T>::schema.is_embedded()) {
                 list.add(value.m_obj.get_key());
             } else {
                 throw std::logic_error("Cannot add existing embedded object to managed list.");
@@ -273,7 +273,7 @@ namespace realm {
         }
         void push_back(const managed<T*>& value)
         {
-            if (!managed<T>::schema.is_embedded_experimental()) {
+            if (!managed<T>::schema.is_embedded()) {
                 auto list = internal::bridge::list(*m_realm, *m_obj, m_key);
                 list.add(value.m_obj->get_key());
             } else {
