@@ -21,7 +21,7 @@ jobs:
     outputs:
       clusterName: ${{ steps.deploy-cluster.outputs.clusterName }}
     steps:
-      - uses: realm/ci-actions/mdb-realm/deploy@30bd9ead57756016f2e2ac7630433cf0883d1bae
+      - uses: realm/ci-actions/mdb-realm/deploy@28a12a22e135d56db2b678fbe6479c0e1b52f169
         id: deploy-cluster
         with:
           atlasUrl: ${{ env.REALM_ATLAS_ENDPOINT }}
@@ -39,7 +39,7 @@ jobs:
       - build-linux-sync
 #      - build-windows-sync
     steps:
-      - uses: realm/ci-actions/mdb-realm/cleanup@30bd9ead57756016f2e2ac7630433cf0883d1bae
+      - uses: realm/ci-actions/mdb-realm/cleanup@28a12a22e135d56db2b678fbe6479c0e1b52f169
         with:
           atlasUrl: ${{ env.REALM_ATLAS_ENDPOINT }}
           realmUrl: ${{ env.REALM_BAAS_ENDPOINT }}
@@ -226,7 +226,7 @@ jobs:
 
       - name: Test
         working-directory: .build/cmake-preset-${{ matrix.preset }}/tests/${{ matrix.configuration }}/
-        run: ./cpprealm_sync_tests
+        run: ./cpprealm_sync_tests "~client-reset"
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
@@ -380,7 +380,7 @@ jobs:
 
       - name: Test
         working-directory: .build/cmake-preset-linux/tests/${{ matrix.configuration }}/
-        run: ./cpprealm_sync_tests
+        run: ./cpprealm_sync_tests "~client-reset"
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
