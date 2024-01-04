@@ -2,9 +2,9 @@
 #define REALM_MODELS_HPP
 
 #include <cpprealm/sdk.hpp>
-#include <cpprealm/experimental/sdk.hpp>
+#include <cpprealm/sdk.hpp>
 
-namespace realm::experimental {
+namespace realm {
     struct DrinkTemplate {
         primary_key<realm::object_id> _id;
         std::string name;

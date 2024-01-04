@@ -1,7 +1,5 @@
 #include <cpprealm/internal/bridge/obj.hpp>
 
-#include <cpprealm/object.hpp>
-
 #include <cpprealm/internal/type_info.hpp>
 
 #include <cpprealm/internal/bridge/dictionary.hpp>

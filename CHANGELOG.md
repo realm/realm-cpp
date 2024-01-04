@@ -27,7 +27,8 @@ X.Y.Z Release notes (YYYY-MM-DD)
 * Add support for manual compaction via `realm::db_config::should_compact_on_launch(std::function<bool(uint64_t total_bytes, uint64_t unused_bytes)>&&)`.
 
 ### Breaking Changes
-* None
+* The `experimental` namespace has been removed and all types under it have been elevated to the `realm` namespace.
+* The Realm C++ 'Alpha' SDK has been removed.
 
 ### Compatibility
 * Fileformat: Generates files with format v23. Reads and automatically upgrade from fileformat v5.

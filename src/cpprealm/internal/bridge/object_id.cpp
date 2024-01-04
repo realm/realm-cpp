@@ -1,6 +1,6 @@
 #include <cpprealm/internal/bridge/object_id.hpp>
 
-#include <cpprealm/experimental/types.hpp>
+#include <cpprealm/types.hpp>
 
 #include <realm/object_id.hpp>
 #include <realm/string_data.hpp>

@@ -1,5 +1,23 @@
-#ifndef REALM_INTERNAL_OBJ_HPP
-#define REALM_INTERNAL_OBJ_HPP
+////////////////////////////////////////////////////////////////////////////
+//
+// Copyright 2024 Realm Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+////////////////////////////////////////////////////////////////////////////
+
+#ifndef CPPREALM_BRIDGE_OBJ_HPP
+#define CPPREALM_BRIDGE_OBJ_HPP
 
 #include <any>
 #include <chrono>
@@ -8,7 +26,7 @@
 #include <optional>
 #include <string>
 
-#include <cpprealm/experimental/types.hpp>
+#include <cpprealm/types.hpp>
 #include <cpprealm/internal/bridge/binary.hpp>
 #include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/decimal128.hpp>
@@ -29,8 +47,6 @@ namespace realm {
     class Query;
     struct ColKey;
     class LnkLst;
-    template <typename T>
-    struct object_base;
     struct NotificationToken;
 
     namespace internal::bridge {
@@ -41,14 +57,11 @@ namespace realm {
         template <typename, typename>
         struct type_info;
     }
-    namespace experimental {
-        template <typename, typename>
-        struct managed;
-        template <typename, typename>
-        struct accessor;
-    }
+
     template <typename, typename>
-    struct persisted;
+    struct managed;
+    template <typename, typename>
+    struct accessor;
 }
 
 namespace realm::internal::bridge {
@@ -123,16 +136,7 @@ namespace realm::internal::bridge {
         [[nodiscard]] obj get_linked_object(const col_key& col_key);
         template <typename T>
         T get(const col_key& col_key) const {
-            if constexpr (is_optional<T>::value) {
-                if (is_null(col_key)) {
-                    return std::nullopt;
-                }
-                return
-                    persisted<typename T::value_type, void>::deserialize
-                            (internal::bridge::get<typename type_info::type_info<typename T::value_type, void>::internal_type>(*this, col_key));
-            } else {
-                return internal::bridge::get<T>(*this, col_key);
-            }
+            return internal::bridge::get<T>(*this, col_key);
         }
 
         template <typename T>
@@ -196,20 +200,20 @@ namespace realm::internal::bridge {
             for (auto v : values) {
                 if constexpr (std::is_pointer_v<ValueType>) {
                     internal::bridge::obj m_obj;
-                    if constexpr (experimental::managed<std::remove_pointer_t<ValueType>, void>::schema.HasPrimaryKeyProperty) {
-                        auto pk = (*v).*(experimental::managed<std::remove_pointer_t<ValueType>, void>::schema.primary_key().ptr);
+                    if constexpr (managed<std::remove_pointer_t<ValueType>, void>::schema.HasPrimaryKeyProperty) {
+                        auto pk = (*v).*(managed<std::remove_pointer_t<ValueType>, void>::schema.primary_key().ptr);
                         m_obj = this->get_table().create_object_with_primary_key(internal::bridge::mixed(serialize(pk.value)));
                     } else {
                         m_obj = m_obj = this->get_table().create_object();
                     }
                     std::apply([&m_obj, &v](auto && ...p) {
-                        (experimental::accessor<typename std::decay_t<decltype(p)>::Result, void>::set(
+                        (accessor<typename std::decay_t<decltype(p)>::Result, void>::set(
                                  m_obj, m_obj.get_table().get_column_key(p.name),
                                  (*v).*(std::decay_t<decltype(p)>::ptr)), ...);
-                    }, experimental::managed<std::remove_pointer_t<ValueType>, void>::schema.ps);
+                    }, managed<std::remove_pointer_t<ValueType>, void>::schema.ps);
                     v2.push_back(m_obj.get_key());
                 } else {
-                    v2.push_back(::realm::experimental::serialize(v));
+                    v2.push_back(::realm::serialize(v));
                 }
             }
             set_list_values(col_key, v2);
@@ -249,4 +253,4 @@ namespace realm::internal::bridge {
 }
 
 
-#endif //REALM_INTERNAL_OBJ_HPP
+#endif //CPPREALM_BRIDGE_OBJ_HPP

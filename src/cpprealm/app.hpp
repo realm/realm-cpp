@@ -16,10 +16,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef CPP_REALM_APP_HPP
-#define CPP_REALM_APP_HPP
+#ifndef CPPREALM_APP_HPP
+#define CPPREALM_APP_HPP
 
-#include <cpprealm/experimental/db.hpp>
+#include <cpprealm/db.hpp>
 
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/sync_error.hpp>
@@ -268,4 +268,4 @@ private:
 };
 
 }
-#endif /* CPP_REALM_APP_HPP */
+#endif /* CPPREALM_APP_HPP */

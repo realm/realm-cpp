@@ -15,9 +15,9 @@ This repository holds the source code for the C++ SDK Preview.
 Realm was built for mobile developers, with simplicity in mind. The idiomatic, object-oriented data model can save you thousands of lines of code.
 
 ```cpp
-#include <cpprealm/experimental/sdk.hpp>
+#include <cpprealm/sdk.hpp>
 
-using namespace realm::experimental;
+using namespace realm;
 
 // Define your models like regular structs.
 struct Dog {

@@ -88,15 +88,13 @@ let package = Package(
                 .define("CATCH_CONFIG_NO_POSIX_SIGNALS", .when(platforms: [.tvOS])),
             ] + cxxSettings) as [CXXSetting]),
         .executableTarget(
-            name: "realm-beta-tests",
+            name: "realm-tests",
             dependencies: ["realm-cpp-sdk", "Catch2"],
             path: "tests",
             exclude: [
-                "experimental/sync",
-                "experimental/alpha",
+                "sync",
             ],
             sources: [
-                "experimental",
                 "main.hpp",
                 "main.cpp",
             ],

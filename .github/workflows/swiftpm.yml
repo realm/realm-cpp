@@ -71,7 +71,7 @@ jobs:
 
       - name: Build
         run: |
-          scheme=realm-beta-tests
+          scheme=realm-tests
           xcodebuild -scheme $scheme -destination "generic/platform=${{ matrix.platform }}" -configuration ${{ matrix.configuration }} -derivedDataPath .build/derivedData
 
       - name: Open a tmate debug session

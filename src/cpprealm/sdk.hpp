@@ -2,54 +2,49 @@
 //
 // Copyright 2022 Realm Inc.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
+// Licensed under the Apache License, Version 2.0 (the >License>);
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
+// distributed under the License is distributed on an >AS IS> BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef realm_sdk_hpp
-#define realm_sdk_hpp
-
-#include <cpprealm/alpha_support.hpp>
+#ifndef CPPREALM_SDK_HPP
+#define CPPREALM_SDK_HPP
 
 #include <utility>
 
-#ifdef CPP_REALM_ENABLE_ALPHA_SDK
-#include <cpprealm/db.hpp>
-#include <cpprealm/persisted.hpp>
-#include <cpprealm/persisted_binary.hpp>
-#include <cpprealm/persisted_bool.hpp>
-#include <cpprealm/persisted_double.hpp>
-#include <cpprealm/persisted_embedded.hpp>
-#include <cpprealm/persisted_enum.hpp>
-#include <cpprealm/persisted_int.hpp>
-#include <cpprealm/persisted_list.hpp>
-#include <cpprealm/persisted_map.hpp>
-#include <cpprealm/persisted_mixed.hpp>
-#include <cpprealm/persisted_optional.hpp>
-#include <cpprealm/persisted_timestamp.hpp>
-#include <cpprealm/persisted_uuid.hpp>
-#include <cpprealm/persisted_object_id.hpp>
-#include <cpprealm/persisted_decimal128.hpp>
-#endif
-
 #include <cpprealm/schema.hpp>
-#include <cpprealm/results.hpp>
 #include <cpprealm/notifications.hpp>
-#include <cpprealm/asymmetric_object.hpp>
-#include <cpprealm/object.hpp>
 #include <cpprealm/app.hpp>
 #include <cpprealm/flex_sync.hpp>
 #include <cpprealm/thread_safe_reference.hpp>
 #include <cpprealm/rbool.hpp>
 
-#endif /* realm_sdk_hpp */
+#include <cpprealm/db.hpp>
+#include <cpprealm/client_reset.hpp>
+#include <cpprealm/link.hpp>
+#include <cpprealm/macros.hpp>
+#include <cpprealm/managed_binary.hpp>
+#include <cpprealm/managed_decimal.hpp>
+#include <cpprealm/managed_dictionary.hpp>
+#include <cpprealm/managed_list.hpp>
+#include <cpprealm/managed_mixed.hpp>
+#include <cpprealm/managed_numeric.hpp>
+#include <cpprealm/managed_objectid.hpp>
+#include <cpprealm/managed_primary_key.hpp>
+#include <cpprealm/managed_set.hpp>
+#include <cpprealm/managed_string.hpp>
+#include <cpprealm/managed_timestamp.hpp>
+#include <cpprealm/managed_uuid.hpp>
+#include <cpprealm/observation.hpp>
+#include <cpprealm/results.hpp>
+
+#endif /* CPPREALM_SDK_HPP */

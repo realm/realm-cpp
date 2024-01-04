@@ -17,10 +17,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#include <thread>
-#include <filesystem>
 #include <sstream>
-#include <numeric>
+#include <thread>
 #include <cpprealm/internal/generic_network_transport.hpp>
 
 #include "admin_utils.hpp"
@@ -40,7 +38,7 @@ static app::Response do_http_request(app::Request &&request) {
     return p.get_future().get();
 }
 
-static std::string authenticate(const std::string& baas_url, const std::string& provider_type, bson::BsonDocument&& credentials)
+static std::pair<std::string, std::string> authenticate(const std::string& baas_url, const std::string& provider_type, bson::BsonDocument&& credentials)
 {
     std::stringstream body;
     body << credentials;
@@ -57,227 +55,10 @@ static std::string authenticate(const std::string& baas_url, const std::string& 
         REALM_TERMINATE(util::format("Unable to authenticate at %1 with provider '%2': %3", baas_url, provider_type, result.body).c_str());
     }
     auto parsed_response = static_cast<bson::BsonDocument>(bson::parse(result.body));
-    return static_cast<std::string>(parsed_response["access_token"]);
+    return {static_cast<std::string>(parsed_response["access_token"]), static_cast<std::string>(parsed_response["refresh_token"])};
 }
 
 } // namespace
-
-#if !REALM_WINDOWS && !REALM_MOBILE
-#include <unistd.h>
-#include <fcntl.h>
-
-namespace local {
-using namespace std::filesystem;
-
-static void write_to_devnull() {
-    /* open /dev/null for writing */
-    int fd = open("/dev/null", O_WRONLY);
-
-    dup2(fd, 1);    /* make stdout a copy of fd (> /dev/null) */
-    dup2(fd, 2);    /* ...and same with stderr */
-    close(fd);      /* close fd */
-}
-
-struct Process {
-    std::string launch_path;
-    std::map<std::string, std::string> environment = {};
-    std::vector<std::string> arguments = {};
-
-    void run() {
-        auto command = launch_path;
-        std::vector<const char*> args;
-        args.push_back(launch_path.data());
-        for (auto& arg : arguments) {
-            args.push_back(arg.data());
-        }
-        args.push_back(nullptr);
-        std::vector<const char*> env;
-        std::vector<std::string> env_hold;
-        for (auto &[k,v] : environment) {
-            std::string cat;
-            cat.append(k).append("=").append(v);
-            env_hold.push_back(cat);
-            env.push_back(env_hold[env_hold.size() - 1].data());
-        }
-        env.push_back(nullptr);
-
-        int ev = execve(command.data(),
-                        const_cast<char* const*>(args.data()),
-                        const_cast<char* const*>(env.data()));
-        if (ev == -1) {
-            std::cout<<errno<<std::endl;
-        }
-    }
-};
-
-struct RealmServer {
-    static inline path root_url = current_path();
-    static inline path build_dir = root_url.string() + "/.baas";
-    static inline path bin_dir = build_dir.string() + "/bin";
-
-    static Process launch_add_user_process() {
-        auto lib_dir = build_dir.string() + "/lib";
-        auto bin_path = "$PATH:" + bin_dir.string();
-        auto aws_access_key_id = getenv("AWS_ACCESS_KEY_ID");
-        auto aws_secret_access_key = getenv("AWS_SECRET_ACCESS_KEY");
-        std::map<std::string, std::string> env = {
-                {"PATH",                  bin_path},
-                {"DYLD_LIBRARY_PATH",     lib_dir},
-                {"LD_LIBRARY_PATH",       lib_dir},
-                {"AWS_ACCESS_KEY_ID",     aws_access_key_id},
-                {"AWS_SECRET_ACCESS_KEY", aws_secret_access_key}
-        };
-        auto stitch_root = build_dir.string() + "/go/src/github.com/10gen/stitch";
-
-        auto user_process = Process{
-                .launch_path = bin_dir.string() + "/create_user",
-                .environment = env,
-                .arguments = {
-                        "addUser",
-                        "-domainID",
-                        "000000000000000000000000",
-                        "-mongoURI", "mongodb://localhost:26000",
-                        "-salt", "DQOWene1723baqD!_@#",
-                        "-id", "unique_user@domain.com",
-                        "-password", "password"
-                }
-        };
-        std::string command = "";
-        auto arguments = user_process.arguments;
-        auto environment = user_process.environment;
-            if (!environment.empty()) {
-                command += "" + std::accumulate(environment.begin(),
-                                                environment.end(),
-                                                std::string(),
-                                                [&](auto one, auto &two) {
-                                                    return one + " " + two.first + "=" + two.second;
-                                                });
-                command += " ";
-            }
-            command += user_process.launch_path;
-            if (!arguments.empty()) {
-                command += std::accumulate(arguments.begin(),
-                                           arguments.end(),
-                                           std::string(),
-                                           [](auto one, auto &two) {
-                                               return one + " " + two;
-                                           });
-            }
-
-            if (!environment.empty()) {
-                command += "";
-            }
-
-        if (system(command.c_str()) == 1) {
-            REALM_TERMINATE(util::format("Command '%1' failed.", command).c_str());
-        }
-        return user_process;
-    }
-
-    static Process launch_server_process() {
-        auto lib_dir = build_dir.string() + "/lib";
-        auto bin_path = "$PATH:" + bin_dir.string();
-        auto aws_access_key_id = getenv("AWS_ACCESS_KEY_ID");
-        auto aws_secret_access_key = getenv("AWS_SECRET_ACCESS_KEY");
-        std::map<std::string, std::string> env = {
-                {"PATH",                  bin_path},
-                {"DYLD_LIBRARY_PATH",     lib_dir},
-                {"LD_LIBRARY_PATH",       lib_dir},
-                {"AWS_ACCESS_KEY_ID",     aws_access_key_id},
-                {"AWS_SECRET_ACCESS_KEY", aws_secret_access_key}
-        };
-        auto stitch_root = build_dir.string() + "/go/src/github.com/10gen/stitch";
-        Process server_process;
-        server_process.environment = env;
-        create_directory(temp_directory_path());
-        server_process.launch_path = bin_dir.string() + "/stitch_server";
-        std::string config_overrides = "config_overrides.json";
-        for (const auto& dirEntry : recursive_directory_iterator(current_path())) {
-            if (dirEntry.path().string().find("config_overrides.json") != std::string::npos) {
-                config_overrides = dirEntry.path().string();
-            }
-        }
-        server_process.arguments = {
-                "--configFile",
-                stitch_root + "/etc/configs/test_config.json",
-                "--configFile",
-                config_overrides
-        };
-
-        server_process.run();
-        return server_process;
-    }
-
-    static inline void wait_for_server_to_start() {
-        std::string baas_url = "http://localhost:9090";
-        bson::BsonDocument credentials {
-                {"username", "unique_user@domain.com"},
-                {"password", "password"}
-        };
-        std::stringstream body;
-        body << credentials;
-
-        auto do_request = [&]() {
-            app::Request r;
-            r.method = realm::app::HttpMethod::post;
-            r.url = util::format("%1/api/admin/v3.0/auth/providers/%2/login", baas_url, "local-userpass");
-            r.headers = {
-                    {"Content-Type", "application/json;charset=utf-8"},
-                    {"Accept",       "application/json"}
-            };
-            r.body = body.str();
-
-            return do_http_request(std::move(r));
-        };
-
-        auto response = do_request();
-        while (response.http_status_code != 200) {
-            std::cout << "Server not up" << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-             response = do_request();
-        }
-        std::cout << "Server started!" << std::endl;
-    }
-
-    static Process launch_mongo_process() {
-        create_directory(temp_directory_path());
-        Process mongo_process;
-        mongo_process.launch_path = bin_dir.string() + "/mongod";
-        mongo_process.arguments = {
-                "--quiet",
-                "--dbpath", build_dir.string() + "/db_files",
-                "--bind_ip", "localhost",
-                "--port", "26000",
-                "--replSet", "test"
-        };
-        mongo_process.run();
-
-        Process init_process;
-        init_process.launch_path = bin_dir.string() + "/mongo";
-        init_process.arguments = {
-            "--port", "26000",
-            "--eval", "'rs.initiate()'"
-        };
-        init_process.run();
-        return mongo_process;
-    }
-
-    RealmServer() = default;
-public:
-    static void setup() {
-        if (system("./evergreen/install_baas.sh -w baas -b 1eb31b87154cf7af6cbe50ab2732e2856ca499c7") == -1) {
-            REALM_TERMINATE("Failed to run setup_baas.rb");
-        }
-    }
-
-public:
-    static RealmServer shared;
-};
-
-RealmServer RealmServer::shared = RealmServer();
-} // namespace local
-
-#endif // !REALM_WINDOWS && !REALM_MOBILE
 
 app::Response Admin::Endpoint::request(app::HttpMethod method, bson::BsonDocument&& body) const
 {
@@ -309,18 +90,20 @@ app::Response Admin::Endpoint::request(app::HttpMethod method, const std::string
     return response;
 }
 
-Admin::Session::Session(const std::string& baas_url, const std::string& access_token, const std::string& group_id, std::optional<std::string> cluster_name)
+Admin::Session::Session(const std::string& baas_url, const std::string& access_token, const std::string& refresh_token, const std::string& group_id, std::optional<std::string> cluster_name)
 : group(util::format("%1/api/admin/v3.0/groups/%2", baas_url, group_id), access_token)
 , apps(group["apps"])
 , m_group_id(group_id)
 , m_cluster_name(std::move(cluster_name))
 , m_base_url(baas_url)
 , m_access_token(access_token)
+, m_refresh_token(refresh_token)
 {
 
 }
 
 std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::string app_name, bool is_asymmetric, bool disable_recovery_mode) {
+    refresh_access_token();
     recovery_mode_disabled = disable_recovery_mode;
     auto info = static_cast<bson::BsonDocument>(apps.post({{"name", app_name}}));
     app_name = static_cast<std::string>(info["client_app_id"]);
@@ -652,19 +435,19 @@ Admin::Session Admin::Session::local(std::optional<std::string> baas_url)
         {"username", "unique_user@domain.com"},
         {"password", "password"}
     };
-    std::string access_token = authenticate(base_url, "local-userpass", std::move(credentials));
+    std::pair<std::string, std::string> tokens = authenticate(base_url, "local-userpass", std::move(credentials));
 
     app::Request request;
     request.url = base_url + "/api/admin/v3.0/auth/profile";
     request.headers = {
-            {"Authorization", "Bearer " + access_token}};
+            {"Authorization", "Bearer " + tokens.first}};
 
     auto result = do_http_request(std::move(request));
     auto parsed_response = static_cast<bson::BsonDocument>(bson::parse(result.body));
     auto roles = static_cast<bson::BsonArray>(parsed_response["roles"]);
     auto group_id = static_cast<std::string>(static_cast<bson::BsonDocument>(roles[0])["group_id"]);
 
-    return Session(base_url, access_token, group_id, std::nullopt);
+    return Session(base_url, tokens.first, tokens.second, group_id, std::nullopt);
 }
 
 Admin::Session Admin::Session::atlas(const std::string& baas_url, std::string project_id, std::string cluster_name, std::string api_key, std::string private_api_key)
@@ -673,9 +456,9 @@ Admin::Session Admin::Session::atlas(const std::string& baas_url, std::string pr
         {"username", std::move(api_key)},
         {"apiKey", std::move(private_api_key)}
     };
-    std::string access_token = authenticate(baas_url, "mongodb-cloud", std::move(credentials));
+    std::pair<std::string, std::string> tokens = authenticate(baas_url, "mongodb-cloud", std::move(credentials));
 
-    return Session(baas_url, access_token, std::move(project_id), std::move(cluster_name));
+    return Session(baas_url, tokens.first, tokens.second, std::move(project_id), std::move(cluster_name));
 }
 
 void Admin::Session::enable_sync() {
@@ -732,18 +515,27 @@ static Admin::Session make_default_session() {
     } else if (const char* local_endpoint = getenv("REALM_LOCAL_ENDPOINT")) {
         return Admin::Session::local(local_endpoint);
     } else {
-#if !REALM_WINDOWS && !REALM_MOBILE
-        using namespace local;
-        std::thread([] {
-            RealmServer::setup();
-        }).detach();
-
-        RealmServer::wait_for_server_to_start();
         return Admin::Session::local();
-#else
-        REALM_TERMINATE("Automatic local tests are unsupported on this platform. Set the REALM_LOCAL_ENDPOINT environment variable to the base URL of a running BAAS server.");
-#endif // !REALM_WINDOWS && !REALM_MOBILE
     }
+}
+
+void Admin::Session::refresh_access_token() {
+    std::stringstream body;
+    auto request = app::Request();
+    request.method = realm::app::HttpMethod::post;
+    request.url = util::format("%1/api/admin/v3.0/auth/session", m_base_url);
+    request.headers = {
+            {"Content-Type", "application/json;charset=utf-8"},
+            {"Accept", "application/json"},
+            {"Authorization", util::format("Bearer %1", m_refresh_token)}};
+    request.body = body.str();
+
+    auto result = do_http_request(std::move(request));
+    if (result.http_status_code >= 400) {
+        REALM_TERMINATE("Unable to refresh access token");
+    }
+    auto parsed_response = static_cast<bson::BsonDocument>(bson::parse(result.body));
+    m_access_token = static_cast<std::string>(parsed_response["access_token"]);
 }
 
 Admin::Session& Admin::shared() {

@@ -16,183 +16,224 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef realm_realm_hpp
-#define realm_realm_hpp
+#ifndef CPPREALM_DB_HPP
+#define CPPREALM_DB_HPP
+
+#include <cpprealm/accessors.hpp>
+
+#include <cpprealm/schema.hpp>
+
+#include <cpprealm/internal/bridge/sync_session.hpp>
+#include <cpprealm/internal/bridge/thread_safe_reference.hpp>
+#include <cpprealm/internal/bridge/sync_session.hpp>
+
+#include <cpprealm/scheduler.hpp>
+
+#include <cpprealm/macros.hpp>
+#include <cpprealm/results.hpp>
+#include <cpprealm/types.hpp>
 
 #include <filesystem>
-#include <iostream>
-
-#include <cpprealm/asymmetric_object.hpp>
-#include <cpprealm/flex_sync.hpp>
-#include <cpprealm/internal/bridge/async_open_task.hpp>
-#include <cpprealm/internal/bridge/schema.hpp>
-#include <cpprealm/internal/bridge/sync_session.hpp>
-#include <cpprealm/logger.hpp>
-#include <cpprealm/results.hpp>
-#include <cpprealm/scheduler.hpp>
-#include <cpprealm/thread_safe_reference.hpp>
+#include <optional>
+#include <string>
 #include <utility>
 
 namespace realm {
+    namespace {
+        template<typename T>
+        using is_optional = internal::type_info::is_optional<T>;
+    }
+    namespace schemagen {
+        template <typename Class, typename ...Properties>
+        struct schema;
+        template <auto Ptr, bool IsPrimaryKey>
+        struct property;
+    }
+
     using sync_config = internal::bridge::realm::sync_config;
     using db_config = internal::bridge::realm::config;
     using sync_session = internal::bridge::sync_session;
-    using status = internal::bridge::status;
+    using sync_error = internal::bridge::sync_error;
 
-template <typename ...Ts>
-struct db {
-    using config = db_config;
-    explicit db(config&& config)
-    {
-        std::vector<internal::bridge::object_schema> schema;
-        (schema.push_back(Ts::schema.to_core_schema()), ...);
-        config.set_schema(schema);
-        m_realm = internal::bridge::realm(config);
-    }
+    struct sync_subscription_set;
 
-    sync_subscription_set subscriptions()
-    {
-        return sync_subscription_set(m_realm);
-    }
-
-    void write(std::function<void()>&& block) const
-    {
-        m_realm.begin_transaction();
-        block();
-        m_realm.commit_transaction();
-    }
-
-    template<template<typename> typename ObjectBase, typename T>
-    using ObjectPredicate = std::enable_if_t<std::is_base_of_v<ObjectBase<T>, T> && (std::is_same_v<T, Ts> || ...)>;
-
-    template <typename T>
-    ObjectPredicate<object, T>
-    add(std::vector<T>& objects)
-    {
-        auto actual_schema = m_realm.schema().find(T::schema.name);
-        auto group = m_realm.read_group();
-        auto table = group.get_table(actual_schema.table_key());
-        for (auto& object : objects)
-            object.manage(table, m_realm);
-    }
-
-    template <typename T>
-    ObjectPredicate<object, T>
-    add(T& object)
-    {
-        auto actual_schema = m_realm.schema().find(T::schema.name);
-        auto group = m_realm.read_group();
-        auto table = group.get_table(actual_schema.table_key());
-        object.manage(table, m_realm);
-    }
-
-    template <typename T>
-    ObjectPredicate<object, T>
-    add(T&& object)
-    {
-        add(object);
-    }
-
-    template <typename T>
-    ObjectPredicate<asymmetric_object, T>
-    add(T& object)
-    {
-        auto actual_schema = m_realm.schema().find(T::schema.name);
-        auto group = m_realm.read_group();
-        auto table = group.get_table(actual_schema.table_key());
-        object.manage(table, m_realm);
-    }
-
-    template <typename T>
-    void remove(T& object)
-    {
-        if (!object.is_managed())
-            throw std::runtime_error("Only managed objects can be removed");
-        auto group = m_realm.read_group();
-        auto schema = object.m_object->get_object_schema();
-        auto table = group.get_table(schema.table_key());
-        table.remove_object(object.m_object->get_obj().get_key());
-    }
-
-    template <typename T>
-    results<T, void> objects()
-    {
-        return results<T, void>(internal::bridge::results(m_realm, m_realm.read_group().get_table(T::schema.name)));
-    }
-
-    template <typename T>
-    T object(const typename decltype(T::schema)::PrimaryKeyProperty::Result& primary_key) {
-        auto table = m_realm.read_group().get_table(internal::bridge::table_name_for_object_type(T::schema.name));
-        return T::schema.create(table->get_object_with_primary_key(primary_key),
-                                 m_realm);
-    }
-
-    template <typename T>
-    T resolve(thread_safe_reference<T>&& tsr)
-    {
-        T cls;
-        cls.assign_accessors(internal::bridge::resolve<internal::bridge::object>(m_realm, std::move(tsr.m_tsr)));
-        return cls;
-    }
-
-    [[maybe_unused]] bool refresh()
-    {
-        return m_realm.refresh();
-    }
-
-    /**
-     An object encapsulating an Atlas App Services "session". Sessions represent the
-     communication between the client (and a local Realm file on disk), and the server
-
-     Sessions are always created by the SDK and vended out through various APIs. The
-     lifespans of sessions associated with Realms are managed automatically.
-    */
-    std::optional<sync_session> get_sync_session() const {
-        return m_realm.get_sync_session();
-    }
-
-private:
-    db(internal::bridge::realm realm) //NOLINT
-    : m_realm(std::move(realm)) { }
-    template <typename>
-    friend struct object;
-    template <typename T, typename>
-    friend struct thread_safe_reference;
-    internal::bridge::realm m_realm;
-};
-
-template <typename ...Ts>
-static db<Ts...> open(db_config&& config)
-{
-    return db<Ts...>(std::move(config));
+    template <typename T, typename = void>
+    struct thread_safe_reference;
 }
 
-template <typename ...Ts>
-struct async_open_promise : public std::promise<thread_safe_reference<db<Ts...>>> {
-private:
-    async_open_promise(internal::bridge::async_open_task&& task) // NOLINT(google-explicit-constructor)
-    : async_open_task(std::move(task)) {}
-    internal::bridge::async_open_task async_open_task;
-    template <typename ...Vs>
-    friend inline async_open_promise<Vs...> async_open(const typename db<Vs...>::config& config);
-};
+namespace realm {
 
-template <typename ...Ts>
-[[nodiscard]] static inline async_open_promise<Ts...> async_open(const typename db<Ts...>::config& config) {
-    // TODO: Add these flags to core
-    auto c = config;
-    std::vector<internal::bridge::object_schema> schema;
-    (schema.push_back(Ts::schema.to_core_schema()), ...);
-    c.set_schema(schema);
-    async_open_promise<Ts...> p = {internal::bridge::realm::get_synchronized_realm(c)};
-    p.async_open_task.start([&p](internal::bridge::thread_safe_reference tsr, auto ex) {
-        if (ex) {
-            p.set_exception(ex);
-        } else {
-            p.set_value(thread_safe_reference<db<Ts...>>(std::move(tsr)));
+    struct db {
+        static inline std::vector<internal::bridge::object_schema> schemas;
+        internal::bridge::realm m_realm;
+        explicit db(realm::db_config config)
+        {
+            if (!config.get_schema())
+                config.set_schema(db::schemas);
+            m_realm = internal::bridge::realm(config);
         }
-    });
-    return p;
+
+        void begin_write() const { m_realm.begin_transaction(); }
+        void commit_write() const { m_realm.commit_transaction(); }
+
+        template <typename Fn>
+        std::invoke_result_t<Fn> write(Fn&& fn) const {
+            begin_write();
+            if constexpr (!std::is_void_v<std::invoke_result_t<Fn>>) {
+                auto val = fn();
+                commit_write();
+                return val;
+            } else {
+                fn();
+                commit_write();
+            }
+        }
+        template <typename U>
+        managed<std::remove_const_t<U>> add(U &&v) {
+            using T = std::remove_const_t<U>;
+            static_assert(sizeof(managed<T>), "Must declare schema for T");
+            auto table = m_realm.table_for_object_type(managed<std::remove_const_t<T>>::schema.name);
+            internal::bridge::obj m_obj;
+            if constexpr (managed<std::remove_const_t<T>>::schema.HasPrimaryKeyProperty) {
+                auto pk = v.*(managed<std::remove_const_t<T>>::schema.primary_key().ptr);
+                m_obj = table.create_object_with_primary_key(realm::internal::bridge::mixed(serialize(pk.value)));
+            } else {
+                m_obj = table.create_object();
+            }
+
+            std::apply([&m_obj, &v, this](auto && ...p) {
+                (accessor<typename std::decay_t<decltype(p)>::Result>::set(
+                        m_obj, m_obj.get_table().get_column_key(p.name), m_realm, v.*(std::decay_t<decltype(p)>::ptr)
+                ), ...);
+            }, managed<T>::schema.ps);
+            auto m = managed<T>(std::move(m_obj), m_realm);
+            std::apply([&m](auto && ...ptr) {
+                std::apply([&](auto&& ...name) {
+                    ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
+                }, managed<T>::managed_pointers_names);
+            }, managed<T>::managed_pointers());
+            return m;
+        }
+        template <typename T>
+        void remove(T& object)
+        {
+            auto table = m_realm.table_for_object_type(T::schema.name);
+            table.remove_object(object.m_obj.get_key());
+        }
+        template <typename T>
+        void insert(const std::vector<T> &v) {
+            static_assert(sizeof(managed<T>), "Must declare schema for T");
+            internal::bridge::table table = m_realm.table_for_object_type(managed<T>::schema.name);
+            for (auto& obj : v) {
+                internal::bridge::obj m_obj;
+                if constexpr (managed<T>::schema.HasPrimaryKeyProperty) {
+                    auto pk = obj.*(managed<T>::schema.primary_key().ptr);
+                    m_obj = table.create_object_with_primary_key(realm::internal::bridge::mixed(serialize(pk.value)));
+                } else {
+                    m_obj = table.create_object();
+                }
+                std::apply([&m_obj, &obj](auto && ...p) {
+                    (accessor<typename std::decay_t<decltype(p)>::Result>::set(
+                            m_obj, m_obj.get_table().get_column_key(p.name), obj.*(std::decay_t<decltype(p)>::ptr)
+                    ), ...);
+                }, managed<T>::schema.ps);
+            }
+        }
+
+    private:
+        template <size_t N, typename Tpl, typename ...Ts> auto v_add(const Tpl& tpl, const std::tuple<Ts...>& vs) {
+            if constexpr (N + 1 == sizeof...(Ts)) {
+                auto managed = add(std::move(std::get<N>(vs)));
+                return std::tuple_cat(tpl, std::make_tuple(std::move(managed)));
+            } else {
+                auto managed = add(std::move(std::get<N>(vs)));
+                return v_add<N + 1>(std::tuple_cat(tpl, std::make_tuple(std::move(managed))), vs);
+            }
+        }
+    public:
+        template <typename ...Ts>
+        std::tuple<managed<Ts>...> insert(Ts&&... v) {
+            std::tuple<> tpl;
+            return v_add<0>(tpl, std::make_tuple(v...));
+        }
+        template <typename T>
+        results<T> objects()
+        {
+            return results<T>(internal::bridge::results(m_realm, m_realm.table_for_object_type(managed<T>::schema.name)));
+        }
+
+        [[maybe_unused]] bool refresh()
+        {
+            return m_realm.refresh();
+        }
+
+        ::realm::sync_subscription_set subscriptions();
+
+        std::optional<sync_session> get_sync_session() const {
+            return m_realm.get_sync_session();
+        }
+
+        template <typename T>
+        managed<T> resolve(thread_safe_reference<T>&& tsr)
+        {
+            auto object = internal::bridge::resolve<internal::bridge::object>(m_realm, std::move(tsr.m_tsr));
+            internal::bridge::obj m_obj = object.get_obj();
+            auto m = managed<T>(std::move(m_obj), m_realm);
+            std::apply([&m](auto && ...ptr) {
+                std::apply([&](auto&& ...name) {
+                    ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
+                }, managed<T>::managed_pointers_names);
+            }, managed<T>::managed_pointers());
+            return m;
+        }
+
+        bool is_frozen() const;
+        db freeze();
+        db thaw();
+        void invalidate();
+        void close();
+        bool is_closed();
+        friend struct ::realm::thread_safe_reference<db>;
+        template <typename, typename> friend struct managed;
+        template<typename T>
+        friend void internal::bridge::realm::config::set_client_reset_handler(const client_reset_mode_base<T>&);
+    private:
+        db(internal::bridge::realm&& r)
+        {
+            m_realm = std::move(r);
+        }
+        db(const internal::bridge::realm& r)
+        {
+            m_realm = r;
+        }
+    };
+
+    bool operator==(const db&, const db&);
+    bool operator!=(const db&, const db&);
+
+    template <typename ...Ts>
+    inline db open(const db_config& config) {
+        auto config_copy = config;
+        if constexpr (sizeof...(Ts) == 0) {
+            config_copy.set_schema(db::schemas);
+        } else {
+            std::vector<internal::bridge::object_schema> schema;
+            (schema.push_back(managed<Ts>::schema.to_core_schema()), ...);
+            config_copy.set_schema(schema);
+        }
+        return db(config_copy);
+    }
+    template <typename ...Ts>
+    inline db open(const std::string& path, const std::shared_ptr<scheduler>& scheduler = scheduler::make_default()) {
+        return open<Ts...>(db_config(path, scheduler));
+    }
+
+    template <typename T>
+    inline std::ostream& operator<< (std::ostream& stream, const T*& object)
+    {
+        stream << "link:" << object << std::endl;
+        return stream;
+    }
 }
-}
-#endif /* realm_realm_hpp */
+
+#endif //CPPREALM_DB_HPP
