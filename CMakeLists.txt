@@ -44,13 +44,6 @@ add_compile_definitions(REALM_ENABLE_ENCRYPTION)
 add_compile_definitions(REALM_INSTALL_LIBEXECDIR)
 add_compile_definitions(REALM_BUILD_LIB_ONLY)
 
-# Check if the compiler is Clang or GCC >= 11
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "11.0"))
-    set(ENABLE_ALPHA_SDK TRUE)
-else()
-    set(ENABLE_ALPHA_SDK FALSE)
-endif()
-
 add_subdirectory(src)
 target_include_directories(cpprealm PUBLIC src)
 
