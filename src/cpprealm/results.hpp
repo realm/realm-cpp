@@ -25,6 +25,8 @@
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/macros.hpp>
 #include <cpprealm/schema.hpp>
+#include <cpprealm/notifications.hpp>
+#include <cpprealm/schema.hpp>
 
 namespace realm {
     class rbool;
@@ -225,10 +227,14 @@ namespace realm {
             };
         };
 
-        internal::bridge::notification_token observe(std::function<void(results_change)> &&handler) {
-            return m_parent.add_notification_callback(
-                    std::make_shared<results_callback_wrapper>(std::move(handler), static_cast<Derived&>(*this)));
+        realm::notification_token observe(std::function<void(results_change)>&& handler) {
+            auto r = std::make_shared<internal::bridge::results>(m_parent.get_realm(), m_parent.get_realm().table_for_object_type(managed<T>::schema.name));
+            realm::notification_token token = r->add_notification_callback(std::make_shared<results_callback_wrapper>(std::move(handler), static_cast<Derived&>(*this)));
+            token.m_realm = r->get_realm();
+            token.m_results = r;
+            return std::move(token);
         }
+
 
         Derived freeze() {
             auto frozen_realm = m_parent.get_realm().freeze();

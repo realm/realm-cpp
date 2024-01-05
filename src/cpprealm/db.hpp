@@ -57,7 +57,7 @@ namespace realm {
 
     struct sync_subscription_set;
 
-    template <typename T, typename = void>
+    template <typename T>
     struct thread_safe_reference;
 }
 
