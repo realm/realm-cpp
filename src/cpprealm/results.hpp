@@ -191,25 +191,24 @@ namespace realm {
         }
 
         struct results_callback_wrapper : internal::bridge::collection_change_callback {
-            std::function<void(results_change)> handler;
-            Derived &collection;
-            bool ignoreChangesInInitialNotification = true;
-
-            results_callback_wrapper(std::function<void(results_change)> handler,
-                                     Derived &collection)
-                : handler(handler), collection(collection) {}
+            explicit results_callback_wrapper(std::function<void(results_change)>&& fn,
+                                              Derived *c,
+                                              bool ignore_initial_notification = true)
+                : m_handler(std::move(fn)),
+                  collection(c),
+                  m_ignore_changes_in_initial_notification(ignore_initial_notification) {}
 
             void before(const realm::internal::bridge::collection_change_set &c) override {}
 
             void after(internal::bridge::collection_change_set const &changes) final {
-                if (ignoreChangesInInitialNotification) {
-                    ignoreChangesInInitialNotification = false;
-                    handler({&collection, {}, {}, {}});
+                if (m_ignore_changes_in_initial_notification) {
+                    m_ignore_changes_in_initial_notification = false;
+                    m_handler({collection, {}, {}, {}});
                 } else if (changes.empty()) {
-                    handler({&collection, {}, {}, {}});
+                    m_handler({collection, {}, {}, {}});
                 } else if (!changes.collection_root_was_deleted() || !changes.deletions().empty()) {
-                    handler({
-                            &collection,
+                    m_handler({
+                            collection,
                             to_vector(changes.deletions()),
                             to_vector(changes.insertions()),
                             to_vector(changes.modifications()),
@@ -217,7 +216,11 @@ namespace realm {
                 }
             }
 
+            Derived *collection;
+
         private:
+            std::function<void(results_change)> m_handler;
+            bool m_ignore_changes_in_initial_notification;
             std::vector<uint64_t> to_vector(const internal::bridge::index_set &index_set) {
                 auto vector = std::vector<uint64_t>();
                 for (auto index: index_set.as_indexes()) {
@@ -229,7 +232,7 @@ namespace realm {
 
         realm::notification_token observe(std::function<void(results_change)>&& handler) {
             auto r = std::make_shared<internal::bridge::results>(m_parent.get_realm(), m_parent.get_realm().table_for_object_type(managed<T>::schema.name));
-            realm::notification_token token = r->add_notification_callback(std::make_shared<results_callback_wrapper>(std::move(handler), static_cast<Derived&>(*this)));
+            realm::notification_token token = r->add_notification_callback(std::make_shared<results_callback_wrapper>(std::move(handler), static_cast<Derived*>(this)));
             token.m_realm = r->get_realm();
             token.m_results = r;
             return std::move(token);
