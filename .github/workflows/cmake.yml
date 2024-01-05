@@ -307,9 +307,13 @@ jobs:
         with:
           timeout-minutes: 15
 
-      - name: Test
+      - name: Flexible Sync Tests
         working-directory: .build/cmake-preset-windows-x64/tests/${{ matrix.configuration }}/
-        run: ./cpprealm_sync_tests
+        run: ./cpprealm_sync_tests "~client_reset"
+
+      - name: Client Reset Tests
+        working-directory: .build/cmake-preset-windows-x64/tests/${{ matrix.configuration }}/
+        run: ./cpprealm_sync_tests "client_reset"
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
