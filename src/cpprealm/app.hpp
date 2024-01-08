@@ -48,7 +48,7 @@ namespace realm {
 // Represents an error state from the server.
 struct app_error {
     app_error() = delete;
-    app_error(const app_error& other) ;
+    app_error(const app_error& other);
     app_error& operator=(const app_error& other) ;
     app_error(app_error&& other);
     app_error& operator=(app_error&& other);
