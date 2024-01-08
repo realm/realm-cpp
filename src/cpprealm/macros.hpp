@@ -520,7 +520,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         friend struct db;                                                                          \
         template <typename, typename> friend struct managed;                                       \
         template <typename, typename> friend struct box;                                           \
-        template <typename, typename> friend struct ::realm::thread_safe_reference;                \
+        template <typename> friend struct ::realm::thread_safe_reference;                \
     };                                                                                             \
     struct meta_schema_##cls {   \
         meta_schema_##cls() {                                                    \

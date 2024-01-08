@@ -2,7 +2,7 @@ X.Y.Z Release notes (YYYY-MM-DD)
 =============================================================
 
 ### Fixed
-* None
+* When observing `results<>` the notifications would not fire after the `results<>` instance left the scope.
 
 ### Enhancements
 * Add the following methods for control over the sync session state:

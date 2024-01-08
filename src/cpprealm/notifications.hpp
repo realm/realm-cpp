@@ -42,12 +42,14 @@ struct notification_token {
         m_token = std::move(other.m_token);
         m_dictionary = std::move(other.m_dictionary);
         m_list = std::move(other.m_list);
+        m_results = std::move(other.m_results);
         m_realm = std::move(other.m_realm);
     };
     notification_token &operator=(notification_token &&other) {
         m_token = std::move(other.m_token);
         m_dictionary = std::move(other.m_dictionary);
         m_list = std::move(other.m_list);
+        m_results = std::move(other.m_results);
         m_realm = std::move(other.m_realm);
         return *this;
     };
@@ -64,6 +66,7 @@ struct notification_token {
     std::shared_ptr<internal::bridge::dictionary> m_dictionary;
     std::shared_ptr<internal::bridge::list> m_list;
     std::shared_ptr<internal::bridge::set> m_set;
+    std::shared_ptr<internal::bridge::results> m_results;
     internal::bridge::realm m_realm;
 };
 

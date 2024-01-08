@@ -2,6 +2,32 @@
 #include "test_objects.hpp"
 
 namespace realm {
+    struct results_wrapper {
+        explicit results_wrapper(const db_config &c) {
+            m_realm = std::make_unique<db>(c);
+        }
+        auto get_results() const {
+            return m_realm->objects<AllTypesObject>()
+                    .where([&](auto &data) { return data.double_col != 5 && data.str_col == "foo"; });
+        }
+
+        void observe() {
+            m_token = get_results().observe([&](auto &&c) {
+                run_count++;
+                realm::results<realm::AllTypesObject> *res = c.collection;
+                CHECK_FALSE(res == nullptr);
+            });
+        }
+
+        void unregister() {
+            m_token.unregister();
+        }
+
+        size_t run_count = 0;
+    private:
+        std::unique_ptr<db> m_realm;
+        realm::notification_token m_token;
+    };
 
     TEST_CASE("results", "[results]") {
         realm_path path;
@@ -26,6 +52,7 @@ namespace realm {
                 auto token = results.observe([&](auto&& c) {
                     did_run = true;
                     change = std::move(c);
+                    CHECK_FALSE(c.collection == nullptr);
                 });
                 return token;
             };
@@ -111,6 +138,7 @@ namespace realm {
 
             auto require_change = [&] {
                 auto token = results.observe([&](auto&& c) {
+                    CHECK(c.collection == &results);
                     did_run = true;
                     change = std::move(c);
                 });
@@ -143,6 +171,7 @@ namespace realm {
 
             auto require_change = [&] {
                 auto token = results.observe([&](auto&& c) {
+                    CHECK(c.collection == &results);
                     did_run = true;
                     change = std::move(c);
                 });
@@ -356,6 +385,53 @@ namespace realm {
 
             CHECK(notification_count == 3);
             token.unregister();
+            realm.write([&realm, &res]() {
+                res[0].str_col = "abc";
+            });
+            realm.refresh();
+            CHECK(notification_count == 3);
+        }
+
+        SECTION("observe_results_in_wrapper") {
+            auto realm = db(config);
+
+            AllTypesObjectLink link;
+            link.str_col = "bar";
+            link._id = 1;
+
+            AllTypesObject obj;
+            obj.str_col = "foo";
+            obj._id = 1;
+            obj.list_obj_col.push_back(&link);
+
+            realm.write([&realm, &obj]() {
+                return realm.add(std::move(obj));
+            });
+
+            results_wrapper wrapper(config);
+            wrapper.observe();
+            auto res = wrapper.get_results();
+
+            realm.write([&realm, &res]() {
+                res[0].str_col = "foo";
+            });
+            realm.refresh();
+
+            realm.write([&realm, &res]() {
+                res[0].str_col = "bar";
+            });
+            realm.refresh();
+
+            CHECK(wrapper.run_count == 3);
+            wrapper.unregister();
+            realm.write([&realm, &res]() {
+                AllTypesObject o;
+                o.str_col = "foo";
+                o._id = 1;
+                realm.add(std::move(o));
+            });
+            realm.refresh();
+            CHECK(wrapper.run_count == 3);
         }
     }
 }
