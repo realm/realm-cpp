@@ -238,7 +238,6 @@ namespace realm {
             return std::move(token);
         }
 
-
         Derived freeze() {
             auto frozen_realm = m_parent.get_realm().freeze();
             return Derived(internal::bridge::results(frozen_realm, frozen_realm.table_for_object_type(managed<T>::schema.name)));
