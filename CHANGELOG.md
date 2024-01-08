@@ -3,6 +3,7 @@ X.Y.Z Release notes (YYYY-MM-DD)
 
 ### Fixed
 * When observing `results<>` the notifications would not fire after the `results<>` instance left the scope.
+* Platform-agnostic network transport would pass the incorrect port value when using a proxy configuration.
 
 ### Enhancements
 * Add the following methods for control over the sync session state:
