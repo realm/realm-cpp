@@ -1,4 +1,4 @@
-X.Y.Z Release notes (YYYY-MM-DD)
+1.0.0 Release notes (2024-01-08)
 =============================================================
 
 ### Fixed
@@ -35,7 +35,7 @@ X.Y.Z Release notes (YYYY-MM-DD)
 * Fileformat: Generates files with format v23. Reads and automatically upgrade from fileformat v5.
 
 ### Internals
-* None
+* Upgraded to Core v13.25.1
 
 ----------------------------------------------
 
