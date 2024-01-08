@@ -108,13 +108,13 @@ TEST_CASE("app", "[app]") {
         REQUIRE_THROWS_AS(dead_app.login(realm::App::credentials::anonymous()).get(), realm::app_error);
         REQUIRE_THROWS_AS(dead_app.register_user("", "").get(), realm::app_error);
 
-        std::promise<realm::app_error> error_promise;
-        std::future<realm::app_error> future = error_promise.get_future();
+        std::promise<void> error_promise;
+        std::future<void> future = error_promise.get_future();
         dead_app.login(realm::App::credentials::anonymous(), [&](realm::user, std::optional<realm::app_error> e) mutable {
             CHECK(e);
-            error_promise.set_value(*e);
+            CHECK(e->message().find("404 message: cannot find app using Client App ID 'NA'"));
+            error_promise.set_value();
         });
-        CHECK(future.get().message().find("404 message: cannot find app using Client App ID 'NA'"));
 
         auto user = app.login(realm::App::credentials::anonymous()).get();
         user.log_out().get();
