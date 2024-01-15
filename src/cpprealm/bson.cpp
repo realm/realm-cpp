@@ -7,27 +7,37 @@ namespace realm {
     {
         m_bson = std::make_shared<realm::bson::Bson>();
     }
+
     bsoncxx::~bsoncxx() noexcept
     {
 
     }
+
     bsoncxx::bsoncxx(const bsoncxx& v) noexcept
     {
         m_bson = v.m_bson;
     }
+
     bsoncxx::bsoncxx(bsoncxx&& v) noexcept
     {
         m_bson = std::move(v.m_bson);
     }
+
     bsoncxx& bsoncxx::operator=(const bsoncxx& v) noexcept
     {
         m_bson = v.m_bson;
         return *this;
     }
+
     bsoncxx& bsoncxx::operator=(bsoncxx&& v) noexcept
     {
         m_bson = std::move(v.m_bson);
         return *this;
+    }
+
+    bsoncxx::bsoncxx(realm::bson::Bson& b) noexcept
+    {
+        m_bson = std::make_shared<realm::bson::Bson>(b);
     }
 
     bsoncxx::bsoncxx(int32_t v) noexcept
@@ -54,9 +64,13 @@ namespace realm {
     {
         m_bson = std::make_shared<realm::bson::Bson>(realm::bson::MaxKey());
     }
-    bsoncxx::bsoncxx(const std::chrono::time_point<std::chrono::system_clock>& v) noexcept
+    bsoncxx::bsoncxx(const timestamp& v) noexcept
     {
-        m_bson = std::make_shared<realm::bson::Bson>(realm::bson::MongoTimestamp(v.time_since_epoch().count(), 0));
+        m_bson = std::make_shared<realm::bson::Bson>(realm::bson::MongoTimestamp(v.m_seconds, v.m_increment));
+    }
+    bsoncxx::bsoncxx(const date& v) noexcept
+    {
+        m_bson = std::make_shared<realm::bson::Bson>(realm::Timestamp(v.m_date));
     }
     bsoncxx::bsoncxx(const decimal128& v) noexcept
     {
@@ -102,6 +116,88 @@ namespace realm {
     bsoncxx::operator realm::bson::Bson() const
     {
         return *m_bson;
+    }
+
+    bool operator==(const bsoncxx& lhs, const bsoncxx& rhs)
+    {
+        return lhs.operator realm::bson::Bson() == rhs.operator realm::bson::Bson();
+    }
+    bool operator!=(const bsoncxx& lhs, const bsoncxx& rhs)
+    {
+        return lhs.operator realm::bson::Bson() != rhs.operator realm::bson::Bson();
+    }
+
+    bsoncxx::operator int32_t() noexcept
+    {
+        return m_bson->operator int32_t();
+    }
+    bsoncxx::operator int64_t() noexcept
+    {
+        return m_bson->operator int64_t();
+    }
+    bsoncxx::operator bool() noexcept
+    {
+        return m_bson->operator bool();
+    }
+    bsoncxx::operator double() noexcept
+    {
+        return m_bson->operator double();
+    }
+    bsoncxx::operator min_key() noexcept
+    {
+        return min_key();
+    }
+    bsoncxx::operator max_key() noexcept
+    {
+        return max_key();
+    }
+    bsoncxx::operator const timestamp() noexcept
+    {
+        auto ts = m_bson->operator realm::bson::MongoTimestamp();
+        return timestamp(ts.seconds, ts.increment);
+    }
+    bsoncxx::operator const date() noexcept
+    {
+        auto d = m_bson->operator realm::Timestamp();
+        return date(d.get_time_point());
+    }
+    bsoncxx::operator const decimal128() noexcept
+    {
+        return deserialize(internal::bridge::decimal128(m_bson->operator Decimal128()));
+    }
+    bsoncxx::operator const object_id() noexcept
+    {
+        return deserialize(internal::bridge::object_id(m_bson->operator ObjectId()));
+    }
+    bsoncxx::operator const uuid() noexcept
+    {
+        return deserialize(internal::bridge::uuid(m_bson->operator UUID()));
+    }
+    bsoncxx::operator const regular_expression() noexcept
+    {
+        return regular_expression(m_bson->operator const realm::bson::RegularExpression &());
+    }
+    bsoncxx::operator const std::vector<uint8_t>() noexcept
+    {
+        auto data = m_bson->operator const std::vector<char>&();
+        return std::vector<uint8_t>(data.begin(), data.end());
+    }
+    bsoncxx::operator const std::string() noexcept
+    {
+        return m_bson->operator std::string &();
+    }
+    bsoncxx::operator const document() noexcept
+    {
+        auto doc = m_bson->operator const realm::bson::IndexedMap<realm::bson::Bson>&();
+        return bsoncxx::document(doc);
+    }
+    bsoncxx::operator const std::vector<bsoncxx>() noexcept
+    {
+        std::vector<bsoncxx> ret;
+        for(auto v : m_bson->operator const std::vector<realm::bson::Bson>&()) {
+            ret.push_back(v);
+        }
+        return ret;
     }
 
     bsoncxx::type bsoncxx::get_type() const {
@@ -178,6 +274,35 @@ namespace realm {
         m_document = std::move(v.m_document);
         return *this;
     }
+    bsoncxx::document::document(CoreDocument& doc) noexcept
+    {
+        m_document = std::make_shared<CoreDocument>(doc);
+    }
+
+    void bsoncxx::document::insert(const std::string& key, const bsoncxx& v)
+    {
+        m_document->operator[](key) = v.operator realm::bson::Bson();
+    }
+
+    void bsoncxx::document::pop_back()
+    {
+        m_document->pop_back();
+    };
+
+    bool bsoncxx::document::empty() const
+    {
+        return m_document->empty();
+    };
+
+    size_t bsoncxx::document::size() const
+    {
+        return m_document->size();
+    };
+
+    bsoncxx::document::value bsoncxx::document::operator[](const std::string& key)
+    {
+        return bsoncxx::document::value(m_document, key);
+    }
 
     bsoncxx::document::operator CoreDocument() const
     {
@@ -187,5 +312,59 @@ namespace realm {
     bsoncxx::regular_expression::operator realm::bson::RegularExpression() const
     {
         return realm::bson::RegularExpression();
+    }
+
+    bsoncxx::document::iterator bsoncxx::document::begin()
+    {
+        return bsoncxx::document::iterator(m_document, 0);
+    }
+
+    bsoncxx::document::iterator bsoncxx::document::end()
+    {
+        return bsoncxx::document::iterator(m_document, m_document->size());
+    }
+
+    std::pair<std::string, bsoncxx> bsoncxx::document::iterator::operator*()
+    {
+        auto entry = m_document->operator[](m_idx);
+        return {entry.first, bsoncxx(entry.second)};
+    }
+    bsoncxx::document::iterator& bsoncxx::document::iterator::operator++()
+    {
+        m_idx++;
+        return *this;
+    }
+    bsoncxx::document::iterator& bsoncxx::document::iterator::operator--()
+    {
+        m_idx--;
+        return *this;
+    }
+    bsoncxx::document::iterator& bsoncxx::document::iterator::operator++(int v)
+    {
+        m_idx += v;
+        return *this;
+    }
+    bsoncxx::document::iterator& bsoncxx::document::iterator::operator--(int v)
+    {
+        m_idx -= v;
+        return *this;
+    }
+    bool bsoncxx::document::iterator::operator!=(const bsoncxx::document::iterator& rhs) const noexcept
+    {
+        return *m_document != *rhs.m_document || m_idx != rhs.m_idx;
+    }
+    bool bsoncxx::document::iterator::operator==(const bsoncxx::document::iterator& rhs) const noexcept
+    {
+        return *m_document == *rhs.m_document && m_idx == rhs.m_idx;
+    }
+
+    bsoncxx::document::value& bsoncxx::document::value::operator=(const bsoncxx& v)
+    {
+        m_document->operator[](key) = v;
+        return *this;
+    }
+    bsoncxx::document::value::operator bsoncxx() const
+    {
+        return bsoncxx(m_document->operator[](key));
     }
 }

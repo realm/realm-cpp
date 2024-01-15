@@ -29,7 +29,6 @@ namespace realm {
         class RegularExpression;
     }
 
-
     struct bsoncxx {
 
         enum class type {
@@ -53,6 +52,36 @@ namespace realm {
         };
 
         struct document {
+            using CoreDocument = realm::bson::IndexedMap<realm::bson::Bson>;
+
+            struct value {
+                value& operator=(const bsoncxx& v);
+                operator bsoncxx() const;
+                const std::string key;
+            private:
+                friend struct bsoncxx;
+                explicit value(std::shared_ptr<CoreDocument>& d, const std::string& k)
+                    : m_document(d), key(k) {};
+                std::shared_ptr<CoreDocument> m_document;
+            };
+
+            struct iterator {
+                std::pair<std::string, bsoncxx> operator*();
+                iterator& operator++();
+                iterator& operator--();
+                iterator& operator++(int);
+                iterator& operator--(int);
+                bool operator!=(const iterator& rhs) const noexcept;
+                bool operator==(const iterator& rhs) const noexcept;
+            private:
+                friend struct document;
+                iterator(const std::shared_ptr<CoreDocument>& d, size_t i) : m_document(d), m_idx(i) {};
+                size_t m_idx = 0;
+                std::shared_ptr<CoreDocument> m_document;
+            };
+            iterator begin();
+            iterator end();
+
             document() noexcept;
             document(const std::vector<std::pair<std::string, bsoncxx>>&) noexcept;
             document(const document&);
@@ -60,17 +89,37 @@ namespace realm {
             ~document();
             document& operator=(const document&);
             document& operator=(document&&);
-
-            using CoreDocument = realm::bson::IndexedMap<realm::bson::Bson>;
+            void insert(const std::string& key, const bsoncxx& value);
+            void pop_back();
+            bool empty() const;
+            size_t size() const;
+            value operator[](const std::string&);
             operator CoreDocument() const;
         private:
+            friend struct bsoncxx;
+            document(CoreDocument&) noexcept;
             std::shared_ptr<CoreDocument> m_document;
         };
 
         struct min_key {};
         struct max_key {};
         struct regular_expression {
+            regular_expression() = default;
+            regular_expression(const realm::bson::RegularExpression&) {}
             operator realm::bson::RegularExpression() const;
+        };
+        struct timestamp {
+            explicit timestamp(uint32_t seconds, uint32_t increment) : m_seconds(seconds), m_increment(increment) {}
+            friend struct bsoncxx;
+        private:
+            const uint32_t m_seconds;
+            const uint32_t m_increment;
+        };
+        struct date {
+            explicit date(const std::chrono::time_point<std::chrono::system_clock>& d) : m_date(d) {}
+            friend struct bsoncxx;
+        private:
+            const std::chrono::time_point<std::chrono::system_clock> m_date;
         };
 
         bsoncxx() noexcept;
@@ -86,12 +135,11 @@ namespace realm {
         bsoncxx(double) noexcept;
         bsoncxx(min_key) noexcept;
         bsoncxx(max_key) noexcept;
-        bsoncxx(const std::chrono::time_point<std::chrono::system_clock>&) noexcept;
-//        bsoncxx(realm::Timestamp) noexcept;
+        bsoncxx(const timestamp&) noexcept;
+        bsoncxx(const date&) noexcept;
         bsoncxx(const decimal128&) noexcept;
         bsoncxx(const object_id&) noexcept;
         bsoncxx(const uuid&) noexcept;
-
         bsoncxx(const regular_expression&) noexcept;
         bsoncxx(const std::vector<uint8_t>&) noexcept;
         bsoncxx(const std::string&) noexcept;
@@ -100,9 +148,31 @@ namespace realm {
         bsoncxx(const std::vector<bsoncxx>&) noexcept;
         type get_type() const;
         operator realm::bson::Bson() const;
+        
+        operator int32_t() noexcept;
+        operator int64_t() noexcept;
+        operator bool() noexcept;
+        operator double() noexcept;
+        operator min_key() noexcept;
+        operator max_key() noexcept;
+        operator const timestamp() noexcept;
+        operator const date() noexcept;
+        operator const decimal128() noexcept;
+        operator const object_id() noexcept;
+        operator const uuid() noexcept;
+        operator const regular_expression() noexcept;
+        operator const std::vector<uint8_t>() noexcept;
+        operator const std::string() noexcept;
+        operator const document() noexcept;
+        operator const std::vector<bsoncxx>() noexcept;
     private:
+        friend struct document::value;
+        bsoncxx(realm::bson::Bson&) noexcept;
         std::shared_ptr<realm::bson::Bson> m_bson;
     };
+
+    bool operator==(const bsoncxx& lhs, const bsoncxx& rhs);
+    bool operator!=(const bsoncxx& lhs, const bsoncxx& rhs);
 } // namespace realm
 
 #endif//REALMCXX_BSON_HPP

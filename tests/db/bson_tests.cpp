@@ -1,15 +1,15 @@
 #include "../main.hpp"
 #include "test_objects.hpp"
 
-TEST_CASE("bson", "[bson]") {
-    SECTION("types") {
+TEST_CASE("types", "[bson]") {
+    SECTION("creates correct type") {
         auto bson = realm::bsoncxx();
         CHECK(bson.get_type() == realm::bsoncxx::type::b_null);
 
-        bson = realm::bsoncxx((int32_t)123);
+        bson = realm::bsoncxx((int32_t) 123);
         CHECK(bson.get_type() == realm::bsoncxx::type::b_int32);
 
-        bson = realm::bsoncxx((int64_t)123);
+        bson = realm::bsoncxx((int64_t) 123);
         CHECK(bson.get_type() == realm::bsoncxx::type::b_int64);
 
         bson = realm::bsoncxx(true);
@@ -24,11 +24,14 @@ TEST_CASE("bson", "[bson]") {
         bson = realm::bsoncxx("foo");
         CHECK(bson.get_type() == realm::bsoncxx::type::b_string);
 
-        bson = realm::bsoncxx(std::vector<uint8_t>({0,0,0,0}));
+        bson = realm::bsoncxx(std::vector<uint8_t>({0, 0, 0, 0}));
         CHECK(bson.get_type() == realm::bsoncxx::type::b_binary);
 
-        bson = realm::bsoncxx(std::chrono::system_clock::now());
+        bson = realm::bsoncxx(realm::bsoncxx::timestamp(100, 0));
         CHECK(bson.get_type() == realm::bsoncxx::type::b_timestamp);
+
+        bson = realm::bsoncxx(realm::bsoncxx::date(std::chrono::system_clock::now()));
+        CHECK(bson.get_type() == realm::bsoncxx::type::b_datetime);
 
         bson = realm::bsoncxx(realm::object_id::generate());
         CHECK(bson.get_type() == realm::bsoncxx::type::b_objectId);
@@ -54,4 +57,56 @@ TEST_CASE("bson", "[bson]") {
         bson = realm::bsoncxx(realm::uuid());
         CHECK(bson.get_type() == realm::bsoncxx::type::b_uuid);
     }
+
+    SECTION("value operator") {
+    }
+
+    SECTION("assignment operator") {
+    }
+}
+
+TEST_CASE("document", "[bson]") {
+    SECTION("assign subscript") {
+        auto doc = realm::bsoncxx::document();
+        doc["key"] = "value";
+        auto str_val = doc["key"];
+        CHECK(str_val == "value");
+    }
+
+    SECTION("iterate") {
+        auto doc = realm::bsoncxx::document();
+        doc["key"] = "value";
+        doc["key2"] = (int64_t)123;
+        auto str_val = doc["key"];
+        CHECK(str_val == "value");
+        auto int_val = doc["key2"];
+        CHECK(int_val == (int64_t)123);
+        size_t count = 0;
+        for(auto [k, v] : doc) {
+            count++;
+            if (count == 1) {
+                CHECK(k == "key");
+                CHECK(v == "value");
+            }
+            else if (count == 2) {
+                CHECK(k == "key2");
+                CHECK(v.operator int64_t() == 123);
+            }
+        }
+        CHECK(count == 2);
+        CHECK(doc.empty() == false);
+        CHECK(doc.size() == 2);
+
+        doc.pop_back();
+        CHECK(doc.size() == 1);
+        doc.pop_back();
+        CHECK(doc.empty() == true);
+    }
+
+    SECTION("comparison") {
+
+    }
+}
+
+TEST_CASE("regular expression", "[bson]") {
 }
