@@ -3,6 +3,13 @@
 #include <realm/util/bson/bson.hpp>
 
 namespace realm {
+
+    /*
+    ===========================
+    bsoncxx
+    ===========================
+    */
+
     bsoncxx::bsoncxx() noexcept
     {
         m_bson = std::make_shared<realm::bson::Bson>();
@@ -127,74 +134,80 @@ namespace realm {
         return lhs.operator realm::bson::Bson() != rhs.operator realm::bson::Bson();
     }
 
-    bsoncxx::operator int32_t() noexcept
+    bsoncxx::operator std::nullopt_t() const
+    {
+        return m_bson->operator util::None();
+    }
+    bsoncxx::operator int32_t() const
     {
         return m_bson->operator int32_t();
     }
-    bsoncxx::operator int64_t() noexcept
+    bsoncxx::operator int64_t() const
     {
         return m_bson->operator int64_t();
     }
-    bsoncxx::operator bool() noexcept
+    bsoncxx::operator bool() const
     {
         return m_bson->operator bool();
     }
-    bsoncxx::operator double() noexcept
+    bsoncxx::operator double() const
     {
         return m_bson->operator double();
     }
-    bsoncxx::operator min_key() noexcept
+    bsoncxx::operator min_key() const
     {
+        m_bson->operator bson::MinKey();
         return min_key();
     }
-    bsoncxx::operator max_key() noexcept
+    bsoncxx::operator max_key() const
     {
+        m_bson->operator bson::MaxKey();
         return max_key();
     }
-    bsoncxx::operator const timestamp() noexcept
+    bsoncxx::operator timestamp() const
     {
         auto ts = m_bson->operator realm::bson::MongoTimestamp();
         return timestamp(ts.seconds, ts.increment);
     }
-    bsoncxx::operator const date() noexcept
+    bsoncxx::operator date() const
     {
         auto d = m_bson->operator realm::Timestamp();
         return date(d.get_time_point());
     }
-    bsoncxx::operator const decimal128() noexcept
+    bsoncxx::operator decimal128() const
     {
         return deserialize(internal::bridge::decimal128(m_bson->operator Decimal128()));
     }
-    bsoncxx::operator const object_id() noexcept
+    bsoncxx::operator object_id() const
     {
         return deserialize(internal::bridge::object_id(m_bson->operator ObjectId()));
     }
-    bsoncxx::operator const uuid() noexcept
+    bsoncxx::operator uuid() const
     {
         return deserialize(internal::bridge::uuid(m_bson->operator UUID()));
     }
-    bsoncxx::operator const regular_expression() noexcept
+    bsoncxx::operator regular_expression() const
     {
         return regular_expression(m_bson->operator const realm::bson::RegularExpression &());
     }
-    bsoncxx::operator const std::vector<uint8_t>() noexcept
+    bsoncxx::operator std::vector<uint8_t>() const
     {
-        auto data = m_bson->operator const std::vector<char>&();
+        auto data = m_bson->operator std::vector<char>&();
         return std::vector<uint8_t>(data.begin(), data.end());
     }
-    bsoncxx::operator const std::string() noexcept
+    bsoncxx::operator std::string() const
     {
         return m_bson->operator std::string &();
     }
-    bsoncxx::operator const document() noexcept
+    bsoncxx::operator document() const
     {
         auto doc = m_bson->operator const realm::bson::IndexedMap<realm::bson::Bson>&();
         return bsoncxx::document(doc);
     }
-    bsoncxx::operator const std::vector<bsoncxx>() noexcept
+    bsoncxx::operator std::vector<bsoncxx>() const
     {
         std::vector<bsoncxx> ret;
-        for(auto v : m_bson->operator const std::vector<realm::bson::Bson>&()) {
+        for(auto v : m_bson->operator std::vector<realm::bson::Bson>&()) {
             ret.push_back(v);
         }
         return ret;
@@ -239,6 +252,21 @@ namespace realm {
         }
     }
 
+    std::string bsoncxx::to_string() const
+    {
+        return m_bson->to_string();
+    }
+
+    std::string bsoncxx::to_json() const
+    {
+        return m_bson->toJson();
+    }
+
+    /*
+    ===========================
+    bsoncxx::document
+    ===========================
+    */
 
     bsoncxx::document::document() noexcept
     {
@@ -309,10 +337,11 @@ namespace realm {
         return *m_document;
     }
 
-    bsoncxx::regular_expression::operator realm::bson::RegularExpression() const
-    {
-        return realm::bson::RegularExpression();
-    }
+    /*
+    ===========================
+    bsoncxx::document::iterator
+    ===========================
+    */
 
     bsoncxx::document::iterator bsoncxx::document::begin()
     {
@@ -367,4 +396,70 @@ namespace realm {
     {
         return bsoncxx(m_document->operator[](key));
     }
-}
+
+    /*
+    ===========================
+    bsoncxx::regular_expression
+    ===========================
+    */
+
+    bsoncxx::regular_expression::regular_expression(const realm::bson::RegularExpression& v)
+    {
+        m_reg_expr = std::make_shared<realm::bson::RegularExpression>(v);
+    }
+    bsoncxx::regular_expression::regular_expression(const std::string& pattern, const std::string& options)
+    {
+        m_reg_expr = std::make_shared<realm::bson::RegularExpression>(pattern, options);
+    }
+    bsoncxx::regular_expression::regular_expression(const std::string& pattern, option options)
+    {
+        m_reg_expr = std::make_shared<realm::bson::RegularExpression>(pattern, static_cast<realm::bson::RegularExpression::Option>(options));
+    }
+    bsoncxx::regular_expression::regular_expression()
+    {
+        m_reg_expr = std::make_shared<realm::bson::RegularExpression>();
+    }
+
+    bsoncxx::regular_expression::operator realm::bson::RegularExpression() const
+    {
+        return *m_reg_expr;
+    }
+
+    static_assert((int)realm::bson::RegularExpression::Option::None == (int)bsoncxx::regular_expression::option::none);
+    static_assert((int)realm::bson::RegularExpression::Option::Multiline == (int)bsoncxx::regular_expression::option::multiline);
+    static_assert((int)realm::bson::RegularExpression::Option::IgnoreCase == (int)bsoncxx::regular_expression::option::ignore_case);
+    static_assert((int)realm::bson::RegularExpression::Option::Extended == (int)bsoncxx::regular_expression::option::extended);
+    static_assert((int)realm::bson::RegularExpression::Option::Dotall == (int)bsoncxx::regular_expression::option::dotall);
+
+    bsoncxx::regular_expression::option bsoncxx::regular_expression::get_options() const
+    {
+        return static_cast<bsoncxx::regular_expression::option>(m_reg_expr->options());
+    }
+
+    std::string bsoncxx::regular_expression::get_pattern() const
+    {
+        return m_reg_expr->pattern();
+    }
+
+    bsoncxx::regular_expression::option operator|(const bsoncxx::regular_expression::option& lhs,
+                                                  const bsoncxx::regular_expression::option& rhs) noexcept
+    {
+        return bsoncxx::regular_expression::option(static_cast<int>(lhs) | static_cast<int>(rhs));
+    }
+
+    bsoncxx::regular_expression::option operator&(const bsoncxx::regular_expression::option& lhs,
+                                                  const bsoncxx::regular_expression::option& rhs) noexcept
+    {
+        return bsoncxx::regular_expression::option(static_cast<int>(lhs) & static_cast<int>(rhs));
+    }
+
+    bool operator==(const bsoncxx::regular_expression& lhs, const bsoncxx::regular_expression& rhs) noexcept
+    {
+        return lhs.operator realm::bson::RegularExpression() == rhs.operator realm::bson::RegularExpression();
+    }
+    bool operator!=(const bsoncxx::regular_expression& lhs, const bsoncxx::regular_expression& rhs) noexcept
+    {
+        return lhs.operator realm::bson::RegularExpression() != rhs.operator realm::bson::RegularExpression();
+    }
+
+} // namespace realm

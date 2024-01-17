@@ -104,21 +104,39 @@ namespace realm {
         struct min_key {};
         struct max_key {};
         struct regular_expression {
-            regular_expression() = default;
-            regular_expression(const realm::bson::RegularExpression&) {}
+            enum class option : uint8_t {
+                none,
+                ignore_case = 1,
+                multiline = 2,
+                dotall = 4,
+                extended = 8
+            };
+            regular_expression(const std::string& pattern, const std::string& options);
+            regular_expression(const std::string& pattern, option options);
+            regular_expression();
+            option get_options() const;
+            std::string get_pattern() const;
             operator realm::bson::RegularExpression() const;
+        private:
+            friend struct bsoncxx;
+            regular_expression(const realm::bson::RegularExpression&);
+            std::shared_ptr<realm::bson::RegularExpression> m_reg_expr;
         };
+
         struct timestamp {
             explicit timestamp(uint32_t seconds, uint32_t increment) : m_seconds(seconds), m_increment(increment) {}
-            friend struct bsoncxx;
+            uint32_t get_seconds() const noexcept { return m_seconds; }
+            uint32_t get_increment() const noexcept { return m_increment; }
         private:
+            friend struct bsoncxx;
             const uint32_t m_seconds;
             const uint32_t m_increment;
         };
         struct date {
             explicit date(const std::chrono::time_point<std::chrono::system_clock>& d) : m_date(d) {}
-            friend struct bsoncxx;
+            std::chrono::time_point<std::chrono::system_clock> get_date() const noexcept { return m_date; }
         private:
+            friend struct bsoncxx;
             const std::chrono::time_point<std::chrono::system_clock> m_date;
         };
 
@@ -148,23 +166,27 @@ namespace realm {
         bsoncxx(const std::vector<bsoncxx>&) noexcept;
         type get_type() const;
         operator realm::bson::Bson() const;
-        
-        operator int32_t() noexcept;
-        operator int64_t() noexcept;
-        operator bool() noexcept;
-        operator double() noexcept;
-        operator min_key() noexcept;
-        operator max_key() noexcept;
-        operator const timestamp() noexcept;
-        operator const date() noexcept;
-        operator const decimal128() noexcept;
-        operator const object_id() noexcept;
-        operator const uuid() noexcept;
-        operator const regular_expression() noexcept;
-        operator const std::vector<uint8_t>() noexcept;
-        operator const std::string() noexcept;
-        operator const document() noexcept;
-        operator const std::vector<bsoncxx>() noexcept;
+
+        operator std::nullopt_t() const;
+        operator int32_t() const;
+        operator int64_t() const;
+        operator bool() const;
+        operator double() const;
+        operator min_key() const;
+        operator max_key() const;
+        operator timestamp() const;
+        operator date() const;
+        operator decimal128() const;
+        operator object_id() const;
+        operator uuid() const;
+        operator regular_expression() const;
+        operator std::vector<uint8_t>() const;
+        operator std::string() const;
+        operator document() const;
+        operator std::vector<bsoncxx>() const;
+
+        std::string to_string() const;
+        std::string to_json() const;
     private:
         friend struct document::value;
         bsoncxx(realm::bson::Bson&) noexcept;
@@ -173,6 +195,12 @@ namespace realm {
 
     bool operator==(const bsoncxx& lhs, const bsoncxx& rhs);
     bool operator!=(const bsoncxx& lhs, const bsoncxx& rhs);
+    bool operator==(const bsoncxx::regular_expression& lhs, const bsoncxx::regular_expression& rhs) noexcept;
+    bool operator!=(const bsoncxx::regular_expression& lhs, const bsoncxx::regular_expression& rhs) noexcept;
+    bsoncxx::regular_expression::option operator|(const bsoncxx::regular_expression::option& lhs,
+                                                  const bsoncxx::regular_expression::option& rhs) noexcept;
+    bsoncxx::regular_expression::option operator&(const bsoncxx::regular_expression::option& lhs,
+                                                  const bsoncxx::regular_expression::option& rhs) noexcept;
 } // namespace realm
 
 #endif//REALMCXX_BSON_HPP
