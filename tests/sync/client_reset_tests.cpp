@@ -25,14 +25,14 @@ void simulate_client_reset_error_for_session(sync_session&& session) {
 }
 
 void prepare_realm(const realm::db_config& flx_sync_config, const user& sync_user) {
-    sync_user.call_function("deleteClientResetObjects", "[]").get();
+    sync_user.call_function("deleteClientResetObjects", std::vector<bsoncxx>()).get();
     auto synced_realm = db(flx_sync_config);
     auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
                                                           subs.add<client_reset_obj>("foo-strings");
                                                       }).get();
     CHECK(update_success == true);
     CHECK(synced_realm.subscriptions().size() == 1);
-    sync_user.call_function("insertClientResetObject", "[]").get();
+    sync_user.call_function("insertClientResetObject", bsoncxx::array()).get();
 
     auto session = synced_realm.get_sync_session()->operator std::weak_ptr<::realm::SyncSession>().lock().get();
     session->pause();

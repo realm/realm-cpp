@@ -20,8 +20,10 @@ TEST_CASE("asymmetric object", "[sync]") {
 
         synced_realm.get_sync_session()->wait_for_upload_completion().get();
 
-        auto result = user.call_function("asymmetricSyncData", bson::Bson(bson::BsonArray({bson::BsonDocument{{"_id", oid.to_string()}}})).toJson()).get();
-        CHECK(result);
-        CHECK(result->find(oid.to_string()) != std::string::npos);
+        auto result = user.call_function("asymmetricSyncData", { bsoncxx::document({{"_id", oid.to_string()}}) }).get();
+        bsoncxx::array bson_array = *result;
+        CHECK(bson_array.size() == 1);
+        bsoncxx::document doc = bson_array[0];
+        CHECK(doc["_id"] == oid);
     }
 }

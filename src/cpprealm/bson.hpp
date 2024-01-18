@@ -31,6 +31,8 @@ namespace realm {
 
     struct bsoncxx {
 
+        using array = std::vector<bsoncxx>;
+
         enum class type {
             b_null,
             b_int32,
@@ -95,9 +97,9 @@ namespace realm {
             size_t size() const;
             value operator[](const std::string&);
             operator CoreDocument() const;
+            document(CoreDocument&) noexcept;
         private:
             friend struct bsoncxx;
-            document(CoreDocument&) noexcept;
             std::shared_ptr<CoreDocument> m_document;
         };
 
@@ -183,13 +185,12 @@ namespace realm {
         operator std::vector<uint8_t>() const;
         operator std::string() const;
         operator document() const;
-        operator std::vector<bsoncxx>() const;
+        operator array() const;
 
         std::string to_string() const;
         std::string to_json() const;
-    private:
-        friend struct document::value;
         bsoncxx(realm::bson::Bson&) noexcept;
+    private:
         std::shared_ptr<realm::bson::Bson> m_bson;
     };
 
