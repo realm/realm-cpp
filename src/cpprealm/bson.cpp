@@ -250,6 +250,8 @@ namespace realm {
             case realm::bson::Bson::Type::RegularExpression:
                 return bsoncxx::type::b_regular_expression;
         }
+
+        throw std::runtime_error("BSON type not supported");
     }
 
     std::string bsoncxx::to_string() const
@@ -272,7 +274,7 @@ namespace realm {
     {
         m_document = std::make_shared<CoreDocument>();
     }
-    bsoncxx::document::document(const std::vector<std::pair<std::string, bsoncxx>>& v) noexcept
+    bsoncxx::document::document(const std::initializer_list<std::pair<std::string, bsoncxx>>& v) noexcept
     {
         CoreDocument core_document;
         for (auto& [k, v] : v) {

@@ -194,7 +194,7 @@ TEST_CASE("regular expression", "[bson]") {
     SECTION("comparison") {
         auto regex = realm::bsoncxx::regular_expression("[0-9]", "i");
         auto regex2 = realm::bsoncxx::regular_expression("[0-9]", "i");
-        auto regex3 = realm::bsoncxx::regular_expression("[0-9]", "d");
+        auto regex3 = realm::bsoncxx::regular_expression("[0-9]", "m");
         CHECK(regex == regex2);
         CHECK(regex != regex3);
     }

@@ -85,7 +85,7 @@ namespace realm {
             iterator end();
 
             document() noexcept;
-            document(const std::vector<std::pair<std::string, bsoncxx>>&) noexcept;
+            document(const std::initializer_list<std::pair<std::string, bsoncxx>>&) noexcept;
             document(const document&);
             document(document&&);
             ~document();

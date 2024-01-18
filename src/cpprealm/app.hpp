@@ -175,6 +175,7 @@ struct user {
      @param callback The completion handler to call when the function call is complete.
      This handler is executed on the thread the method was called from.
      */
+    [[deprecated("This function is deprecated and will replaced by the BSON based call_function API.")]]
     void call_function(const std::string& name, const std::string& args_ejson,
                        std::function<void(std::optional<std::string>, std::optional<app_error>)> callback) const;
 
@@ -183,9 +184,10 @@ struct user {
 
     @param name The name of the Atlas App Services function to be called.
     @param arguments The string represented extended json to be provided to the function.
-    @param callback The completion handler to call when the function call is complete.
+    @return A future containing an optional std::string once the operation has completed.
     This handler is executed on the thread the method was called from.
     */
+    [[deprecated("This function is deprecated and will replaced by the BSON based call_function API.")]]
     [[nodiscard]] std::future<std::optional<std::string>> call_function(const std::string& name,
                                                                         const std::string& args_ejson) const;
 
