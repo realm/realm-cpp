@@ -8,6 +8,7 @@ set(BRIDGE_TYPE_REQUIRED_HEADERS
     realm/object-store/sync/app.hpp
     realm/sync/config.hpp
     realm/sync/subscriptions.hpp
+    realm/util/bson/bson.hpp
 )
 
 set(BRIDGE_TYPES
@@ -48,6 +49,8 @@ set(BRIDGE_TYPES
     AppError realm::app::AppError
     SyncSubscriptionSet realm::sync::SubscriptionSet
     MutableSyncSubscriptionSet realm::sync::MutableSubscriptionSet
+    Bson realm::bson::Bson
+    BsonIndexedMap realm::bson::IndexedMap<realm::bson::Bson>
 )
 
 while(BRIDGE_TYPES)

@@ -123,7 +123,7 @@ TEST_CASE("types", "[bson]") {
 
 TEST_CASE("document", "[bson]") {
     SECTION("assign subscript") {
-        auto doc = realm::bsoncxx::document();
+        auto doc = realm::bsoncxx::document({{}});
         doc["key"] = "value";
         auto str_val = doc["key"];
         CHECK(str_val == "value");

@@ -20,15 +20,43 @@
 #define REALMCXX_BSON_HPP
 
 #include <cpprealm/types.hpp>
+#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm {
     namespace bson {
         class Bson;
         template <typename>
         class IndexedMap;
-        class RegularExpression;
+        struct RegularExpression;
     }
 
+
+    /**
+     A struct representing a BSON value. BSON is a computer data interchange format.
+     The name "BSON" is based on the term JSON and stands for "Binary JSON".
+
+     The following types conform to BSON:
+
+       int32_t
+       int64_t
+       bool
+       double
+       bsoncxx::min_key
+       bsoncxx::max_key
+       bsoncxx::timestamp
+       bsoncxx::date
+       decimal128
+       object_id
+       uuid
+       bsoncxx::regular_expression
+       std::vector<uint8_t>
+       std::string
+       char*;
+       bsoncxx::document;
+       std::vector<bsoncxx>
+
+     @see bsonspec.org
+     */
     struct bsoncxx {
 
         using array = std::vector<bsoncxx>;
@@ -62,9 +90,9 @@ namespace realm {
                 const std::string key;
             private:
                 friend struct bsoncxx;
-                explicit value(std::shared_ptr<CoreDocument>& d, const std::string& k)
+                explicit value(CoreDocument* d, const std::string& k)
                     : m_document(d), key(k) {};
-                std::shared_ptr<CoreDocument> m_document;
+                CoreDocument* m_document;
             };
 
             struct iterator {
@@ -77,9 +105,9 @@ namespace realm {
                 bool operator==(const iterator& rhs) const noexcept;
             private:
                 friend struct document;
-                iterator(const std::shared_ptr<CoreDocument>& d, size_t i) : m_document(d), m_idx(i) {};
+                iterator(CoreDocument* d, size_t i) : m_document(d), m_idx(i) {};
                 size_t m_idx = 0;
-                std::shared_ptr<CoreDocument> m_document;
+                CoreDocument* m_document;
             };
             iterator begin();
             iterator end();
@@ -93,18 +121,27 @@ namespace realm {
             document& operator=(document&&);
             void insert(const std::string& key, const bsoncxx& value);
             void pop_back();
-            bool empty() const;
+            bool empty();
             size_t size() const;
             value operator[](const std::string&);
             operator CoreDocument() const;
             document(CoreDocument&) noexcept;
         private:
             friend struct bsoncxx;
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+            internal::bridge::storage::BsonIndexedMap m_document[1];
+#else
             std::shared_ptr<CoreDocument> m_document;
+#endif
         };
 
+        /// MinKey will always be the smallest value when comparing to other BSON types
         struct min_key {};
+        /// MaxKey will always be the greatest value when comparing to other BSON types
         struct max_key {};
+
+        /// Provides regular expression capabilities for pattern matching strings in queries.
+        /// MongoDB uses Perl compatible regular expressions (i.e. "PCRE") version 8.42 with UTF-8 support.
         struct regular_expression {
             enum class option : uint8_t {
                 none,
@@ -122,9 +159,11 @@ namespace realm {
         private:
             friend struct bsoncxx;
             regular_expression(const realm::bson::RegularExpression&);
-            std::shared_ptr<realm::bson::RegularExpression> m_reg_expr;
+            option m_options;
+            std::string m_pattern;
         };
 
+        /// A type representing a BSON timestamp
         struct timestamp {
             explicit timestamp(uint32_t seconds, uint32_t increment) : m_seconds(seconds), m_increment(increment) {}
             uint32_t get_seconds() const noexcept { return m_seconds; }
@@ -134,6 +173,8 @@ namespace realm {
             const uint32_t m_seconds;
             const uint32_t m_increment;
         };
+
+        /// A type representing a BSON datetime
         struct date {
             explicit date(const std::chrono::time_point<std::chrono::system_clock>& d) : m_date(d) {}
             std::chrono::time_point<std::chrono::system_clock> get_date() const noexcept { return m_date; }
@@ -149,6 +190,9 @@ namespace realm {
         bsoncxx& operator=(const bsoncxx&) noexcept;
         bsoncxx& operator=(bsoncxx&&) noexcept;
 
+        /**
+         Allowed BSON types.
+        */
         bsoncxx(int32_t) noexcept;
         bsoncxx(int64_t) noexcept;
         bsoncxx(bool) noexcept;
@@ -165,7 +209,7 @@ namespace realm {
         bsoncxx(const std::string&) noexcept;
         bsoncxx(const char*) noexcept;
         bsoncxx(const document&) noexcept;
-        bsoncxx(const std::vector<bsoncxx>&) noexcept;
+        bsoncxx(const array&) noexcept;
         type get_type() const;
         operator realm::bson::Bson() const;
 
@@ -191,7 +235,11 @@ namespace realm {
         std::string to_json() const;
         bsoncxx(realm::bson::Bson&) noexcept;
     private:
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        internal::bridge::storage::Bson m_bson[1];
+#else
         std::shared_ptr<realm::bson::Bson> m_bson;
+#endif
     };
 
     bool operator==(const bsoncxx& lhs, const bsoncxx& rhs);
