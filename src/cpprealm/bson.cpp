@@ -379,7 +379,7 @@ namespace realm {
     bsoncxx::document::document(CoreDocument& doc) noexcept
     {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        *reinterpret_cast<CoreDocument*>(&m_document) = *reinterpret_cast<const CoreDocument*>(&doc);
+        new (&m_document) CoreDocument(doc);
 #else
         m_document = std::make_shared<CoreDocument>(doc);
 #endif
