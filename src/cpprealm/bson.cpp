@@ -31,7 +31,7 @@ namespace realm {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         *reinterpret_cast<bson::Bson*>(&m_bson) = *reinterpret_cast<const bson::Bson*>(&v.m_bson);
 #else
-        m_table = v.m_table;
+        m_bson = v.m_bson;
 #endif
     }
 
@@ -40,7 +40,7 @@ namespace realm {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         *reinterpret_cast<bson::Bson*>(&m_bson) = std::move(*reinterpret_cast<bson::Bson*>(&v.m_bson));
 #else
-        m_table = std::move(v.m_table);
+        m_bson = std::move(v.m_bson);
 #endif
     }
 
@@ -49,7 +49,7 @@ namespace realm {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         *reinterpret_cast<bson::Bson*>(&m_bson) = *reinterpret_cast<const bson::Bson*>(&v.m_bson);
 #else
-        m_table = v.m_table;
+        m_bson = v.m_bson;
 #endif
         return *this;
     }
@@ -59,7 +59,7 @@ namespace realm {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         *reinterpret_cast<bson::Bson*>(&m_bson) = std::move(*reinterpret_cast<bson::Bson*>(&v.m_bson));
 #else
-        m_table = std::move(v.m_table);
+        m_bson = std::move(v.m_bson);
 #endif
         return *this;
     }
@@ -407,7 +407,11 @@ namespace realm {
 
     bsoncxx::document::value bsoncxx::document::operator[](const std::string& key)
     {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return bsoncxx::document::value(CORE_DOCUMENT, key);
+#else
+        return bsoncxx::document::value(m_document.get(), key);
+#endif
     }
 
     bsoncxx::document::operator CoreDocument() const
@@ -423,12 +427,20 @@ namespace realm {
 
     bsoncxx::document::iterator bsoncxx::document::begin()
     {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return bsoncxx::document::iterator(CORE_DOCUMENT, 0);
+#else
+        return bsoncxx::document::iterator(m_document.get(), 0);
+#endif
     }
 
     bsoncxx::document::iterator bsoncxx::document::end()
     {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return bsoncxx::document::iterator(CORE_DOCUMENT, CONST_CORE_DOCUMENT->size());
+#else
+        return bsoncxx::document::iterator(m_document.get(), m_document->size());
+#endif
     }
 
     std::pair<std::string, bsoncxx> bsoncxx::document::iterator::operator*()

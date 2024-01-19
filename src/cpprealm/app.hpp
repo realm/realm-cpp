@@ -191,9 +191,24 @@ struct user {
     [[nodiscard]] std::future<std::optional<std::string>> call_function(const std::string& name,
                                                                         const std::string& args_ejson) const;
 
+    /**
+     Calls the Atlas App Services function with the provided name and arguments.
+
+    @param name The name of the Atlas App Services function to be called.
+    @param arguments The BSON array to be provided to the function.
+    @param callback The completion handler to call when the function call is complete.
+                    This handler is executed on the thread the method was called from.
+    */
     void call_function(const std::string& name, const std::vector<bsoncxx>& args_bson,
                        std::function<void(std::optional<bsoncxx>, std::optional<app_error>)> callback) const;
 
+    /**
+    Calls the Atlas App Services function with the provided name and arguments.
+
+    @param name The name of the Atlas App Services function to be called.
+    @param arguments The BSON array to be provided to the function.
+    @return A future containing optional BSON once the operation has completed.
+    */
     [[nodiscard]] std::future<std::optional<bsoncxx>> call_function(const std::string& name, const std::vector<bsoncxx>& args_bson) const;
 
     /**
