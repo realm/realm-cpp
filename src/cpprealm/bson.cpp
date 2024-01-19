@@ -419,6 +419,19 @@ namespace realm {
         return *CONST_CORE_DOCUMENT;
     }
 
+    bool operator==(const bsoncxx::document& lhs, const bsoncxx::document& rhs)
+    {
+        auto l = lhs.operator bsoncxx::document::CoreDocument();
+        auto r = rhs.operator bsoncxx::document::CoreDocument();
+        return l.keys() == r.keys() && l.entries() == r.entries();
+    }
+    bool operator!=(const bsoncxx::document& lhs, const bsoncxx::document& rhs)
+    {
+        auto l = lhs.operator bsoncxx::document::CoreDocument();
+        auto r = rhs.operator bsoncxx::document::CoreDocument();
+        return l.keys() != r.keys() || l.entries() != r.entries();
+    }
+
     /*
     ===========================
     bsoncxx::document::iterator

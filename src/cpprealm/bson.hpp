@@ -244,6 +244,8 @@ namespace realm {
 
     bool operator==(const bsoncxx& lhs, const bsoncxx& rhs);
     bool operator!=(const bsoncxx& lhs, const bsoncxx& rhs);
+    bool operator==(const bsoncxx::document& lhs, const bsoncxx::document& rhs);
+    bool operator!=(const bsoncxx::document& lhs, const bsoncxx::document& rhs);
     bool operator==(const bsoncxx::regular_expression& lhs, const bsoncxx::regular_expression& rhs) noexcept;
     bool operator!=(const bsoncxx::regular_expression& lhs, const bsoncxx::regular_expression& rhs) noexcept;
     bsoncxx::regular_expression::option operator|(const bsoncxx::regular_expression::option& lhs,
