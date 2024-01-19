@@ -101,7 +101,7 @@ TEST_CASE("types", "[bson]") {
         CHECK(bson.operator realm::bsoncxx::min_key() == realm::bsoncxx::min_key());
 
         bson = realm::bsoncxx(realm::bsoncxx::document({{"name", "foo"}}));
-        CHECK(bson.operator realm::bsoncxx::document() == realm::bsoncxx::document({{"name", "foo"}}));
+        CHECK((bson.operator realm::bsoncxx::document() == realm::bsoncxx::document({{"name", "foo"}})));
 
         bson = realm::bsoncxx(std::vector<realm::bsoncxx>({{"one", 123, true}}));
         CHECK(bson.operator std::vector<realm::bsoncxx>() == std::vector<realm::bsoncxx>({{"one", 123, true}}));
@@ -165,10 +165,10 @@ TEST_CASE("document", "[bson]") {
 
         auto doc2 = realm::bsoncxx::document();
         doc2["key"] = "value";
-        CHECK(doc == doc2);
+        CHECK((doc == doc2));
 
         doc2["key"] = 123;
-        CHECK(doc != doc2);
+        CHECK((doc != doc2));
     }
 }
 
