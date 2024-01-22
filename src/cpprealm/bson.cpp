@@ -339,7 +339,7 @@ namespace realm {
     bsoncxx::document::document(const document& v)
     {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        *reinterpret_cast<CoreDocument*>(&m_document) = *reinterpret_cast<const CoreDocument*>(&v.m_document);
+        new (&m_document) CoreDocument(*reinterpret_cast<const CoreDocument*>(&v.m_document));
 #else
         m_document = v.m_document;
 #endif
@@ -347,7 +347,7 @@ namespace realm {
     bsoncxx::document::document(document&& v)
     {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        *reinterpret_cast<CoreDocument*>(&m_document) = std::move(*reinterpret_cast<const CoreDocument*>(&v.m_document));
+        new (&m_document) CoreDocument(std::move(*reinterpret_cast<CoreDocument*>(&v.m_document)));
 #else
         m_document = std::move(v.m_document);
 #endif
