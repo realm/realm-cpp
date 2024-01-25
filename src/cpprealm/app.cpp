@@ -2,7 +2,7 @@
 #include <cpprealm/internal/generic_network_transport.hpp>
 
 #ifndef REALMCXX_VERSION_MAJOR
-#include <cpprealm/internal/version_numbers.hpp>
+#include <cpprealm/version_numbers.hpp>
 #endif
 
 #include <realm/object-store/sync/app.hpp>

@@ -54,6 +54,7 @@ endif()
 
 target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
 
+include_directories(../realm-core/src)
 target_link_libraries(cpprealm_sync_tests cpprealm Catch2::Catch2)
 target_link_libraries(cpprealm_db_tests cpprealm Catch2::Catch2)
 

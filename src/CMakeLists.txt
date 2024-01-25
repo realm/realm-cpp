@@ -2,9 +2,10 @@ add_subdirectory(cpprealm/internal/bridge/generator)
 
 include(GetVersion)
 # Configure source code to use right version number
-configure_file(${RealmCxx_SOURCE_DIR}/src/cpprealm/internal/version_numbers.hpp.in ${RealmCxx_SOURCE_DIR}/src/cpprealm/internal/version_numbers.hpp)
-install(FILES ${RealmCxx_SOURCE_DIR}/src/cpprealm/internal/version_numbers.hpp
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm/internal
+configure_file(cpprealm/internal/version_numbers.hpp.in cpprealm/version_numbers.hpp)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/version_numbers.hpp
+        DESTINATION include/cpprealm
         COMPONENT devel)
 
 add_custom_command(
@@ -17,6 +18,10 @@ add_custom_command(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cpprealm/internal/bridge/bridge_types.hpp.in
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp
 )
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp
+        DESTINATION include/cpprealm/internal/bridge
+        COMPONENT devel)
 
 set(SOURCES
     cpprealm/analytics.cpp
@@ -129,15 +134,11 @@ set(HEADERS
 include(GNUInstallDirs)
 
 add_library(cpprealm ${SOURCES} ${HEADERS} ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp)
-target_include_directories(cpprealm PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-)
 
-install(TARGETS cpprealm RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime)
-install(TARGETS cpprealm LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime)
-install(TARGETS cpprealm ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT devel)
+install(TARGETS ${PROJECT_NAME} ObjectStore Storage QueryParser Sync
+        EXPORT "${PROJECT_NAME}Targets"
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # include
+        )
 
 foreach(header ${HEADERS})
     get_filename_component(dir ${header} DIRECTORY)

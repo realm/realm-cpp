@@ -18,7 +18,7 @@ endif()
 
 target_link_libraries(realm_helloworld cpprealm)
 
-if(MSVC)
+if(MSVC AND DEFINED ENABLE_STATIC)
     set_property(TARGET realm_helloworld PROPERTY
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()

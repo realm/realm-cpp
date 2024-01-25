@@ -1,0 +1,162 @@
+name: Test vcpkg integration
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-static:
+    runs-on: ${{ matrix.os }}
+    name: "Static linkage"
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        build_type: [Debug, Release]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Install dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+          git \
+          ninja-build
+
+      - name: Setup Ninja
+        if: matrix.os == 'macos-latest'
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Clone vcpkg
+        working-directory: ./tests/vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          ./bootstrap-vcpkg.sh
+          cd ..
+
+      - name: Configure and build (macOS)
+        working-directory: ./tests/vcpkg
+        if: matrix.os == 'macos-latest'
+        run: |
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-osx
+          cd build
+          cmake --build . --config ${{matrix.build_type}}
+
+      - name: Configure and build (Ubuntu)
+        working-directory: ./tests/vcpkg
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-linux
+          cd build
+          cmake --build . --config ${{matrix.build_type}}
+
+      - name: Configure and build (Windows)
+        working-directory: ./tests/vcpkg
+        if: matrix.os == 'windows-latest'
+        run: |
+          cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-windows-static -DENABLE_STATIC=ON
+          cd build
+          cmake --build . --config ${{matrix.build_type}}
+
+      - name: Open a tmate debug session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          timeout-minutes: 15
+
+      - name: Run Application (Unix)
+        working-directory: ./tests/vcpkg/build
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        run: |
+          ./realm_helloworld
+
+      - name: Run Application (Windows)
+        working-directory: ./tests/vcpkg/build
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd ${{matrix.build_type}}
+          start realm_helloworld.exe
+
+  build-dynamic:
+    runs-on: ${{ matrix.os }}
+    name: "Dynamic linkage"
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        build_type: [ Debug, Release ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Install dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+          git \
+          ninja-build
+
+      - name: Setup Ninja
+        if: matrix.os == 'macos-latest'
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Clone vcpkg
+        working-directory: ./tests/vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          ./bootstrap-vcpkg.sh
+          cd ..
+
+      - name: Configure and build (macOS)
+        working-directory: ./tests/vcpkg
+        if: matrix.os == 'macos-latest'
+        run: |
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-osx-dynamic
+          cd build
+          cmake --build . --config ${{matrix.build_type}}
+
+      - name: Configure and build (Ubuntu)
+        working-directory: ./tests/vcpkg
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-linux-dynamic
+          cd build
+          cmake --build . --config ${{matrix.build_type}}
+
+      - name: Configure and build (Windows)
+        working-directory: ./tests/vcpkg
+        if: matrix.os == 'windows-latest'
+        run: |
+          cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-windows
+          cd build
+          cmake --build . --config ${{matrix.build_type}}
+
+      - name: Run Application (Unix)
+        working-directory: ./tests/vcpkg/build
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        run: |
+          ./realm_helloworld
+
+      - name: Run Application (Windows)
+        working-directory: ./tests/vcpkg/build
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd ${{matrix.build_type}}
+          start realm_helloworld.exe
+
+      - name: Open a tmate debug session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          timeout-minutes: 15

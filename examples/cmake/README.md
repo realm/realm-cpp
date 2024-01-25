@@ -21,3 +21,8 @@ cmake -GNinja -D CMAKE_BUILD_TYPE=debug ..
 ninja 
 ./hello
 ```
+
+# Using vcpkg
+
+In the root directory of this example project run:
+`cmake -B [build directory] -S . -DCMAKE_TOOLCHAIN_FILE=[path to vcpkg]/scripts/buildsystems/vcpkg.cmake -DVCPKG_OVERLAY_PORTS="../ports"`

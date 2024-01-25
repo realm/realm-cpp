@@ -20,6 +20,7 @@
 #define CPPREALM_BRIDGE_UTILS_HPP
 
 #include <functional>
+#include <memory>
 #include <string_view>
 #include <string>
 #include <type_traits>
