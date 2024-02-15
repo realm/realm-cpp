@@ -104,80 +104,21 @@ namespace realm {
                        !collection_root_was_deleted;
             }
         };
-        class iterator {
-        public:
-            using difference_type = size_t;
-            using value_type = managed<T, void>;
-            using pointer = std::unique_ptr<value_type>;
-            using reference = value_type &;
-            using iterator_category = std::input_iterator_tag;
-
-            bool operator!=(const iterator &other) const {
-                return !(*this == other);
-            }
-
-            bool operator==(const iterator &other) const {
-                return (m_parent == other.m_parent) && (m_idx == other.m_idx);
-            }
-
-            reference operator*() noexcept {
-                internal::bridge::obj obj = internal::bridge::get<internal::bridge::obj>(m_parent->m_parent, m_idx);
-                value = managed<T, void>(std::move(obj), this->m_parent->m_parent.get_realm());
-                return value;
-            }
-
-            pointer operator->() const noexcept {
-                auto obj = internal::bridge::get<internal::bridge::obj>(*m_parent, m_idx);
-                return T::schema::create_unique(std::move(obj), m_parent->m_parent.get_realm());
-            }
-
-            iterator &operator++() {
-                m_idx++;
-                return *this;
-            }
-
-            iterator operator++(int i) {
-                m_idx += i;
-                return *this;
-            }
-
-        private:
-            iterator(size_t idx, Derived *parent)
-                : m_idx(idx), m_parent(parent) {
-            }
-
-            size_t m_idx;
-            Derived *m_parent;
-            managed<T, void> value;
-
-            template<auto>
-            friend struct linking_objects;
-            template<typename, typename>
-            friend struct results_common_base;
-        };
-        virtual ~results_common_base() = default;
-        iterator begin() {
-            return iterator(0, static_cast<Derived*>(this));
-        }
-
-        iterator end() {
-            return iterator(m_parent.size(), static_cast<Derived*>(this));
-        }
 
         size_t size() {
             return m_parent.size();
         }
 
-        Derived& where(const std::string &query, const std::vector<realm::mixed>& arguments) {
+        virtual ~results_common_base() = default;
+        Derived where(const std::string &query, const std::vector<realm::mixed>& arguments) {
             std::vector<internal::bridge::mixed> mixed_args;
             for(auto& a : arguments)
                 mixed_args.push_back(serialize(a));
-            m_parent = internal::bridge::results(m_parent.get_realm(),
-                                                 m_parent.get_table().query(query, std::move(mixed_args)));
-            return static_cast<Derived&>(*this);
+            return Derived(internal::bridge::results(m_parent.get_realm(),
+                                                     m_parent.get_table().query(query, std::move(mixed_args))));
         }
 
-        Derived& where(std::function<rbool(managed<T>&)>&& fn) {
+        Derived where(std::function<rbool(managed<T>&)>&& fn) {
             static_assert(sizeof(managed<T>), "Must declare schema for T");
             auto realm = m_parent.get_realm();
             auto schema = realm.schema().find(managed<T>::schema.name);
@@ -186,8 +127,7 @@ namespace realm {
             auto builder = internal::bridge::query(table_ref);
             auto q = realm::query<managed<T>>(builder, std::move(schema), realm);
             auto full_query = fn(q).q;
-            m_parent = internal::bridge::results(m_parent.get_realm(), full_query);
-            return static_cast<Derived&>(*this);
+            return Derived(internal::bridge::results(m_parent.get_realm(), full_query));
         }
 
         struct results_callback_wrapper : internal::bridge::collection_change_callback {
@@ -252,14 +192,12 @@ namespace realm {
             return m_parent.get_realm().is_frozen();
         }
 
-        Derived& sort(const std::string& key_path, bool ascending) {
-            m_parent = m_parent.sort({{key_path, ascending}});
-            return static_cast<Derived&>(*this);
+        Derived sort(const std::string& key_path, bool ascending) {
+            return Derived(m_parent.sort({{key_path, ascending}}));
         }
 
-        Derived& sort(const std::vector<sort_descriptor>& sort_descriptors) {
-            m_parent = m_parent.sort(sort_descriptors);
-            return static_cast<Derived&>(*this);
+        Derived sort(const std::vector<sort_descriptor>& sort_descriptors) {
+            return Derived(m_parent.sort(sort_descriptors));
         }
 
     protected:
@@ -285,6 +223,50 @@ namespace realm {
                 throw std::out_of_range("Index out of range.");
             return internal::bridge::get<T>(this->m_parent, index);
         }
+
+        class iterator {
+        public:
+            using difference_type = size_t;
+            using value_type = T;
+            using iterator_category = std::input_iterator_tag;
+
+            bool operator!=(const iterator &other) const {
+                return !(*this == other);
+            }
+
+            bool operator==(const iterator &other) const {
+                return (m_parent == other.m_parent) && (m_idx == other.m_idx);
+            }
+
+            value_type operator*() noexcept {
+                return m_parent->operator[](m_idx);
+            }
+
+            iterator &operator++() {
+                m_idx++;
+                return *this;
+            }
+
+            iterator operator++(int i) {
+                m_idx += i;
+                return *this;
+            }
+
+            explicit iterator(size_t idx, Derived *parent)
+                : m_idx(idx), m_parent(parent) {
+            }
+        private:
+            size_t m_idx;
+            Derived *m_parent;
+        };
+
+        iterator begin() {
+            return iterator(0, static_cast<Derived*>(this));
+        }
+
+        iterator end() {
+            return iterator(this->m_parent.size(), static_cast<Derived*>(this));
+        }
     };
 
     template<typename T, typename Derived>
@@ -297,6 +279,56 @@ namespace realm {
             if (index >= this->m_parent.size())
                 throw std::out_of_range("Index out of range.");
             return deserialize<T>(internal::bridge::get<internal::bridge::mixed>(this->m_parent, index));
+        }
+
+        // TODO: The current impl of realm::mixed does not allow managed object types,
+        // to be accessed from the iterator as it would be required to be wrapped in a
+        // managed<> template. As these templates require on a col & obj key as they act as managed
+        // properties on an object this use case is broken. Ideally we should replace realm::mixed to
+        // not be a std::variant, but rather be a type-safe union we define in the SDK so that
+        // realm::mixed could have a managed context itself.
+        class iterator {
+        public:
+            using difference_type = size_t;
+            using value_type = T;
+            using iterator_category = std::input_iterator_tag;
+
+            bool operator!=(const iterator &other) const {
+                return !(*this == other);
+            }
+
+            bool operator==(const iterator &other) const {
+                return (m_parent == other.m_parent) && (m_idx == other.m_idx);
+            }
+
+            value_type operator*() noexcept {
+                return m_parent->operator[](m_idx);
+            }
+
+            iterator &operator++() {
+                m_idx++;
+                return *this;
+            }
+
+            iterator operator++(int i) {
+                m_idx += i;
+                return *this;
+            }
+
+            explicit iterator(size_t idx, Derived *parent)
+                : m_idx(idx), m_parent(parent) {
+            }
+        private:
+            size_t m_idx;
+            Derived *m_parent;
+        };
+
+        iterator begin() {
+            return iterator(0, static_cast<Derived*>(this));
+        }
+
+        iterator end() {
+            return iterator(this->m_parent.size(), static_cast<Derived*>(this));
         }
     };
 
@@ -311,6 +343,50 @@ namespace realm {
                 throw std::out_of_range("Index out of range.");
             return static_cast<T>(internal::bridge::get<int64_t>(this->m_parent, index));
         }
+
+        class iterator {
+        public:
+            using difference_type = size_t;
+            using value_type = T;
+            using iterator_category = std::input_iterator_tag;
+
+            bool operator!=(const iterator &other) const {
+                return !(*this == other);
+            }
+
+            bool operator==(const iterator &other) const {
+                return (m_parent == other.m_parent) && (m_idx == other.m_idx);
+            }
+
+            value_type operator*() noexcept {
+                return m_parent->operator[](m_idx);
+            }
+
+            iterator &operator++() {
+                m_idx++;
+                return *this;
+            }
+
+            iterator operator++(int i) {
+                m_idx += i;
+                return *this;
+            }
+
+            explicit iterator(size_t idx, Derived *parent)
+                : m_idx(idx), m_parent(parent) {
+            }
+        private:
+            size_t m_idx;
+            Derived *m_parent;
+        };
+
+        iterator begin() {
+            return iterator(0, static_cast<Derived*>(this));
+        }
+
+        iterator end() {
+            return iterator(this->m_parent.size(), static_cast<Derived*>(this));
+        }
     };
 
     template<typename T, typename Derived>
@@ -323,6 +399,51 @@ namespace realm {
             if (index >= this->m_parent.size())
                 throw std::out_of_range("Index out of range.");
             return managed<T, void>(internal::bridge::get<internal::bridge::obj>(this->m_parent, index), this->m_parent.get_realm());
+        }
+
+        class iterator {
+        public:
+            using difference_type = size_t;
+            using value_type = managed<T, void>;
+            using iterator_category = std::input_iterator_tag;
+
+            bool operator!=(const iterator &other) const {
+                return !(*this == other);
+            }
+
+            bool operator==(const iterator &other) const {
+                return (m_parent == other.m_parent) && (m_idx == other.m_idx);
+            }
+
+            value_type operator*() noexcept {
+                internal::bridge::obj obj = internal::bridge::get<internal::bridge::obj>(m_parent->m_parent, m_idx);
+                return managed<T, void>(std::move(obj), this->m_parent->m_parent.get_realm());
+            }
+
+            iterator &operator++() {
+                m_idx++;
+                return *this;
+            }
+
+            iterator operator++(int i) {
+                m_idx += i;
+                return *this;
+            }
+
+            explicit iterator(size_t idx, Derived *parent)
+                : m_idx(idx), m_parent(parent) {
+            }
+        private:
+            size_t m_idx;
+            Derived *m_parent;
+        };
+
+        iterator begin() {
+            return iterator(0, static_cast<Derived*>(this));
+        }
+
+        iterator end() {
+            return iterator(this->m_parent.size(), static_cast<Derived*>(this));
         }
     };
 

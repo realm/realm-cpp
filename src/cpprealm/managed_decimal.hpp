@@ -59,6 +59,15 @@ namespace realm {
         managed<realm::decimal128>& operator-=(const decimal128& o);
         managed<realm::decimal128>& operator*=(const decimal128& o);
         managed<realm::decimal128>& operator/=(const decimal128& o);
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 
     template<>
@@ -97,6 +106,15 @@ namespace realm {
         managed<std::optional<realm::decimal128>>& operator-=(const decimal128& o);
         managed<std::optional<realm::decimal128>>& operator*=(const decimal128& o);
         managed<std::optional<realm::decimal128>>& operator/=(const decimal128& o);
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 
 } // namespace realm

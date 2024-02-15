@@ -223,7 +223,7 @@ namespace realm {
             CHECK(moved_o.double_col == 123.456);
         }
 
-        SECTION("results_iterator") {
+        SECTION("results_iterator_object") {
             auto realm = db(std::move(config));
 
             AllTypesObject obj;
@@ -241,50 +241,75 @@ namespace realm {
             });
             auto results = realm.objects<AllTypesObject>();
 
+            managed<AllTypesObject> obj_from_loop;
             size_t count = 0;
-            for (auto& o : results) {
+            for (auto o : results) {
                 count++;
                 if (count == 1) {
                     CHECK(o._id == 1);
                     CHECK(o.str_col == "foo");
+                    obj_from_loop = o;
                 } else {
                     CHECK(o._id == 2);
                     CHECK(o.str_col == "bar");
                 }
             }
+            CHECK(obj_from_loop.str_col == "foo");
             CHECK(count == 2);
         }
 
-        SECTION("results_iterator") {
+        SECTION("results_iterator_primitive") {
             auto realm = db(std::move(config));
 
             AllTypesObject obj;
-            obj.str_col = "foo";
-            obj._id = 1;
+            obj.list_int_col = {1, 2, 3};
 
-            AllTypesObject obj2;
-            obj2.str_col = "bar";
-            obj2._id = 2;
-
-            realm.write([&realm, &obj, &obj2]() {
-                realm.add(std::move(obj));
-                realm.add(std::move(obj2));
-
+            auto managed_obj = realm.write([&]() {
+                return realm.add(std::move(obj));
             });
-            auto results = realm.objects<AllTypesObject>();
+            auto results = managed_obj.list_int_col.as_results();
 
-            size_t count = 0;
-            for (auto& o : results) {
-                count++;
-                if (count == 1) {
-                    CHECK(o._id == 1);
-                    CHECK(o.str_col == "foo");
-                } else {
-                    CHECK(o._id == 2);
-                    CHECK(o.str_col == "bar");
-                }
+            std::vector<int64_t> res;
+            for (auto o : results) {
+                res.push_back(o);
             }
-            CHECK(count == 2);
+            CHECK(res == std::vector<int64_t>({1, 2, 3}));
+        }
+
+        SECTION("results_iterator_mixed") {
+            auto realm = db(std::move(config));
+
+            AllTypesObject obj;
+            obj.list_mixed_col = {realm::mixed((int64_t)1), realm::mixed((int64_t)2), realm::mixed((int64_t)3)};
+
+            auto managed_obj = realm.write([&]() {
+                return realm.add(std::move(obj));
+            });
+            auto results = managed_obj.list_mixed_col.as_results();
+
+            std::vector<realm::mixed> res;
+            for (auto o : results) {
+                res.push_back(o);
+            }
+            CHECK(res == std::vector<realm::mixed>({realm::mixed((int64_t)1), realm::mixed((int64_t)2), realm::mixed((int64_t)3)}));
+        }
+
+        SECTION("results_iterator_enum") {
+            auto realm = db(std::move(config));
+
+            AllTypesObject obj;
+            obj.list_enum_col = {AllTypesObject::Enum::one, AllTypesObject::Enum::two};
+
+            auto managed_obj = realm.write([&]() {
+                return realm.add(std::move(obj));
+            });
+            auto results = managed_obj.list_enum_col.as_results();
+
+            std::vector<AllTypesObject::Enum> res;
+            for (auto o : results) {
+                res.push_back(o);
+            }
+            CHECK(res == std::vector<AllTypesObject::Enum>({AllTypesObject::Enum::one, AllTypesObject::Enum::two}));
         }
 
         SECTION("results_query") {

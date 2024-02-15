@@ -43,6 +43,15 @@ namespace realm {
         //MARK: -   comparison operators
         rbool operator==(const std::vector<uint8_t>& rhs) const noexcept;
         rbool operator!=(const std::vector<uint8_t>& rhs) const noexcept;
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 
     template<>
@@ -74,6 +83,15 @@ namespace realm {
         //MARK: -   comparison operators
         rbool operator==(const std::optional<std::vector<uint8_t>>& rhs) const noexcept;
         rbool operator!=(const std::optional<std::vector<uint8_t>>& rhs) const noexcept;
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 }
 

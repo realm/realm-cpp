@@ -117,19 +117,6 @@ namespace realm {
         }
     };
     template<>
-    struct box<std::optional<int64_t>> : public box_base<std::optional<int64_t>> {
-        using box_base<std::optional<int64_t>>::box_base;
-        using box_base<std::optional<int64_t>>::operator=;
-        std::optional<int64_t> operator*() {
-            auto v = m_backing_map.get(m_key);
-            if (v.is_null()) {
-                return std::nullopt;
-            } else {
-                return v.operator int64_t();
-            };
-        }
-    };
-    template<>
     struct box<double> : public box_base<double> {
         using box_base<double>::box_base;
         using box_base<double>::operator=;
@@ -138,37 +125,11 @@ namespace realm {
         }
     };
     template<>
-    struct box<std::optional<double>> : public box_base<std::optional<double>> {
-        using box_base<std::optional<double>>::box_base;
-        using box_base<std::optional<double>>::operator=;
-        std::optional<double> operator*() {
-            auto v = m_backing_map.get(m_key);
-            if (v.is_null()) {
-                return std::nullopt;
-            } else {
-                return v.operator double();
-            };
-        }
-    };
-    template<>
     struct box<bool> : public box_base<bool> {
         using box_base<bool>::box_base;
         using box_base<bool>::operator=;
         bool operator*() {
             return m_backing_map.get(m_key).operator bool();
-        }
-    };
-    template<>
-    struct box<std::optional<bool>> : public box_base<std::optional<bool>> {
-        using box_base<std::optional<bool>>::box_base;
-        using box_base<std::optional<bool>>::operator=;
-        std::optional<bool> operator*() {
-            auto v = m_backing_map.get(m_key);
-            if (v.is_null()) {
-                return std::nullopt;
-            } else {
-                return v.operator bool();
-            };
         }
     };
     template<typename V>
@@ -219,19 +180,6 @@ namespace realm {
             return this->m_backing_map.get(this->m_key).operator internal::bridge::uuid().operator ::realm::uuid();
         }
     };
-    template<>
-    struct box<std::optional<uuid>> : public box_base<std::optional<uuid>> {
-        using box_base<std::optional<uuid>>::box_base;
-        using box_base<std::optional<uuid>>::operator=;
-        std::optional<uuid> operator*() {
-            auto v = this->m_backing_map.get(this->m_key);
-            if (v.is_null()) {
-                return std::nullopt;
-            } else {
-                return v.operator internal::bridge::uuid().operator ::realm::uuid();
-            };
-        }
-    };
     template<typename Mixed>
     struct box<Mixed, std::enable_if_t<internal::type_info::MixedPersistableConcept<Mixed>::value>> : public box_base<Mixed> {
         using box_base<Mixed>::box_base;
@@ -246,37 +194,11 @@ namespace realm {
         }
     };
     template<>
-    struct box<std::optional<object_id>> : public box_base<std::optional<object_id>> {
-        using box_base<std::optional<object_id>>::box_base;
-        using box_base<std::optional<object_id>>::operator=;
-        std::optional<object_id> operator*() {
-            auto v = this->m_backing_map.get(this->m_key);
-            if (v.is_null()) {
-                return std::nullopt;
-            } else {
-                return v.operator internal::bridge::object_id().operator ::realm::object_id();
-            };
-        }
-    };
-    template<>
     struct box<decimal128> : public box_base<decimal128> {
         using box_base<decimal128>::box_base;
         using box_base<decimal128>::operator=;
         decimal128 operator*() {
             return this->m_backing_map.get(this->m_key).operator internal::bridge::decimal128().operator ::realm::decimal128();
-        }
-    };
-    template<>
-    struct box<std::optional<decimal128>> : public box_base<std::optional<decimal128>> {
-        using box_base<std::optional<decimal128>>::box_base;
-        using box_base<std::optional<decimal128>>::operator=;
-        std::optional<decimal128> operator*() {
-            auto v = this->m_backing_map.get(this->m_key);
-            if (v.is_null()) {
-                return std::nullopt;
-            } else {
-                return v.operator internal::bridge::decimal128().operator ::realm::decimal128();
-            };
         }
     };
     template<>
@@ -288,19 +210,6 @@ namespace realm {
         }
     };
     template<>
-    struct box<std::optional<std::chrono::time_point<std::chrono::system_clock>>> : public box_base<std::optional<std::chrono::time_point<std::chrono::system_clock>>> {
-        using box_base<std::optional<std::chrono::time_point<std::chrono::system_clock>>>::box_base;
-        using box_base<std::optional<std::chrono::time_point<std::chrono::system_clock>>>::operator=;
-        std::optional<std::chrono::time_point<std::chrono::system_clock>> operator*() {
-            auto v = this->m_backing_map.get(this->m_key);
-            if (v.is_null()) {
-                return std::nullopt;
-            } else {
-                return this->m_backing_map.get(this->m_key).operator internal::bridge::timestamp().operator std::chrono::time_point<std::chrono::system_clock>();
-            };
-        }
-    };
-    template<>
     struct box<std::vector<uint8_t>> : public box_base<std::vector<uint8_t>> {
         using box_base<std::vector<uint8_t>>::box_base;
         using box_base<std::vector<uint8_t>>::operator=;
@@ -309,37 +218,11 @@ namespace realm {
         }
     };
     template<>
-    struct box<std::optional<std::vector<uint8_t>>> : public box_base<std::optional<std::vector<uint8_t>>> {
-        using box_base<std::optional<std::vector<uint8_t>>>::box_base;
-        using box_base<std::optional<std::vector<uint8_t>>>::operator=;
-        std::optional<std::vector<uint8_t>> operator*() {
-            auto v = this->m_backing_map.get(this->m_key);
-            if (v.is_null()) {
-                return std::nullopt;
-            } else {
-                return this->m_backing_map.get(this->m_key).operator internal::bridge::binary().operator std::vector<uint8_t>();
-            };
-        }
-    };
-    template<>
     struct box<std::string> : public box_base<std::string> {
         using box_base<std::string>::box_base;
         using box_base<std::string>::operator=;
         std::string operator*() {
             return this->m_backing_map.get(this->m_key).operator std::string();
-        }
-    };
-    template<>
-    struct box<std::optional<std::string>> : public box_base<std::optional<std::string>> {
-        using box_base<std::optional<std::string>>::box_base;
-        using box_base<std::optional<std::string>>::operator=;
-        std::optional<std::string> operator*() {
-            auto v = this->m_backing_map.get(this->m_key);
-            if (v.is_null()) {
-                return std::nullopt;
-            } else {
-                return this->m_backing_map.get(this->m_key).operator std::string();
-            };
         }
     };
 
@@ -386,31 +269,17 @@ namespace realm {
             return !this->operator==(rhs);
         }
 
-        typename managed<V*>::ref_type operator*() {
+        std::optional<typename managed<V*>::ref_type> operator*() {
             auto obj = this->m_backing_map.get_object(this->m_key);
             if (!obj.is_valid()) {
                 return std::nullopt;
             }
-            auto m = managed<V, void>(std::move(obj), this->m_realm);
-            std::apply([&m](auto &&...ptr) {
-                std::apply([&](auto &&...name) {
-                    ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
-                },
-                managed<V, void>::managed_pointers_names);
-            },
-            managed<V, void>::managed_pointers());
-            return m;
+            return typename managed<V*>::ref_type(managed<V>(std::move(obj), this->m_realm));
         }
 
         typename managed<V*>::ref_type operator->() {
             auto obj = this->m_backing_map.get_object(this->m_key);
-            auto m = managed<V>(std::move(obj), this->m_realm);
-            std::apply([&m](auto &&...ptr) {
-                std::apply([&](auto &&...name) {
-                    ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
-                }, managed<V, void>::managed_pointers_names);
-            }, managed<V, void>::managed_pointers());
-            return {std::move(m)};
+            return typename managed<V*>::ref_type(managed<V>(std::move(obj), this->m_realm));
         }
 
         box& operator=(V* o) {
@@ -454,18 +323,6 @@ namespace realm {
             return a.get_key() == b.get_key();
         }
         bool operator!=(const box<managed<V*>> rhs) const {
-            return !this->operator==(rhs);
-        }
-
-        bool operator==(const V& rhs) const {
-            auto a = const_cast<box<managed<V*>> *>(this)->m_backing_map.get_object(this->m_key);
-            auto &b = rhs.m_obj;
-            if (this->m_realm != rhs.m_realm) {
-                return false;
-            }
-            return a.get_key() == b.get_key();
-        }
-        bool operator!=(const V& rhs) const {
             return !this->operator==(rhs);
         }
 
@@ -618,6 +475,15 @@ namespace realm {
             token.m_dictionary = dict;
             return token;
         }
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 
 } // namespace realm

@@ -43,14 +43,21 @@ namespace realm {
         }
 
         struct ref_type {
-            managed<T> m_managed;
-            managed<T>* operator ->() const {
-                return const_cast<managed<T>*>(&m_managed);
+            explicit ref_type(managed<T>&& value) : m_managed(std::move(value)) { }
+            const managed<T>* operator ->() const {
+                return &m_managed;
             }
             managed<T>* operator ->() {
                 return &m_managed;
             }
 
+            const managed<T>& operator *() const {
+                return m_managed;
+            }
+            managed<T>& operator *() {
+                return m_managed;
+            }
+            
             bool operator ==(const managed<T*>& rhs) const {
                 if (this->m_managed.m_realm != *rhs.m_realm) {
                     return false;
@@ -80,16 +87,16 @@ namespace realm {
             bool operator !=(const ref_type& rhs) const {
                 return !this->operator==(rhs);
             }
+        private:
+            managed<T> m_managed;
         };
         ref_type operator ->() const {
             if (should_detect_usage_for_queries) {
-                managed<T> m = managed<T>::prepare_for_query(*m_realm);
-                return {std::move(m)};
+                return ref_type(managed<T>::prepare_for_query(*m_realm));
             }
-            managed<T> m(m_obj->get_linked_object(m_key), *m_realm);
-            return {std::move(m)};
+            return ref_type(managed<T>(m_obj->get_linked_object(m_key), *m_realm));
         }
-        operator bool() {
+        operator bool() const {
             if (m_obj && m_key) {
                 return !m_obj->is_null(m_key);
             }
@@ -163,6 +170,11 @@ namespace realm {
         bool operator !=(const managed<T*>& rhs) const {
             return !this->operator==(rhs);
         }
+
+    private:
+        managed<T*>() = default;
+        template<typename, typename>
+        friend struct managed;
     };
 } //namespace realm
 #endif //CPPREALM_BRIDGE_LINK_HPP

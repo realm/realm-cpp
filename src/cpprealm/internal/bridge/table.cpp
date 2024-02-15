@@ -122,6 +122,14 @@ namespace realm::internal::bridge {
         return static_cast<TableRef>(*this)->get_column_key(name);
     }
 
+    uint32_t table::get_key() const {
+        return static_cast<TableRef>(*this)->get_key().value;
+    }
+
+    std::string table::get_name() const {
+        return static_cast<TableRef>(*this)->get_name();
+    }
+
     table table::get_link_target(const col_key col_key) const {
         return static_cast<TableRef>(*this)->get_link_target(col_key);
     }

@@ -182,7 +182,7 @@ namespace realm {
         };
 
         template<>
-        struct managed<primary_key<int64_t>> : managed_base {
+        struct managed<primary_key<int64_t>> final : managed_base {
             primary_key<int64_t> detach() const {
                 return operator int64_t();
             }
@@ -203,10 +203,19 @@ namespace realm {
             rbool operator>=(const int& rhs) const noexcept;
             rbool operator<(const int& rhs) const noexcept;
             rbool operator<=(const int& rhs) const noexcept;
+
+        private:
+            managed() = default;
+            managed(const managed&) = delete;
+            managed(managed &&) = delete;
+            managed& operator=(const managed&) = delete;
+            managed& operator=(managed&&) = delete;
+            template<typename, typename>
+            friend struct managed;
         };
 
         template<>
-        struct managed<primary_key<std::string>> : managed_base {
+        struct managed<primary_key<std::string>> final : managed_base {
             primary_key<std::string> detach() const {
                 return operator std::string();
             }
@@ -219,6 +228,15 @@ namespace realm {
             rbool operator!=(const std::string& rhs) const noexcept;
             rbool operator==(const char* rhs) const noexcept;
             rbool operator!=(const char* rhs) const noexcept;
+
+        private:
+            managed() = default;
+            managed(const managed&) = default;
+            managed(managed &&) = delete;
+            managed& operator=(const managed&) = delete;
+            managed& operator=(managed&&) = delete;
+            template<typename, typename>
+            friend struct managed;
         };
 
         template<>
@@ -233,10 +251,19 @@ namespace realm {
 
             rbool operator==(const realm::uuid& rhs) const noexcept;
             rbool operator!=(const realm::uuid& rhs) const noexcept;
+
+        private:
+            managed() = default;
+            managed(const managed&) = delete;
+            managed(managed &&) = delete;
+            managed& operator=(const managed&) = delete;
+            managed& operator=(managed&&) = delete;
+            template<typename, typename>
+            friend struct managed;
         };
 
         template<>
-        struct managed<primary_key<realm::object_id>> : managed_base {
+        struct managed<primary_key<realm::object_id>> final : managed_base {
             primary_key<realm::object_id> detach() const {
                 return operator realm::object_id();
             }
@@ -247,10 +274,19 @@ namespace realm {
 
             rbool operator==(const realm::object_id& rhs) const noexcept;
             rbool operator!=(const realm::object_id& rhs) const noexcept;
+
+        private:
+            managed() = default;
+            managed(const managed&) = delete;
+            managed(managed &&) = delete;
+            managed& operator=(const managed&) = delete;
+            managed& operator=(managed&&) = delete;
+            template<typename, typename>
+            friend struct managed;
         };
 
         template<typename T>
-        struct managed<primary_key<T>, std::enable_if_t<std::is_enum_v<T>>> : managed_base {
+        struct managed<primary_key<T>, std::enable_if_t<std::is_enum_v<T>>> final : managed_base {
             primary_key<T> detach() const {
                 return operator T();
             }
@@ -275,10 +311,19 @@ namespace realm {
                 }
                 return serialize(detach().value) != serialize(rhs);
             }
+
+        private:
+            managed() = default;
+            managed(const managed&) = delete;
+            managed(managed &&) = delete;
+            managed& operator=(const managed&) = delete;
+            managed& operator=(managed&&) = delete;
+            template<typename, typename>
+            friend struct managed;
         };
 
         template<>
-        struct managed<primary_key<std::optional<int64_t>>> : managed_base {
+        struct managed<primary_key<std::optional<int64_t>>> final : managed_base {
             primary_key<std::optional<int64_t>> detach() const {
                 return operator std::optional<int64_t>();
             }
@@ -297,11 +342,19 @@ namespace realm {
             rbool operator>=(const int& rhs) const noexcept;
             rbool operator<(const int& rhs) const noexcept;
             rbool operator<=(const int& rhs) const noexcept;
+
+        private:
+            managed() = default;
+            managed(managed &&) = delete;
+            managed& operator=(const managed&) = delete;
+            managed& operator=(managed&&) = delete;
+            template<typename, typename>
+            friend struct managed;
         };
 
         template<typename T>
         struct managed<primary_key<T>, std::enable_if_t<std::conjunction_v<typename internal::type_info::is_optional<T>,
-                                                                           std::is_enum<typename T::value_type> >>> : managed_base {
+                                                                           std::is_enum<typename T::value_type> >>> final : managed_base {
             primary_key<T> detach() const {
                 return operator T();
             }
@@ -339,10 +392,19 @@ namespace realm {
                 }
                 return serialize(detach().value) != serialize(rhs);
             }
+
+        private:
+            managed() = default;
+            managed(const managed&) = delete;
+            managed(managed &&) = delete;
+            managed& operator=(const managed&) = delete;
+            managed& operator=(managed&&) = delete;
+            template<typename, typename>
+            friend struct managed;
         };
 
         template<>
-        struct managed<primary_key<std::optional<std::string>>> : managed_base {
+        struct managed<primary_key<std::optional<std::string>>> final : managed_base {
             primary_key<std::optional<std::string>> detach() const {
                 return operator std::optional<std::string>();
             }
@@ -355,10 +417,19 @@ namespace realm {
             rbool operator!=(const std::optional<std::string>& rhs) const noexcept;
             rbool operator==(const char* rhs) const noexcept;
             rbool operator!=(const char* rhs) const noexcept;
+
+        private:
+            managed() = default;
+            managed(const managed&) = delete;
+            managed(managed &&) = delete;
+            managed& operator=(const managed&) = delete;
+            managed& operator=(managed&&) = delete;
+            template<typename, typename>
+            friend struct managed;
         };
 
         template<>
-        struct managed<primary_key<std::optional<realm::uuid>>> : managed_base {
+        struct managed<primary_key<std::optional<realm::uuid>>> final : managed_base {
             primary_key<std::optional<realm::uuid>> detach() const {
                 return operator std::optional<realm::uuid>();
             }
@@ -373,10 +444,19 @@ namespace realm {
 
             rbool operator==(const std::optional<realm::uuid>& rhs) const noexcept;
             rbool operator!=(const std::optional<realm::uuid>& rhs) const noexcept;
+
+        private:
+            managed() = default;
+            managed(const managed&) = delete;
+            managed(managed &&) = delete;
+            managed& operator=(const managed&) = delete;
+            managed& operator=(managed&&) = delete;
+            template<typename, typename>
+            friend struct managed;
         };
 
         template<>
-        struct managed<primary_key<std::optional<realm::object_id>>> : managed_base {
+        struct managed<primary_key<std::optional<realm::object_id>>> final : managed_base {
             std::optional<realm::object_id> detach() const {
                 return operator std::optional<realm::object_id>();
             }
@@ -391,6 +471,15 @@ namespace realm {
 
             rbool operator==(const std::optional<realm::object_id>& rhs) const noexcept;
             rbool operator!=(const std::optional<realm::object_id>& rhs) const noexcept;
+
+        private:
+            managed() = default;
+            managed(const managed&) = delete;
+            managed(managed &&) = delete;
+            managed& operator=(const managed&) = delete;
+            managed& operator=(managed&&) = delete;
+            template<typename, typename>
+            friend struct managed;
         };
 }
 

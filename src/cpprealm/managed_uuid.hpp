@@ -29,6 +29,7 @@ namespace realm {
 
     template<>
     struct managed<realm::uuid> : managed_base {
+        using value_type = realm::uuid;
         using managed<realm::uuid>::managed_base::operator=;
 
         [[nodiscard]] realm::uuid detach() const {
@@ -46,10 +47,20 @@ namespace realm {
         //MARK: -   comparison operators
         rbool operator==(const realm::uuid& rhs) const noexcept;
         rbool operator!=(const realm::uuid& rhs) const noexcept;
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 
     template<>
     struct managed<std::optional<realm::uuid>> : managed_base {
+        using value_type = std::optional<realm::uuid>;
         using managed<std::optional<realm::uuid>>::managed_base::operator=;
 
         [[nodiscard]] std::optional<realm::uuid> detach() const {
@@ -72,6 +83,15 @@ namespace realm {
         //MARK: -   comparison operators
         rbool operator==(const std::optional<realm::uuid>& rhs) const noexcept;
         rbool operator!=(const std::optional<realm::uuid>& rhs) const noexcept;
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 
 } // namespace realm

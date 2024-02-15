@@ -746,4 +746,100 @@ TEST_CASE("list", "[list]") {
         CHECK(sorted_object_results24[0] == AllTypesObject::Enum::two);
         CHECK(sorted_object_results24[1] == AllTypesObject::Enum::one);
     }
+
+    SECTION("object lifetime") {
+        managed<StringObject> out_of_scope_obj;
+        {
+            auto realm = db(std::move(config));
+            auto obj1 = AllTypesObject();
+            obj1._id = 1;
+
+            auto link1 = AllTypesObjectLink();
+            link1.str_col = "bar1";
+            obj1.opt_obj_col = &link1;
+
+            auto link2 = AllTypesObjectLink();
+            link2.str_col = "bar2";
+            obj1.list_obj_col.push_back(&link2);
+
+            StringObject s1;
+            s1.str_col = "objA";
+            s1._id = 1;
+            StringObject s2;
+            s2.str_col = "objB";
+            s2._id = 2;
+            link1.list_obj_col.push_back(&s1);
+            link1.list_obj_col.push_back(&s2);
+
+            auto managed_obj = realm.write([&] {
+                return realm.add(std::move(obj1));
+            });
+            auto link_obj = managed_obj.list_obj_col[0];
+
+            auto query = realm.objects<realm::AllTypesObject>();
+            CHECK(query.size() == 1);
+            size_t run_count = 0;
+            for (size_t i = 0; i < query.size(); i++) {
+                auto entry = query[i];
+                if (entry.opt_obj_col) {
+                    auto size = entry.opt_obj_col->list_obj_col.size();
+                    for (size_t j = 0; j < entry.opt_obj_col->list_obj_col.size(); j++) {
+                        if (j == 0) {
+                            CHECK(entry.opt_obj_col->list_obj_col[j]->str_col.detach() == "objA");
+                        } else {
+                            CHECK(entry.opt_obj_col->list_obj_col[j]->str_col.detach() == "objB");
+                        }
+                        run_count++;
+                    }
+                }
+
+                auto obj = entry.opt_obj_col->list_obj_col[0];
+                CHECK(obj->str_col == "objA");
+
+                out_of_scope_obj = *obj;
+                CHECK(run_count == 2);
+                CHECK(out_of_scope_obj.str_col.detach() == "objA");
+            }
+        }
+        // Check object copied correctly after scope exit.
+        CHECK(out_of_scope_obj.str_col.detach() == "objA");
+    }
+
+    SECTION("as_results managed objects") {
+        auto realm = realm::db(std::move(config));
+        auto obj = realm::AllTypesObject();
+        auto managed_obj = realm.write([&]() {
+            return realm.add(std::move(obj));
+        });
+
+        AllTypesObjectLink link;
+        link._id = 1;
+        link.str_col = "foo";
+
+        AllTypesObjectLink link2;
+        link2._id = 2;
+        link2.str_col = "bar";
+
+        realm.write([&]() {
+            managed_obj.list_obj_col.push_back(&link);
+            managed_obj.list_obj_col.push_back(&link2);
+        });
+
+        CHECK(managed_obj.list_obj_col.as_results().size() == 2);
+    }
+
+    SECTION("as_results managed objects") {
+        auto realm = realm::db(std::move(config));
+        auto obj = realm::AllTypesObject();
+        obj.list_int_col = {1, 2, 3};
+        auto managed_obj = realm.write([&]() {
+            return realm.add(std::move(obj));
+        });
+
+        CHECK(managed_obj.list_int_col.as_results().size() == 3);
+        auto res = managed_obj.list_int_col.as_results();
+        CHECK(res[0] == 1);
+        CHECK(res[1] == 2);
+        CHECK(res[2] == 3);
+    }
 }

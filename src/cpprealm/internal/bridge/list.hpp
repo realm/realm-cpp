@@ -100,6 +100,7 @@ namespace realm::internal::bridge {
         size_t find(const obj_key&);
 
         results sort(const std::vector<sort_descriptor>&);
+        [[nodiscard]] results as_results() const;
 
         notification_token add_notification_callback(std::shared_ptr<collection_change_callback>);
     private:

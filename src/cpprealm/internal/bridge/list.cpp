@@ -130,6 +130,10 @@ namespace realm::internal::bridge {
         return get_list()->sort(results_descriptors);
     }
 
+    [[nodiscard]] results list::as_results() const {
+        return get_list()->as_results();
+    }
+
     table list::get_table() const {
         return get_list()->get_table();
     }

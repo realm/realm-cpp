@@ -70,6 +70,8 @@ TEST_CASE("map", "[map]") {
         auto embedded2 = AllTypesObjectEmbedded();
         embedded2.str_col = "bar";
 
+        auto managed_links = realm.objects<AllTypesObjectLink>();
+
         realm.write([&managed_obj, &link2, &embedded2] {
             managed_obj.map_int_col["b"] = 84;
             managed_obj.map_str_col["b"] = "bar";
@@ -92,10 +94,7 @@ TEST_CASE("map", "[map]") {
         CHECK(managed_obj.map_uuid_col["b"] == realm::uuid());
         CHECK(managed_obj.map_binary_col["a"] == std::vector<uint8_t>{0, 1, 2});
         CHECK(managed_obj.map_binary_col["b"] == std::vector<uint8_t>{3, 4, 5});
-//        CHECK(managed_obj.map_link_col["a"] == link);
-//        CHECK(managed_obj.map_embedded_col["a"] == embedded);
-//        CHECK(managed_obj.map_link_col["b"] == link2);
-//        CHECK(managed_obj.map_embedded_col["b"] == embedded2);
+        CHECK(managed_obj.map_link_col["a"] == managed_links[0]);
         CHECK(managed_obj.map_link_col["b"]->str_col == "foo");
         CHECK(managed_obj.map_embedded_col["b"]->str_col == "bar");
 
@@ -206,5 +205,27 @@ TEST_CASE("map", "[map]") {
 
         std::map<std::string, std::string> as_values = managed_obj.map_str_col.detach();
         CHECK(as_values == std::map<std::string, std::string>({{"a", std::string("baz")}, {"b", std::string("foo")}}));
+    }
+
+    SECTION("object lifetime") {
+        managed<AllTypesObjectLink> ptr;
+        {
+            auto obj = AllTypesObject();
+            auto link = AllTypesObjectLink();
+            link.str_col = "foo";
+            obj.map_link_col = {
+                    {"a", &link}
+            };
+            auto realm = db(std::move(config));
+            auto managed_obj = realm.write([&realm, &obj] {
+                return realm.add(std::move(obj));
+            });
+
+            auto opt_boxed_value = *managed_obj.map_link_col["a"];
+            auto ref_type = *opt_boxed_value;
+            ptr = *ref_type;
+        }
+        // Check object copied correctly after scope exit.
+        CHECK(ptr.str_col == "foo");
     }
 }

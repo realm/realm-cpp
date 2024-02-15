@@ -459,7 +459,7 @@ TEST_CASE("set", "[set]") {
 
         auto it = managed_obj.set_obj_col.find(managed_link);
         CHECK(it != managed_obj.set_obj_col.end());
-        auto x = (*it)._id.operator int64_t();
+        CHECK((*it).str_col == "bar");
         CHECK(*it == realm.objects<AllTypesObjectLink>().where([](auto& o) { return o._id == 3; })[0]);
         auto it2 = managed_obj.set_obj_col.find(managed_link_not_in_set);
         CHECK(it2 == managed_obj.set_obj_col.end());
@@ -642,6 +642,51 @@ TEST_CASE("set", "[set]") {
             res.insert(it.operator*()._id);
         }
         CHECK(res == std::set<int64_t>({1, 2}));
+    }
+
+    SECTION("object lifetime") {
+        std::unique_ptr<managed<AllTypesObjectLink>> ptr;
+        {
+            auto realm = realm::db(std::move(config));
+            auto obj = realm::AllTypesObject();
+            auto managed_obj = realm.write([&]() {
+                return realm.add(std::move(obj));
+            });
+
+            AllTypesObjectLink link;
+            link._id = 1;
+            link.str_col = "foo";
+
+            AllTypesObjectLink link2;
+            link2._id = 2;
+            link2.str_col = "bar";
+
+            AllTypesObjectLink link3;
+            link3._id = 3;
+            link3.str_col = "bar";
+
+            auto managed_link_not_in_set = realm.write([&]() {
+                return realm.add(std::move(link2));
+            });
+
+            auto managed_link = realm.write([&]() {
+                realm.add(std::move(link2));
+                return realm.add(std::move(link3));
+            });
+
+            realm.write([&]() {
+                managed_obj.set_obj_col.insert(&link);
+                managed_obj.set_obj_col.insert(&link);
+                managed_obj.set_obj_col.insert(managed_link);
+                managed_obj.set_obj_col.insert(managed_link);
+            });
+            CHECK(managed_obj.set_obj_col.size() == 2);
+
+            auto it = managed_obj.set_obj_col.find(managed_link);
+            ptr = std::make_unique<managed<AllTypesObjectLink>>(*it);
+        }
+        // Object should exist after scope exit
+        CHECK(ptr->str_col == "bar");
     }
 }
 

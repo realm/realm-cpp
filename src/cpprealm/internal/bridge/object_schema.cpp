@@ -117,6 +117,9 @@ namespace realm::internal::bridge {
     void object_schema::set_name(const std::string &name) {
         get_object_schema()->name = name;
     }
+    std::string object_schema::get_name() const {
+        return get_object_schema()->name;
+    }
     property object_schema::property_for_name(const std::string &v) {
         return *get_object_schema()->property_for_name(v);
     }

@@ -44,6 +44,15 @@ namespace realm::internal::bridge {
 #endif
     }
 
+    obj_link::obj_link(uint32_t table_key, obj_key obj_key) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        new (&m_obj_link) ObjLink(TableKey(table_key), obj_key);
+#else
+        m_obj_link = std::make_shared<ObjLink>(TableKey(table_key), obj_key);
+#endif
+    }
+
+
     obj_link& obj_link::operator=(const obj_link& other) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         if (this != &other) {
@@ -101,6 +110,14 @@ namespace realm::internal::bridge {
         return reinterpret_cast<const ObjLink*>(&m_obj_link)->get_obj_key();
 #else
         return m_obj_link->get_obj_key();
+#endif
+    }
+
+    uint32_t obj_link::get_table_key() {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return reinterpret_cast<const ObjLink*>(&m_obj_link)->get_table_key().value;
+#else
+        return m_obj_link->get_table_key().value;
 #endif
     }
 
