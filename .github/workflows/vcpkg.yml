@@ -26,26 +26,17 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-          git \
           ninja-build
 
       - name: Setup Ninja
         if: matrix.os == 'macos-latest'
         uses: seanmiddleditch/gha-setup-ninja@master
 
-      - name: Clone vcpkg
-        working-directory: ./tests/vcpkg
-        run: |
-          git clone https://github.com/microsoft/vcpkg.git
-          cd vcpkg
-          ./bootstrap-vcpkg.sh
-          cd ..
-
       - name: Configure and build (macOS)
         working-directory: ./tests/vcpkg
         if: matrix.os == 'macos-latest'
         run: |
-          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-osx
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-osx
           cd build
           cmake --build . --config ${{matrix.build_type}}
 
@@ -53,7 +44,7 @@ jobs:
         working-directory: ./tests/vcpkg
         if: matrix.os == 'ubuntu-latest'
         run: |
-          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-linux
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-linux
           cd build
           cmake --build . --config ${{matrix.build_type}}
 
@@ -61,7 +52,7 @@ jobs:
         working-directory: ./tests/vcpkg
         if: matrix.os == 'windows-latest'
         run: |
-          cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-windows-static -DENABLE_STATIC=ON
+          cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-windows-static -DENABLE_STATIC=ON
           cd build
           cmake --build . --config ${{matrix.build_type}}
 
@@ -103,26 +94,17 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-          git \
           ninja-build
 
       - name: Setup Ninja
         if: matrix.os == 'macos-latest'
         uses: seanmiddleditch/gha-setup-ninja@master
 
-      - name: Clone vcpkg
-        working-directory: ./tests/vcpkg
-        run: |
-          git clone https://github.com/microsoft/vcpkg.git
-          cd vcpkg
-          ./bootstrap-vcpkg.sh
-          cd ..
-
       - name: Configure and build (macOS)
         working-directory: ./tests/vcpkg
         if: matrix.os == 'macos-latest'
         run: |
-          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-osx-dynamic
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-osx-dynamic
           cd build
           cmake --build . --config ${{matrix.build_type}}
 
@@ -130,7 +112,7 @@ jobs:
         working-directory: ./tests/vcpkg
         if: matrix.os == 'ubuntu-latest'
         run: |
-          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-linux-dynamic
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-linux-dynamic
           cd build
           cmake --build . --config ${{matrix.build_type}}
 
@@ -138,7 +120,7 @@ jobs:
         working-directory: ./tests/vcpkg
         if: matrix.os == 'windows-latest'
         run: |
-          cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-windows
+          cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-windows
           cd build
           cmake --build . --config ${{matrix.build_type}}
 

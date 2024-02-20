@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Realm is a mobile database that runs directly inside phones, tablets or wearables.",
   "homepage": "https://github.com/realm/realm-cpp",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": [
     {
       "name": "vcpkg-cmake",
