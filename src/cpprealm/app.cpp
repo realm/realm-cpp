@@ -2,7 +2,7 @@
 #include <cpprealm/internal/generic_network_transport.hpp>
 
 #ifndef REALMCXX_VERSION_MAJOR
-#include <cpprealm/internal/version_numbers.hpp>
+#include <cpprealm/version_numbers.hpp>
 #endif
 
 #include <realm/object-store/sync/app.hpp>
@@ -459,7 +459,7 @@ namespace realm {
         device_info.sdk = "Realm Cpp";
         app_config.device_info = std::move(device_info);
 
-        m_app = app::App::get_shared_app(std::move(app_config), client_config);
+        m_app = app::App::get_app(app::App::CacheMode::Enabled, std::move(app_config), client_config);
     }
 
     App::App(const std::string &app_id,

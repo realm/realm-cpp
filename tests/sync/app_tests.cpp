@@ -41,10 +41,10 @@ static std::string create_jwt(const std::string& appId)
     std::string payloadStr = payload.dump();
     std::string encoded_header;
     encoded_header.resize(realm::util::base64_encoded_size(headerStr.length()));
-    realm::util::base64_encode(headerStr.data(), headerStr.length(), encoded_header.data(), encoded_header.size());
+    realm::util::base64_encode(headerStr, encoded_header);
     std::string encoded_payload;
     encoded_payload.resize(realm::util::base64_encoded_size(payloadStr.length()));
-    realm::util::base64_encode(payloadStr.data(), payloadStr.length(), encoded_payload.data(), encoded_payload.size());
+    realm::util::base64_encode(payloadStr, encoded_payload);
 
     // Remove padding characters.
     while (encoded_header.back() == '=')
@@ -58,7 +58,7 @@ static std::string create_jwt(const std::string& appId)
 
     std::string signature;
     signature.resize(realm::util::base64_encoded_size(mac.length()));
-    realm::util::base64_encode(mac.data(), mac.length(), signature.data(), signature.size());
+    realm::util::base64_encode(mac, signature);
     while (signature.back() == '=')
         signature.pop_back();
     std::replace(signature.begin(), signature.end(), '+', '-');

@@ -292,7 +292,7 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.1
         with:
           key: ccache-linux-${{ matrix.compiler.name }}-${{ matrix.compiler.version }}
-      
+
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.13
         with:
@@ -355,7 +355,7 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.1
         with:
           key: ccache-linux-${{ matrix.compiler.name }}-${{ matrix.compiler.version }}
-      
+
       - name: Install Linux Dependencies
         run: |
           sudo apt-get update

@@ -1,4 +1,4 @@
-file(STRINGS "${RealmCxx_SOURCE_DIR}/dependencies.list" DEPENDENCIES)
+file(STRINGS "${cpprealm_SOURCE_DIR}/dependencies.list" DEPENDENCIES)
 message("Dependencies: ${DEPENDENCIES}")
 foreach(LINE IN LISTS DEPENDENCIES)
     string(REGEX MATCHALL "([^=]+)" KEY_VALUE ${LINE})

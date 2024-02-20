@@ -277,8 +277,7 @@ namespace realm {
 
         std::vector<char> buffer;
         buffer.resize(5000);
-        realm::util::base64_encode(json_str.c_str(), json_str.size(),
-                                   buffer.data(), buffer.size());
+        realm::util::base64_encode(json_str, buffer);
 
         size_t s = 0;
         while (buffer[s] != '\0') {

@@ -94,7 +94,7 @@ namespace realm::internal {
                 auto userpass = util::format("%1:%2", m_proxy_config->username_password->first, m_proxy_config->username_password->second);
                 std::string encoded_userpass;
                 encoded_userpass.resize(realm::util::base64_encoded_size(userpass.length()));
-                realm::util::base64_encode(userpass.data(), userpass.size(), encoded_userpass.data(), encoded_userpass.size());
+                realm::util::base64_encode(userpass, encoded_userpass);
                 [urlRequest addValue:@(util::format("Basic %1", encoded_userpass).c_str()) forHTTPHeaderField:@"'Proxy-Authorization'"];
             }
 
