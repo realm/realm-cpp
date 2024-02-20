@@ -101,8 +101,6 @@ if(NOT APPLE AND NOT WINDOWS_STORE AND NOT ANDROID)
     target_link_libraries(ObjectStore PUBLIC ${libuv_target})
 endif()
 
-target_compile_definitions(cpprealm PUBLIC REALM_ENABLE_SYNC=1)
-
 target_link_libraries(cpprealm PUBLIC Realm::ObjectStore)
 set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
 
