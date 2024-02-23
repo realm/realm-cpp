@@ -29,6 +29,7 @@ namespace realm {
 
     template<>
     struct managed<std::chrono::time_point<std::chrono::system_clock>> : public managed_base {
+        using value_type = std::chrono::time_point<std::chrono::system_clock>;
         using managed<std::chrono::time_point<std::chrono::system_clock>>::managed_base::operator=;
 
         [[nodiscard]] std::chrono::time_point<std::chrono::system_clock> detach() const {
@@ -57,10 +58,20 @@ namespace realm {
         rbool operator>=(const std::chrono::time_point<std::chrono::system_clock>& rhs) const noexcept;
         rbool operator<(const std::chrono::time_point<std::chrono::system_clock>& rhs) const noexcept;
         rbool operator<=(const std::chrono::time_point<std::chrono::system_clock>& rhs) const noexcept;
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 
     template<>
     struct managed<std::optional<std::chrono::time_point<std::chrono::system_clock>>> : managed_base {
+        using value_type = std::optional<std::chrono::time_point<std::chrono::system_clock>>;
         using managed<std::optional<std::chrono::time_point<std::chrono::system_clock>>>::managed_base::operator=;
 
         [[nodiscard]] std::optional<std::chrono::time_point<std::chrono::system_clock>> detach() const {
@@ -98,6 +109,15 @@ namespace realm {
         //MARK: -   comparison operators
         rbool operator==(const std::optional<std::chrono::time_point<std::chrono::system_clock>>& rhs) const noexcept;
         rbool operator!=(const std::optional<std::chrono::time_point<std::chrono::system_clock>>& rhs) const noexcept;
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 
 } // namespace realm

@@ -140,12 +140,4 @@ namespace realm {
 
     __cpprealm_build_optional_query(==, equal, std::string)
     __cpprealm_build_optional_query(!=, not_equal, std::string)
-#ifdef __cpp_lib_starts_ends_with
-    bool managed_string::starts_with(std::string_view v) const noexcept {
-        return get().starts_with(v);
-    }
-    bool managed_string::ends_with(std::string_view v) const noexcept {
-        return get().ends_with(v);
-    }
-#endif
 }

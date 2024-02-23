@@ -135,6 +135,15 @@ namespace realm {
             m_obj->template set<int64_t>(this->m_key, old_val * o);
             return *this;
         }
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 
     template<>
@@ -250,6 +259,15 @@ namespace realm {
             auto old_val = m_obj->template get<double>(m_key);
             m_obj->template set<double>(this->m_key, old_val * o);
         }
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 
     template<>
@@ -268,6 +286,15 @@ namespace realm {
 
         rbool operator==(const bool& rhs) const noexcept;
         rbool operator!=(const bool& rhs) const noexcept;
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 
 #define CPP_REALM_MANAGED_OPTIONAL_NUMERIC(type) \
@@ -345,7 +372,15 @@ namespace realm {
                 throw std::runtime_error("Cannot perform arithmetic on null value."); \
             } \
             m_obj->template set<type>(this->m_key, (*old_val) / o); \
-        } \
+        }                                        \
+    private:    \
+        managed() = default; \
+        managed(const managed&) = delete; \
+        managed(managed &&) = delete; \
+        managed& operator=(const managed&) = delete; \
+        managed& operator=(managed&&) = delete; \
+        template<typename, typename> \
+        friend struct managed; \
     }; \
 
 CPP_REALM_MANAGED_OPTIONAL_NUMERIC(int64_t);
@@ -369,6 +404,15 @@ CPP_REALM_MANAGED_OPTIONAL_NUMERIC(double);
 
         rbool operator==(const std::optional<bool>& rhs) const noexcept;
         rbool operator!=(const std::optional<bool>& rhs) const noexcept;
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 
     template <typename T>
@@ -439,6 +483,15 @@ CPP_REALM_MANAGED_OPTIONAL_NUMERIC(double);
             }
             return detach() <= rhs;
         }
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 
     template <typename T>
@@ -524,6 +577,15 @@ CPP_REALM_MANAGED_OPTIONAL_NUMERIC(double);
             }
             return detach() <= rhs;
         }
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 } // namespace realm
 

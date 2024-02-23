@@ -52,6 +52,7 @@ namespace realm::internal::bridge {
         void add_property(const property&);
 
         void set_name(const std::string& name);
+        std::string get_name() const;
         void set_primary_key(const std::string& primary_key);
         void set_object_type(object_type);
         property property_for_name(const std::string&);

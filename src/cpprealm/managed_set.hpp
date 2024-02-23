@@ -150,6 +150,15 @@ namespace realm {
         {
             return internal::bridge::set(*m_realm, *m_obj, m_key).size();
         }
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 
     template<typename T>
@@ -180,11 +189,6 @@ namespace realm {
             {
                 auto s = realm::internal::bridge::set(*m_parent->m_realm, *m_parent->m_obj, m_parent->m_key);
                 managed<T> m(s.get_obj(m_i), *m_parent->m_realm);
-                std::apply([&m](auto &&...ptr) {
-                    std::apply([&](auto &&...name) {
-                        ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
-                    }, managed<T>::managed_pointers_names);
-                }, managed<T>::managed_pointers());
                 return {std::move(m)};
             }
 
@@ -356,6 +360,15 @@ namespace realm {
         {
             return internal::bridge::set(*m_realm, *m_obj, m_key).size();
         }
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 } // namespace realm
 

@@ -988,7 +988,6 @@ namespace realm {
             auto obj1 = AllTypesObject();
             obj1._id = 1;
 
-
             auto o = AllTypesObjectLink();
             o.str_col = "bar";
             obj1.opt_obj_col = &o;
@@ -1005,8 +1004,83 @@ namespace realm {
             });
 
             CHECK(realm.objects<AllTypesObject>().size() == 2);
-//            CHECK(realm.objects<AllTypesObjectLink>().size() == 2);
-
+            CHECK(realm.objects<AllTypesObjectLink>().size() == 1);
         }
+
+        static_assert(!std::is_constructible_v<typename managed<AllTypesObjectLink *>::ref_type>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<int64_t>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<double>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<bool>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::string>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<primary_key<int64_t>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<primary_key<realm::object_id>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<primary_key<realm::uuid>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<primary_key<std::string>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<primary_key<std::optional<int64_t>>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<primary_key<std::optional<realm::object_id>>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<primary_key<std::optional<realm::uuid>>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<primary_key<std::optional<std::string>>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<realm::AllTypesObject::Enum>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::chrono::time_point<std::chrono::system_clock>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<realm::uuid>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<realm::object_id>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<realm::decimal128>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::vector<std::uint8_t>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<realm::mixed>>, "Default constructor is private.");
+
+        static_assert(!std::is_constructible_v<managed<std::optional<int64_t>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::optional<double>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::optional<std::string>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::optional<bool>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::optional<realm::AllTypesObject::Enum>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::optional<std::chrono::time_point<std::chrono::system_clock>>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::optional<realm::uuid>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::optional<realm::object_id>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::optional<realm::decimal128>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::optional<std::vector<uint8_t>>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<AllTypesObjectLink*>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<AllTypesObjectEmbedded*>>, "Default constructor is private.");
+
+        static_assert(!std::is_constructible_v<managed<std::vector<int64_t>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::vector<double>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::vector<bool>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::vector<std::string>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::vector<realm::uuid>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::vector<realm::object_id>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::vector<realm::decimal128>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::vector<std::vector<std::uint8_t>>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::vector<std::chrono::time_point<std::chrono::system_clock>>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::vector<realm::mixed>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::vector<realm::AllTypesObject::Enum>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::vector<AllTypesObjectLink *>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::vector<AllTypesObjectEmbedded *>>>, "Default constructor is private.");
+
+        static_assert(!std::is_constructible_v<managed<std::set<int64_t>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::set<double>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::set<bool>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::set<std::string>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::set<realm::uuid>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::set<realm::object_id>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::set<realm::decimal128>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::set<std::vector<std::uint8_t>>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::set<std::chrono::time_point<std::chrono::system_clock>>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::set<realm::mixed>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::set<realm::AllTypesObject::Enum>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::set<AllTypesObjectLink *>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::set<AllTypesObjectEmbedded *>>>, "Default constructor is private.");
+
+        static_assert(!std::is_constructible_v<managed<std::map<std::string, int64_t>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::map<std::string, double>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::map<std::string, bool>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::map<std::string, std::string>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::map<std::string, realm::uuid>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::map<std::string, realm::object_id>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::map<std::string, realm::decimal128>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::map<std::string, std::vector<std::uint8_t>>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::map<std::string, std::chrono::time_point<std::chrono::system_clock>>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::map<std::string, realm::mixed>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::map<std::string, realm::AllTypesObject::Enum>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::map<std::string, AllTypesObjectLink *>>>, "Default constructor is private.");
+        static_assert(!std::is_constructible_v<managed<std::map<std::string, AllTypesObjectEmbedded *>>>, "Default constructor is private.");
     }
 }

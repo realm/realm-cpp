@@ -53,13 +53,15 @@ namespace realm::internal::bridge {
     struct obj_link {
         obj_link(const ObjLink&);
         obj_link();
-        obj_link(const obj_link& other) ;
-        obj_link& operator=(const obj_link& other) ;
+        obj_link(const obj_link& other);
+        obj_link(uint32_t table_key, obj_key obj_key);
+        obj_link& operator=(const obj_link& other);
         obj_link(obj_link&& other);
         obj_link& operator=(obj_link&& other);
         ~obj_link();
         operator ObjLink() const;
         obj_key get_obj_key();
+        uint32_t get_table_key();
     private:
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::ObjLink m_obj_link[1];

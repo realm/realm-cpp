@@ -103,6 +103,10 @@ namespace realm {
             return ret;
         }
 
+        [[nodiscard]] results<T> as_results() const {
+            return results<T>(realm::internal::bridge::list(*m_realm, *m_obj, m_key).as_results());
+        }
+
         realm::notification_token observe(std::function<void(realm::collection_change)>&& fn) {
             auto list = std::make_shared<realm::internal::bridge::list>(*m_realm, *m_obj, m_key);
             realm::notification_token token = list->add_notification_callback(
@@ -158,10 +162,20 @@ namespace realm {
             return results<T>(internal::bridge::list(*m_realm, *m_obj, m_key)
                                       .sort(std::vector<internal::bridge::sort_descriptor>({{"self", ascending}})));
         }
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 
     template<typename T>
     struct managed<std::vector<T*>> : managed_base {
+    public:
         [[nodiscard]] std::vector<T*> detach() const {
             auto list = realm::internal::bridge::list(*m_realm, *m_obj, m_key);
             size_t count = list.size();
@@ -183,6 +197,10 @@ namespace realm {
                 ret.push_back(v);
             }
             return ret;
+        }
+
+        [[nodiscard]] results<T*> as_results() const {
+            return results<T*>(realm::internal::bridge::list(*m_realm, *m_obj, m_key).as_results());
         }
 
         class iterator {
@@ -311,13 +329,7 @@ namespace realm {
         }
         typename managed<T*>::ref_type operator[](size_t idx) const {
             auto list = realm::internal::bridge::list(*m_realm, *m_obj, m_key);
-            managed<T> m(realm::internal::bridge::get<realm::internal::bridge::obj>(list, idx), *m_realm);
-            std::apply([&m](auto &&...ptr) {
-                std::apply([&](auto &&...name) {
-                    ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
-                }, managed<T>::managed_pointers_names);
-            }, managed<T>::managed_pointers());
-            return {std::move(m)};
+            return typename managed<T*>::ref_type(managed<T>(realm::internal::bridge::get<realm::internal::bridge::obj>(list, idx), *m_realm));
         }
 
         realm::notification_token observe(std::function<void(realm::collection_change)>&& fn) {
@@ -358,6 +370,15 @@ namespace realm {
             auto table_ref = m_obj->get_target_table(m_key);
             return results<T>(internal::bridge::results(*m_realm, table_ref)).sort(sort_descriptors);
         }
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 } // namespace realm
 

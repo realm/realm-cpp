@@ -65,6 +65,7 @@ namespace realm {
 
     //MARK: - managed string
     template <> struct managed<std::string> : managed_base {
+        using value_type = std::string;
         using managed<std::string>::managed_base::managed_base;
         using managed<std::string>::managed_base::operator=;
 
@@ -102,14 +103,6 @@ namespace realm {
 
 
         [[nodiscard]] size_t size() const noexcept;
-#ifdef __cpp_lib_starts_ends_with
-        [[nodiscard]] bool starts_with(std::string_view) const noexcept;
-        [[nodiscard]] bool ends_with(std::string_view) const noexcept;
-#endif
-#ifdef __cpp_lib_string_contains
-        [[nodiscard]] bool contains(std::string_view) const noexcept;
-#endif
-
         //MARK: -   operations
         void clear() noexcept;
         void push_back(char c);
@@ -127,23 +120,22 @@ namespace realm {
         rbool operator!=(const char* rhs) const noexcept;
         rbool contains(const std::string &s) const noexcept;
         rbool empty() const noexcept;
-#ifdef __cpp_impl_three_way_comparison
-        inline auto operator<=>(const std::string& rhs) const noexcept {
-            return get().compare(rhs) <=> 0;
-        }
-        inline auto operator<=>(const char* rhs) const noexcept {
-            return get().compare(rhs) <=> 0;
-        }
-#else
-#endif
     private:
         friend struct char_reference;
         friend struct const_char_reference;
         void inline set(const std::string& v) { m_obj->template set<std::string>(m_key, v); }
         [[nodiscard]] inline std::string get() const { return m_obj->get<std::string>(m_key); }
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 
-    template <> struct managed<std::optional<std::string>> : public managed<std::string> {
+    template <> struct managed<std::optional<std::string>> final : public managed<std::string> {
+        using value_type = std::optional<std::string>;
         using managed<std::string>::operator=;
         managed& operator =(std::optional<std::string>&& v) { set(std::move(v)); return *this; }
         managed& operator =(const std::optional<std::string>& v) { set(v); return *this; }
@@ -165,6 +157,13 @@ namespace realm {
         rbool operator!=(const std::optional<std::string>& rhs) const noexcept;
     private:
         void inline set(const std::optional<std::string>& v) { m_obj->template set<std::optional<std::string>>(m_key, v); }
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
     };
 }
 

@@ -71,8 +71,16 @@ namespace realm {
         primary_key<int64_t> _id;
         std::string str_col;
         StringObject* str_link_col = nullptr;
+
+        std::vector<std::string> list_str_col;
+        std::vector<StringObject*> list_obj_col;
+        std::set<std::string> set_str_col;
+        std::set<StringObject*> set_obj_col;
+        std::map<std::string, std::string> map_str_col;
+        std::map<std::string, StringObject*> map_link_col;
+
     };
-    REALM_SCHEMA(AllTypesObjectLink, _id, str_col, str_link_col)
+    REALM_SCHEMA(AllTypesObjectLink, _id, str_col, str_link_col, list_str_col, list_obj_col, set_str_col, set_obj_col, map_str_col, map_link_col)
 
     struct SetParentObject {
         primary_key<int64_t> _id;

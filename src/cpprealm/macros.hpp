@@ -119,6 +119,106 @@
 #define FE_97(WHAT, cls, X, ...) WHAT(cls, X)FE_96(WHAT, cls, __VA_ARGS__)
 #define FE_98(WHAT, cls, X, ...) WHAT(cls, X)FE_97(WHAT, cls, __VA_ARGS__)
 #define FE_99(WHAT, cls, X, ...) WHAT(cls, X)FE_98(WHAT, cls, __VA_ARGS__)
+#define FE_100(WHAT, cls, X, ...) WHAT(cls, X) FE_99(WHAT, cls, __VA_ARGS__)
+#define FE_101(WHAT, cls, X, ...) WHAT(cls, X) FE_100(WHAT, cls, __VA_ARGS__)
+#define FE_102(WHAT, cls, X, ...) WHAT(cls, X) FE_101(WHAT, cls, __VA_ARGS__)
+#define FE_103(WHAT, cls, X, ...) WHAT(cls, X) FE_102(WHAT, cls, __VA_ARGS__)
+#define FE_104(WHAT, cls, X, ...) WHAT(cls, X) FE_103(WHAT, cls, __VA_ARGS__)
+#define FE_105(WHAT, cls, X, ...) WHAT(cls, X) FE_104(WHAT, cls, __VA_ARGS__)
+#define FE_106(WHAT, cls, X, ...) WHAT(cls, X) FE_105(WHAT, cls, __VA_ARGS__)
+#define FE_107(WHAT, cls, X, ...) WHAT(cls, X) FE_106(WHAT, cls, __VA_ARGS__)
+#define FE_108(WHAT, cls, X, ...) WHAT(cls, X) FE_107(WHAT, cls, __VA_ARGS__)
+#define FE_109(WHAT, cls, X, ...) WHAT(cls, X) FE_108(WHAT, cls, __VA_ARGS__)
+#define FE_110(WHAT, cls, X, ...) WHAT(cls, X) FE_109(WHAT, cls, __VA_ARGS__)
+#define FE_111(WHAT, cls, X, ...) WHAT(cls, X) FE_110(WHAT, cls, __VA_ARGS__)
+#define FE_112(WHAT, cls, X, ...) WHAT(cls, X) FE_111(WHAT, cls, __VA_ARGS__)
+#define FE_113(WHAT, cls, X, ...) WHAT(cls, X) FE_112(WHAT, cls, __VA_ARGS__)
+#define FE_114(WHAT, cls, X, ...) WHAT(cls, X) FE_113(WHAT, cls, __VA_ARGS__)
+#define FE_115(WHAT, cls, X, ...) WHAT(cls, X) FE_114(WHAT, cls, __VA_ARGS__)
+#define FE_116(WHAT, cls, X, ...) WHAT(cls, X) FE_115(WHAT, cls, __VA_ARGS__)
+#define FE_117(WHAT, cls, X, ...) WHAT(cls, X) FE_116(WHAT, cls, __VA_ARGS__)
+#define FE_118(WHAT, cls, X, ...) WHAT(cls, X) FE_117(WHAT, cls, __VA_ARGS__)
+#define FE_119(WHAT, cls, X, ...) WHAT(cls, X) FE_118(WHAT, cls, __VA_ARGS__)
+#define FE_120(WHAT, cls, X, ...) WHAT(cls, X) FE_119(WHAT, cls, __VA_ARGS__)
+#define FE_121(WHAT, cls, X, ...) WHAT(cls, X) FE_120(WHAT, cls, __VA_ARGS__)
+#define FE_122(WHAT, cls, X, ...) WHAT(cls, X) FE_121(WHAT, cls, __VA_ARGS__)
+#define FE_123(WHAT, cls, X, ...) WHAT(cls, X) FE_122(WHAT, cls, __VA_ARGS__)
+#define FE_124(WHAT, cls, X, ...) WHAT(cls, X) FE_123(WHAT, cls, __VA_ARGS__)
+#define FE_125(WHAT, cls, X, ...) WHAT(cls, X) FE_124(WHAT, cls, __VA_ARGS__)
+#define FE_126(WHAT, cls, X, ...) WHAT(cls, X) FE_125(WHAT, cls, __VA_ARGS__)
+#define FE_127(WHAT, cls, X, ...) WHAT(cls, X) FE_126(WHAT, cls, __VA_ARGS__)
+#define FE_128(WHAT, cls, X, ...) WHAT(cls, X) FE_127(WHAT, cls, __VA_ARGS__)
+#define FE_129(WHAT, cls, X, ...) WHAT(cls, X) FE_128(WHAT, cls, __VA_ARGS__)
+#define FE_130(WHAT, cls, X, ...) WHAT(cls, X) FE_129(WHAT, cls, __VA_ARGS__)
+#define FE_131(WHAT, cls, X, ...) WHAT(cls, X) FE_130(WHAT, cls, __VA_ARGS__)
+#define FE_132(WHAT, cls, X, ...) WHAT(cls, X) FE_131(WHAT, cls, __VA_ARGS__)
+#define FE_133(WHAT, cls, X, ...) WHAT(cls, X) FE_132(WHAT, cls, __VA_ARGS__)
+#define FE_134(WHAT, cls, X, ...) WHAT(cls, X) FE_133(WHAT, cls, __VA_ARGS__)
+#define FE_135(WHAT, cls, X, ...) WHAT(cls, X) FE_134(WHAT, cls, __VA_ARGS__)
+#define FE_136(WHAT, cls, X, ...) WHAT(cls, X) FE_135(WHAT, cls, __VA_ARGS__)
+#define FE_137(WHAT, cls, X, ...) WHAT(cls, X) FE_136(WHAT, cls, __VA_ARGS__)
+#define FE_138(WHAT, cls, X, ...) WHAT(cls, X) FE_137(WHAT, cls, __VA_ARGS__)
+#define FE_139(WHAT, cls, X, ...) WHAT(cls, X) FE_138(WHAT, cls, __VA_ARGS__)
+#define FE_140(WHAT, cls, X, ...) WHAT(cls, X) FE_139(WHAT, cls, __VA_ARGS__)
+#define FE_141(WHAT, cls, X, ...) WHAT(cls, X) FE_140(WHAT, cls, __VA_ARGS__)
+#define FE_142(WHAT, cls, X, ...) WHAT(cls, X) FE_141(WHAT, cls, __VA_ARGS__)
+#define FE_143(WHAT, cls, X, ...) WHAT(cls, X) FE_142(WHAT, cls, __VA_ARGS__)
+#define FE_144(WHAT, cls, X, ...) WHAT(cls, X) FE_143(WHAT, cls, __VA_ARGS__)
+#define FE_145(WHAT, cls, X, ...) WHAT(cls, X) FE_144(WHAT, cls, __VA_ARGS__)
+#define FE_146(WHAT, cls, X, ...) WHAT(cls, X) FE_145(WHAT, cls, __VA_ARGS__)
+#define FE_147(WHAT, cls, X, ...) WHAT(cls, X) FE_146(WHAT, cls, __VA_ARGS__)
+#define FE_148(WHAT, cls, X, ...) WHAT(cls, X) FE_147(WHAT, cls, __VA_ARGS__)
+#define FE_149(WHAT, cls, X, ...) WHAT(cls, X) FE_148(WHAT, cls, __VA_ARGS__)
+#define FE_150(WHAT, cls, X, ...) WHAT(cls, X) FE_149(WHAT, cls, __VA_ARGS__)
+#define FE_151(WHAT, cls, X, ...) WHAT(cls, X) FE_150(WHAT, cls, __VA_ARGS__)
+#define FE_152(WHAT, cls, X, ...) WHAT(cls, X) FE_151(WHAT, cls, __VA_ARGS__)
+#define FE_153(WHAT, cls, X, ...) WHAT(cls, X) FE_152(WHAT, cls, __VA_ARGS__)
+#define FE_154(WHAT, cls, X, ...) WHAT(cls, X) FE_153(WHAT, cls, __VA_ARGS__)
+#define FE_155(WHAT, cls, X, ...) WHAT(cls, X) FE_154(WHAT, cls, __VA_ARGS__)
+#define FE_156(WHAT, cls, X, ...) WHAT(cls, X) FE_155(WHAT, cls, __VA_ARGS__)
+#define FE_157(WHAT, cls, X, ...) WHAT(cls, X) FE_156(WHAT, cls, __VA_ARGS__)
+#define FE_158(WHAT, cls, X, ...) WHAT(cls, X) FE_157(WHAT, cls, __VA_ARGS__)
+#define FE_159(WHAT, cls, X, ...) WHAT(cls, X) FE_158(WHAT, cls, __VA_ARGS__)
+#define FE_160(WHAT, cls, X, ...) WHAT(cls, X) FE_159(WHAT, cls, __VA_ARGS__)
+#define FE_161(WHAT, cls, X, ...) WHAT(cls, X) FE_160(WHAT, cls, __VA_ARGS__)
+#define FE_162(WHAT, cls, X, ...) WHAT(cls, X) FE_161(WHAT, cls, __VA_ARGS__)
+#define FE_163(WHAT, cls, X, ...) WHAT(cls, X) FE_162(WHAT, cls, __VA_ARGS__)
+#define FE_164(WHAT, cls, X, ...) WHAT(cls, X) FE_163(WHAT, cls, __VA_ARGS__)
+#define FE_165(WHAT, cls, X, ...) WHAT(cls, X) FE_164(WHAT, cls, __VA_ARGS__)
+#define FE_166(WHAT, cls, X, ...) WHAT(cls, X) FE_165(WHAT, cls, __VA_ARGS__)
+#define FE_167(WHAT, cls, X, ...) WHAT(cls, X) FE_166(WHAT, cls, __VA_ARGS__)
+#define FE_168(WHAT, cls, X, ...) WHAT(cls, X) FE_167(WHAT, cls, __VA_ARGS__)
+#define FE_169(WHAT, cls, X, ...) WHAT(cls, X) FE_168(WHAT, cls, __VA_ARGS__)
+#define FE_170(WHAT, cls, X, ...) WHAT(cls, X) FE_169(WHAT, cls, __VA_ARGS__)
+#define FE_171(WHAT, cls, X, ...) WHAT(cls, X) FE_170(WHAT, cls, __VA_ARGS__)
+#define FE_172(WHAT, cls, X, ...) WHAT(cls, X) FE_171(WHAT, cls, __VA_ARGS__)
+#define FE_173(WHAT, cls, X, ...) WHAT(cls, X) FE_172(WHAT, cls, __VA_ARGS__)
+#define FE_174(WHAT, cls, X, ...) WHAT(cls, X) FE_173(WHAT, cls, __VA_ARGS__)
+#define FE_175(WHAT, cls, X, ...) WHAT(cls, X) FE_174(WHAT, cls, __VA_ARGS__)
+#define FE_176(WHAT, cls, X, ...) WHAT(cls, X) FE_175(WHAT, cls, __VA_ARGS__)
+#define FE_177(WHAT, cls, X, ...) WHAT(cls, X) FE_176(WHAT, cls, __VA_ARGS__)
+#define FE_178(WHAT, cls, X, ...) WHAT(cls, X) FE_177(WHAT, cls, __VA_ARGS__)
+#define FE_179(WHAT, cls, X, ...) WHAT(cls, X) FE_178(WHAT, cls, __VA_ARGS__)
+#define FE_180(WHAT, cls, X, ...) WHAT(cls, X) FE_179(WHAT, cls, __VA_ARGS__)
+#define FE_181(WHAT, cls, X, ...) WHAT(cls, X) FE_180(WHAT, cls, __VA_ARGS__)
+#define FE_182(WHAT, cls, X, ...) WHAT(cls, X) FE_181(WHAT, cls, __VA_ARGS__)
+#define FE_183(WHAT, cls, X, ...) WHAT(cls, X) FE_182(WHAT, cls, __VA_ARGS__)
+#define FE_184(WHAT, cls, X, ...) WHAT(cls, X) FE_183(WHAT, cls, __VA_ARGS__)
+#define FE_185(WHAT, cls, X, ...) WHAT(cls, X) FE_184(WHAT, cls, __VA_ARGS__)
+#define FE_186(WHAT, cls, X, ...) WHAT(cls, X) FE_185(WHAT, cls, __VA_ARGS__)
+#define FE_187(WHAT, cls, X, ...) WHAT(cls, X) FE_186(WHAT, cls, __VA_ARGS__)
+#define FE_188(WHAT, cls, X, ...) WHAT(cls, X) FE_187(WHAT, cls, __VA_ARGS__)
+#define FE_189(WHAT, cls, X, ...) WHAT(cls, X) FE_188(WHAT, cls, __VA_ARGS__)
+#define FE_190(WHAT, cls, X, ...) WHAT(cls, X) FE_189(WHAT, cls, __VA_ARGS__)
+#define FE_191(WHAT, cls, X, ...) WHAT(cls, X) FE_190(WHAT, cls, __VA_ARGS__)
+#define FE_192(WHAT, cls, X, ...) WHAT(cls, X) FE_191(WHAT, cls, __VA_ARGS__)
+#define FE_193(WHAT, cls, X, ...) WHAT(cls, X) FE_192(WHAT, cls, __VA_ARGS__)
+#define FE_194(WHAT, cls, X, ...) WHAT(cls, X) FE_193(WHAT, cls, __VA_ARGS__)
+#define FE_195(WHAT, cls, X, ...) WHAT(cls, X) FE_194(WHAT, cls, __VA_ARGS__)
+#define FE_196(WHAT, cls, X, ...) WHAT(cls, X) FE_195(WHAT, cls, __VA_ARGS__)
+#define FE_197(WHAT, cls, X, ...) WHAT(cls, X) FE_196(WHAT, cls, __VA_ARGS__)
+#define FE_198(WHAT, cls, X, ...) WHAT(cls, X) FE_197(WHAT, cls, __VA_ARGS__)
+#define FE_199(WHAT, cls, X, ...) WHAT(cls, X) FE_198(WHAT, cls, __VA_ARGS__)
 
 #define GET_MACRO(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, \
     _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26,\
@@ -126,19 +226,39 @@
     _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54,\
     _55, _56, _57, _58, _59, _60, _61, _62, _63, _64, _65, _66, _67, _68,\
     _69, _70, _71, _72, _73, _74, _75, _76, _77, _78, _79, _80, _81, _82,\
-    _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, _97, _98, _99, NAME, ...) NAME
+    _83, _84, _85, _86, _87, _88, _89, _90, _91, _92, _93, _94, _95, _96, \
+    _97, _98, _99, _100, _101, _102, _103, _104, _105, _106, _107, _108, _109, \
+    _110, _111, _112, _113, _114, _115, _116, _117, _118, _119, _120, _121, \
+    _122, _123, _124, _125, _126, _127, _128, _129, _130, _131, _132, _133, \
+    _134, _135, _136, _137, _138, _139, _140, _141, _142, _143, _144, _145, \
+    _146, _147, _148, _149, _150, _151, _152, _153, _154, _155, _156, _157, \
+    _158, _159, _160, _161, _162, _163, _164, _165, _166, _167, _168, _169, \
+    _170, _171, _172, _173, _174, _175, _176, _177, _178, _179, _180, _181, \
+    _182, _183, _184, _185, _186, _187, _188, _189, _190, _191, _192, _193, \
+    _194, _195, _196, _197, _198, _199, NAME, ...) NAME \
 
 #define FOR_EACH(action, cls, ...) \
   GET_MACRO(_0, __VA_ARGS__,        \
-        FE_99, FE_98, FE_97, FE_96, FE_95, FE_94, FE_93, FE_92, FE_91, FE_90, FE_89, FE_88, \
-        FE_87, FE_86, FE_85, FE_84, FE_83, FE_82, FE_81, FE_80, FE_79, FE_78, FE_77, FE_76, \
-        FE_75, FE_74, FE_73, FE_72, FE_71, FE_70, FE_69, FE_68, FE_67, FE_66, FE_65, FE_64, \
-        FE_63, FE_62, FE_61, FE_60, FE_59, FE_58, FE_57, FE_56, FE_55, FE_54, FE_53, FE_52, \
-        FE_51, FE_50, FE_49, FE_48, FE_47, FE_46, FE_45, FE_44, FE_43, FE_42, FE_41, FE_40, \
-        FE_39, FE_38, FE_37, FE_36, FE_35, FE_34, FE_33, FE_32, FE_31, FE_30, FE_29, FE_28, \
-        FE_27, FE_26, FE_25, FE_24, FE_23, FE_22, FE_21, FE_20, FE_19, FE_18, FE_17, FE_16, \
-        FE_15, FE_14, FE_13, FE_12, FE_11, FE_10, FE_9, FE_8, FE_7, FE_6, FE_5, FE_4, FE_3, \
-        FE_2, FE_1, FE_0)(action, cls, __VA_ARGS__)
+        FE_199, FE_198, FE_197, FE_196, FE_195, FE_194, FE_193, FE_192, FE_191, FE_190, \
+        FE_189, FE_188, FE_187, FE_186, FE_185, FE_184, FE_183, FE_182, FE_181, FE_180, \
+        FE_179, FE_178, FE_177, FE_176, FE_175, FE_174, FE_173, FE_172, FE_171, FE_170, \
+        FE_169, FE_168, FE_167, FE_166, FE_165, FE_164, FE_163, FE_162, FE_161, FE_160, \
+        FE_159, FE_158, FE_157, FE_156, FE_155, FE_154, FE_153, FE_152, FE_151, FE_150, \
+        FE_149, FE_148, FE_147, FE_146, FE_145, FE_144, FE_143, FE_142, FE_141, FE_140, \
+        FE_139, FE_138, FE_137, FE_136, FE_135, FE_134, FE_133, FE_132, FE_131, FE_130, \
+        FE_129, FE_128, FE_127, FE_126, FE_125, FE_124, FE_123, FE_122, FE_121, FE_120, \
+        FE_119, FE_118, FE_117, FE_116, FE_115, FE_114, FE_113, FE_112, FE_111, FE_110, \
+        FE_109, FE_108, FE_107, FE_106, FE_105, FE_104, FE_103, FE_102, FE_101, FE_100, \
+        FE_99, FE_98, FE_97, FE_96, FE_95, FE_94, FE_93, FE_92, FE_91, FE_90, \
+        FE_89, FE_88, FE_87, FE_86, FE_85, FE_84, FE_83, FE_82, FE_81, FE_80, \
+        FE_79, FE_78, FE_77, FE_76, FE_75, FE_74, FE_73, FE_72, FE_71, FE_70, \
+        FE_69, FE_68, FE_67, FE_66, FE_65, FE_64, FE_63, FE_62, FE_61, FE_60, \
+        FE_59, FE_58, FE_57, FE_56, FE_55, FE_54, FE_53, FE_52, FE_51, FE_50, \
+        FE_49, FE_48, FE_47, FE_46, FE_45, FE_44, FE_43, FE_42, FE_41, FE_40, \
+        FE_39, FE_38, FE_37, FE_36, FE_35, FE_34, FE_33, FE_32, FE_31, FE_30, \
+        FE_29, FE_28, FE_27, FE_26, FE_25, FE_24, FE_23, FE_22, FE_21, FE_20, \
+        FE_19, FE_18, FE_17, FE_16, FE_15, FE_14, FE_13, FE_12, FE_11, FE_10, \
+        FE_9, FE_8, FE_7, FE_6, FE_5, FE_4, FE_3, FE_2, FE_1, FE_0)(action, cls, __VA_ARGS__)
 
 #define DECLARE_PERSISTED(cls, property) managed<decltype(cls::property)> property;
 #define DECLARE_PROPERTY(cls, p) realm::property<&cls::p>(#p),
@@ -177,6 +297,7 @@ constexpr constant_index< acc > counter_crumb( id, constant_index< rank >, const
 
 namespace realm {
     struct managed_base {
+        protected:
         managed_base() = default;
         managed_base(const managed_base& other) {
             m_obj = other.m_obj;
@@ -219,7 +340,7 @@ namespace realm {
             should_detect_usage_for_queries = false;
             query = nullptr;
         }
-
+    public:
         static constexpr bool is_object = false;
         internal::bridge::obj *m_obj = nullptr;
         internal::bridge::realm *m_realm = nullptr;

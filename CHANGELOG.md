@@ -1,3 +1,27 @@
+X.Y.Z Release notes (YYYY-MM-DD)
+=============================================================
+
+### Fixed
+* Managed objects would exhibit undefined behaviour when returned from the subscript operator in `std::vector` & `std::map`.
+
+### Enhancements
+* Add `realm::holds_alternative` which acts as a substitute to `std::holds_alternative` when using `managed<realm::mixed>`.
+* Add `managed<realm::mixed>::get_stored_link` for retrieving a link from a mixed proeprty type.
+* Add `managed<realm::mixed>::set_link` for setting a link in a mixed proeprty type.
+* Add compile time checking to prevent misuse of managed property types.
+* Add `managed<std::vector<>>::as_results()` to allow the ability to derive a `realm::results<>` collection from a managed vector.
+
+### Breaking Changes
+* None
+
+### Compatibility
+* Fileformat: Generates files with format v23. Reads and automatically upgrade from fileformat v5.
+
+### Internals
+* None
+
+----------------------------------------------
+
 1.0.0 Release notes (2024-01-08)
 =============================================================
 

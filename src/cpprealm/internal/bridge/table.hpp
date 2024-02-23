@@ -48,6 +48,8 @@ namespace realm {
             operator ConstTableRef() const;
 
             col_key get_column_key(const std::string_view &name) const;
+            uint32_t get_key() const;
+            std::string get_name() const;
 
             obj create_object_with_primary_key(const mixed &key) const;
 
