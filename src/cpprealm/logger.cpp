@@ -67,7 +67,7 @@ namespace realm {
         internal_logger(std::shared_ptr<logger> &&s) {
             m_logger = std::move(s);
         }
-        void do_log(util::Logger::Level level, const std::string &msg) override {
+        void do_log(util::Logger::Level level, const std::string &msg) {
             m_logger->do_log(log_level_for_level(level), msg);
         }
 
@@ -76,9 +76,9 @@ namespace realm {
     };
 
     void set_default_logger(std::shared_ptr<struct logger>&& l) {
-        util::Logger::set_default_logger(std::make_shared<internal_logger>(std::move(l)));
+//        util::Logger::set_default_logger(std::make_shared<internal_logger>(std::move(l)));
     }
     void set_default_level_threshold(logger::level l) {
-        util::Logger::set_default_level_threshold(log_level_for_level(l));
+//        util::Logger::set_default_level_threshold(log_level_for_level(l));
     }
 }
