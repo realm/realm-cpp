@@ -21,7 +21,6 @@
 #define __generate_query_operator_case_sensitive(op, type) \
     query &query::op(col_key column_key, type value, bool) { \
         this->operator=(get_query()->op(column_key, value)); \
-        std::cout <<    get_query()->get_description() << "\n";                                                \
         return *this; \
     }
 
