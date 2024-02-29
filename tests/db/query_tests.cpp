@@ -9,52 +9,6 @@ namespace realm {
 #define query_string_results_size(Cls, str, args)  \
     realm.template objects<Cls>().where(str, args).size()
 
-//
-//    // Type trait to convert int to int64_t
-//    template<typename T>
-//    struct TypeConverter {
-//        using Type = T;
-//    };
-//
-////    template<>
-////    struct TypeConverter<int> {
-////        using Type = int64_t;
-////    };
-//
-//    template<typename T>
-//    struct TypeConverter<T*> {
-//        using Type = managed<T>;
-//    };
-//
-//    template<typename... Ts>
-//    struct TypeConverter<std::variant<Ts...>> {
-//        using Type = std::variant<typename std::conditional<std::is_pointer_v<Ts>, managed<Ts>, Ts>::type...>;
-//    };
-//
-//#define EXTRACT(...) __VA_ARGS__
-//
-//// Macro to declare member with type conversion
-//#define DECLARE_MEMBER(type, name) typename TypeConverter<type>::Type name
-//
-//#define DECLARE_CLS(name) \
-//    struct MyClass { \
-//        DECLARE_MEMBER(EXTRACT(int), value1); \
-//        DECLARE_MEMBER(EXTRACT(double), value2); \
-//        DECLARE_MEMBER(EXTRACT(float), value3); \
-//        DECLARE_MEMBER(EXTRACT(std::variant<int, std::string, AllTypesObject*>), value4); \
-//        MyClass() = default; \
-//     void printValues() { \
-//            std::cout << "Value 1: " << value1 << std::endl; \
-//            std::cout << "Value 2: " << value2 << std::endl; \
-//            std::cout << "Value 3: " << value3 << std::endl; \
-//            std::visit([](auto&& arg) { \
-//                std::cout << "Value 4: " << arg << std::endl; \
-//            }, value4); \
-//        } \
-//    };              \
-//
-//    DECLARE_CLS(cls_name)
-
     TEST_CASE("query") {
         realm_path path;
         realm::db_config config;
