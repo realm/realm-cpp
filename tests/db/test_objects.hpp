@@ -91,20 +91,6 @@ namespace realm {
     REALM_SCHEMA(SetParentObject, _id, set1, set2, set3)
 
     struct AllTypesObject {
-
-        using mixed = std::variant<
-                std::monostate,
-                int64_t,
-                bool,
-                std::string,
-                double,
-                std::vector<uint8_t>,
-                std::chrono::time_point<std::chrono::system_clock>,
-                uuid,
-                object_id,
-                decimal128,
-                AllTypesObjectLink*>;
-
         enum class Enum {
             one, two
         };
