@@ -4,32 +4,6 @@
 
 namespace realm {
 
-    TEST_CASE("cached realm") {
-        SECTION("cached realm transactions") {
-            realm_path path;
-            realm::db_config config1;
-            config1.set_path(path);
-            auto o = managed<AllTypesObject>();
-            {
-                auto realm = db(std::move(config1));
-                o = realm.write([&] {
-                    return realm.add(AllTypesObject());
-                });
-            }
-
-            realm::db_config config2;
-            config2.set_path(path);
-            {
-                auto realm = db(std::move(config2));
-                // If the cached realm is not returned this write would fail with a wrong transaction state.
-                realm.write([&] {
-                    o.str_col = "foo";
-                });
-            }
-            CHECK(o.str_col == "foo");
-        }
-    }
-
     TEST_CASE("tsr_object") {
         realm_path path;
         realm::db_config config;

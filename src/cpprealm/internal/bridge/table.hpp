@@ -28,12 +28,98 @@ namespace realm {
     class ConstTableRef;
     class Mixed;
     class TableView;
+    class LinkChain;
+    class Subexpr;
 
     namespace internal::bridge {
         struct obj;
         struct mixed;
         struct col_key;
         struct query;
+        struct table;
+        struct uuid;
+        struct object_id;
+        struct decimal128;
+        struct binary;
+        struct timestamp;
+
+        struct subexpr {
+            subexpr(subexpr&& other) = default;
+            subexpr& operator=(subexpr&& other) = default;
+            ~subexpr() = default;
+            subexpr(std::unique_ptr<Subexpr> other);
+
+            query equal(const std::optional<int64_t>& rhs) const;
+            query not_equal(const std::optional<int64_t>& rhs) const;
+            query greater(const std::optional<int64_t>& rhs) const;
+            query less(const std::optional<int64_t>& rhs) const;
+            query greater_equal(const std::optional<int64_t>& rhs) const;
+            query less_equal(const std::optional<int64_t>& rhs) const;
+
+            query equal(const std::optional<bool>& rhs) const;
+            query not_equal(const std::optional<bool>& rhs) const;
+
+            query equal(const std::optional<double>& rhs) const;
+            query not_equal(const std::optional<double>& rhs) const;
+            query greater(const std::optional<double>& rhs) const;
+            query less(const std::optional<double>& rhs) const;
+            query greater_equal(const std::optional<double>& rhs) const;
+            query less_equal(const std::optional<double>& rhs) const;
+
+            query equal(const std::optional<binary>& rhs) const;
+            query not_equal(const std::optional<binary>& rhs) const;
+
+            query equal(const std::optional<timestamp>& rhs) const;
+            query not_equal(const std::optional<timestamp>& rhs) const;
+            query greater(const std::optional<timestamp>& rhs) const;
+            query less(const std::optional<timestamp>& rhs) const;
+            query greater_equal(const std::optional<timestamp>& rhs) const;
+            query less_equal(const std::optional<timestamp>& rhs) const;
+
+            query equal(const std::optional<std::string>& rhs) const;
+            query not_equal(const std::optional<std::string>& rhs) const;
+            query contains(const std::optional<std::string>& rhs, bool case_sensitive = true) const;
+
+            query equal(const std::optional<internal::bridge::uuid>& rhs) const;
+            query not_equal(const std::optional<internal::bridge::uuid>& rhs) const;
+
+            query equal(const std::optional<internal::bridge::object_id>& rhs) const;
+            query not_equal(const std::optional<internal::bridge::object_id>& rhs) const;
+
+            query equal(const std::optional<internal::bridge::decimal128>& rhs) const;
+            query not_equal(const std::optional<internal::bridge::decimal128>& rhs) const;
+            query greater(const std::optional<internal::bridge::decimal128>& rhs) const;
+            query less(const std::optional<internal::bridge::decimal128>& rhs) const;
+            query greater_equal(const std::optional<internal::bridge::decimal128>& rhs) const;
+            query less_equal(const std::optional<internal::bridge::decimal128>& rhs) const;
+
+            query mixed_equal(const internal::bridge::mixed& rhs) const;
+            query mixed_not_equal(const internal::bridge::mixed& rhs) const;
+
+            std::shared_ptr<Subexpr> m_subexpr;
+        };
+
+        struct link_chain {
+            link_chain();
+            link_chain(const link_chain& other) ;
+            link_chain& operator=(const link_chain& other) ;
+            link_chain(link_chain&& other);
+            link_chain& operator=(link_chain&& other);
+            ~link_chain() = default;
+            link_chain(const LinkChain& other);
+
+            link_chain& link(col_key);
+            link_chain& link(std::string col_name);
+            link_chain& backlink(const table& origin, col_key origin_col_key);
+
+            template<typename>
+            subexpr column(col_key);
+
+            subexpr subquery(query subquery);
+            table get_table();
+
+            std::shared_ptr<LinkChain> m_link_chain;
+        };
 
         struct table {
             table();
@@ -56,10 +142,12 @@ namespace realm {
             obj create_object(const obj_key &obj_key = {}) const;
 
             table get_link_target(const col_key col_key) const;
+            link_chain get_link(const col_key col_key) const;
 
             [[nodiscard]] bool is_embedded() const;
 
             struct query query(const std::string &, const std::vector <mixed>&) const;
+            struct query where() const;
 
             void remove_object(const obj_key &) const;
             obj get_object(const obj_key&) const;

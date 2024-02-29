@@ -8,8 +8,355 @@
 #include <realm/mixed.hpp>
 #include <realm/table.hpp>
 #include <realm/table_view.hpp>
+#include <realm/query_expression.hpp>
 
 namespace realm::internal::bridge {
+
+    subexpr::subexpr(std::unique_ptr<Subexpr> other) {
+        m_subexpr = std::move(other);
+    }
+
+    // INT
+    query subexpr::equal(const std::optional<int64_t>& rhs) const {
+        return *std::dynamic_pointer_cast<::realm::Columns<Int>>(m_subexpr) == rhs;
+    }
+
+    query subexpr::not_equal(const std::optional<int64_t>& rhs) const {
+        return *std::dynamic_pointer_cast<::realm::Columns<Int>>(m_subexpr) != rhs;
+    }
+
+    query subexpr::greater(const std::optional<int64_t>& rhs) const {
+        return *std::dynamic_pointer_cast<::realm::Columns<Int>>(m_subexpr) > rhs;
+    }
+
+    query subexpr::less(const std::optional<int64_t>& rhs) const {
+        return *std::dynamic_pointer_cast<::realm::Columns<Int>>(m_subexpr) < rhs;
+    }
+
+    query subexpr::greater_equal(const std::optional<int64_t>& rhs) const {
+        return *std::dynamic_pointer_cast<::realm::Columns<Int>>(m_subexpr) >= rhs;
+    }
+
+    query subexpr::less_equal(const std::optional<int64_t>& rhs) const {
+        return *std::dynamic_pointer_cast<::realm::Columns<Int>>(m_subexpr) <= rhs;
+    }
+
+    // BOOL
+    query subexpr::equal(const std::optional<bool>& rhs) const {
+        return *std::dynamic_pointer_cast<::realm::Columns<Bool>>(m_subexpr) == rhs;
+    }
+
+    query subexpr::not_equal(const std::optional<bool>& rhs) const {
+        return *std::dynamic_pointer_cast<::realm::Columns<Bool>>(m_subexpr) != rhs;
+    }
+
+    // DOUBLE
+    query subexpr::equal(const std::optional<double>& rhs) const {
+        return *std::dynamic_pointer_cast<::realm::Columns<Double>>(m_subexpr) == rhs;
+    }
+
+    query subexpr::not_equal(const std::optional<double>& rhs) const {
+        return *std::dynamic_pointer_cast<::realm::Columns<Double>>(m_subexpr) != rhs;
+    }
+
+    query subexpr::greater(const std::optional<double>& rhs) const {
+        return *std::dynamic_pointer_cast<::realm::Columns<Double>>(m_subexpr) > rhs;
+    }
+
+    query subexpr::less(const std::optional<double>& rhs) const {
+        return *std::dynamic_pointer_cast<::realm::Columns<Double>>(m_subexpr) < rhs;
+    }
+
+    query subexpr::greater_equal(const std::optional<double>& rhs) const {
+        return *std::dynamic_pointer_cast<::realm::Columns<Double>>(m_subexpr) >= rhs;
+    }
+
+    query subexpr::less_equal(const std::optional<double>& rhs) const {
+        return *std::dynamic_pointer_cast<::realm::Columns<Double>>(m_subexpr) <= rhs;
+    }
+
+    // BINARY
+    query subexpr::equal(const std::optional<binary>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<BinaryData>>(m_subexpr) == *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<BinaryData>>(m_subexpr) == ::realm::null();
+        }
+    }
+
+    query subexpr::not_equal(const std::optional<binary>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<BinaryData>>(m_subexpr) != *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<BinaryData>>(m_subexpr) != ::realm::null();
+        }
+    }
+
+    // TIMESTAMP
+    query subexpr::equal(const std::optional<timestamp>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<Timestamp>>(m_subexpr) == *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<Timestamp>>(m_subexpr) == ::realm::null();
+        }
+    }
+
+    query subexpr::not_equal(const std::optional<timestamp>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<Timestamp>>(m_subexpr) != *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<Timestamp>>(m_subexpr) != ::realm::null();
+        }
+    }
+
+    query subexpr::greater(const std::optional<timestamp>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<Timestamp>>(m_subexpr) > *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<Timestamp>>(m_subexpr) > ::realm::null();
+        }
+    }
+
+    query subexpr::less(const std::optional<timestamp>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<Timestamp>>(m_subexpr) < *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<Timestamp>>(m_subexpr) < ::realm::null();
+        }
+    }
+
+    query subexpr::greater_equal(const std::optional<timestamp>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<Timestamp>>(m_subexpr) >= *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<Timestamp>>(m_subexpr) >= ::realm::null();
+        }
+    }
+
+    query subexpr::less_equal(const std::optional<timestamp>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<Timestamp>>(m_subexpr) <= *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<Timestamp>>(m_subexpr) <= ::realm::null();
+        }
+    }
+
+    // UUID
+    query subexpr::equal(const std::optional<uuid>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<UUID>>(m_subexpr) == *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<UUID>>(m_subexpr) == ::realm::null();
+        }
+    }
+
+    query subexpr::not_equal(const std::optional<uuid>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<UUID>>(m_subexpr) != *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<UUID>>(m_subexpr) != ::realm::null();
+        }
+    }
+
+    // OBJECT_ID
+    query subexpr::equal(const std::optional<object_id>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<ObjectId>>(m_subexpr) == *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<ObjectId>>(m_subexpr) == ::realm::null();
+        }
+    }
+
+    query subexpr::not_equal(const std::optional<object_id>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<ObjectId>>(m_subexpr) != *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<ObjectId>>(m_subexpr) != ::realm::null();
+        }
+    }
+
+    // DECIMAL128
+    query subexpr::equal(const std::optional<decimal128>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<Decimal128>>(m_subexpr) == *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<Decimal128>>(m_subexpr) == ::realm::null();
+        }
+    }
+
+    query subexpr::not_equal(const std::optional<decimal128>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<Decimal128>>(m_subexpr) != *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<Decimal128>>(m_subexpr) != ::realm::null();
+        }
+    }
+
+    query subexpr::greater(const std::optional<decimal128>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<Decimal128>>(m_subexpr) > *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<Decimal128>>(m_subexpr) > ::realm::null();
+        }
+    }
+
+    query subexpr::less(const std::optional<decimal128>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<Decimal128>>(m_subexpr) < *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<Decimal128>>(m_subexpr) < ::realm::null();
+        }
+    }
+
+    query subexpr::greater_equal(const std::optional<decimal128>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<Decimal128>>(m_subexpr) >= *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<Decimal128>>(m_subexpr) >= ::realm::null();
+        }
+    }
+
+    query subexpr::less_equal(const std::optional<decimal128>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<Decimal128>>(m_subexpr) <= *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<Decimal128>>(m_subexpr) <= ::realm::null();
+        }
+    }
+
+    // STRING
+    query subexpr::equal(const std::optional<std::string>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<StringData>>(m_subexpr) == *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<StringData>>(m_subexpr) >= ::realm::null();
+        }
+    }
+
+    query subexpr::not_equal(const std::optional<std::string>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<StringData>>(m_subexpr) != *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<StringData>>(m_subexpr) != ::realm::null();
+        }
+    }
+
+    query subexpr::contains(const std::optional<std::string>& rhs, bool case_sensitive) const {
+        return std::dynamic_pointer_cast<::realm::Columns<StringData>>(m_subexpr)->contains(rhs, case_sensitive);
+    }
+
+    // MIXED
+    query subexpr::mixed_equal(const internal::bridge::mixed& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<Mixed>>(m_subexpr) == rhs.operator Mixed();
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<Mixed>>(m_subexpr) == ::realm::null();
+        }
+    }
+
+    query subexpr::mixed_not_equal(const internal::bridge::mixed& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<Mixed>>(m_subexpr) != rhs.operator Mixed();
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<Mixed>>(m_subexpr) != ::realm::null();
+        }
+    }
+
+    link_chain::link_chain() {
+        m_link_chain = std::make_shared<LinkChain>();
+    }
+
+    link_chain::link_chain(const link_chain& other) {
+        m_link_chain = other.m_link_chain;
+    }
+
+    link_chain& link_chain::operator=(const link_chain& other) {
+        m_link_chain = other.m_link_chain;
+        return *this;
+    }
+
+    link_chain::link_chain(link_chain&& other) {
+        m_link_chain = std::move(other.m_link_chain);
+    }
+
+    link_chain& link_chain::operator=(link_chain&& other) {
+        m_link_chain = std::move(other.m_link_chain);
+        return *this;
+    }
+
+    link_chain::link_chain(const LinkChain& other) {
+        m_link_chain = std::make_shared<LinkChain>(other);
+    }
+
+    link_chain& link_chain::link(col_key ck) {
+        m_link_chain->link(ck);
+        return *this;
+    }
+
+    link_chain& link_chain::link(std::string col_name) {
+        m_link_chain->link(col_name);
+        return *this;
+    }
+
+    link_chain& link_chain::backlink(const table& origin, col_key origin_col_key) {
+        reinterpret_cast<LinkChain*>(&m_link_chain)->backlink(origin.operator ConstTableRef().operator*(), origin_col_key);
+        return *this;
+    }
+
+    template<>
+    subexpr link_chain::column<int64_t>(col_key col_name) {
+        return m_link_chain->column<Int>(col_name).clone();
+    }
+
+    template<>
+    subexpr link_chain::column<bool>(col_key col_name) {
+        return m_link_chain->column<Bool>(col_name).clone();
+    }
+
+    template<>
+    subexpr link_chain::column<std::string>(col_key col_name) {
+        return m_link_chain->column<StringData>(col_name).clone();
+    }
+
+    template<>
+    subexpr link_chain::column<std::vector<uint8_t>>(col_key col_name) {
+        return m_link_chain->column<BinaryData>(col_name).clone();
+    }
+
+    template<>
+    subexpr link_chain::column<std::chrono::time_point<std::chrono::system_clock>>(col_key col_name) {
+        return m_link_chain->column<Timestamp>(col_name).clone();
+    }
+
+    template<>
+    subexpr link_chain::column<double>(col_key col_name) {
+        return m_link_chain->column<Double>(col_name).clone();
+    }
+
+    template<>
+    subexpr link_chain::column<::realm::decimal128>(col_key col_name) {
+        return m_link_chain->column<Decimal128>(col_name).clone();
+    }
+
+    template<>
+    subexpr link_chain::column<::realm::object_id>(col_key col_name) {
+        return m_link_chain->column<ObjectId>(col_name).clone();
+    }
+
+    template<>
+    subexpr link_chain::column<::realm::uuid>(col_key col_name) {
+        return m_link_chain->column<UUID>(col_name).clone();
+    }
+
+    subexpr link_chain::subquery(query subquery) {
+        auto expr = reinterpret_cast<LinkChain*>(&m_link_chain)->subquery(subquery);
+        return expr;
+    }
+
+    table link_chain::get_table() {
+        return reinterpret_cast< LinkChain*>(&m_link_chain)->get_current_table();
+    }
+
     table::table() {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_table) TableRef();
@@ -132,6 +479,10 @@ namespace realm::internal::bridge {
 
     table table::get_link_target(const col_key col_key) const {
         return static_cast<TableRef>(*this)->get_link_target(col_key);
+    }
+
+    link_chain table::get_link(const col_key col_key) const {
+        return static_cast<const TableRef>(*this)->link(col_key);
     }
 
     obj table::create_object_with_primary_key(const bridge::mixed& key) const {

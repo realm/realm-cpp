@@ -21,6 +21,9 @@
 
 #include <cpprealm/rbool.hpp>
 
+#include <cpprealm/db.hpp>
+#include <cpprealm/schema.hpp>
+
 namespace realm {
         template <typename, typename>
         struct managed;

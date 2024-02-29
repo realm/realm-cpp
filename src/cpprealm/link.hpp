@@ -92,7 +92,8 @@ namespace realm {
         };
         ref_type operator ->() const {
             if (should_detect_usage_for_queries) {
-                return ref_type(managed<T>::prepare_for_query(*m_realm));
+                this->rbool_query->add_link_chain(m_realm, m_key);
+                return ref_type(managed<T>::prepare_for_query(*m_realm, this->rbool_query));
             }
             return ref_type(managed<T>(m_obj->get_linked_object(m_key), *m_realm));
         }

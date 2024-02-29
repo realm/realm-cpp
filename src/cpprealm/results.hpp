@@ -24,12 +24,12 @@
 #include <cpprealm/internal/bridge/results.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/macros.hpp>
-#include <cpprealm/schema.hpp>
 #include <cpprealm/notifications.hpp>
 #include <cpprealm/schema.hpp>
+#include <cpprealm/rbool.hpp>
+#include <iostream>
 
 namespace realm {
-    class rbool;
     struct mutable_sync_subscription_set;
 }
 
@@ -43,45 +43,6 @@ namespace realm {
     struct results_base;
     template<typename T, typename Derived>
     struct results_common_base;
-
-
-    template<typename T>
-    struct query : public T {
-    private:
-        template<typename V>
-        void set_managed(V &prop, const internal::bridge::col_key &column_key, internal::bridge::realm& r) {
-            new(&prop.m_key) internal::bridge::col_key(column_key);
-            prop.m_realm = &r;
-        }
-
-        template<size_t N, typename P>
-        constexpr auto
-        prepare_for_query(internal::bridge::query &query, internal::bridge::object_schema &schema,
-                          internal::bridge::realm& r, P property) {
-            if constexpr (N + 1 == std::tuple_size_v<decltype(T::managed_pointers() )>) {
-                (this->*property).prepare_for_query(query);
-                set_managed((this->*property), schema.property_for_name(T::schema.names[N]).column_key(), r);
-                return;
-            } else {
-                (this->*property).prepare_for_query(query);
-                set_managed((this->*property), schema.property_for_name(T::schema.names[N]).column_key(), r);
-                return prepare_for_query<N + 1>(query, schema, r, std::get<N + 1>(T::managed_pointers() ));
-            }
-        }
-
-        query(internal::bridge::query &query, internal::bridge::object_schema &&schema, internal::bridge::realm& r) {
-            prepare_for_query<0>(query, schema, r, std::get<0>(T::managed_pointers()));
-        }
-        template<typename>
-        friend struct ::realm::results;
-        template<typename, typename, typename>
-        friend struct ::realm::results_base;
-        template<typename, typename>
-        friend struct ::realm::results_common_base;
-        template<typename, typename>
-        friend struct ::realm::managed;
-        friend struct ::realm::mutable_sync_subscription_set;
-    };
 
     template<typename T, typename Derived>
     struct results_common_base {
@@ -124,9 +85,9 @@ namespace realm {
             auto schema = realm.schema().find(managed<T>::schema.name);
             auto group = realm.read_group();
             auto table_ref = group.get_table(schema.table_key());
-            auto builder = internal::bridge::query(table_ref);
-            auto q = realm::query<managed<T>>(builder, std::move(schema), realm);
-            auto full_query = fn(q).q;
+            rbool query = rbool(internal::bridge::query(table_ref));
+            auto query_object = managed<T>::prepare_for_query(realm, &query);
+            auto full_query = fn(query_object).q;
             return Derived(internal::bridge::results(m_parent.get_realm(), full_query));
         }
 

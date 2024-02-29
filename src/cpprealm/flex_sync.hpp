@@ -93,8 +93,12 @@ namespace realm {
             auto builder = internal::bridge::query(table_ref);
 
             if (query_fn) {
-                auto q = realm::query<managed<T>>(builder, std::move(schema), m_realm);
-                auto full_query = (*query_fn)(q).q;
+                auto schema = m_realm.get().schema().find(managed<T>::schema.name);
+                auto group = m_realm.get().read_group();
+                auto table_ref = group.get_table(schema.table_key());
+                rbool query = rbool(internal::bridge::query(table_ref));
+                auto query_object = managed<T>::prepare_for_query(m_realm, &query);
+                auto full_query = (*query_fn)(query_object).q;
                 insert_or_assign(name, full_query);
             } else {
                 insert_or_assign(name, builder);

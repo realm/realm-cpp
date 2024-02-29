@@ -5,9 +5,7 @@ namespace realm {
 #define __cpprealm_build_pk_query(op, name, type, rhs_type) \
     rbool managed<primary_key<type>>::operator op(const rhs_type& rhs) const noexcept { \
         if (this->should_detect_usage_for_queries) { \
-            auto query = internal::bridge::query(this->query->get_table()); \
-            query.name(this->m_key, serialize(rhs)); \
-            return query; \
+            return this->rbool_query->name(m_key, rhs); \
         } \
         return serialize(detach().value) op serialize(rhs); \
     } \
@@ -16,9 +14,7 @@ namespace realm {
 #define __cpprealm_build_int_pk_query(op, name, type, rhs_type, cast) \
     rbool managed<primary_key<type>>::operator op(const rhs_type& rhs) const noexcept { \
         if (this->should_detect_usage_for_queries) { \
-            auto query = internal::bridge::query(this->query->get_table()); \
-            query.name(this->m_key, serialize((cast)rhs)); \
-            return query; \
+            return this->rbool_query->name(m_key, serialize((cast)rhs)); \
         } \
         return serialize(detach().value) op serialize((cast)rhs); \
     }  \

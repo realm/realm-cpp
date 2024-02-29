@@ -10,6 +10,7 @@
 #include <cpprealm/internal/bridge/uuid.hpp>
 
 #include <realm/query.hpp>
+#include <iostream>
 
 #define __generate_query_operator(op, type) \
     query &query::op(col_key column_key, type value) { \
@@ -20,6 +21,7 @@
 #define __generate_query_operator_case_sensitive(op, type) \
     query &query::op(col_key column_key, type value, bool) { \
         this->operator=(get_query()->op(column_key, value)); \
+        std::cout <<    get_query()->get_description() << "\n";                                                \
         return *this; \
     }
 
@@ -191,7 +193,7 @@ namespace realm::internal::bridge {
 
     query& query::negate() {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->Not();
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->operator!();
 #else
         m_query = std::make_shared<Query>(m_query->operator!());
 #endif

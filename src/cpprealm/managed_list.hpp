@@ -351,11 +351,13 @@ namespace realm {
         }
 
         results<T> where(std::function<rbool(managed<T> &)> &&fn) {
+            static_assert(sizeof(managed<T>), "Must declare schema for T");
             auto schema = m_realm->schema().find(managed<T>::schema.name);
-            auto table_ref = m_obj->get_target_table(m_key);
-            auto builder = internal::bridge::query(table_ref);
-            auto q = realm::query<managed<T>>(builder, std::move(schema), *m_realm);
-            auto full_query = fn(q).q;
+            auto group = m_realm->read_group();
+            auto table_ref = group.get_table(schema.table_key());
+            rbool query = rbool(internal::bridge::query(table_ref));
+            auto query_object = managed<T>::prepare_for_query(*m_realm, &query);
+            auto full_query = fn(query_object).q;
             return results<T>(internal::bridge::results(*m_realm, full_query));
         }
 
