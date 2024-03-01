@@ -79,28 +79,28 @@ namespace realm {
 
         //MARK: -   comparison operators
         rbool operator==(const T& rhs) const noexcept {
-            if (this->should_detect_usage_for_queries) {
+            if (this->rbool_query) {
                 return this->rbool_query->mixed_equal(m_key, serialize(rhs));
             }
             return detach() == rhs;
         }
 
         rbool operator!=(const T& rhs) const noexcept {
-            if (this->should_detect_usage_for_queries) {
+            if (this->rbool_query) {
                 return this->rbool_query->mixed_not_equal(m_key, serialize(rhs));
             }
             return detach() != rhs;
         }
 
         rbool operator==(const std::nullopt_t& rhs) const noexcept {
-            if (this->should_detect_usage_for_queries) {
+            if (this->rbool_query) {
                 return this->rbool_query->mixed_equal(m_key, internal::bridge::mixed(std::monostate()));
             }
             return detach() == T(std::monostate());
         }
 
         rbool operator!=(const std::nullopt_t& rhs) const noexcept {
-            if (this->should_detect_usage_for_queries) {
+            if (this->rbool_query) {
                 return this->rbool_query->mixed_not_equal(m_key, internal::bridge::mixed(std::monostate()));
             }
             return detach() != T(std::monostate());
