@@ -19,6 +19,7 @@
 #ifndef CPPREALM_BRIDGE_TABLE_HPP
 #define CPPREALM_BRIDGE_TABLE_HPP
 
+#include <optional>
 #include <string>
 #include <vector>
 #include <cpprealm/internal/bridge/obj_key.hpp>
