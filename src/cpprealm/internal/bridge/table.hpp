@@ -97,6 +97,7 @@ namespace realm {
             query mixed_equal(const internal::bridge::mixed& rhs) const;
             query mixed_not_equal(const internal::bridge::mixed& rhs) const;
 
+        private:
             std::shared_ptr<Subexpr> m_subexpr;
         };
 
@@ -119,6 +120,7 @@ namespace realm {
             subexpr subquery(query subquery);
             table get_table();
 
+        private:
             std::shared_ptr<LinkChain> m_link_chain;
         };
 

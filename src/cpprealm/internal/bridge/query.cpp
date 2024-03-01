@@ -10,7 +10,6 @@
 #include <cpprealm/internal/bridge/uuid.hpp>
 
 #include <realm/query.hpp>
-#include <iostream>
 
 #define __generate_query_operator(op, type) \
     query &query::op(col_key column_key, type value) { \

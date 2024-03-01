@@ -90,18 +90,15 @@ namespace realm {
             auto schema = m_realm.get().schema().find(managed<T>::schema.name);
             auto group = m_realm.get().read_group();
             auto table_ref = group.get_table(schema.table_key());
-            auto builder = internal::bridge::query(table_ref);
+            auto root_query = internal::bridge::query(table_ref);
 
             if (query_fn) {
-                auto schema = m_realm.get().schema().find(managed<T>::schema.name);
-                auto group = m_realm.get().read_group();
-                auto table_ref = group.get_table(schema.table_key());
-                rbool query = rbool(internal::bridge::query(table_ref));
+                rbool query = rbool(std::move(root_query));
                 auto query_object = managed<T>::prepare_for_query(m_realm, &query);
                 auto full_query = (*query_fn)(query_object).q;
                 insert_or_assign(name, full_query);
             } else {
-                insert_or_assign(name, builder);
+                insert_or_assign(name, root_query);
             }
         }
 

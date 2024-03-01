@@ -44,36 +44,28 @@ namespace realm {
 
    rbool managed<primary_key<std::string>>::operator ==(const char* rhs) const noexcept {
         if (this->should_detect_usage_for_queries) {
-            auto query = internal::bridge::query(this->query->get_table());
-            query.equal(this->m_key, serialize(std::string(rhs)));
-            return query;
+            return this->rbool_query->equal(m_key, std::string(rhs));
         }
         return serialize(detach().value) == serialize(std::string(rhs));
     }
 
     rbool managed<primary_key<std::string>>::operator !=(const char* rhs) const noexcept {
         if (this->should_detect_usage_for_queries) {
-            auto query = internal::bridge::query(this->query->get_table());
-            query.not_equal(this->m_key, serialize(std::string(rhs)));
-            return query;
+            return this->rbool_query->not_equal(m_key, std::string(rhs));
         }
         return serialize(detach().value) != serialize(std::string(rhs));
     }
 
     rbool managed<primary_key<std::optional<std::string>>>::operator ==(const char* rhs) const noexcept {
         if (this->should_detect_usage_for_queries) {
-            auto query = internal::bridge::query(this->query->get_table());
-            query.equal(this->m_key, serialize(std::string(rhs)));
-            return query;
+            return this->rbool_query->equal(m_key, std::string(rhs));
         }
         return serialize(detach().value) == serialize(std::string(rhs));
     }
 
     rbool managed<primary_key<std::optional<std::string>>>::operator !=(const char* rhs) const noexcept {
         if (this->should_detect_usage_for_queries) {
-            auto query = internal::bridge::query(this->query->get_table());
-            query.not_equal(this->m_key, serialize(std::string(rhs)));
-            return query;
+            return this->rbool_query->not_equal(m_key, std::string(rhs));
         }
         return serialize(detach().value) != serialize(std::string(rhs));
     }
@@ -92,14 +84,8 @@ namespace realm {
 
 #define __cpprealm_build_optional_pk_query(op, name, type, rhs_type) \
     rbool managed<primary_key<std::optional<type>>>::operator op(const rhs_type& rhs) const noexcept { \
-        if (this->should_detect_usage_for_queries) { \
-            auto query = internal::bridge::query(this->query->get_table()); \
-            if (auto r = serialize(rhs)) { \
-                query.name(this->m_key, *r); \
-            } else { \
-                query.name(this->m_key, std::nullopt); \
-            } \
-            return query; \
+        if (this->should_detect_usage_for_queries) {                 \
+            return this->rbool_query->name(m_key, rhs);  \
         } \
         return serialize(detach()) op serialize(rhs); \
     } \

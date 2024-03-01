@@ -190,7 +190,6 @@ namespace realm {
         rbool(const rbool &r) {
             if (r.is_for_queries) {
                 new (&q) internal::bridge::query(r.q);
-                auto x = q.description();
                 is_for_queries = true;
             } else
                 b = r.b;

@@ -20,8 +20,10 @@
 #define CPPREALM_BRIDGE_LINK_HPP
 
 #include <cpprealm/accessors.hpp>
-#include <cpprealm/internal/type_info.hpp>
 #include <cpprealm/macros.hpp>
+#include <cpprealm/rbool.hpp>
+
+#include <cpprealm/internal/type_info.hpp>
 
 namespace realm {
     template <typename, typename>

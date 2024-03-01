@@ -47,9 +47,7 @@ namespace realm {
         template<typename T>
         std::enable_if_t<std::is_integral_v<T>, rbool> operator==(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.equal(this->m_key, (int64_t)rhs);
-                return rbool(std::move(query));
+                return this->rbool_query->equal(m_key, (int64_t)rhs);
             }
             return serialize(detach()) == rhs;
         }
@@ -57,9 +55,7 @@ namespace realm {
         template<typename T>
         std::enable_if_t<std::is_integral_v<T>, rbool> operator!=(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.not_equal(this->m_key, (int64_t)rhs);
-                return rbool(std::move(query));
+                return this->rbool_query->not_equal(m_key, (int64_t)rhs);
             }
             return serialize(detach()) != rhs;
         }
@@ -67,9 +63,7 @@ namespace realm {
         template<typename T>
         std::enable_if_t<std::is_integral_v<T>, rbool> operator>(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.greater(this->m_key, (int64_t)rhs);
-                return rbool(std::move(query));
+                return this->rbool_query->greater(m_key, (int64_t)rhs);
             }
             return serialize(detach()) > rhs;
         }
@@ -77,9 +71,7 @@ namespace realm {
         template<typename T>
         std::enable_if_t<std::is_integral_v<T>, rbool> operator<(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.less(this->m_key, (int64_t)rhs);
-                return rbool(std::move(query));
+                return this->rbool_query->less(m_key, (int64_t)rhs);
             }
             return serialize(detach()) < rhs;
         }
@@ -87,9 +79,7 @@ namespace realm {
         template<typename T>
         std::enable_if_t<std::is_integral_v<T>, rbool> operator>=(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.greater_equal(this->m_key, (int64_t)rhs);
-                return rbool(std::move(query));
+                return this->rbool_query->greater_equal(m_key, (int64_t)rhs);
             }
             return serialize(detach()) >= rhs;
         }
@@ -97,9 +87,7 @@ namespace realm {
         template<typename T>
         std::enable_if_t<std::is_integral_v<T>, rbool> operator<=(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.less_equal(this->m_key, (int64_t)rhs);
-                return rbool(std::move(query));
+                return this->rbool_query->less_equal(m_key, (int64_t)rhs);
             }
             return serialize(detach()) <= rhs;
         }
@@ -174,9 +162,7 @@ namespace realm {
         template<typename T>
         std::enable_if_t< std::disjunction_v<std::is_integral<T>, std::is_floating_point<T>>, rbool> operator==(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.equal(this->m_key, (double)rhs);
-                return rbool(std::move(query));
+                return this->rbool_query->equal(m_key, (double)rhs);
             }
             return serialize(detach()) == rhs;
         }
@@ -184,9 +170,7 @@ namespace realm {
         template<typename T>
         std::enable_if_t< std::disjunction_v<std::is_integral<T>, std::is_floating_point<T>>, rbool> operator!=(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.not_equal(this->m_key, (double)rhs);
-                return rbool(std::move(query));
+                return this->rbool_query->not_equal(m_key, (double)rhs);
             }
             return serialize(detach()) != rhs;
         }
@@ -194,9 +178,7 @@ namespace realm {
         template<typename T>
         std::enable_if_t< std::disjunction_v<std::is_integral<T>, std::is_floating_point<T>>, rbool> operator>(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.greater(this->m_key, (double)rhs);
-                return rbool(std::move(query));
+                return this->rbool_query->greater(m_key, (double)rhs);
             }
             return serialize(detach()) > rhs;
         }
@@ -204,9 +186,7 @@ namespace realm {
         template<typename T>
         std::enable_if_t< std::disjunction_v<std::is_integral<T>, std::is_floating_point<T>>, rbool> operator<(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.less(this->m_key, (double)rhs);
-                return rbool(std::move(query));
+                return this->rbool_query->less(m_key, (double)rhs);
             }
             return serialize(detach()) < rhs;
         }
@@ -214,9 +194,7 @@ namespace realm {
         template<typename T>
         std::enable_if_t< std::disjunction_v<std::is_integral<T>, std::is_floating_point<T>>, rbool> operator>=(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.greater_equal(this->m_key, (double)rhs);
-                return rbool(std::move(query));
+                return this->rbool_query->greater_equal(m_key, (double)rhs);
             }
             return serialize(detach()) >= rhs;
         }
@@ -224,9 +202,7 @@ namespace realm {
         template<typename T>
         std::enable_if_t< std::disjunction_v<std::is_integral<T>, std::is_floating_point<T>>, rbool> operator<=(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.less_equal(this->m_key, (double)rhs);
-                return rbool(std::move(query));
+                return this->rbool_query->less_equal(m_key, (double)rhs);
             }
             return serialize(detach()) <= rhs;
         }
@@ -437,49 +413,37 @@ CPP_REALM_MANAGED_OPTIONAL_NUMERIC(double);
         //MARK: -   comparison operators
         rbool operator==(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.equal(this->m_key, serialize(rhs));
-                return query;
+                return this->rbool_query->equal(m_key, serialize(rhs));
             }
             return detach() == rhs;
         }
         rbool operator!=(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.not_equal(this->m_key, serialize(rhs));
-                return query;
+                return this->rbool_query->not_equal(m_key, serialize(rhs));
             }
             return detach() != rhs;
         }
         rbool operator>(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.greater(this->m_key, serialize(rhs));
-                return query;
+                return this->rbool_query->greater(m_key, serialize(rhs));
             }
             return detach() > rhs;
         }
         rbool operator<(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.less(this->m_key, serialize(rhs));
-                return query;
+                return this->rbool_query->greater(m_key, serialize(rhs));
             }
             return detach() < rhs;
         }
         rbool operator>=(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.greater_equal(this->m_key, serialize(rhs));
-                return query;
+                return this->rbool_query->greater_equal(m_key, serialize(rhs));
             }
             return detach() >= rhs;
         }
         rbool operator<=(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.less_equal(this->m_key, serialize(rhs));
-                return query;
+                return this->rbool_query->less_equal(m_key, serialize(rhs));
             }
             return detach() <= rhs;
         }
@@ -523,57 +487,37 @@ CPP_REALM_MANAGED_OPTIONAL_NUMERIC(double);
         //MARK: -   comparison operators
         rbool operator==(const std::optional<T>& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                if (auto r = rhs) {
-                    query.equal(this->m_key, serialize(*r));
-                } else {
-                    query.equal(this->m_key, std::nullopt);
-                }
-                return query;
+                return this->rbool_query->equal(m_key, serialize(rhs));
             }
             return detach() == rhs;
         }
         rbool operator!=(const std::optional<T>& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                if (auto r = rhs) {
-                    query.not_equal(this->m_key, serialize(*r));
-                } else {
-                    query.not_equal(this->m_key, std::nullopt);
-                }
-                return query;
+                return this->rbool_query->not_equal(m_key, serialize(rhs));
             }
             return detach() != rhs;
         }
         rbool operator>(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.greater(this->m_key, serialize(rhs));
-                return query;
+                return this->rbool_query->greater(m_key, rhs);
             }
             return detach() > rhs;
         }
         rbool operator<(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.less(this->m_key, serialize(rhs));
-                return query;
+                return this->rbool_query->less(m_key, rhs);
             }
             return detach() < rhs;
         }
         rbool operator>=(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.greater_equal(this->m_key, serialize(rhs));
-                return query;
+                return this->rbool_query->greater_equal(m_key, rhs);
             }
             return detach() >= rhs;
         }
         rbool operator<=(const T& rhs) const noexcept {
             if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.less_equal(this->m_key, serialize(rhs));
-                return query;
+                return this->rbool_query->less_equal(m_key, rhs);
             }
             return detach() <= rhs;
         }

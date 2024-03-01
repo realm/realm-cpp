@@ -349,8 +349,7 @@ namespace realm::internal::bridge {
     }
 
     subexpr link_chain::subquery(query subquery) {
-        auto expr = reinterpret_cast<LinkChain*>(&m_link_chain)->subquery(subquery);
-        return expr;
+        return reinterpret_cast<LinkChain*>(&m_link_chain)->subquery(subquery);
     }
 
     table link_chain::get_table() {

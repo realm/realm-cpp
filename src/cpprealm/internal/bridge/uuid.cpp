@@ -16,7 +16,6 @@ namespace realm::internal::bridge {
         m_uuid = bytes;
     }
 
-
     uuid::uuid(const ::realm::uuid &v)
     {
         m_uuid = UUID(v.to_string()).to_bytes();

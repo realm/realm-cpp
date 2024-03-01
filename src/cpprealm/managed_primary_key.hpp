@@ -19,10 +19,8 @@
 #ifndef CPPREALM_MANAGED_PRIMARY_KEY_HPP
 #define CPPREALM_MANAGED_PRIMARY_KEY_HPP
 
+#include <cpprealm/macros.hpp>
 #include <cpprealm/rbool.hpp>
-
-#include <cpprealm/db.hpp>
-#include <cpprealm/schema.hpp>
 
 namespace realm {
         template <typename, typename>
@@ -300,17 +298,13 @@ namespace realm {
 
             rbool operator==(const T& rhs) const noexcept {
                 if (this->should_detect_usage_for_queries) {
-                    auto query = internal::bridge::query(this->query->get_table());
-                    query.equal(this->m_key, serialize(rhs));
-                    return query;
+                    return this->rbool_query->equal(m_key, serialize(rhs));
                 }
                 return serialize(detach().value) == serialize(rhs);
             }
             rbool operator!=(const T& rhs) const noexcept {
                 if (this->should_detect_usage_for_queries) {
-                    auto query = internal::bridge::query(this->query->get_table());
-                    query.not_equal(this->m_key, serialize(rhs));
-                    return query;
+                    return this->rbool_query->not_equal(m_key, serialize(rhs));
                 }
                 return serialize(detach().value) != serialize(rhs);
             }
@@ -373,25 +367,13 @@ namespace realm {
 
             rbool operator==(const T& rhs) const noexcept {
                 if (this->should_detect_usage_for_queries) {
-                    auto query = internal::bridge::query(this->query->get_table());
-                    if (auto r = serialize(rhs)) {
-                        query.equal(this->m_key, *r);
-                    } else {
-                        query.equal(this->m_key, std::nullopt);
-                    }
-                    return query;
+                    return this->rbool_query->equal(m_key, serialize(rhs));
                 }
                 return serialize(detach().value) == serialize(rhs);
             }
             rbool operator!=(const T& rhs) const noexcept {
                 if (this->should_detect_usage_for_queries) {
-                    auto query = internal::bridge::query(this->query->get_table());
-                    if (auto r = serialize(rhs)) {
-                        query.not_equal(this->m_key, *r);
-                    } else {
-                        query.not_equal(this->m_key, std::nullopt);
-                    }
-                    return query;
+                    return this->rbool_query->not_equal(m_key, serialize(rhs));
                 }
                 return serialize(detach().value) != serialize(rhs);
             }
