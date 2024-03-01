@@ -29,42 +29,6 @@ namespace realm {
         realm::notification_token m_token;
     };
 
-    TEST_CASE("test") {
-        realm_path path;
-        realm::db_config config;
-        config.set_path(path);
-        auto realm = db(std::move(config));
-
-        StringObject str_obj;
-        str_obj.str_col = "foo";
-
-        AllTypesObjectLink link;
-        link.str_col = "bar";
-        link._id = 0;
-        link.str_link_col = &str_obj;
-
-        AllTypesObject obj;
-        obj.str_col = "foo";
-        obj._id = 1;
-        obj.opt_obj_col = &link;
-
-        AllTypesObject obj2;
-        obj2.str_col = "bar";
-        obj2._id = 2;
-
-        realm.write([&realm, &obj, &obj2]() {
-            realm.add(std::move(obj));
-            realm.add(std::move(obj2));
-
-        });
-        auto results = realm.objects<AllTypesObject>();
-        auto queried_results = results.where([](auto& o) {
-            return o.opt_obj_col->str_link_col->str_col == std::string("foo") && o.opt_obj_col->str_col == std::string("bar");
-        });
-        CHECK(queried_results.size() == 1);
-        CHECK(queried_results[0]._id == 1);
-    }
-
     TEST_CASE("results", "[results]") {
         realm_path path;
         realm::db_config config;

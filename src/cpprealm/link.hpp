@@ -148,30 +148,48 @@ namespace realm {
             return *this;
         }
 
-        bool operator ==(const std::nullptr_t) const {
+        rbool operator ==(std::nullptr_t) const {
+            if (rbool_query) {
+                return rbool_query->link_equal(m_key, std::nullopt);
+            }
             return !m_obj->get_linked_object(m_key).is_valid();
         }
-        bool operator ==(const managed<T>& rhs) const {
+        rbool operator ==(const managed<T>& rhs) const {
+            if (rbool_query) {
+                return rbool_query->link_equal(m_key, rhs.m_obj);
+            }
             if (*this->m_realm != rhs.m_realm)
                 return false;
             return m_obj->get_linked_object(m_key).get_key() == rhs.m_obj.get_key();
         }
 
-        bool operator ==(const managed<T*>& rhs) const {
+        rbool operator ==(const managed<T*>& rhs) const {
+            if (rbool_query) {
+                return rbool_query->link_equal(m_key, *rhs.m_obj);
+            }
             if (*this->m_realm != *rhs.m_realm)
                 return false;
             return m_obj->get_linked_object(m_key).get_key() == rhs.m_obj->get_key();
         }
 
-        bool operator !=(const std::nullptr_t) const {
-            return !this->operator==(nullptr);
+        rbool operator !=(std::nullptr_t) const {
+            if (rbool_query) {
+                return rbool_query->link_not_equal(m_key, std::nullopt);
+            }
+            return m_obj->get_linked_object(m_key).is_valid();
         }
-        bool operator !=(const managed<T>& rhs) const {
-            return !this->operator==(rhs);
+        rbool operator !=(const managed<T>& rhs) const {
+            if (rbool_query) {
+                return rbool_query->link_not_equal(m_key, rhs.m_obj);
+            }
+            return m_obj->get_linked_object(m_key).is_valid();
         }
 
-        bool operator !=(const managed<T*>& rhs) const {
-            return !this->operator==(rhs);
+        rbool operator !=(const managed<T*>& rhs) const {
+            if (rbool_query) {
+                return rbool_query->link_not_equal(m_key, *rhs.m_obj);
+            }
+            return m_obj->get_linked_object(m_key).is_valid();
         }
 
     private:

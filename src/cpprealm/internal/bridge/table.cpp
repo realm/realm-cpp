@@ -262,6 +262,23 @@ namespace realm::internal::bridge {
         }
     }
 
+    // LINKS
+    query subexpr::equal(const std::optional<obj>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<Link>>(m_subexpr) == *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<Link>>(m_subexpr) != ::realm::null();
+        }
+    }
+
+    query subexpr::not_equal(const std::optional<obj>& rhs) const {
+        if (rhs) {
+            return *std::dynamic_pointer_cast<::realm::Columns<Link>>(m_subexpr) != *rhs;
+        } else {
+            return *std::dynamic_pointer_cast<::realm::Columns<Link>>(m_subexpr) != ::realm::null();
+        }
+    }
+
     link_chain::link_chain() {
         m_link_chain = std::make_shared<LinkChain>();
     }
@@ -346,6 +363,15 @@ namespace realm::internal::bridge {
     template<>
     subexpr link_chain::column<::realm::uuid>(col_key col_name) {
         return m_link_chain->column<UUID>(col_name).clone();
+    }
+
+    template<>
+    subexpr link_chain::column<obj>(col_key col_name) {
+        return m_link_chain->column<Link>(col_name).clone();
+    }
+
+    subexpr link_chain::column_mixed(col_key col_name) {
+        return m_link_chain->column<Mixed>(col_name).clone();
     }
 
     subexpr link_chain::subquery(query subquery) {

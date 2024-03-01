@@ -171,20 +171,38 @@ namespace realm::internal::bridge {
 
     __generate_query_operator(equal, bool)
     __generate_query_operator(not_equal, bool)
+                                                                                                                                                                                                                                                                                                                    query& links_to(col_key column_key, bool value);
+    query& query::links_to(col_key column_key, const internal::bridge::obj& o) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->links_to(column_key, o.get_key());
+#else
+        m_query = std::make_shared<Query>(m_query->links_to(column_key, o.get_key()));
+#endif
+        return *this;
+    }
+
+    query& query::not_links_to(col_key column_key, const internal::bridge::obj& o) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->not_links_to(column_key, {o.get_key()});
+#else
+        m_query = std::make_shared<Query>(m_query->not_links_to(column_key, {o.get_key()}));
+#endif
+        return *this;
+    }
 
     query& query::equal(col_key column_key, std::nullopt_t) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->equal(column_key, realm::null{});
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->equal(column_key, ::realm::null{});
 #else
-        m_query = std::make_shared<Query>(m_query->equal(column_key, realm::null{}));
+        m_query = std::make_shared<Query>(m_query->equal(column_key, ::realm::null{}));
 #endif
         return *this;
     }
     query& query::not_equal(col_key column_key, std::nullopt_t) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->not_equal(column_key, realm::null{});
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->not_equal(column_key, ::realm::null{});
 #else
-        m_query = std::make_shared<Query>(m_query->not_equal(column_key, realm::null{}));
+        m_query = std::make_shared<Query>(m_query->not_equal(column_key, ::realm::null{}));
 #endif
         return *this;
     }

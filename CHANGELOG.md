@@ -3,6 +3,7 @@ X.Y.Z Release notes (YYYY-MM-DD)
 
 ### Fixed
 * Managed objects would exhibit undefined behaviour when returned from the subscript operator in `std::vector` & `std::map`.
+* Type safe queries would not work correctly when link properties were used.
 
 ### Enhancements
 * Add `realm::holds_alternative` which acts as a substitute to `std::holds_alternative` when using `managed<realm::mixed>`.

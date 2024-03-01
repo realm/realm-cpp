@@ -97,6 +97,9 @@ namespace realm {
             query mixed_equal(const internal::bridge::mixed& rhs) const;
             query mixed_not_equal(const internal::bridge::mixed& rhs) const;
 
+            query equal(const std::optional<obj>&) const;
+            query not_equal(const std::optional<obj>&) const;
+
         private:
             std::shared_ptr<Subexpr> m_subexpr;
         };
@@ -116,6 +119,7 @@ namespace realm {
 
             template<typename>
             subexpr column(col_key);
+            subexpr column_mixed(col_key);
 
             subexpr subquery(query subquery);
             table get_table();

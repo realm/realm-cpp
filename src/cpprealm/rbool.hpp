@@ -156,10 +156,38 @@ namespace realm {
 
         rbool& mixed_not_equal(const internal::bridge::col_key& col_key, const internal::bridge::mixed& rhs) {
             if (auto lc = m_link_chain) {
-                q = lc->column<std::string>(col_key).mixed_not_equal(rhs);
+                q = lc->column_mixed(col_key).mixed_not_equal(rhs);
                 m_link_chain = std::nullopt;
             } else {
                 q.not_equal(col_key, rhs);
+            }
+            return *this;
+        }
+
+        rbool& link_equal(const internal::bridge::col_key& col_key, const std::optional<internal::bridge::obj>& rhs) {
+            if (auto lc = m_link_chain) {
+                q = lc->column<internal::bridge::obj>(col_key).equal(rhs);
+                m_link_chain = std::nullopt;
+            } else {
+                if (rhs) {
+                    q.links_to(col_key, *rhs);
+                } else {
+                    q.links_to(col_key, internal::bridge::obj());
+                }
+            }
+            return *this;
+        }
+
+        rbool& link_not_equal(const internal::bridge::col_key& col_key, const std::optional<internal::bridge::obj>& rhs) {
+            if (auto lc = m_link_chain) {
+                q = lc->column<internal::bridge::obj>(col_key).not_equal(rhs);
+                m_link_chain = std::nullopt;
+            } else {
+                if (rhs) {
+                    q.not_links_to(col_key, *rhs);
+                } else {
+                    q.not_links_to(col_key, internal::bridge::obj());
+                }
             }
             return *this;
         }

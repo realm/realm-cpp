@@ -19,7 +19,9 @@
 #ifndef CPPREALM_BRIDGE_QUERY_HPP
 #define CPPREALM_BRIDGE_QUERY_HPP
 
+#include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/internal/bridge/col_key.hpp>
+#include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 
 #include <optional>
@@ -141,7 +143,10 @@ namespace realm::internal::bridge {
         // Conditions: bool
         query& equal(col_key column_key, bool value);
         query& not_equal(col_key column_key, bool value);
-        using underlying = Query;
+
+        // Conditions: links
+        query& links_to(col_key column_key, const internal::bridge::obj& o);
+        query& not_links_to(col_key column_key, const internal::bridge::obj& o);
 
         std::string description() const;
     private:
