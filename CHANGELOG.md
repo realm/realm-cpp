@@ -19,7 +19,7 @@ X.Y.Z Release notes (YYYY-MM-DD)
 * Fileformat: Generates files with format v23. Reads and automatically upgrade from fileformat v5.
 
 ### Internals
-* None
+* Upgraded to Core v14.1.0
 
 ----------------------------------------------
 

@@ -3,7 +3,7 @@
 import PackageDescription
 
 let sdkVersion = Version("1.0.0")
-let coreVersion = Version("13.26.0")
+let coreVersion = Version("14.1.0")
 
 var cxxSettings: [CXXSetting] = [
     .define("REALM_ENABLE_SYNC", to: "1"),
@@ -61,7 +61,7 @@ let package = Package(
             targets: ["realm-cpp-sdk"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/realm/realm-core.git", revision: "334d534a49b39d70f1b2ae5d982272e30f74dd82")
+        .package(url: "https://github.com/realm/realm-core.git", revision: "08c61e87add15b0d7fcd52c818c43fb4804e1216")
     ],
     targets: [
         cppSdkTarget,
