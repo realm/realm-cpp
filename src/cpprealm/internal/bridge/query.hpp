@@ -19,7 +19,6 @@
 #ifndef CPPREALM_BRIDGE_QUERY_HPP
 #define CPPREALM_BRIDGE_QUERY_HPP
 
-#include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>

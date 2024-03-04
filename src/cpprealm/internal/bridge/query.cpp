@@ -399,9 +399,8 @@ namespace realm::internal::bridge {
     }
 
     table link_chain::get_table() {
-        return reinterpret_cast< LinkChain*>(&m_link_chain)->get_current_table();
+        return reinterpret_cast<LinkChain*>(&m_link_chain)->get_current_table();
     }
-
 
     query::query() {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
