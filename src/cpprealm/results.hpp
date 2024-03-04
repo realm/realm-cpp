@@ -27,7 +27,6 @@
 #include <cpprealm/notifications.hpp>
 #include <cpprealm/schema.hpp>
 #include <cpprealm/rbool.hpp>
-#include <iostream>
 
 namespace realm {
     struct mutable_sync_subscription_set;

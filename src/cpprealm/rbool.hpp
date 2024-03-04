@@ -36,7 +36,7 @@ namespace realm {
     class rbool {
         bool is_for_queries = false;
         std::optional<internal::bridge::link_chain> m_link_chain;
-        internal::bridge::table m_current_table;
+        internal::bridge::table m_table;
 
         friend rbool operator&&(const rbool &lhs, const rbool &rhs);
 
@@ -51,7 +51,7 @@ namespace realm {
             if (m_link_chain) {
                 m_link_chain->link(col_key);
             } else {
-                m_link_chain = m_current_table.get_link(col_key);
+                m_link_chain = m_table.get_link(col_key);
             }
             return *this;
         }
@@ -212,7 +212,7 @@ namespace realm {
         };
 
         rbool(internal::bridge::query &&q) : q(q), is_for_queries(true) {
-            m_current_table = q.get_table();
+            m_table = q.get_table();
         }
         rbool(bool b) : b(b) {}
         rbool(const rbool &r) {
