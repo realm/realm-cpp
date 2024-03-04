@@ -99,29 +99,29 @@ namespace realm {
     };
 
     rbool managed_string::operator==(const char* rhs) const noexcept {
-        if (this->rbool_query) {
-            return this->rbool_query->equal(m_key, std::string(rhs));
+        if (this->m_rbool_query) {
+            return this->m_rbool_query->equal(m_key, std::string(rhs));
         }
         return detach() == rhs;
     }
 
     rbool managed_string::operator!=(const char* rhs) const noexcept {
-        if (this->rbool_query) {
-            return this->rbool_query->not_equal(m_key, std::string(rhs));
+        if (this->m_rbool_query) {
+            return this->m_rbool_query->not_equal(m_key, std::string(rhs));
         }
         return detach() != rhs;
     }
 
     rbool managed_string::contains(const std::string &rhs, bool case_sensitive) const noexcept {
-        if (this->rbool_query) {
-            return this->rbool_query->contains(m_key, std::string(rhs), case_sensitive);
+        if (this->m_rbool_query) {
+            return this->m_rbool_query->contains(m_key, std::string(rhs), case_sensitive);
         }
         return detach().find(rhs) != realm::not_in_collection;
     }
 
     rbool managed_string::empty() const noexcept {
-        if (this->rbool_query) {
-            return this->rbool_query->equal(m_key, std::string());
+        if (this->m_rbool_query) {
+            return this->m_rbool_query->equal(m_key, std::string());
         } else {
             return detach().empty();
         }

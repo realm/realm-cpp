@@ -297,14 +297,14 @@ namespace realm {
             }
 
             rbool operator==(const T& rhs) const noexcept {
-                if (this->rbool_query) {
-                    return this->rbool_query->equal(m_key, serialize(rhs));
+                if (this->m_rbool_query) {
+                    return this->m_rbool_query->equal(m_key, serialize(rhs));
                 }
                 return serialize(detach().value) == serialize(rhs);
             }
             rbool operator!=(const T& rhs) const noexcept {
-                if (this->rbool_query) {
-                    return this->rbool_query->not_equal(m_key, serialize(rhs));
+                if (this->m_rbool_query) {
+                    return this->m_rbool_query->not_equal(m_key, serialize(rhs));
                 }
                 return serialize(detach().value) != serialize(rhs);
             }
@@ -366,14 +366,14 @@ namespace realm {
             }
 
             rbool operator==(const T& rhs) const noexcept {
-                if (this->rbool_query) {
-                    return this->rbool_query->equal(m_key, serialize(rhs));
+                if (this->m_rbool_query) {
+                    return this->m_rbool_query->equal(m_key, serialize(rhs));
                 }
                 return serialize(detach().value) == serialize(rhs);
             }
             rbool operator!=(const T& rhs) const noexcept {
-                if (this->rbool_query) {
-                    return this->rbool_query->not_equal(m_key, serialize(rhs));
+                if (this->m_rbool_query) {
+                    return this->m_rbool_query->not_equal(m_key, serialize(rhs));
                 }
                 return serialize(detach().value) != serialize(rhs);
             }
