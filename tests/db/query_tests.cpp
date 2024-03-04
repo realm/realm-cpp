@@ -256,7 +256,7 @@ namespace realm {
         SECTION("link column") {
             auto realm = db(std::move(config));
 
-            auto create_obj = [&](const std::string& str_col, int64_t pk) {
+            auto create_obj = [&](int64_t pk) {
                 auto obj = AllTypesObject();
                 obj._id = pk;
                 obj.str_col = "root obj";
@@ -275,9 +275,9 @@ namespace realm {
                 });
             };
 
-            auto managed_obj = create_obj("foo", 0);
-            auto managed_obj2 = create_obj("foo", 1);
-            auto managed_obj3 = create_obj("foo",2);
+            auto managed_obj = create_obj(0);
+            auto managed_obj2 = create_obj(1);
+            auto managed_obj3 = create_obj(2);
 
             auto res = realm.objects<AllTypesObject>().where([](auto &obj) {
                 return obj.opt_obj_col->str_col == "foo";
