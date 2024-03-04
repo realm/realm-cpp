@@ -4,6 +4,11 @@ namespace realm {
     uuid::uuid(const std::string &v)
         : m_uuid(v) {
     }
+
+    uuid::uuid(const std::array<uint8_t, 16>& bytes)
+        : m_uuid(bytes) {
+    }
+
     uuid::uuid(const internal::bridge::uuid &v)
         : m_uuid(v) {
     }

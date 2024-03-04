@@ -34,6 +34,7 @@ namespace realm {
 
     struct uuid {
         explicit uuid(const std::string &);
+        uuid(const std::array<uint8_t, 16>&);
         uuid() = default;
         [[nodiscard]] std::string to_string() const;
         [[nodiscard]] std::string to_base64() const;

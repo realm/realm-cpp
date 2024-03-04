@@ -10,6 +10,7 @@ X.Y.Z Release notes (YYYY-MM-DD)
 * Add `managed<realm::mixed>::set_link` for setting a link in a mixed proeprty type.
 * Add compile time checking to prevent misuse of managed property types.
 * Add `managed<std::vector<>>::as_results()` to allow the ability to derive a `realm::results<>` collection from a managed vector.
+* Allow a `realm::uuid` to be constructed with `std::array<uint8_t, 16>`.
 
 ### Breaking Changes
 * None
