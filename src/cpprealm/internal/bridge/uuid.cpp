@@ -8,8 +8,12 @@ namespace realm::internal::bridge {
         m_uuid = UUID::UUIDBytes();
     }
 
-    uuid::uuid(const std::string &v) {
+    uuid::uuid(const std::string& v) {
         m_uuid = UUID(v).to_bytes();
+    }
+
+    uuid::uuid(const std::array<uint8_t, 16>& v) {
+        m_uuid = v;
     }
 
     uuid::uuid(const ::realm::uuid &v)

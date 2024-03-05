@@ -38,6 +38,7 @@ namespace realm::internal::bridge {
         ~uuid() = default;
         uuid(const UUID&); //NOLINT(google-explicit-constructor);
         explicit uuid(const std::string&);
+        uuid(const std::array<uint8_t, 16>&);
         uuid(const struct ::realm::uuid&); //NOLINT(google-explicit-constructor);
         operator UUID() const final; //NOLINT(google-explicit-constructor);
         operator ::realm::uuid() const; //NOLINT(google-explicit-constructor);

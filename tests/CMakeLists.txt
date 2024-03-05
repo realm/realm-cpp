@@ -39,7 +39,8 @@ add_executable(cpprealm_db_tests
                 db/performance_tests.cpp
                 db/numeric_tests.cpp
                 db/set_tests.cpp
-                db/frozen_tests.cpp)
+                db/frozen_tests.cpp
+                db/uuid_tests.cpp)
 
 if(MSVC)
     set_property(TARGET cpprealm_sync_tests PROPERTY
