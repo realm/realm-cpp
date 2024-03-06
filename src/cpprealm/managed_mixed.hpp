@@ -79,37 +79,29 @@ namespace realm {
 
         //MARK: -   comparison operators
         rbool operator==(const T& rhs) const noexcept {
-            if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.equal(this->m_key, serialize(rhs));
-                return query;
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->mixed_equal(m_key, serialize(rhs));
             }
             return detach() == rhs;
         }
 
         rbool operator!=(const T& rhs) const noexcept {
-            if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.not_equal(this->m_key, serialize(rhs));
-                return query;
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->mixed_not_equal(m_key, serialize(rhs));
             }
             return detach() != rhs;
         }
 
         rbool operator==(const std::nullopt_t& rhs) const noexcept {
-            if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.equal(this->m_key, rhs);
-                return query;
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->mixed_equal(m_key, internal::bridge::mixed(std::monostate()));
             }
             return detach() == T(std::monostate());
         }
 
         rbool operator!=(const std::nullopt_t& rhs) const noexcept {
-            if (this->should_detect_usage_for_queries) {
-                auto query = internal::bridge::query(this->query->get_table());
-                query.not_equal(this->m_key, rhs);
-                return query;
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->mixed_not_equal(m_key, internal::bridge::mixed(std::monostate()));
             }
             return detach() != T(std::monostate());
         }

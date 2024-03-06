@@ -118,7 +118,7 @@ namespace realm {
         rbool operator==(const char* rhs) const noexcept;
         rbool operator!=(const std::string& rhs) const noexcept;
         rbool operator!=(const char* rhs) const noexcept;
-        rbool contains(const std::string &s) const noexcept;
+        rbool contains(const std::string &s, bool case_sensitive = true) const noexcept;
         rbool empty() const noexcept;
     private:
         friend struct char_reference;

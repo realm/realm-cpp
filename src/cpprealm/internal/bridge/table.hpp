@@ -29,10 +29,12 @@ namespace realm {
     class Mixed;
     class TableView;
 
+
     namespace internal::bridge {
-        struct obj;
-        struct mixed;
         struct col_key;
+        struct link_chain;
+        struct mixed;
+        struct obj;
         struct query;
 
         struct table {
@@ -56,10 +58,12 @@ namespace realm {
             obj create_object(const obj_key &obj_key = {}) const;
 
             table get_link_target(const col_key col_key) const;
+            link_chain get_link(const col_key col_key) const;
 
             [[nodiscard]] bool is_embedded() const;
 
             struct query query(const std::string &, const std::vector <mixed>&) const;
+            struct query where() const;
 
             void remove_object(const obj_key &) const;
             obj get_object(const obj_key&) const;

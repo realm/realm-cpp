@@ -23,6 +23,7 @@
 #include <string>
 
 namespace realm {
+
     struct logger {
         /// Specifies criticality when passed to log().
         ///
@@ -47,10 +48,18 @@ namespace realm {
                            off = 8 };
         virtual void do_log(level, const std::string &) = 0;
         virtual inline ~logger() noexcept = default;
+        void set_level_threshold(level l) {
+            m_level_threshold = l;
+        }
+
+        level get_level_threshold() const {
+            return m_level_threshold;
+        }
+    protected:
+        level m_level_threshold;
     };
 
     void set_default_logger(std::shared_ptr<struct logger> &&);
-    void set_default_level_threshold(logger::level);
 }
 
 #endif//CPPREALM_LOGGER_HPP

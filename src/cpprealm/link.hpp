@@ -20,8 +20,10 @@
 #define CPPREALM_BRIDGE_LINK_HPP
 
 #include <cpprealm/accessors.hpp>
-#include <cpprealm/internal/type_info.hpp>
 #include <cpprealm/macros.hpp>
+#include <cpprealm/rbool.hpp>
+
+#include <cpprealm/internal/type_info.hpp>
 
 namespace realm {
     template <typename, typename>
@@ -91,8 +93,9 @@ namespace realm {
             managed<T> m_managed;
         };
         ref_type operator ->() const {
-            if (should_detect_usage_for_queries) {
-                return ref_type(managed<T>::prepare_for_query(*m_realm));
+            if (this->m_rbool_query) {
+                this->m_rbool_query->add_link_chain(m_realm, m_key);
+                return ref_type(managed<T>::prepare_for_query(*m_realm, this->m_rbool_query));
             }
             return ref_type(managed<T>(m_obj->get_linked_object(m_key), *m_realm));
         }
@@ -145,30 +148,48 @@ namespace realm {
             return *this;
         }
 
-        bool operator ==(const std::nullptr_t) const {
+        rbool operator ==(std::nullptr_t) const {
+            if (m_rbool_query) {
+                return m_rbool_query->link_equal(m_key, std::nullopt);
+            }
             return !m_obj->get_linked_object(m_key).is_valid();
         }
-        bool operator ==(const managed<T>& rhs) const {
+        rbool operator ==(const managed<T>& rhs) const {
+            if (m_rbool_query) {
+                return m_rbool_query->link_equal(m_key, rhs.m_obj);
+            }
             if (*this->m_realm != rhs.m_realm)
                 return false;
             return m_obj->get_linked_object(m_key).get_key() == rhs.m_obj.get_key();
         }
 
-        bool operator ==(const managed<T*>& rhs) const {
+        rbool operator ==(const managed<T*>& rhs) const {
+            if (m_rbool_query) {
+                return m_rbool_query->link_equal(m_key, *rhs.m_obj);
+            }
             if (*this->m_realm != *rhs.m_realm)
                 return false;
             return m_obj->get_linked_object(m_key).get_key() == rhs.m_obj->get_key();
         }
 
-        bool operator !=(const std::nullptr_t) const {
-            return !this->operator==(nullptr);
+        rbool operator !=(std::nullptr_t) const {
+            if (m_rbool_query) {
+                return m_rbool_query->link_not_equal(m_key, std::nullopt);
+            }
+            return m_obj->get_linked_object(m_key).is_valid();
         }
-        bool operator !=(const managed<T>& rhs) const {
-            return !this->operator==(rhs);
+        rbool operator !=(const managed<T>& rhs) const {
+            if (m_rbool_query) {
+                return m_rbool_query->link_not_equal(m_key, rhs.m_obj);
+            }
+            return m_obj->get_linked_object(m_key).is_valid();
         }
 
-        bool operator !=(const managed<T*>& rhs) const {
-            return !this->operator==(rhs);
+        rbool operator !=(const managed<T*>& rhs) const {
+            if (m_rbool_query) {
+                return m_rbool_query->link_not_equal(m_key, *rhs.m_obj);
+            }
+            return m_obj->get_linked_object(m_key).is_valid();
         }
 
     private:

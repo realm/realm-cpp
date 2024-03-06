@@ -45,7 +45,9 @@ namespace realm::internal::bridge {
 
     class null_logger : public ::realm::logger {
     public:
-        null_logger() = default;
+        null_logger() {
+           set_level_threshold(logger::level::off);
+        };
         void do_log(logger::level, const std::string&) override {}
     };
 
@@ -245,8 +247,9 @@ namespace realm::internal::bridge {
     realm::realm(const config &v) {
         static bool initialized;
         if (!initialized) {
-            set_default_level_threshold(logger::level::off);
-            set_default_logger(std::make_shared<struct null_logger>());
+            auto logger = std::make_shared<struct null_logger>();
+            logger->set_level_threshold(logger::level::off);
+            set_default_logger(logger);
             realm_analytics::send();
             initialized = true;
         }

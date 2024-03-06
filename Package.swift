@@ -3,7 +3,7 @@
 import PackageDescription
 
 let sdkVersion = Version("1.0.0")
-let coreVersion = Version("13.26.0")
+let coreVersion = Version("14.1.0")
 
 var cxxSettings: [CXXSetting] = [
     .define("REALM_ENABLE_SYNC", to: "1"),
@@ -61,7 +61,7 @@ let package = Package(
             targets: ["realm-cpp-sdk"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/realm/realm-core.git", revision: "334d534a49b39d70f1b2ae5d982272e30f74dd82")
+        .package(url: "https://github.com/realm/realm-core.git", revision: "08c61e87add15b0d7fcd52c818c43fb4804e1216")
     ],
     targets: [
         cppSdkTarget,
@@ -97,6 +97,25 @@ let package = Package(
             sources: [
                 "main.hpp",
                 "main.cpp",
+                "db/binary_tests.cpp",
+                "db/date_tests.cpp",
+                "db/decimal_tests.cpp",
+                "db/embedded_object_tests.cpp",
+                "db/frozen_tests.cpp",
+                "db/list_tests.cpp",
+                "db/map_tests.cpp",
+                "db/mixed_tests.cpp",
+                "db/numeric_tests.cpp",
+                "db/object_id_tests.cpp",
+                "db/object_tests.cpp",
+                "db/optional_tests.cpp",
+                "db/performance_tests.cpp",
+                "db/query_tests.cpp",
+                "db/realm_tests.cpp",
+                "db/results_tests.cpp",
+                "db/run_loop_tests.cpp",
+                "db/set_tests.cpp",
+                "db/string_tests.cpp"
             ],
             resources: [
                 .copy("setup_baas.rb"),

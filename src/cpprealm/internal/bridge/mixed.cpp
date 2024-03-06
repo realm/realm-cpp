@@ -24,10 +24,12 @@ namespace realm::internal::bridge {
     }
 
     mixed::mixed(const mixed& other) {
-        if (other.type() == data_type::String) {
-            m_owned_string = other.m_owned_string;
-        } else if (other.type() == data_type::Binary) {
-            m_owned_data = other.m_owned_data;
+        if (!other.is_null()) {
+            if (other.type() == data_type::String) {
+                m_owned_string = other.m_owned_string;
+            } else if (other.type() == data_type::Binary) {
+                m_owned_data = other.m_owned_data;
+            }
         }
 
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
@@ -39,10 +41,12 @@ namespace realm::internal::bridge {
 
     mixed& mixed::operator=(const mixed& other) {
         if (this != &other) {
-            if (other.type() == data_type::String) {
-                m_owned_string = other.m_owned_string;
-            } else if (other.type() == data_type::Binary) {
-                m_owned_data = other.m_owned_data;
+            if (!other.is_null()) {
+                if (other.type() == data_type::String) {
+                    m_owned_string = other.m_owned_string;
+                } else if (other.type() == data_type::Binary) {
+                    m_owned_data = other.m_owned_data;
+                }
             }
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
             *reinterpret_cast<Mixed*>(&m_mixed) = *reinterpret_cast<const Mixed*>(&other.m_mixed);

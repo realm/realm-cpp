@@ -377,7 +377,7 @@ namespace realm {
                 return db.add(std::move(obj));
             });
 
-            managed<AllTypesObject> AllTypesObject_res = db.objects<AllTypesObject>()[0];
+            managed<AllTypesObject> allTypesObject_res = db.objects<AllTypesObject>()[0];
             managed<AllTypesObjectLink> allTypeObjectLink = db.objects<AllTypesObjectLink>().where([](auto& o) {
                 return o._id == 1;
             })[0];
@@ -479,8 +479,8 @@ namespace realm {
             CHECK(results_obj.opt_obj_col == allTypeObjectLink);
             CHECK(results_obj.opt_obj_col != allTypeObjectLink2);
 
-            CHECK(results_obj.opt_embedded_obj_col == AllTypesObject_res.opt_embedded_obj_col);
-            CHECK(!(results_obj.opt_embedded_obj_col != managed_obj.opt_embedded_obj_col));
+            CHECK(results_obj.opt_embedded_obj_col == allTypesObject_res.opt_embedded_obj_col);
+            CHECK(results_obj.opt_embedded_obj_col != managed_obj.opt_embedded_obj_col);
 
             CHECK(results_obj.list_int_col[0] == 1);
             CHECK(results_obj.list_double_col[0] == 1.23);
@@ -495,7 +495,7 @@ namespace realm {
             CHECK(results_obj.list_obj_col[0]->str_col == "link object 2");
             CHECK(results_obj.list_obj_col[0] == allTypeObjectLink2);
             CHECK(results_obj.opt_obj_col->str_link_col->str_col == "string col link");
-            CHECK(results_obj.list_embedded_obj_col[0] == AllTypesObject_res.list_embedded_obj_col[0]);
+            CHECK(results_obj.list_embedded_obj_col[0] == allTypesObject_res.list_embedded_obj_col[0]);
             CHECK(results_obj.list_embedded_obj_col[0] != managed_obj.opt_embedded_obj_col);
 
             CHECK(results_obj.map_int_col["foo"] == 1);
@@ -509,7 +509,7 @@ namespace realm {
             CHECK(results_obj.map_decimal_col["foo"] == decimal);
             CHECK(results_obj.map_mixed_col["foo"] == realm::mixed("bar"));
             CHECK(results_obj.map_link_col["foo"] == other_obj2);
-            CHECK(results_obj.map_embedded_col["foo"]->str_col == AllTypesObject_res.map_embedded_col["foo"]->str_col);
+            CHECK(results_obj.map_embedded_col["foo"]->str_col == allTypesObject_res.map_embedded_col["foo"]->str_col);
             CHECK(results_obj.map_embedded_col["foo"]->str_col != managed_obj.opt_embedded_obj_col->str_col);
         }
 

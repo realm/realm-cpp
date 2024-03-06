@@ -4,12 +4,12 @@
 #include <cpprealm/internal/bridge/query.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 
-#include <realm/keys.hpp>
 #include <realm/mixed.hpp>
 #include <realm/table.hpp>
 #include <realm/table_view.hpp>
 
 namespace realm::internal::bridge {
+
     table::table() {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_table) TableRef();
@@ -132,6 +132,10 @@ namespace realm::internal::bridge {
 
     table table::get_link_target(const col_key col_key) const {
         return static_cast<TableRef>(*this)->get_link_target(col_key);
+    }
+
+    link_chain table::get_link(const col_key col_key) const {
+        return static_cast<const TableRef>(*this)->link(col_key);
     }
 
     obj table::create_object_with_primary_key(const bridge::mixed& key) const {

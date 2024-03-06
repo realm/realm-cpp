@@ -260,33 +260,18 @@
         FE_19, FE_18, FE_17, FE_16, FE_15, FE_14, FE_13, FE_12, FE_11, FE_10, \
         FE_9, FE_8, FE_7, FE_6, FE_5, FE_4, FE_3, FE_2, FE_1, FE_0)(action, cls, __VA_ARGS__)
 
+namespace realm {
+    template<typename T, typename = void>
+    struct managed;
+}
+
 #define DECLARE_PERSISTED(cls, property) managed<decltype(cls::property)> property;
 #define DECLARE_PROPERTY(cls, p) realm::property<&cls::p>(#p),
 #define DECLARE_MANAGED_PROPERTY(cls, p) &realm::managed<cls>::p,
-#define DECLARE_UNMANAGED_TO_MANAGED_PAIR(cls, p) std::pair {&cls::p, &realm::managed<cls>::p},
 #define DECLARE_MANAGED_PROPERTY_NAME(cls, p) #p,
-#define DECLARE_COND_PROPERTY_VALUE_FOR_NAME(cls, p) if (_name == #p) { auto ptr = &managed<cls>::p; return (*this.*ptr).detach(); }
 #define DECLARE_COND_UNMANAGED_TO_MANAGED(cls, p) if constexpr (std::is_same_v<decltype(ptr), decltype(&cls::p)>) { return &managed<cls>::p; }
 
 #include <utility>
-
-#define COUNTER_READ_CRUMB( TAG, RANK, ACC ) \
-    counter_crumb( TAG(), constant_index< RANK >(), constant_index< ACC >() )
-#define COUNTER_READ( TAG ) COUNTER_READ_CRUMB( TAG, 1, COUNTER_READ_CRUMB( TAG, 2, COUNTER_READ_CRUMB( TAG, 4, COUNTER_READ_CRUMB( TAG, 8, \
-    COUNTER_READ_CRUMB( TAG, 16, COUNTER_READ_CRUMB( TAG, 32, COUNTER_READ_CRUMB( TAG, 64, COUNTER_READ_CRUMB( TAG, 128, 0 ) ) ) ) ) ) ) )
-
-#define COUNTER_INC( TAG ) \
-constant_index< COUNTER_READ( TAG ) + 1 > \
-constexpr counter_crumb( TAG, constant_index< ( COUNTER_READ( TAG ) + 1 ) & ~ COUNTER_READ( TAG ) >, \
-          					constant_index< ( COUNTER_READ( TAG ) + 1 ) & COUNTER_READ( TAG ) > ) { return {}; }
-
-#define COUNTER_LINK_NAMESPACE( NS ) using counter_crumb;
-
-template< std::size_t n >
-struct constant_index : std::integral_constant< std::size_t, n > {};
-
-template< typename id, std::size_t rank, std::size_t acc >
-constexpr constant_index< acc > counter_crumb( id, constant_index< rank >, constant_index< acc > ) { return {}; } // found by ADL via constant_index
 
 #include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
@@ -296,49 +281,42 @@ constexpr constant_index< acc > counter_crumb( id, constant_index< rank >, const
 #include <cpprealm/internal/bridge/realm.hpp>
 
 namespace realm {
+    class rbool;
+
     struct managed_base {
-        protected:
+    protected:
         managed_base() = default;
         managed_base(const managed_base& other) {
             m_obj = other.m_obj;
             m_realm = other.m_realm;
             m_key = other.m_key;
-            // MARK: Queries
-            should_detect_usage_for_queries = other.should_detect_usage_for_queries;
-            query = other.query;
+            m_rbool_query = other.m_rbool_query;
         }
         managed_base& operator=(const managed_base& other) {
             m_obj = other.m_obj;
             m_realm = other.m_realm;
             m_key = other.m_key;
-            // MARK: Queries
-            should_detect_usage_for_queries = other.should_detect_usage_for_queries;
-            query = other.query;
+            m_rbool_query = other.m_rbool_query;
             return *this;
         }
         managed_base(managed_base&& other) {
             m_obj = std::move(other.m_obj);
             m_realm = std::move(other.m_realm);
             m_key = std::move(other.m_key);
-            // MARK: Queries
-            should_detect_usage_for_queries = std::move(other.should_detect_usage_for_queries);
-            query = std::move(other.query);
+            m_rbool_query = std::move(other.m_rbool_query);
         }
         managed_base& operator=(managed_base&& other) {
             m_obj = std::move(other.m_obj);
             m_realm = std::move(other.m_realm);
             m_key = std::move(other.m_key);
-            // MARK: Queries
-            should_detect_usage_for_queries = std::move(other.should_detect_usage_for_queries);
-            query = std::move(other.query);
+            m_rbool_query = std::move(other.m_rbool_query);
             return *this;
         }
         ~managed_base() {
             m_obj = nullptr;
             m_realm = nullptr;
+            m_rbool_query = nullptr;
             m_key.~col_key();
-            should_detect_usage_for_queries = false;
-            query = nullptr;
         }
     public:
         static constexpr bool is_object = false;
@@ -346,8 +324,7 @@ namespace realm {
         internal::bridge::realm *m_realm = nullptr;
         internal::bridge::col_key m_key;
         // MARK: Queries
-        bool should_detect_usage_for_queries = false;
-        internal::bridge::query* query = nullptr;
+        rbool* m_rbool_query = nullptr;
 
         void assign(internal::bridge::obj *obj,
                     internal::bridge::realm* realm,
@@ -375,22 +352,17 @@ namespace realm {
             return *this;
         }
 
-        void prepare_for_query(internal::bridge::query& query_builder) {
-            should_detect_usage_for_queries = true;
-            query = &query_builder;
-        }
-
         void prepare_for_query(internal::bridge::realm* realm,
                                const internal::bridge::table& table,
-                               const std::string_view& col_name) {
-            this->query = new internal::bridge::query(table);
+                               const std::string_view& col_name,
+                               realm::rbool* query_builder) {
             this->m_realm = realm;
             this->m_key = table.get_column_key(col_name);
-            this->should_detect_usage_for_queries = true;
+            this->m_rbool_query = query_builder;
         }
     };
 
-    template<typename T, typename = void>
+    template<typename T, typename>
     struct managed;
 }
 
@@ -407,24 +379,16 @@ auto zipTuples(const std::tuple<Ts...>& tuple1, const std::tuple<Us...>& tuple2)
 
 #define __cpprealm_build_query(op, name, type) \
 rbool managed<type>::operator op(const type& rhs) const noexcept { \
-    if (this->should_detect_usage_for_queries) { \
-        auto query = internal::bridge::query(this->query->get_table()); \
-        query.name(this->m_key, serialize(rhs)); \
-        return query; \
+    if (this->m_rbool_query) { \
+        return this->m_rbool_query->name(m_key, rhs); \
     } \
     return serialize(detach()) op serialize(rhs); \
 } \
 
 #define __cpprealm_build_optional_query(op, name, type) \
 rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) const noexcept { \
-    if (this->should_detect_usage_for_queries) { \
-        auto query = internal::bridge::query(this->query->get_table()); \
-        if (auto r = serialize(rhs)) { \
-            query.name(this->m_key, *r); \
-        } else { \
-            query.name(this->m_key, std::nullopt); \
-        } \
-        return query; \
+    if (this->m_rbool_query) {        \
+        return this->m_rbool_query->name(m_key, rhs); \
     } \
     return serialize(detach()) op serialize(rhs); \
 } \
@@ -466,14 +430,14 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         managed(const managed& other) { \
             m_obj = other.m_obj; \
             m_realm = other.m_realm;                                                               \
-            m_prepare_for_query = other.m_prepare_for_query;                                     \
-            if (m_prepare_for_query) {                                                                                       \
+            m_rbool_query = other.m_rbool_query;                                     \
+            if (m_rbool_query) {                                                                                       \
                 auto schema = m_realm.schema().find(other.schema.name);                                  \
                 auto group = m_realm.read_group();                                                   \
                 auto table_ref = group.get_table(schema.table_key());                                  \
                 std::apply([&](auto &&...ptr) {                                                        \
                     std::apply([&](auto &&..._name) {                                                   \
-                        ((*this.*ptr).prepare_for_query(&m_realm, table_ref, _name), ...);                \
+                        ((*this.*ptr).prepare_for_query(&m_realm, table_ref, _name, m_rbool_query), ...);                \
                     }, managed_pointers_names);                                                         \
                 }, managed_pointers());                                                                 \
             } else {                                                                                      \
@@ -487,14 +451,14 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         managed& operator=(const managed& other) { \
             m_obj = other.m_obj; \
             m_realm = other.m_realm;                                                               \
-            m_prepare_for_query = other.m_prepare_for_query;                                     \
-             if (m_prepare_for_query) {                                                                                       \
+            m_rbool_query = other.m_rbool_query;                                     \
+             if (m_rbool_query) {                                                                                       \
                  auto schema = m_realm.schema().find(other.schema.name);                                  \
                  auto group = m_realm.read_group();                                                   \
                  auto table_ref = group.get_table(schema.table_key());                                  \
                  std::apply([&](auto &&...ptr) {                                                        \
                      std::apply([&](auto &&..._name) {                                                   \
-                         ((*this.*ptr).prepare_for_query(&m_realm, table_ref, _name), ...);                \
+                         ((*this.*ptr).prepare_for_query(&m_realm, table_ref, _name, m_rbool_query), ...);                \
                      }, managed_pointers_names);                                                         \
                  }, managed_pointers());                                                                 \
              } else {                                                                                      \
@@ -508,15 +472,15 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         } \
         managed(managed&& other) { \
             m_obj = std::move(other.m_obj); \
-            m_realm = std::move(other.m_realm);                                                    \
-            m_prepare_for_query = std::move(other.m_prepare_for_query);                                     \
-             if (m_prepare_for_query) {                                                                                       \
+            m_realm = std::move(other.m_realm);                                            \
+            m_rbool_query = std::move(other.m_rbool_query);                                     \
+             if (m_rbool_query) {                                                                                       \
                  auto schema = m_realm.schema().find(other.schema.name);                                  \
                  auto group = m_realm.read_group();                                                   \
                  auto table_ref = group.get_table(schema.table_key());                                  \
                  std::apply([&](auto &&...ptr) {                                                        \
                      std::apply([&](auto &&..._name) {                                                   \
-                         ((*this.*ptr).prepare_for_query(&m_realm, table_ref, _name), ...);                \
+                         ((*this.*ptr).prepare_for_query(&m_realm, table_ref, _name, m_rbool_query), ...);                \
                      }, managed_pointers_names);                                                         \
                  }, managed_pointers());                                                                 \
              } else {                                                                                      \
@@ -529,15 +493,15 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         } \
         managed& operator=(managed&& other) { \
             m_obj = std::move(other.m_obj); \
-            m_realm = std::move(other.m_realm);                                                   \
-            m_prepare_for_query = std::move(other.m_prepare_for_query);                                     \
-            if (m_prepare_for_query) {                                                                                       \
+            m_realm = std::move(other.m_realm);                                            \
+            m_rbool_query = std::move(other.m_rbool_query);                                     \
+            if (m_rbool_query) {                                                                                       \
                 auto schema = m_realm.schema().find(other.schema.name);                                  \
                 auto group = m_realm.read_group();                                                   \
                 auto table_ref = group.get_table(schema.table_key());                                  \
                 std::apply([&](auto &&...ptr) {                                                        \
                    std::apply([&](auto &&..._name) {                                                   \
-                     ((*this.*ptr).prepare_for_query(&m_realm, table_ref, _name), ...);                \
+                     ((*this.*ptr).prepare_for_query(&m_realm, table_ref, _name, m_rbool_query), ...);                \
                    }, managed_pointers_names);                                                         \
                 }, managed_pointers());                                                                 \
                 } else {                                                                                      \
@@ -549,16 +513,16 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
             }  \
              return *this;\
         }                                                                                          \
-        static managed prepare_for_query(const internal::bridge::realm& r) {                       \
+        static managed prepare_for_query(const internal::bridge::realm& r, realm::rbool* q) {                       \
             managed<cls> m;                                                                        \
-            m.m_prepare_for_query = true;                                                          \
-            m.m_realm = r;                                                                         \
+            m.m_realm = r;                                                                 \
+            m.m_rbool_query = q;                                                                               \
             auto schema = m.m_realm.schema().find(m.schema.name);                                  \
             auto group = m.m_realm.read_group();                                                   \
             auto table_ref = group.get_table(schema.table_key());                                  \
             std::apply([&](auto && ...ptr) {                                                        \
                 std::apply([&](auto&& ..._name) {                                                   \
-                    ((m.*ptr).prepare_for_query(&m.m_realm, table_ref, _name), ...);                \
+                    ((m.*ptr).prepare_for_query(&m.m_realm, table_ref, _name, m.m_rbool_query), ...);                \
                 }, managed_pointers_names);                                                         \
             }, managed_pointers());                                                                 \
             return m;                                                                               \
@@ -637,7 +601,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
     private:                                                                                       \
         internal::bridge::obj m_obj;                                                               \
         internal::bridge::realm m_realm;                                                           \
-        bool m_prepare_for_query = false;                                                          \
+        rbool* m_rbool_query = nullptr;                                                       \
         friend struct db;                                                                          \
         template <typename, typename> friend struct managed;                                       \
         template <typename, typename> friend struct box;                                           \

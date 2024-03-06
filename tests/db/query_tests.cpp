@@ -256,24 +256,34 @@ namespace realm {
         SECTION("link column") {
             auto realm = db(std::move(config));
 
-            auto obj = AllTypesObject();
-            auto obj_link = AllTypesObjectLink();
-            obj_link.str_col = "foo";
-            auto obj_link2 = StringObject();
-            obj_link2.str_col = "bar";
+            auto create_obj = [&](int64_t pk) {
+                auto obj = AllTypesObject();
+                obj._id = pk;
+                obj.str_col = "root obj";
+                auto obj_link = AllTypesObjectLink();
+                obj_link._id = pk;
+                obj_link.str_col = "foo";
+                auto obj_link2 = StringObject();
+                obj_link2._id = pk;
+                obj_link2.str_col = "bar";
 
-            obj.opt_obj_col = &obj_link;
-            obj_link.str_link_col = &obj_link2;
+                obj.opt_obj_col = &obj_link;
+                obj_link.str_link_col = &obj_link2;
 
-            auto managed_obj = realm.write([&]() {
-                return realm.add(std::move(obj));
-            });
+                return realm.write([&]() {
+                    return realm.add(std::move(obj));
+                });
+            };
+
+            auto managed_obj = create_obj(0);
+            auto managed_obj2 = create_obj(1);
+            auto managed_obj3 = create_obj(2);
 
             auto res = realm.objects<AllTypesObject>().where([](auto &obj) {
                 return obj.opt_obj_col->str_col == "foo";
             });
-            CHECK(res.size() == 1);
-            CHECK(query_string_results_size(AllTypesObject, "opt_obj_col.str_col == $0", {std::string("foo")}) == 1);
+            CHECK(res.size() == 3);
+            CHECK(query_string_results_size(AllTypesObject, "opt_obj_col.str_col == $0", {std::string("foo")}) == 3);
 
             res = realm.objects<AllTypesObject>().where([](auto &obj) {
                 return obj.opt_obj_col->str_col == "bar";
@@ -284,20 +294,40 @@ namespace realm {
             res = realm.objects<AllTypesObject>().where([](auto &obj) {
                 return obj.opt_obj_col->str_col != "bar";
             });
-            CHECK(res.size() == 1);
-            CHECK(query_string_results_size(AllTypesObject, "str_col != $0", {std::string("bar")}) == 1);
+            CHECK(res.size() == 3);
+            CHECK(query_string_results_size(AllTypesObject, "str_col != $0", {std::string("bar")}) == 3);
 
             res = realm.objects<AllTypesObject>().where([](auto &obj) {
                 return obj.opt_obj_col->str_link_col->str_col == "bar";
             });
-            CHECK(res.size() == 1);
-            CHECK(query_string_results_size(AllTypesObject, "opt_obj_col.str_link_col.str_col == $0", {std::string("bar")}) == 1);
+            CHECK(res.size() == 3);
+            CHECK(query_string_results_size(AllTypesObject, "opt_obj_col.str_link_col.str_col == $0", {std::string("bar")}) == 3);
 
             res = realm.objects<AllTypesObject>().where([](auto &obj) {
                 return obj.opt_obj_col->str_link_col->str_col != "bar";
             });
             CHECK(res.size() == 0);
             CHECK(query_string_results_size(AllTypesObject, "opt_obj_col.str_link_col.str_col != $0", {std::string("bar")}) == 0);
+
+            res = realm.objects<AllTypesObject>().where([&](auto &obj) {
+                return obj.opt_obj_col == managed_obj.opt_obj_col;
+            });
+            CHECK(res.size() == 1);
+
+            res = realm.objects<AllTypesObject>().where([](auto &obj) {
+                return obj.opt_obj_col == std::nullptr_t();
+            });
+            CHECK(res.size() == 0);
+
+            res = realm.objects<AllTypesObject>().where([&](auto &obj) {
+                return obj.opt_obj_col != managed_obj.opt_obj_col;
+            });
+            CHECK(res.size() == 2);
+
+            res = realm.objects<AllTypesObject>().where([](auto &obj) {
+                return obj.opt_obj_col != std::nullptr_t();
+            });
+            CHECK(res.size() == 3);
         }
     }
 }
