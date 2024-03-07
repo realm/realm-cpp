@@ -1,3 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+project(cpprealm_tests)
+
 Include(FetchContent)
 FetchContent_Declare(
         Catch2
@@ -55,8 +58,15 @@ endif()
 
 target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
 
-target_link_libraries(cpprealm_sync_tests cpprealm Catch2::Catch2)
-target_link_libraries(cpprealm_db_tests cpprealm Catch2::Catch2)
+if (DEFINED USES_CONAN)
+    find_package(cpprealm CONFIG REQUIRED)
+    set(CPPREALM_TARGET cpprealm::cpprealm)
+else()
+    set(CPPREALM_TARGET cpprealm)
+endif()
+
+target_link_libraries(cpprealm_sync_tests ${CPPREALM_TARGET} Catch2::Catch2)
+target_link_libraries(cpprealm_db_tests ${CPPREALM_TARGET} Catch2::Catch2)
 
 add_test(cpprealm_tests cpprealm_sync_tests cpprealm_db_tests)
 enable_testing()

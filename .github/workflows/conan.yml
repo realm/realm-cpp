@@ -1,0 +1,41 @@
+name: Test Conan integration
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-static:
+    runs-on: ${{ matrix.os }}
+    name: "Static linkage"
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        build_type: [Debug, Release]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Install Conan
+        id: conan
+        uses: turtlebrowser/get-conan@main
+
+      - name: Conan version
+        run: echo "${{ steps.conan.outputs.version }}"
+
+      - name: Configure and build
+        working-directory: .
+        if: matrix.os == 'macos-latest'
+        run: |
+          conan create . -tf="tests"
+
+      - name: Open a tmate debug session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          timeout-minutes: 15
