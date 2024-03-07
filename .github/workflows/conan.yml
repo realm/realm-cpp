@@ -28,11 +28,23 @@ jobs:
       - name: Conan version
         run: echo "${{ steps.conan.outputs.version }}"
 
-      - name: Configure and build
+      - name: Conan profile detect
         working-directory: .
-        if: matrix.os == 'macos-latest'
         run: |
-          conan create . -tf="tests"
+          conan profile detect
+
+      - name: Update Conan profile
+        if: matrix.os == 'windows-latest'
+        run: |
+          $profilePath = "$env:USERPROFILE\.conan2\profiles\default"
+          $content = Get-Content -Path $profilePath
+          $content = $content -replace 'compiler.cppstd=14', 'compiler.cppstd=17'
+          $content | Set-Content -Path $profilePath
+
+      - name: Conan create
+        working-directory: .
+        run: |
+          conan create . -tf="tests" -s build_type=${{ matrix.build_type }} -o use_libuv=True --build=missing
 
       - name: Open a tmate debug session
         if: ${{ failure() }}

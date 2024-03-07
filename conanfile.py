@@ -14,8 +14,8 @@ class cpprealmRecipe(ConanFile):
 
     # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False], "fPIC": [True, False]}
-    default_options = {"shared": False, "fPIC": True}
+    options = {"shared": [True, False], "use_libuv": [True, False]}
+    default_options = {"shared": False, "use_libuv": True}
 
     def is_darwin(self):
         return self.settings.os == "Macos" or self.settings.os == "iOS" or self.settings.os == "watchOS"
@@ -30,18 +30,16 @@ class cpprealmRecipe(ConanFile):
         if not self.is_darwin():
             self.requires("openssl/3.2.0")
         if self.settings.os == "Linux":
-            self.requires("curl/8.4.0")
+            self.requires("libcurl/8.4.0")
 
+        if not self.is_darwin() and self.options.use_libuv:
+            self.requires("libuv/1.43.0")
     def source(self):
         git = Git(self)
         git.clone(url="https://github.com/realm/realm-cpp", target=".")
         git.folder = "."
         git.checkout(commit="4b0cb2472656c57c214bab2e9d57f45b17945c16")
         git.run("submodule update --init --recursive")
-
-    def config_options(self):
-        if self.settings.os == "Windows":
-            del self.options.fPIC
 
     def layout(self):
         cmake_layout(self)
@@ -51,7 +49,7 @@ class cpprealmRecipe(ConanFile):
         deps.generate()
         tc = CMakeToolchain(self)
         tc.variables["REALM_CPP_NO_TESTS"] = "ON"
-        tc.variables["REALM_CORE_SUBMODULE_BUILD"] = "OFF"
+        tc.variables["REALM_CORE_SUBMODULE_BUILD"] = "ON"
         tc.generate()
 
     def build(self):
