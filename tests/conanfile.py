@@ -11,9 +11,11 @@ class helloTestConan(ConanFile):
 
     def requirements(self):
         self.requires(self.tested_reference_str)
+        self.requires("libuv/1.43.0")
 
     def generate(self):
         tc = CMakeToolchain(self)
+        # tc.cxxflags = ["/Zc:preprocessor /bigobj"]
         tc.variables["USES_CONAN"] = "ON"
         tc.generate()
 

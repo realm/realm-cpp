@@ -224,7 +224,7 @@ namespace realm {
         return db(config_copy);
     }
     template <typename ...Ts>
-    inline db open(const std::string& path, const std::shared_ptr<scheduler>& scheduler = scheduler::make_default()) {
+    inline db open(const std::string& path, const std::shared_ptr<scheduler>& scheduler) {
         return open<Ts...>(db_config(path, scheduler));
     }
 

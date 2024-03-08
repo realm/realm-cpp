@@ -18,10 +18,10 @@
 
 #define CATCH_CONFIG_RUNNER
 
-#include "admin_utils.hpp"
+// #include "admin_utils.hpp"
 #include <catch2/catch_all.hpp>
 #include <filesystem>
-#include <realm/util/features.h>
+// #include <realm/util/features.h>
 
 int main(int argc, char *argv[]) {
     Catch::ConfigData config;

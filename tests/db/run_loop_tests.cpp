@@ -5,13 +5,13 @@
 
 #include <realm/util/features.h>
 
-#if REALM_HAVE_UV
+#if __has_include(<uv.h>)
 #include <uv.h>
-#elif REALM_PLATFORM_APPLE
+#endif
+
+#if REALM_PLATFORM_APPLE
 #include "realm/util/cf_ptr.hpp"
 #include <CoreFoundation/CoreFoundation.h>
-#else
-#error "No EventLoop implementation selected, tests will fail"
 #endif
 
 class InvocationQueue {
@@ -137,7 +137,9 @@ bool RunLoopScheduler::can_invoke() const noexcept
     return false;
 }
 
-#else
+#endif
+
+#if REALM_HAVE_UV
 class UvScheduler final : public realm::scheduler {
 public:
     UvScheduler(uv_loop_t* loop)
@@ -226,7 +228,7 @@ void run_until(CFRunLoopRef loop, std::function<bool()> predicate)
     CFRelease(timer);
 }
 
-TEST_CASE("run loops", "[run loops]") {
+TEST_CASE("CFRunLoop", "[run loops]") {
     realm_path path;
 
     SECTION("CFRunLoop threads", "[run loops]") {
@@ -341,7 +343,9 @@ TEST_CASE("run loops", "[run loops]") {
     }
 }
 
-#else
+#endif
+
+#if REALM_HAVE_UV
 
 struct IdleHandler {
     uv_idle_t* idle = new uv_idle_t;
@@ -376,7 +380,7 @@ inline void run_until(uv_loop_t *loop, std::function<bool()> predicate) {
     uv_idle_stop(observer.idle);
 }
 
-TEST_CASE("run loops", "[run loops]") {
+TEST_CASE("UV run loop", "[run loops]") {
     realm_path path;
 
 //    #ifndef _WIN32
@@ -469,7 +473,6 @@ TEST_CASE("run loops", "[run loops]") {
     SECTION("uv main thread", "[run loops]") {
         realm::notification_token t1;
         realm::notification_token t2;
-
         bool signal = false;
 
         auto loop = uv_loop_new();

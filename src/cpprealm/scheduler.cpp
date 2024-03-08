@@ -73,10 +73,10 @@ namespace realm {
         std::shared_ptr<util::Scheduler> m_scheduler = util::Scheduler::make_default();
     };
 
-    std::shared_ptr<scheduler> scheduler::make_default() {
-#if QT_CORE_LIB
-        util::Scheduler::set_default_factory(make_qt);
-#endif
-        return std::make_shared<platform_default_scheduler>();
-    }
+//    std::shared_ptr<scheduler> scheduler::make_default() {
+//#if QT_CORE_LIB
+//        util::Scheduler::set_default_factory(make_qt);
+//#endif
+//        return std::make_shared<platform_default_scheduler>();
+//    }
 }

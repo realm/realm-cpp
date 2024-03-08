@@ -59,48 +59,6 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
         )
 
-# on Apple platforms we use the built-in CFRunLoop
-# everywhere else it's libuv, except UWP where it doesn't build
-if(NOT APPLE AND NOT WINDOWS_STORE AND NOT ANDROID)
-    if(VCPKG_TOOLCHAIN)
-        find_package(libuv CONFIG REQUIRED)
-        if (BUILD_SHARED_LIBS)
-            set(libuv_target libuv::uv)
-        else()
-            set(libuv_target libuv::uv_a)
-        endif()
-    else()
-        option(REALM_FETCH_MISSING_DEPENDENCIES "Download missing dependencies with CMake's FetchContent where possible" ON)
-        if(REALM_FETCH_MISSING_DEPENDENCIES)
-            find_package(LibUV)
-        else()
-            find_package(LibUV REQUIRED)
-        endif()
-        if(LibUV_FOUND)
-            set(libuv_target LibUV::LibUV)
-        elseif(REALM_FETCH_MISSING_DEPENDENCIES)
-            message(STATUS "LibUV not found, building from source with FetchContent")
-            include(FetchContent)
-            set(libUV_Git_TAG "v1.35.0")
-            if(MSVC)
-                set(liUV_Git_TAG "v1.43.0")
-            endif()
-            FetchContent_Declare(
-                    libuv
-                    GIT_REPOSITORY https://github.com/libuv/libuv.git
-                    GIT_TAG ${libUV_Git_TAG}
-            )
-            FetchContent_Populate(libuv)
-            add_subdirectory(${libuv_SOURCE_DIR} ${libuv_BINARY_DIR} EXCLUDE_FROM_ALL)
-            set(libuv_target uv_a)
-        endif()
-    endif()
-
-    target_compile_definitions(ObjectStore PUBLIC REALM_HAVE_UV=1)
-    target_link_libraries(cpprealm PUBLIC ${libuv_target})
-    target_link_libraries(ObjectStore PUBLIC ${libuv_target})
-endif()
-
 target_link_libraries(cpprealm PUBLIC Realm::ObjectStore)
 set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
 
@@ -128,6 +86,8 @@ endif()
 
 if(MSVC AND NOT DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+#    set_property(TARGET cpprealm PROPERTY
+#            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
 install(EXPORT "${PROJECT_NAME}Targets"

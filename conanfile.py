@@ -31,14 +31,13 @@ class cpprealmRecipe(ConanFile):
             self.requires("openssl/3.2.0")
         if self.settings.os == "Linux":
             self.requires("libcurl/8.4.0")
-
-        if not self.is_darwin() and self.options.use_libuv:
+        if self.options.use_libuv:
             self.requires("libuv/1.43.0")
     def source(self):
         git = Git(self)
         git.clone(url="https://github.com/realm/realm-cpp", target=".")
         git.folder = "."
-        git.checkout(commit="4b0cb2472656c57c214bab2e9d57f45b17945c16")
+        git.checkout(commit="5d77644485def49168fe25300f38a9d87ac28974")
         git.run("submodule update --init --recursive")
 
     def layout(self):
@@ -50,6 +49,10 @@ class cpprealmRecipe(ConanFile):
         tc = CMakeToolchain(self)
         tc.variables["REALM_CPP_NO_TESTS"] = "ON"
         tc.variables["REALM_CORE_SUBMODULE_BUILD"] = "ON"
+        tc.variables["REALM_USE_SYSTEM_OPENSSL"] = "ON"
+        if self.options.use_libuv:
+            tc.variables["REALM_USE_UV"] = "ON"
+            tc.variables["REALM_HAVE_UV"] = "ON"
         tc.generate()
 
     def build(self):
@@ -58,6 +61,7 @@ class cpprealmRecipe(ConanFile):
         cmake.build()
 
     def package(self):
+        self.cpp_info.cxxflags = ["/Zc:preprocessor /bigobj"]
         cmake = CMake(self)
         cmake.install()
 
