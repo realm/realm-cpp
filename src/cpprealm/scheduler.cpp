@@ -73,10 +73,30 @@ namespace realm {
         std::shared_ptr<util::Scheduler> m_scheduler = util::Scheduler::make_default();
     };
 
-//    std::shared_ptr<scheduler> scheduler::make_default() {
-//#if QT_CORE_LIB
-//        util::Scheduler::set_default_factory(make_qt);
-//#endif
-//        return std::make_shared<platform_default_scheduler>();
-//    }
+    struct null_scheduler final : public scheduler {
+        null_scheduler() = default;
+        ~null_scheduler() final = default;
+        void invoke(std::function<void()> &&fn) override {
+        }
+        [[nodiscard]] bool is_on_thread() const noexcept override {
+            return true;
+        }
+        bool is_same_as(const realm::scheduler *other) const noexcept override {
+            return this == other;
+        }
+        [[nodiscard]] bool can_invoke() const noexcept override {
+            return false;
+        }
+    };
+
+    std::shared_ptr<scheduler> scheduler::make_default() {
+#if QT_CORE_LIB
+        util::Scheduler::set_default_factory(make_qt);
+#endif
+        return std::make_shared<platform_default_scheduler>();
+    }
+
+    std::shared_ptr<scheduler> scheduler::make_null_scheduler() {
+        return std::make_shared<null_scheduler>();
+    }
 }

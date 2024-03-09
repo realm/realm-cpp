@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  build-static:
+  build-dynamic:
     runs-on: ${{ matrix.os }}
     name: "Static linkage"
     strategy:
@@ -44,7 +44,7 @@ jobs:
       - name: Conan create
         working-directory: .
         run: |
-          conan create . -tf="tests" -s build_type=${{ matrix.build_type }} -o use_libuv=True --build=missing
+          conan create . -tf="tests" -s build_type=${{ matrix.build_type }} -o use_libuv=True -o shared=True --build=missing
 
       - name: Open a tmate debug session
         if: ${{ failure() }}
