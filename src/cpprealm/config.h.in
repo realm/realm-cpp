@@ -1,0 +1,2 @@
+// Feature detection
+#cmakedefine01 CPPREALM_USE_UV

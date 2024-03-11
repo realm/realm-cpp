@@ -28,6 +28,7 @@ genrule {
 cc_defaults {
     name: "realm_cpp_defaults",
     cppflags: [
+        "-DCPPREALM_NO_CONFIG"
         "-Wno-delete-non-abstract-non-virtual-dtor",
         "-Wno-mismatched-tags",
         "-Wno-unused-parameter",

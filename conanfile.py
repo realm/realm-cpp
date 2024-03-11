@@ -32,12 +32,12 @@ class cpprealmRecipe(ConanFile):
         if self.settings.os == "Linux":
             self.requires("libcurl/8.4.0")
         if self.options.use_libuv:
-            self.requires("libuv/1.43.0")
+            self.requires("libuv/1.48.0")
     def source(self):
         git = Git(self)
         git.clone(url="https://github.com/realm/realm-cpp", target=".")
         git.folder = "."
-        git.checkout(commit="ae88becb0dfcd6e9dec290123ed5397ddc57c560")
+        git.checkout(commit="518f3ba5af44d6d23bf3128cfc9c6d99ec637426")
         git.run("submodule update --init --recursive")
 
     def layout(self):
@@ -47,12 +47,13 @@ class cpprealmRecipe(ConanFile):
         deps = CMakeDeps(self)
         deps.generate()
         tc = CMakeToolchain(self)
+        tc.variables["USES_CONAN"] = "ON"
         tc.variables["REALM_CPP_NO_TESTS"] = "ON"
         tc.variables["REALM_CORE_SUBMODULE_BUILD"] = "ON"
         tc.variables["REALM_USE_SYSTEM_OPENSSL"] = "ON"
         if self.options.use_libuv:
-            tc.variables["REALM_USE_UV"] = "ON"
-            tc.variables["REALM_HAVE_UV"] = "ON"
+            tc.variables["CPPREALM_USE_UV"] = "ON"
+            self.cpp_info.defines = ["CPPREALM_USE_UV = 1"]
         tc.generate()
 
     def build(self):
@@ -66,6 +67,9 @@ class cpprealmRecipe(ConanFile):
         cmake.install()
 
     def package_info(self):
-        self.cpp_info.libs = ["cpprealm", "realm", "realm-object-store", "realm-sync", "realm-parser"]
+        if self.settings.build_type == "Debug":
+            self.cpp_info.libs = ["cpprealm-dbg", "realm-dbg", "realm-object-store-dbg", "realm-sync-dbg", "realm-parser-dbg"]
+        else:
+            self.cpp_info.libs = ["cpprealm", "realm", "realm-object-store", "realm-sync", "realm-parser"]
         if self.is_darwin():
             self.cpp_info.frameworks = ["Foundation", "Security", "Compression", "z"]

@@ -84,10 +84,16 @@ else()
     endif()
 endif()
 
-if(MSVC AND NOT DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
+if(MSVC AND NOT DEFINED CMAKE_MSVC_RUNTIME_LIBRARY AND NOT DEFINED BUILD_SHARED_LIBS)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-#    set_property(TARGET cpprealm PROPERTY
-#            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
+if(DEFINED CPPREALM_USE_UV)
+    if (DEFINED USES_CONAN)
+        find_package(libuv REQUIRED)
+        target_link_libraries(cpprealm PUBLIC ${libuv_LIBRARIES})
+        target_compile_definitions(cpprealm PUBLIC CPPREALM_USE_UV=1)
+    endif()
 endif()
 
 install(EXPORT "${PROJECT_NAME}Targets"
@@ -129,7 +135,6 @@ if (BUILD_SHARED_LIBS)
                         " Hidden visibility is not supported.")
     endif()
 endif()
-
 
 if (NOT REALM_CPP_NO_TESTS)
     add_subdirectory(tests)

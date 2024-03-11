@@ -24,11 +24,25 @@
 #include <queue>
 
 namespace realm {
+    namespace util {
+        class Scheduler;
+    }
+
     struct scheduler {
-        static std::shared_ptr<scheduler> make_default();
-
-        static std::shared_ptr<scheduler> make_null_scheduler();
-
+        static std::shared_ptr<scheduler> make_platform_default();
+        static std::shared_ptr<scheduler> make_dummy_scheduler();
+//#ifdef CPPREALM_USE_UV
+//        static std::shared_ptr<scheduler> make_UV_scheduler(uv_loop_t* loop);
+//#endif
+//#if __APPLE__
+//        static std::shared_ptr<scheduler> make_CFRunLoop_scheduler(CFRunLoopRef run_loop);
+//#endif
+//#if QT_CORE_LIB
+//        static std::shared_ptr<scheduler> make_Qt_scheduler();
+//#endif
+//#if __ANDROID__
+//        static std::shared_ptr<scheduler> make_Android_ALooper_scheduler();
+//#endif
 
         virtual ~scheduler() = default;
 

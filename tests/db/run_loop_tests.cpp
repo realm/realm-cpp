@@ -3,209 +3,17 @@
 #include <functional>
 #include <mutex>
 
-#include <realm/util/features.h>
-
 #if __has_include(<uv.h>)
+#include <cpprealm/schedulers/uv_scheduler.hpp>
 #include <uv.h>
+#define USE_UV
 #endif
 
-#if REALM_PLATFORM_APPLE
-#include "realm/util/cf_ptr.hpp"
-#include <CoreFoundation/CoreFoundation.h>
-#endif
-
-class InvocationQueue {
-public:
-    void push(std::function<void()>&&);
-    void invoke_all();
-
-private:
-    std::mutex m_mutex;
-    std::vector<std::function<void()>> m_functions;
-};
-
-void InvocationQueue::push(std::function<void()>&& fn)
-{
-    std::lock_guard lock(m_mutex);
-    m_functions.push_back(std::move(fn));
-}
-
-void InvocationQueue::invoke_all()
-{
-    std::vector<std::function<void()>> functions;
-    {
-        std::lock_guard lock(m_mutex);
-        functions.swap(m_functions);
-    }
-    for (auto&& fn : functions) {
-        fn();
-    }
-}
-
-#if REALM_PLATFORM_APPLE
-
-struct RefCountedInvocationQueue {
-    InvocationQueue queue;
-    std::atomic<size_t> ref_count = {0};
-};
-
-class RunLoopScheduler : public realm::scheduler {
-public:
-    RunLoopScheduler(CFRunLoopRef run_loop = nullptr);
-    ~RunLoopScheduler();
-
-    void invoke(std::function<void()>&&) override;
-
-    bool is_on_thread() const noexcept override;
-    bool is_same_as(const scheduler* other) const noexcept override;
-    bool can_invoke() const noexcept override;
-
-private:
-    CFRunLoopRef m_runloop;
-    CFRunLoopSourceRef m_notify_signal = nullptr;
-    RefCountedInvocationQueue& m_queue;
-
-    void release(CFRunLoopSourceRef&);
-    void set_callback(CFRunLoopSourceRef&, std::function<void()>);
-};
-
-RunLoopScheduler::RunLoopScheduler(CFRunLoopRef run_loop)
-    : m_runloop(run_loop ?: CFRunLoopGetCurrent())
-      , m_queue(*new RefCountedInvocationQueue)
-{
-    CFRetain(m_runloop);
-
-    CFRunLoopSourceContext ctx{};
-    ctx.info = &m_queue;
-    ctx.perform = [](void* info) {
-        static_cast<RefCountedInvocationQueue*>(info)->queue.invoke_all();
-    };
-    ctx.retain = [](const void* info) {
-        static_cast<RefCountedInvocationQueue*>(const_cast<void*>(info))
-                ->ref_count.fetch_add(1, std::memory_order_relaxed);
-        return info;
-    };
-    ctx.release = [](const void* info) {
-        auto ptr = static_cast<RefCountedInvocationQueue*>(const_cast<void*>(info));
-        if (ptr->ref_count.fetch_add(-1, std::memory_order_acq_rel) == 1) {
-            delete ptr;
-        }
-    };
-
-    m_notify_signal = CFRunLoopSourceCreate(kCFAllocatorDefault, 0, &ctx);
-    CFRunLoopAddSource(m_runloop, m_notify_signal, kCFRunLoopDefaultMode);
-}
-
-RunLoopScheduler::~RunLoopScheduler()
-{
-    CFRunLoopSourceInvalidate(m_notify_signal);
-    CFRelease(m_notify_signal);
-    CFRelease(m_runloop);
-}
-
-void RunLoopScheduler::invoke(std::function<void()>&& fn)
-{
-    m_queue.queue.push(std::move(fn));
-
-    CFRunLoopSourceSignal(m_notify_signal);
-    // Signalling the source makes it run the next time the runloop gets
-    // to it, but doesn't make the runloop start if it's currently idle
-    // waiting for events
-    CFRunLoopWakeUp(m_runloop);
-}
-
-bool RunLoopScheduler::is_on_thread() const noexcept
-{
-    return CFRunLoopGetCurrent() == m_runloop;
-}
-
-bool RunLoopScheduler::is_same_as(const scheduler* other) const noexcept
-{
-    auto o = dynamic_cast<const RunLoopScheduler*>(other);
-    return (o && (o->m_runloop == m_runloop));
-}
-
-bool RunLoopScheduler::can_invoke() const noexcept
-{
-    if (pthread_main_np())
-        return true;
-
-    if (auto mode = CFRunLoopCopyCurrentMode(CFRunLoopGetCurrent())) {
-        CFRelease(mode);
-        return true;
-    }
-    return false;
-}
-
-#endif
-
-#if REALM_HAVE_UV
-class UvScheduler final : public realm::scheduler {
-public:
-    UvScheduler(uv_loop_t* loop)
-        : m_handle(std::make_unique<uv_async_t>()) {
-        int err = uv_async_init(loop, m_handle.get(), [](uv_async_t *handle) {
-            if (!handle->data) {
-                return;
-            }
-            auto &data = *static_cast<Data *>(handle->data);
-            if (data.close_requested) {
-                uv_close(reinterpret_cast<uv_handle_t *>(handle), [](uv_handle_t *handle) {
-                    delete reinterpret_cast<Data *>(handle->data);
-                    delete reinterpret_cast<uv_async_t *>(handle);
-                });
-            } else {
-                data.queue.invoke_all();
-            }
-        });
-        if (err < 0) {
-            throw std::runtime_error("uv_async_init failed");
-        }
-        m_handle->data = new Data;
-    }
-
-    ~UvScheduler() {
-        if (m_handle && m_handle->data) {
-            static_cast<Data *>(m_handle->data)->close_requested = true;
-            uv_async_send(m_handle.get());
-            // Don't delete anything here as we need to delete it from within the event loop instead
-            m_handle.release();
-        }
-    }
-
-    bool is_on_thread() const noexcept override {
-        return m_id == std::this_thread::get_id();
-    }
-    bool is_same_as(const scheduler *other) const noexcept override {
-        auto o = dynamic_cast<const UvScheduler *>(other);
-        return (o && (o->m_id == m_id));
-    }
-    bool can_invoke() const noexcept override {
-        return true;
-    }
-
-    void invoke(std::function<void()> &&fn) override {
-        auto &data = *static_cast<Data *>(m_handle->data);
-        data.queue.push(std::move(fn));
-        uv_async_send(m_handle.get());
-    }
-
-private:
-    struct Data {
-        InvocationQueue queue;
-        std::atomic<bool> close_requested = {false};
-    };
-    std::unique_ptr<uv_async_t> m_handle;
-    std::thread::id m_id = std::this_thread::get_id();
-};
-#endif
-
-#if REALM_PLATFORM_APPLE
+#if __APPLE__
+#include <cpprealm/schedulers/apple_scheduler.hpp>
 
 void run_until(CFRunLoopRef loop, std::function<bool()> predicate)
 {
-    REALM_ASSERT(loop == CFRunLoopGetCurrent());
-
     auto callback = [](CFRunLoopObserverRef, CFRunLoopActivity, void* info) {
         if ((*static_cast<std::function<bool()>*>(info))()) {
             CFRunLoopStop(CFRunLoopGetCurrent());
@@ -249,7 +57,7 @@ TEST_CASE("CFRunLoop", "[run loops]") {
                 auto loop = CFRunLoopGetCurrent();
 
                 auto obj = realm::AllTypesObject();
-                auto config = realm::db_config(path, std::make_shared<RunLoopScheduler>(loop));
+                auto config = realm::db_config(path, realm::make_apple_scheduler(loop));
 
                 auto realm = realm::db(std::move(config));
                 auto managed_obj = realm.write([&realm, &obj] {
@@ -278,7 +86,7 @@ TEST_CASE("CFRunLoop", "[run loops]") {
 
                 auto obj = realm::AllTypesObject();
 
-                auto config = realm::db_config(path, std::make_shared<RunLoopScheduler>(loop));
+                auto config = realm::db_config(path, realm::make_apple_scheduler(loop));
                 auto realm = realm::db(std::move(config));
                 {
                     obj._id = 123;
@@ -296,7 +104,7 @@ TEST_CASE("CFRunLoop", "[run loops]") {
                 }
 
                 {
-                    auto c = realm::db_config(path, std::make_shared<RunLoopScheduler>(loop));
+                    auto c = realm::db_config(path, realm::make_apple_scheduler(loop));
 
                     auto r = realm::db(std::move(c));
                     auto o = r.objects<realm::AllTypesObject>().where([](auto& obj) { return obj._id == 123; })[0];
@@ -323,7 +131,7 @@ TEST_CASE("CFRunLoop", "[run loops]") {
 
         auto loop = CFRunLoopGetCurrent();
         auto obj = realm::AllTypesObject();
-        auto config = realm::db_config(path, std::make_shared<RunLoopScheduler>(loop));
+        auto config = realm::db_config(path, realm::make_apple_scheduler(loop));
 
         auto realm = realm::db(std::move(config));
         auto managed_obj = realm.write([&realm, &obj] {
@@ -345,7 +153,7 @@ TEST_CASE("CFRunLoop", "[run loops]") {
 
 #endif
 
-#if REALM_HAVE_UV
+#ifdef USE_UV
 
 struct IdleHandler {
     uv_idle_t* idle = new uv_idle_t;
@@ -477,7 +285,7 @@ TEST_CASE("UV run loop", "[run loops]") {
 
         auto loop = uv_loop_new();
         auto obj = realm::AllTypesObject();
-        auto config = realm::db_config(path, std::make_shared<UvScheduler>(loop));
+        auto config = realm::db_config(path, realm::make_uv_scheduler(loop));
 
         auto realm = realm::db(std::move(config));
         auto managed_obj = realm.write([&realm, &obj] {
@@ -496,6 +304,8 @@ TEST_CASE("UV run loop", "[run loops]") {
         run_until(loop, [&]() {
             return signal;
         });
+
+        CHECK(signal);
     }
 }
 #endif

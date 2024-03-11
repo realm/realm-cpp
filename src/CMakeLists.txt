@@ -4,7 +4,13 @@ include(GetVersion)
 # Configure source code to use right version number
 configure_file(cpprealm/internal/version_numbers.hpp.in cpprealm/version_numbers.hpp)
 
+# Store configuration in header file
+configure_file(cpprealm/config.h.in cpprealm/config.h)
+
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/version_numbers.hpp
+        DESTINATION include/cpprealm
+        COMPONENT devel)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/config.h
         DESTINATION include/cpprealm
         COMPONENT devel)
 
@@ -129,7 +135,16 @@ set(HEADERS
     cpprealm/scheduler.hpp
     cpprealm/schema.hpp
     cpprealm/thread_safe_reference.hpp
+    cpprealm/schedulers/apple_scheduler.hpp
     cpprealm/sdk.hpp) # REALM_INSTALL_HEADERS
+
+if (APPLE)
+    list(APPEND HEADERS cpprealm/schedulers/apple_scheduler.hpp)
+    list(APPEND SOURCES cpprealm/schedulers/apple_scheduler.cpp)
+endif()
+if (DEFINED CPPREALM_USE_UV)
+    list(APPEND HEADERS cpprealm/schedulers/uv_scheduler.hpp)
+endif()
 
 include(GNUInstallDirs)
 
