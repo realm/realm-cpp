@@ -28,6 +28,18 @@ namespace realm {
         class Scheduler;
     }
 
+    // A thread-safe queue of functions to invoke, used in the implemenation of
+    // some of the schedulers
+    class invocation_queue {
+    public:
+        void push(std::function<void()>&&);
+        void invoke_all();
+
+    private:
+        std::mutex m_mutex;
+        std::vector<std::function<void()>> m_functions;
+    };
+
     struct scheduler {
         static std::shared_ptr<scheduler> make_platform_default();
         static std::shared_ptr<scheduler> make_dummy_scheduler();

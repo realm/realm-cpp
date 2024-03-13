@@ -135,7 +135,6 @@ set(HEADERS
     cpprealm/scheduler.hpp
     cpprealm/schema.hpp
     cpprealm/thread_safe_reference.hpp
-    cpprealm/schedulers/apple_scheduler.hpp
     cpprealm/sdk.hpp) # REALM_INSTALL_HEADERS
 
 if (APPLE)
@@ -144,6 +143,7 @@ if (APPLE)
 endif()
 if (DEFINED CPPREALM_USE_UV)
     list(APPEND HEADERS cpprealm/schedulers/uv_scheduler.hpp)
+    list(APPEND SOURCES cpprealm/schedulers/uv_scheduler.cpp)
 endif()
 
 include(GNUInstallDirs)

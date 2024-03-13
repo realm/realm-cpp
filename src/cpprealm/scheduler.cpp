@@ -15,6 +15,24 @@
 
 namespace realm {
 
+    void invocation_queue::push(std::function<void()>&& fn)
+    {
+        std::lock_guard lock(m_mutex);
+        m_functions.push_back(std::move(fn));
+    }
+
+    void invocation_queue::invoke_all()
+    {
+        std::vector<std::function<void()>> functions;
+        {
+            std::lock_guard lock(m_mutex);
+            functions.swap(m_functions);
+        }
+        for (auto&& fn : functions) {
+            fn();
+        }
+    }
+
 #if QT_CORE_LIB
     struct QtMainLoopScheduler : public QObject, public util::Scheduler {
 
