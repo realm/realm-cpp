@@ -42,6 +42,7 @@ struct notification_token {
         m_token = std::move(other.m_token);
         m_dictionary = std::move(other.m_dictionary);
         m_list = std::move(other.m_list);
+        m_set = std::move(other.m_set);
         m_results = std::move(other.m_results);
         m_realm = std::move(other.m_realm);
     };
@@ -49,6 +50,7 @@ struct notification_token {
         m_token = std::move(other.m_token);
         m_dictionary = std::move(other.m_dictionary);
         m_list = std::move(other.m_list);
+        m_set = std::move(other.m_set);
         m_results = std::move(other.m_results);
         m_realm = std::move(other.m_realm);
         return *this;
