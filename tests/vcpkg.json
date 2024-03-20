@@ -1,10 +1,7 @@
 {
   "dependencies": [
       {
-        "name": "cpprealm",
-        "features": [
-          "use-libuv"
-        ]
+        "name": "cpprealm"
       }
     ]
 }

@@ -21,10 +21,6 @@
 
 #include <utility>
 
-#ifndef CPPREALM_NO_CONFIG
-#include <cpprealm/config.h>
-#endif
-
 #include <cpprealm/schema.hpp>
 #include <cpprealm/notifications.hpp>
 #include <cpprealm/app.hpp>

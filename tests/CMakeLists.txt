@@ -10,7 +10,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-if (NOT DEFINED USES_CONAN)
+if (NOT DEFINED USES_CONAN AND NOT DEFINED VCPKG_OVERLAY_PORTS)
     add_executable(cpprealm_sync_tests
                     main.hpp
                     main.cpp
@@ -52,7 +52,7 @@ if (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:preprocessor /bigobj")
 endif()
 
-if (NOT DEFINED USES_CONAN)
+if (NOT DEFINED USES_CONAN AND NOT DEFINED VCPKG_OVERLAY_PORTS)
     target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
 endif()
 
@@ -66,7 +66,7 @@ else()
     set(CPPREALM_TARGET cpprealm)
 endif()
 
-if(DEFINED CPPREALM_USE_UV)
+if(NOT APPLE AND NOT WINDOWS_STORE AND NOT ANDROID)
     if (DEFINED USES_CONAN)
         find_package(libuv REQUIRED)
     elseif(DEFINED VCPKG_OVERLAY_PORTS)
@@ -85,12 +85,10 @@ if(DEFINED CPPREALM_USE_UV)
         set(libuv_LIBRARIES uv_a)
         target_link_libraries(${CPPREALM_TARGET} PUBLIC ${libuv_LIBRARIES})
     endif()
+    target_compile_definitions(cpprealm_db_tests PUBLIC REALM_HAVE_UV)
 endif()
 
-if (MSVC AND NOT DEFINED BUILD_SHARED_LIBS AND NOT DEFINED USES_CONAN)
-    set_property(TARGET cpprealm_sync_tests PROPERTY
-            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-
+if (MSVC AND ENABLE_STATIC)
     set_property(TARGET cpprealm_db_tests PROPERTY
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
@@ -98,15 +96,16 @@ if (MSVC AND NOT DEFINED BUILD_SHARED_LIBS AND NOT DEFINED USES_CONAN)
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
-if (NOT DEFINED USES_CONAN)
+if (MSVC)
+    target_link_libraries(cpprealm_db_tests PUBLIC Version)
+endif()
+
+if (NOT DEFINED USES_CONAN AND NOT DEFINED VCPKG_OVERLAY_PORTS)
     target_link_libraries(cpprealm_sync_tests PUBLIC ${CPPREALM_TARGET} Catch2::Catch2)
 endif()
 target_link_libraries(cpprealm_db_tests PUBLIC ${CPPREALM_TARGET} Catch2::Catch2)
 
-if (DEFINED USES_CONAN)
-    if (MSVC)
-        target_link_libraries(cpprealm_db_tests PUBLIC Version)
-    endif()
+if (DEFINED USES_CONAN OR DEFINED VCPKG_OVERLAY_PORTS)
     add_test(cpprealm_tests cpprealm_db_tests)
 else()
     add_test(cpprealm_tests cpprealm_sync_tests cpprealm_db_tests)

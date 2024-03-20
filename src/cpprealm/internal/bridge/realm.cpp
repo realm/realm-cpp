@@ -107,7 +107,7 @@ namespace realm::internal::bridge {
         RealmConfig config;
         config.cache = true;
         config.path = std::filesystem::current_path().append("default.realm").generic_string();
-        config.scheduler = std::make_shared<internal_scheduler>(scheduler::make_dummy_scheduler());
+        config.scheduler = std::make_shared<internal_scheduler>(scheduler::make_default());
         config.schema_version = 0;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_config) RealmConfig(config);
@@ -433,8 +433,7 @@ namespace realm::internal::bridge {
             return *this;
         auto config = m_realm->config();
         config.cache = true;
-        // TODO: add arg to pass in scheduler
-        config.scheduler = std::make_shared<internal_scheduler>(scheduler::make_dummy_scheduler());
+        config.scheduler = std::make_shared<internal_scheduler>(scheduler::make_default());
         return realm(std::move(config));
     }
 

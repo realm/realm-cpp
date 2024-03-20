@@ -24,37 +24,8 @@
 #include <queue>
 
 namespace realm {
-    namespace util {
-        class Scheduler;
-    }
-
-    // A thread-safe queue of functions to invoke, used in the implemenation of
-    // some of the schedulers
-    class invocation_queue {
-    public:
-        void push(std::function<void()>&&);
-        void invoke_all();
-
-    private:
-        std::mutex m_mutex;
-        std::vector<std::function<void()>> m_functions;
-    };
-
     struct scheduler {
-        static std::shared_ptr<scheduler> make_platform_default();
-        static std::shared_ptr<scheduler> make_dummy_scheduler();
-//#ifdef CPPREALM_USE_UV
-//        static std::shared_ptr<scheduler> make_UV_scheduler(uv_loop_t* loop);
-//#endif
-//#if __APPLE__
-//        static std::shared_ptr<scheduler> make_CFRunLoop_scheduler(CFRunLoopRef run_loop);
-//#endif
-//#if QT_CORE_LIB
-//        static std::shared_ptr<scheduler> make_Qt_scheduler();
-//#endif
-//#if __ANDROID__
-//        static std::shared_ptr<scheduler> make_Android_ALooper_scheduler();
-//#endif
+        static std::shared_ptr<scheduler> make_default();
 
         virtual ~scheduler() = default;
 

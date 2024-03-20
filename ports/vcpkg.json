@@ -4,9 +4,6 @@
   "description": "Realm is a mobile database that runs directly inside phones, tablets or wearables.",
   "homepage": "https://github.com/realm/realm-cpp",
   "license": "Apache-2.0",
-  "features": {
-    "use-libuv": { "description": "Use LibUV for scheduler.", "dependencies": ["libuv"]}
-  },
   "dependencies": [
     {
       "name": "vcpkg-cmake",
@@ -15,6 +12,11 @@
     {
       "name": "vcpkg-cmake-config",
       "host": true
+    },
+    {
+      "name": "libuv",
+      "version>=": "1.43.0",
+      "platform": "!osx"
     },
     {
       "name": "curl",

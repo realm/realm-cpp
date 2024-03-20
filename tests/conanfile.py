@@ -20,9 +20,7 @@ class helloTestConan(ConanFile):
 
     def generate(self):
         tc = CMakeToolchain(self)
-        # tc.cxxflags = ["/Zc:preprocessor /bigobj"]
         tc.variables["USES_CONAN"] = "ON"
-        tc.variables["CPPREALM_USE_UV"] = "ON"
         tc.generate()
 
     def build(self):

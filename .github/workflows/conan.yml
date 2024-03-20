@@ -44,7 +44,7 @@ jobs:
       - name: Conan create
         working-directory: .
         run: |
-          conan create . -tf="tests" -s build_type=${{ matrix.build_type }} -o use_libuv=True -o shared=${{ matrix.linkage_is_dynamic }} --build=missing
+          conan create . -tf="tests" -s build_type=${{ matrix.build_type }} -o shared=${{ matrix.linkage_is_dynamic }} --build=missing
 
       - name: Open a tmate debug session
         if: ${{ failure() }}

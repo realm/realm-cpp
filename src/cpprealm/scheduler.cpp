@@ -9,30 +9,7 @@
 #include <QtWidgets/QApplication>
 #endif
 
-#if __APPLE__
-#include <CoreFoundation/CoreFoundation.h>
-#endif
-
 namespace realm {
-
-    void invocation_queue::push(std::function<void()>&& fn)
-    {
-        std::lock_guard lock(m_mutex);
-        m_functions.push_back(std::move(fn));
-    }
-
-    void invocation_queue::invoke_all()
-    {
-        std::vector<std::function<void()>> functions;
-        {
-            std::lock_guard lock(m_mutex);
-            functions.swap(m_functions);
-        }
-        for (auto&& fn : functions) {
-            fn();
-        }
-    }
-
 #if QT_CORE_LIB
     struct QtMainLoopScheduler : public QObject, public util::Scheduler {
 
@@ -74,8 +51,7 @@ namespace realm {
 #endif
 
     struct platform_default_scheduler final : public scheduler {
-        explicit platform_default_scheduler(const std::shared_ptr<util::Scheduler>& s) : m_scheduler(s) { };
-        platform_default_scheduler() = delete;
+        platform_default_scheduler() = default;
         ~platform_default_scheduler() final = default;
         void invoke(std::function<void()> &&fn) override {
             m_scheduler->invoke([f = std::move(fn)]() {
@@ -94,30 +70,13 @@ namespace realm {
         [[nodiscard]] bool can_invoke() const noexcept override {
             return m_scheduler->can_invoke();
         }
-        std::shared_ptr<util::Scheduler> m_scheduler;
+        std::shared_ptr<util::Scheduler> m_scheduler = util::Scheduler::make_default();
     };
 
-    std::shared_ptr<scheduler> scheduler::make_platform_default() {
+    std::shared_ptr<scheduler> scheduler::make_default() {
 #if QT_CORE_LIB
         util::Scheduler::set_default_factory(make_qt);
 #endif
-        return std::make_shared<platform_default_scheduler>(util::Scheduler::make_default());
+        return std::make_shared<platform_default_scheduler>();
     }
-
-    std::shared_ptr<scheduler> scheduler::make_dummy_scheduler() {
-        return std::make_shared<platform_default_scheduler>(util::Scheduler::make_dummy());
-    }
-
-#if QT_CORE_LIB
-    std::shared_ptr<scheduler> scheduler::make_Qt_scheduler() {
-        return std::make_shared<platform_default_scheduler>(make_qt());
-    }
-#endif
-
-#if __ANDROID__
-    std::shared_ptr<scheduler> scheduler::make_Android_ALooper_scheduler() {
-        return std::make_shared<platform_default_scheduler>(util::Scheduler::make_alooper());
-    }
-#endif // REALM_ANDROID
-
 }

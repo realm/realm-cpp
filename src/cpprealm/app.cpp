@@ -413,9 +413,9 @@ namespace realm {
     }
 
     App::App(const configuration& config) {
-//#if QT_CORE_LIB
-//        util::Scheduler::set_default_factory(util::make_qt);
-//#endif
+#if QT_CORE_LIB
+        util::Scheduler::set_default_factory(util::make_qt);
+#endif
         SyncClientConfig client_config;
 
 #if REALM_PLATFORM_APPLE
