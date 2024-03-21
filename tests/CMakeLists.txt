@@ -72,18 +72,6 @@ if(NOT APPLE AND NOT WINDOWS_STORE AND NOT ANDROID)
     elseif(DEFINED VCPKG_OVERLAY_PORTS)
         find_package(libuv CONFIG REQUIRED)
         target_link_libraries(cpprealm_db_tests PUBLIC $<IF:$<TARGET_EXISTS:libuv::uv_a>,libuv::uv_a,libuv::uv>)
-    else()
-        include(FetchContent)
-        set(liUV_Git_TAG "v1.48.0")
-        FetchContent_Declare(
-                libuv
-                GIT_REPOSITORY https://github.com/libuv/libuv.git
-                GIT_TAG ${libUV_Git_TAG}
-        )
-        FetchContent_Populate(libuv)
-        add_subdirectory(${libuv_SOURCE_DIR} ${libuv_BINARY_DIR} EXCLUDE_FROM_ALL)
-        set(libuv_LIBRARIES uv_a)
-        target_link_libraries(${CPPREALM_TARGET} PUBLIC ${libuv_LIBRARIES})
     endif()
     target_compile_definitions(cpprealm_db_tests PUBLIC REALM_HAVE_UV)
 endif()
