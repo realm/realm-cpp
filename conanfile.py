@@ -36,7 +36,7 @@ class cpprealmRecipe(ConanFile):
         git = Git(self)
         git.clone(url="https://github.com/realm/realm-cpp", target=".")
         git.folder = "."
-        git.checkout(commit="63fc9a53be1a323ce22e9ebfbcd79fd4e4521f8c")
+        git.checkout(commit="316c31841b56fab7fe1f28f0aa0138e00f10a8cb")
         git.run("submodule update --init --recursive")
 
     def layout(self):
