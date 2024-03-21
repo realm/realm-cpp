@@ -96,10 +96,6 @@ if (MSVC AND ENABLE_STATIC)
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
-if (MSVC)
-    target_link_libraries(cpprealm_db_tests PUBLIC Version)
-endif()
-
 if (NOT DEFINED USES_CONAN AND NOT DEFINED VCPKG_OVERLAY_PORTS)
     target_link_libraries(cpprealm_sync_tests PUBLIC ${CPPREALM_TARGET} Catch2::Catch2)
 endif()
