@@ -10,7 +10,13 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-if (NOT DEFINED USES_CONAN AND NOT DEFINED VCPKG_OVERLAY_PORTS)
+if (DEFINED USES_CONAN OR DEFINED VCPKG_OVERLAY_PORTS)
+    set(BUILD_FROM_PACKAGE_MANAGER ON)
+else()
+    set(BUILD_FROM_PACKAGE_MANAGER OFF)
+endif()
+
+if (NOT BUILD_FROM_PACKAGE_MANAGER)
     add_executable(cpprealm_sync_tests
                     main.hpp
                     main.cpp
@@ -52,7 +58,7 @@ if (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:preprocessor /bigobj")
 endif()
 
-if (NOT DEFINED USES_CONAN AND NOT DEFINED VCPKG_OVERLAY_PORTS)
+if (NOT BUILD_FROM_PACKAGE_MANAGER)
     target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
 endif()
 
@@ -80,16 +86,21 @@ if (MSVC AND ENABLE_STATIC)
     set_property(TARGET cpprealm_db_tests PROPERTY
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+    if (NOT BUILD_FROM_PACKAGE_MANAGER)
+        set_property(TARGET cpprealm_sync_tests PROPERTY
+                MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
+
     set_property(TARGET Catch2 PROPERTY
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
-if (NOT DEFINED USES_CONAN AND NOT DEFINED VCPKG_OVERLAY_PORTS)
+if (NOT BUILD_FROM_PACKAGE_MANAGER)
     target_link_libraries(cpprealm_sync_tests PUBLIC ${CPPREALM_TARGET} Catch2::Catch2)
 endif()
 target_link_libraries(cpprealm_db_tests PUBLIC ${CPPREALM_TARGET} Catch2::Catch2)
 
-if (DEFINED USES_CONAN OR DEFINED VCPKG_OVERLAY_PORTS)
+if (BUILD_FROM_PACKAGE_MANAGER)
     add_test(cpprealm_tests cpprealm_db_tests)
 else()
     add_test(cpprealm_tests cpprealm_sync_tests cpprealm_db_tests)
