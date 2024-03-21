@@ -10,4 +10,3 @@ Package.resolved
 examples/*.pro.user
 docs/html
 docs/latex
-src/cpprealm/config.h
