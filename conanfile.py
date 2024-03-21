@@ -70,3 +70,5 @@ class cpprealmRecipe(ConanFile):
             self.cpp_info.libs = ["cpprealm", "realm-object-store", "realm-parser", "realm-sync", "realm"]
         if self.is_darwin():
             self.cpp_info.frameworks = ["Foundation", "Security", "Compression", "z"]
+        if self.settings.os == "Windows":
+            self.cpp_info.system_libs = ["Version"]
