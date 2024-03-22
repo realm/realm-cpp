@@ -64,11 +64,14 @@ target_include_directories(${PROJECT_NAME}
 if(NOT APPLE AND NOT WINDOWS_STORE AND NOT ANDROID)
     if(VCPKG_TOOLCHAIN)
         find_package(libuv CONFIG REQUIRED)
-        if (BUILD_SHARED_LIBS)
+        if(BUILD_SHARED_LIBS)
             set(libuv_target libuv::uv)
         else()
             set(libuv_target libuv::uv_a)
         endif()
+    elseif(DEFINED USES_CONAN)
+        find_package(libuv REQUIRED)
+        set(libuv_target ${libuv_LIBRARIES})
     else()
         option(REALM_FETCH_MISSING_DEPENDENCIES "Download missing dependencies with CMake's FetchContent where possible" ON)
         if(REALM_FETCH_MISSING_DEPENDENCIES)
@@ -81,10 +84,7 @@ if(NOT APPLE AND NOT WINDOWS_STORE AND NOT ANDROID)
         elseif(REALM_FETCH_MISSING_DEPENDENCIES)
             message(STATUS "LibUV not found, building from source with FetchContent")
             include(FetchContent)
-            set(libUV_Git_TAG "v1.35.0")
-            if(MSVC)
-                set(liUV_Git_TAG "v1.43.0")
-            endif()
+            set(libUV_Git_TAG "v1.48.0")
             FetchContent_Declare(
                     libuv
                     GIT_REPOSITORY https://github.com/libuv/libuv.git
@@ -104,7 +104,7 @@ endif()
 target_link_libraries(cpprealm PUBLIC Realm::ObjectStore)
 set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
 
-if (APPLE)
+if(APPLE)
     target_sources(cpprealm PRIVATE src/cpprealm/internal/apple/network_transport.mm)
 elseif(ANDROID)
     set(REALM_ANDROID)
@@ -127,7 +127,12 @@ else()
 endif()
 
 if(MSVC AND NOT DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    if(NOT BUILD_SHARED_LIBS)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        set_property(TARGET cpprealm PROPERTY
+                MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        set_property(TARGET uv_a PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
 endif()
 
 install(EXPORT "${PROJECT_NAME}Targets"
@@ -169,7 +174,6 @@ if (BUILD_SHARED_LIBS)
                         " Hidden visibility is not supported.")
     endif()
 endif()
-
 
 if (NOT REALM_CPP_NO_TESTS)
     add_subdirectory(tests)

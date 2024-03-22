@@ -427,7 +427,7 @@ jobs:
       - uses: ammaraskar/msvc-problem-matcher@master
 
       - name: Configure
-        run: cmake --preset windows-x64
+        run: cmake --preset windows-x64 -DENABLE_STATIC=1
 
       - name: Compile
         run: cmake --build --preset windows-x64 --config ${{ matrix.configuration }}
@@ -472,7 +472,7 @@ jobs:
       - uses: ammaraskar/msvc-problem-matcher@master
 
       - name: Configure
-        run: cmake --preset windows-x64
+        run: cmake --preset windows-x64 -DENABLE_STATIC=1
 
       - name: Compile
         run: cmake --build --preset windows-x64 --config ${{ matrix.configuration }}

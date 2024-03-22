@@ -18,10 +18,12 @@
 
 #define CATCH_CONFIG_RUNNER
 
+#ifdef CPPREALM_ENABLE_SYNC_TESTS
 #include "admin_utils.hpp"
+#endif
+
 #include <catch2/catch_all.hpp>
 #include <filesystem>
-#include <realm/util/features.h>
 
 int main(int argc, char *argv[]) {
     Catch::ConfigData config;
