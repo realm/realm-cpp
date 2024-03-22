@@ -10,12 +10,11 @@ class cpprealmTestConan(ConanFile):
 
     def is_darwin(self):
         return self.settings.os == "Macos" or self.settings.os == "iOS" or self.settings.os == "watchOS"
-        
+
     def requirements(self):
         self.requires(self.tested_reference_str)
-        self.requires("libuv/1.48.0")
         if not self.is_darwin():
-            self.requires("openssl/3.2.0")
+            self.requires("libuv/1.48.0")
 
     def generate(self):
         tc = CMakeToolchain(self)
