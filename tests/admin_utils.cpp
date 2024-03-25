@@ -159,10 +159,10 @@ std::string Admin::Session::create_app(bson::BsonArray queryable_fields, std::st
     bson::BsonDocument mongodb_service_config;
     std::string mongodb_service_type;
     if (m_cluster_name) {
-        mongodb_service_config.append("clusterName", *m_cluster_name);
+        mongodb_service_config["clusterName"] = *m_cluster_name;
         mongodb_service_type = "mongodb-atlas";
     } else {
-        mongodb_service_config.append("uri", "mongodb://localhost:26000");
+        mongodb_service_config["uri"] = "mongodb://localhost:26000";
         mongodb_service_type = "mongodb";
     }
 
