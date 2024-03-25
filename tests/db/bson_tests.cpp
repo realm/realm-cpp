@@ -152,11 +152,6 @@ TEST_CASE("document", "[bson]") {
         CHECK(count == 2);
         CHECK(doc.empty() == false);
         CHECK(doc.size() == 2);
-
-        doc.pop_back();
-        CHECK(doc.size() == 1);
-        doc.pop_back();
-        CHECK(doc.empty() == true);
     }
 
     SECTION("comparison") {

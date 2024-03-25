@@ -21,12 +21,12 @@
 
 #include <cpprealm/types.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
+#include <any>
 
 namespace realm {
     namespace bson {
         class Bson;
-        template <typename>
-        class IndexedMap;
+        class BsonDocument;
         struct RegularExpression;
     }
 
@@ -82,7 +82,7 @@ namespace realm {
         };
 
         struct document {
-            using CoreDocument = realm::bson::IndexedMap<realm::bson::Bson>;
+            using CoreDocument = realm::bson::BsonDocument;
 
             struct value {
                 value& operator=(const bsoncxx& v);
@@ -105,9 +105,8 @@ namespace realm {
                 bool operator==(const iterator& rhs) const noexcept;
             private:
                 friend struct document;
-                iterator(CoreDocument* d, size_t i) : m_document(d), m_idx(i) {};
-                size_t m_idx = 0;
-                CoreDocument* m_document;
+                iterator(std::any&& i) : m_iterator(i) { }
+                std::any m_iterator;
             };
             iterator begin();
             iterator end();
@@ -120,7 +119,6 @@ namespace realm {
             document& operator=(const document&);
             document& operator=(document&&);
             void insert(const std::string& key, const bsoncxx& value);
-            void pop_back();
             bool empty();
             size_t size() const;
             value operator[](const std::string&);

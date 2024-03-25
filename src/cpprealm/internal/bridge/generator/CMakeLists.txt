@@ -51,6 +51,7 @@ set(BRIDGE_TYPES
     MutableSyncSubscriptionSet realm::sync::MutableSubscriptionSet
     Bson realm::bson::Bson
     BsonIndexedMap realm::bson::IndexedMap<realm::bson::Bson>
+    BsonDocument realm::bson::BsonDocument
 )
 
 while(BRIDGE_TYPES)

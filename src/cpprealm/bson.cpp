@@ -145,10 +145,10 @@ namespace realm {
     }
     bsoncxx::bsoncxx(const std::vector<bsoncxx>& v) noexcept
     {
-        std::vector<realm::bson::Bson> core_bson;
-        std::transform(v.begin(), v.end(), std::back_inserter(core_bson), [](const bsoncxx& b) {
-            return b.operator realm::bson::Bson();
-        });
+        realm::bson::BsonArray core_bson;
+        for (const bsoncxx& val : v) {
+            core_bson.push_back(val.operator realm::bson::Bson());
+        }
         INIT_BSON(std::move(core_bson));
     }
 
@@ -239,13 +239,13 @@ namespace realm {
     }
     bsoncxx::operator document() const
     {
-        auto doc = CONST_CORE_BSON->operator const realm::bson::IndexedMap<realm::bson::Bson>&();
+        auto doc = CONST_CORE_BSON->operator const realm::bson::BsonDocument &();
         return bsoncxx::document(doc);
     }
     bsoncxx::operator std::vector<bsoncxx>() const
     {
         std::vector<bsoncxx> ret;
-        for(auto v : CONST_CORE_BSON->operator const std::vector<realm::bson::Bson>&()) {
+        for(auto v : CONST_CORE_BSON->operator const realm::bson::BsonArray &()) {
             ret.push_back(v);
         }
         return ret;
@@ -390,11 +390,6 @@ namespace realm {
         CORE_DOCUMENT->operator[](key) = v.operator realm::bson::Bson();
     }
 
-    void bsoncxx::document::pop_back()
-    {
-        CORE_DOCUMENT->pop_back();
-    };
-
     bool bsoncxx::document::empty()
     {
         return CORE_DOCUMENT->empty();
@@ -421,15 +416,11 @@ namespace realm {
 
     bool operator==(const bsoncxx::document& lhs, const bsoncxx::document& rhs)
     {
-        auto l = lhs.operator bsoncxx::document::CoreDocument();
-        auto r = rhs.operator bsoncxx::document::CoreDocument();
-        return l.keys() == r.keys() && l.entries() == r.entries();
+        return lhs.operator bsoncxx::document::CoreDocument() == rhs.operator bsoncxx::document::CoreDocument();
     }
     bool operator!=(const bsoncxx::document& lhs, const bsoncxx::document& rhs)
     {
-        auto l = lhs.operator bsoncxx::document::CoreDocument();
-        auto r = rhs.operator bsoncxx::document::CoreDocument();
-        return l.keys() != r.keys() || l.entries() != r.entries();
+        return !(lhs.operator bsoncxx::document::CoreDocument() == rhs.operator bsoncxx::document::CoreDocument());
     }
 
     /*
@@ -440,8 +431,9 @@ namespace realm {
 
     bsoncxx::document::iterator bsoncxx::document::begin()
     {
+        CORE_DOCUMENT->begin();
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        return bsoncxx::document::iterator(CORE_DOCUMENT, 0);
+        return bsoncxx::document::iterator(CORE_DOCUMENT->begin());
 #else
         return bsoncxx::document::iterator(m_document.get(), 0);
 #endif
@@ -450,7 +442,7 @@ namespace realm {
     bsoncxx::document::iterator bsoncxx::document::end()
     {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        return bsoncxx::document::iterator(CORE_DOCUMENT, CONST_CORE_DOCUMENT->size());
+        return bsoncxx::document::iterator(CORE_DOCUMENT->end());
 #else
         return bsoncxx::document::iterator(m_document.get(), m_document->size());
 #endif
@@ -458,36 +450,36 @@ namespace realm {
 
     std::pair<std::string, bsoncxx> bsoncxx::document::iterator::operator*()
     {
-        auto entry = m_document->operator[](m_idx);
+        auto entry = std::any_cast<bson::IndexedMap<bson::Bson>::iterator&>(m_iterator).operator*();
         return {entry.first, bsoncxx(entry.second)};
     }
     bsoncxx::document::iterator& bsoncxx::document::iterator::operator++()
     {
-        m_idx++;
+        std::any_cast<bson::IndexedMap<bson::Bson>::iterator&>(m_iterator).operator++();
         return *this;
     }
     bsoncxx::document::iterator& bsoncxx::document::iterator::operator--()
     {
-        m_idx--;
+        std::any_cast<bson::IndexedMap<bson::Bson>::iterator&>(m_iterator).operator++();
         return *this;
     }
     bsoncxx::document::iterator& bsoncxx::document::iterator::operator++(int v)
     {
-        m_idx += v;
+        m_iterator = std::any_cast<bson::IndexedMap<bson::Bson>::iterator&>(m_iterator).operator++(v);
         return *this;
     }
     bsoncxx::document::iterator& bsoncxx::document::iterator::operator--(int v)
     {
-        m_idx -= v;
+        m_iterator = std::any_cast<bson::IndexedMap<bson::Bson>::iterator&>(m_iterator).operator--(v);
         return *this;
     }
     bool bsoncxx::document::iterator::operator!=(const bsoncxx::document::iterator& rhs) const noexcept
     {
-        return *m_document != *rhs.m_document || m_idx != rhs.m_idx;
+        return std::any_cast<bson::IndexedMap<bson::Bson>::iterator>(m_iterator) != std::any_cast<bson::IndexedMap<bson::Bson>::iterator>(rhs.m_iterator);
     }
     bool bsoncxx::document::iterator::operator==(const bsoncxx::document::iterator& rhs) const noexcept
     {
-        return *m_document == *rhs.m_document && m_idx == rhs.m_idx;
+        return std::any_cast<bson::IndexedMap<bson::Bson>::iterator>(m_iterator) == std::any_cast<bson::IndexedMap<bson::Bson>::iterator>(rhs.m_iterator);
     }
 
     bsoncxx::document::value& bsoncxx::document::value::operator=(const bsoncxx& v)
