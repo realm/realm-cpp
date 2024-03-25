@@ -29,7 +29,7 @@ namespace realm {
     bsoncxx::bsoncxx(const bsoncxx& v) noexcept
     {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        *reinterpret_cast<bson::Bson*>(&m_bson) = *reinterpret_cast<const bson::Bson*>(&v.m_bson);
+        new (&m_bson) bson::Bson(*reinterpret_cast<const bson::Bson*>(&v.m_bson));
 #else
         m_bson = v.m_bson;
 #endif
@@ -38,7 +38,7 @@ namespace realm {
     bsoncxx::bsoncxx(bsoncxx&& v) noexcept
     {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-        *reinterpret_cast<bson::Bson*>(&m_bson) = std::move(*reinterpret_cast<bson::Bson*>(&v.m_bson));
+        new (&m_bson) bson::Bson(std::move(*reinterpret_cast<bson::Bson*>(&v.m_bson)));
 #else
         m_bson = std::move(v.m_bson);
 #endif
