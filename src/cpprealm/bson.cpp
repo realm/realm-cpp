@@ -435,7 +435,7 @@ namespace realm {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return bsoncxx::document::iterator(CORE_DOCUMENT->begin());
 #else
-        return bsoncxx::document::iterator(m_document.get(), 0);
+        return bsoncxx::document::iterator(m_document->begin());
 #endif
     }
 
@@ -444,7 +444,7 @@ namespace realm {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return bsoncxx::document::iterator(CORE_DOCUMENT->end());
 #else
-        return bsoncxx::document::iterator(m_document.get(), m_document->size());
+        return bsoncxx::document::iterator(m_document->end());
 #endif
     }
 
