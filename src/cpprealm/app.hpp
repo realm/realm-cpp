@@ -19,6 +19,7 @@
 #ifndef CPPREALM_APP_HPP
 #define CPPREALM_APP_HPP
 
+#include <cpprealm/bson.hpp>
 #include <cpprealm/db.hpp>
 
 #include <cpprealm/internal/bridge/realm.hpp>
@@ -156,11 +157,15 @@ struct user {
 
     [[nodiscard]] std::future<void> log_out() const;
 
+
+    [[deprecated("Replaced by `get_custom_data()`. This method will be removed in a future release.")]]
+    [[nodiscard]] std::optional<std::string> custom_data() const;
+
     /**
      The custom data of the user.
      This is configured in your Atlas App Services app.
      */
-    [[nodiscard]] std::optional<std::string> custom_data() const;
+    [[nodiscard]] std::optional<bsoncxx::document> get_custom_data() const;
 
     /**
      Calls the Atlas App Services function with the provided name and arguments.
@@ -170,6 +175,7 @@ struct user {
      @param callback The completion handler to call when the function call is complete.
      This handler is executed on the thread the method was called from.
      */
+    [[deprecated("This function is deprecated and will replaced by the BSON based call_function API.")]]
     void call_function(const std::string& name, const std::string& args_ejson,
                        std::function<void(std::optional<std::string>, std::optional<app_error>)> callback) const;
 
@@ -178,11 +184,32 @@ struct user {
 
     @param name The name of the Atlas App Services function to be called.
     @param arguments The string represented extended json to be provided to the function.
-    @param callback The completion handler to call when the function call is complete.
+    @return A future containing an optional std::string once the operation has completed.
     This handler is executed on the thread the method was called from.
     */
+    [[deprecated("This function is deprecated and will replaced by the BSON based call_function API.")]]
     [[nodiscard]] std::future<std::optional<std::string>> call_function(const std::string& name,
                                                                         const std::string& args_ejson) const;
+
+    /**
+     Calls the Atlas App Services function with the provided name and arguments.
+
+    @param name The name of the Atlas App Services function to be called.
+    @param arguments The BSON array to be provided to the function.
+    @param callback The completion handler to call when the function call is complete.
+                    This handler is executed on the thread the method was called from.
+    */
+    void call_function(const std::string& name, const std::vector<bsoncxx>& args_bson,
+                       std::function<void(std::optional<bsoncxx>, std::optional<app_error>)> callback) const;
+
+    /**
+    Calls the Atlas App Services function with the provided name and arguments.
+
+    @param name The name of the Atlas App Services function to be called.
+    @param arguments The BSON array to be provided to the function.
+    @return A future containing optional BSON once the operation has completed.
+    */
+    [[nodiscard]] std::future<std::optional<bsoncxx>> call_function(const std::string& name, const std::vector<bsoncxx>& args_bson) const;
 
     /**
      Refresh a user's custom data. This will, in effect, refresh the user's auth session.

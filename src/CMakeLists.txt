@@ -26,6 +26,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.
 set(SOURCES
     cpprealm/analytics.cpp
     cpprealm/app.cpp
+    cpprealm/bson.cpp
     cpprealm/db.cpp
     cpprealm/client_reset.cpp
     cpprealm/managed_binary.cpp
@@ -73,6 +74,7 @@ set(HEADERS
     cpprealm/analytics.hpp
     cpprealm/app.hpp
     cpprealm/accessors.hpp
+    cpprealm/bson.hpp
     cpprealm/db.hpp
     cpprealm/client_reset.hpp
     cpprealm/link.hpp

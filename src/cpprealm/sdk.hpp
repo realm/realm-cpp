@@ -21,6 +21,7 @@
 
 #include <utility>
 
+#include <cpprealm/bson.hpp>
 #include <cpprealm/schema.hpp>
 #include <cpprealm/notifications.hpp>
 #include <cpprealm/app.hpp>

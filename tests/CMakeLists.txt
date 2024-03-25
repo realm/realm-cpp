@@ -34,6 +34,7 @@ add_executable(cpprealm_db_tests
                 main.cpp
                 db/test_objects.hpp
                 db/binary_tests.cpp
+                db/bson_tests.cpp
                 db/date_tests.cpp
                 db/decimal_tests.cpp
                 db/embedded_object_tests.cpp

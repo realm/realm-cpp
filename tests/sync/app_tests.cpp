@@ -183,27 +183,28 @@ TEST_CASE("app", "[app]") {
         auto user = app.login(
                                realm::App::credentials::username_password("function_and_custom_user_data@mongodb.com", "foobar"))
                             .get();
-        auto result = user.call_function("updateUserData", realm::bson::Bson(realm::bson::BsonArray({realm::bson::BsonDocument({{"name", "john"}})})).toJson()).get();
+        auto result = user.call_function("updateUserData", { bsoncxx::document({{"name", "john"}}) }).get();
         CHECK(result);
 
         user.refresh_custom_user_data().get();
-        auto res = user.custom_data();
+        auto res = user.get_custom_data();
         CHECK(res);
-        CHECK(res->find("john") != std::string::npos);
+        CHECK((*res)["name"] == "john");
 
-        std::promise<std::optional<realm::bson::Bson>> function_promise;
-        user.call_function("updateUserData", {realm::bson::Bson(realm::bson::BsonArray({realm::bson::BsonDocument({{"name", "jane"}})})).toJson()}, [&function_promise](auto result, auto err) {
+        std::promise<std::optional<bsoncxx>> function_promise;
+        std::future<std::optional<bsoncxx>> function_future = function_promise.get_future();
+        user.call_function("updateUserData", { bsoncxx::document({{"name", "jane"}}) }, [&function_promise](auto result, auto err) {
             function_promise.set_value(result);
         });
-        auto results = function_promise.get_future().get();
+        auto results = function_future.get();
         CHECK(result);
         std::promise<void> refresh_promise;
         user.refresh_custom_user_data([&refresh_promise](auto err) {
             refresh_promise.set_value();
         });
         refresh_promise.get_future().get();
-        res = user.custom_data();
+        res = user.get_custom_data();
         CHECK(res);
-        CHECK(res->find("jane") != std::string::npos);
+        CHECK((*res)["name"] == "jane");
     }
 }

@@ -232,6 +232,15 @@ namespace realm {
         }
     }
 
+    std::optional<bsoncxx::document> user::get_custom_data() const
+    {
+        if (auto v = m_user->custom_data()) {
+            return bsoncxx::document(*v);
+        } else {
+            return std::nullopt;
+        }
+    }
+
     void user::call_function(const std::string& name, const std::string& arguments,
                              std::function<void(std::optional<std::string>, std::optional<app_error>)> callback) const
     {
@@ -241,14 +250,6 @@ namespace realm {
         });
     }
 
-    /**
-     Calls the Atlas App Services function with the provided name and arguments.
-
-     @param name The name of the Atlas App Services function to be called.
-     @param arguments The `BsonArray` of arguments to be provided to the function.
-     @param callback The completion handler to call when the function call is complete.
-     This handler is executed on the thread the method was called from.
-     */
     std::future<std::optional<std::string>> user::call_function(const std::string& name, const std::string& arguments) const
     {
         std::promise<std::optional<std::string>> p;
@@ -265,9 +266,39 @@ namespace realm {
         return f;
     }
 
-    /**
-     Refresh a user's custom data. This will, in effect, refresh the user's auth session.
-     */
+    void user::call_function(const std::string& name, const std::vector<bsoncxx>& args_bson,
+                             std::function<void(std::optional<bsoncxx>, std::optional<app_error>)> callback) const
+    {
+        bson::BsonArray core_bson;
+        for(auto& b : args_bson) {
+            core_bson.push_back(b);
+        }
+        m_user->sync_manager()->app().lock()->call_function(m_user, name, core_bson, std::nullopt, [cb = std::move(callback)](util::Optional<bson::Bson>&& b,
+                                                                                                                              std::optional<app_error> err) {
+            cb(b ? std::optional<bsoncxx>(*b) : std::nullopt, err);
+        });
+    }
+
+    std::future<std::optional<bsoncxx>> user::call_function(const std::string& name, const std::vector<bsoncxx>& args_bson) const
+    {
+        std::promise<std::optional<bsoncxx>> p;
+        std::future<std::optional<bsoncxx>> f = p.get_future();
+        bson::BsonArray core_bson;
+        for(auto& b : args_bson) {
+            core_bson.push_back(b);
+        }
+
+        m_user->sync_manager()->app().lock()->call_function(m_user, name, core_bson, std::nullopt, [p = std::move(p)](util::Optional<bson::Bson>&& b,
+                                                                                                                      std::optional<app_error> err) mutable {
+            if (err) {
+                p.set_exception(std::make_exception_ptr(app_error(std::move(*err))));
+            } else {
+                p.set_value(b ? std::optional<bsoncxx>(*b) : std::nullopt);
+            }
+        });
+        return f;
+    }
+
     void user::refresh_custom_user_data(std::function<void(std::optional<app_error>)> callback)
     {
         m_user->refresh_custom_data(std::move(callback));
