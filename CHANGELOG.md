@@ -1,4 +1,4 @@
-X.Y.Z Release notes (YYYY-MM-DD)
+1.1.0 Release notes (2024-03-26)
 =============================================================
 
 ### Fixed
@@ -13,6 +13,7 @@ X.Y.Z Release notes (YYYY-MM-DD)
 * Add `managed<std::vector<>>::as_results()` to allow the ability to derive a `realm::results<>` collection from a managed vector.
 * Allow a `realm::uuid` to be constructed with `std::array<uint8_t, 16>`.
 * Add support for integrating `cpprealm` with the Conan package manager.
+* Add support for integrating `cpprealm` with the vcpkg package manager.
 * Add BSON support for `user::call_function` and `user::get_custom_data` API's.
 * Add `user::get_custom_data()` and deprecate `user::custom_data()`.
 
