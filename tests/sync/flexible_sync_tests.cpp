@@ -5,7 +5,7 @@
 using namespace realm;
 
 TEST_CASE("flexible_sync", "[sync]") {
-    auto app = realm::App(realm::App::configuration({Admin::shared().cached_app_id(), Admin::shared().base_url()}));
+    auto app = realm::App(realm::App::configuration({Admin::Session::shared().cached_app_id(), Admin::Session::shared().base_url()}));
     SECTION("all") {
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
@@ -81,8 +81,8 @@ TEST_CASE("flexible_sync", "[sync]") {
     SECTION("encrypted sync realm") {
         std::array<char, 64> example_key = {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 4, 4, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0, 0, 0, 0, 0, 6, 6, 0, 0, 0, 0, 0, 0, 7, 7, 0, 0, 0, 0, 0, 0};
         realm::App::configuration app_config;
-        app_config.app_id = Admin::shared().create_app({"str_col", "_id"});
-        app_config.base_url = Admin::shared().base_url();
+        app_config.app_id = Admin::Session::shared().create_app({"str_col", "_id"});
+        app_config.base_url = Admin::Session::shared().base_url();
         app_config.metadata_encryption_key = example_key;
         auto encrypted_app = realm::App(app_config);
         auto user = encrypted_app.login(realm::App::credentials::anonymous()).get();
@@ -109,7 +109,7 @@ void test_set(realm::managed<T>* property, Func f,
 }
 
 TEST_CASE("set collection sync", "[set]") {
-    auto app = realm::App(realm::App::configuration({Admin::shared().cached_app_id(), Admin::shared().base_url()}));
+    auto app = realm::App(realm::App::configuration({Admin::Session::shared().cached_app_id(), Admin::Session::shared().base_url()}));
     SECTION("insert") {
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
@@ -186,7 +186,7 @@ TEST_CASE("set collection sync", "[set]") {
 }
 
 TEST_CASE("pause_resume_sync", "[sync]") {
-    auto app = realm::App(realm::App::configuration({Admin::shared().cached_app_id(), Admin::shared().base_url()}));
+    auto app = realm::App(realm::App::configuration({Admin::Session::shared().cached_app_id(), Admin::Session::shared().base_url()}));
 
     SECTION("pause_resume") {
         auto user = app.login(realm::App::credentials::anonymous()).get();

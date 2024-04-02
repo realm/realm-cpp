@@ -1,11 +1,7 @@
 name: CMake Build
 
 env:
-  REALM_ATLAS_ENDPOINT: ${{ secrets.ATLAS_QA_BASE_URL }}
-  REALM_BAAS_ENDPOINT: ${{ secrets.APPSERVICES_QA_BASE_URL }}
-  REALM_ATLAS_API_KEY: ${{ secrets.ATLAS_QA_API_KEY }}
-  REALM_ATLAS_PRIVATE_API_KEY: ${{ secrets.ATLAS_QA_PRIVATE_API_KEY }}
-  REALM_ATLAS_PROJECT_ID: ${{ secrets.ATLAS_QA_PROJECT_ID}}
+  APIKEY: ${{ secrets.REALM_BAASAAS_API_KEY }}
   REALM_CI: true
   REALM_DISABLE_ANALYTICS: true
 on:
@@ -15,37 +11,26 @@ on:
   pull_request:
 
 jobs:
-  deploy-cluster:
+  stop-all-containers:
     runs-on: ubuntu-latest
-    name: Deploy Cluster
-    outputs:
-      clusterName: ${{ steps.deploy-cluster.outputs.clusterName }}
-    steps:
-      - uses: realm/ci-actions/mdb-realm/deploy@28a12a22e135d56db2b678fbe6479c0e1b52f169
-        id: deploy-cluster
-        with:
-          atlasUrl: ${{ env.REALM_ATLAS_ENDPOINT }}
-          realmUrl: ${{ env.REALM_BAAS_ENDPOINT }}
-          projectId: ${{ env.REALM_ATLAS_PROJECT_ID }}
-          apiKey: ${{ env.REALM_ATLAS_API_KEY }}
-          privateApiKey: ${{ env.REALM_ATLAS_PRIVATE_API_KEY }}
-
-  delete-cluster:
-    runs-on: ubuntu-latest
-    name: Delete Cluster
+    name: Stop Stray Containers
     if: always()
     needs:
       - build-macos-sync
       - build-linux-sync
       - build-windows-sync
     steps:
-      - uses: realm/ci-actions/mdb-realm/cleanup@28a12a22e135d56db2b678fbe6479c0e1b52f169
+      - name: Checkout Repository
+        uses: actions/checkout@v3
         with:
-          atlasUrl: ${{ env.REALM_ATLAS_ENDPOINT }}
-          realmUrl: ${{ env.REALM_BAAS_ENDPOINT }}
-          projectId: ${{ env.REALM_ATLAS_PROJECT_ID }}
-          apiKey: ${{ env.REALM_ATLAS_API_KEY }}
-          privateApiKey: ${{ env.REALM_ATLAS_PRIVATE_API_KEY }}
+          repository: 'https://github.com/10gen/baasaas.git'
+          ref: 'main'
+      - name: Execute CLI
+        run: |
+          chmod +x ./cli.sh
+          ./cli.sh mine  | grep '"id":' | awk -F '"' '{print $4}' | while read id; do
+          ./cli.sh stop "$id"
+          done
 
 
   build-macos-xcode13_1:
@@ -64,10 +49,6 @@ jobs:
           - Release
         exclude:
           - configuration: ${{ (github.event_name == 'pull_request' && 'Release') || 'none' }}
-    needs:
-      - deploy-cluster
-    env:
-      REALM_ATLAS_CLUSTER_NAME: ${{ needs.deploy-cluster.outputs.clusterName }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -129,10 +110,6 @@ jobs:
           - Release
         exclude:
           - configuration: ${{ (github.event_name == 'pull_request' && 'Release') || 'none' }}
-    needs:
-      - deploy-cluster
-    env:
-      REALM_ATLAS_CLUSTER_NAME: ${{ needs.deploy-cluster.outputs.clusterName }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -194,10 +171,6 @@ jobs:
           - Release
         exclude:
           - configuration: ${{ (github.event_name == 'pull_request' && 'Release') || 'none' }}
-    needs:
-      - deploy-cluster
-    env:
-      REALM_ATLAS_CLUSTER_NAME: ${{ needs.deploy-cluster.outputs.clusterName }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -269,12 +242,8 @@ jobs:
         configuration:
           - Debug
           - Release
-    needs:
-      - deploy-cluster
     container:
       image: ${{ matrix.compiler.name == 'clang' && 'silkeh/clang' || matrix.compiler.name }}:${{ matrix.compiler.version }}
-      env:
-        REALM_ATLAS_CLUSTER_NAME: ${{ needs.deploy-cluster.outputs.clusterName }}
     steps:
       - name: Install Linux Dependencies
         run: |
@@ -341,10 +310,6 @@ jobs:
         configuration:
           - Debug
           - Release
-    needs:
-      - deploy-cluster
-    env:
-      REALM_ATLAS_CLUSTER_NAME: ${{ needs.deploy-cluster.outputs.clusterName }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -414,10 +379,6 @@ jobs:
         configuration:
           - Debug
           - Release
-    needs:
-      - deploy-cluster
-    env:
-      REALM_ATLAS_CLUSTER_NAME: ${{ needs.deploy-cluster.outputs.clusterName }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -459,10 +420,6 @@ jobs:
         configuration:
           - Debug
           - Release
-    needs:
-      - deploy-cluster
-    env:
-      REALM_ATLAS_CLUSTER_NAME: ${{ needs.deploy-cluster.outputs.clusterName }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
