@@ -38,10 +38,10 @@ namespace Admin {
                 stop(*m_container_id);
         }
 
-        // returns container id, subsequent calls will return
-        // the original container id until stop is called.
+        // Starts a baasaas container, this container will stop when the baas_manager
+        // instance goes out of scope.
         void start();
-        // Stops a given container and nulls the current container_id;
+        // Stops a given container and nulls the current container_id.
         void stop(const std::string& conainter_id) const;
         // Polls the current container and returns the url once available.
         const std::string wait_for_container() const;
