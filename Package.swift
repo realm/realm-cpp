@@ -25,6 +25,7 @@ var cxxSettings: [CXXSetting] = [
     .define("REALM_VERSION_PATCH", to: String(coreVersion.patch)),
     .define("REALM_VERSION_EXTRA", to: "\"\(coreVersion.prereleaseIdentifiers.first ?? "")\""),
     .define("REALM_VERSION_STRING", to: "\"\(coreVersion)\""),
+    .headerSearchPath("../include/"),
 ]
 
 let applePlatforms: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS]
