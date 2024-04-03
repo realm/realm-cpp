@@ -128,7 +128,7 @@ namespace realm {
 
         return (info.kp_proc.p_flag & P_TRACED) != 0;
     }
-#elif __linux__ && ndef(__ANDROID__)
+#elif __linux__ && !__ANDROID__
     std::string print_hex(unsigned char *bs, unsigned int len) {
         std::stringstream ss;
         for (size_t i = 0; i < len; i++) {
