@@ -20,18 +20,14 @@ jobs:
       - build-linux-sync
       - build-windows-sync
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-        with:
-          repository: 'https://github.com/10gen/baasaas.git'
-          ref: 'main'
-      - name: Execute CLI
+      - name: Stop containers
         run: |
-          chmod +x ./cli.sh
-          ./cli.sh mine  | grep '"id":' | awk -F '"' '{print $4}' | while read id; do
-          ./cli.sh stop "$id"
+          export JSON_HEADER="Content-Type: application/json"
+          export AUTH_HEADER="apiKey: $APIKEY"
+          export BASE_URL="https://us-east-1.aws.data.mongodb-api.com/app/baas-container-service-autzb/endpoint"
+          curl --silent -X GET -H "$JSON_HEADER" -H "$AUTH_HEADER" "$BASE_URL/listContainers?mine=true" | jq | grep '"id":' | awk -F '"' '{print $4}' | while read id; do
+          curl --silent -X POST -H "$JSON_HEADER" -H "$AUTH_HEADER" "$BASE_URL/stopContainer?id=$id"
           done
-
 
   build-macos-xcode13_1:
     runs-on: macos-12
