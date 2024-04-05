@@ -219,7 +219,7 @@ namespace realm {
         return "unknown";
     }
     std::string get_host_os_verion() {
-        return "unknown"
+        return "unknown";
     }
     bool debugger_attached() {
         return false;
