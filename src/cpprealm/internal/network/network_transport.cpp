@@ -27,6 +27,7 @@
 #include <realm/sync/network/network.hpp>
 #include <realm/sync/noinst/client_impl_base.hpp>
 #include <realm/util/base64.hpp>
+#include <realm/util/uri.hpp>
 
 #include <regex>
 
@@ -88,20 +89,51 @@ namespace realm::internal {
         m_proxy_config = proxy_config;
     }
 
-    inline std::string host_from_url(const std::string& url) {
-        std::regex pattern("^(https?://)?([a-zA-Z0-9.-]+|\\[?[0-9a-fA-F:]+\\]?)(:[0-9]+)?(/.*)?$");
-        std::smatch matches;
-        if (std::regex_search(url, matches, pattern)) {
-            if (matches.size() > 2) {
-                return matches[2].str();
-            }
+    inline bool is_valid_ipv4(const std::string& ip) {
+        std::stringstream ss(ip);
+        std::string segment;
+        std::vector<std::string> segments;
+
+        while (std::getline(ss, segment, '.')) {
+            segments.push_back(segment);
         }
-        return "";
+        if (segments.size() != 4) return false;
+
+        for (const std::string& seg : segments) {
+            if (seg.empty() || seg.size() > 3) return false;
+
+            for (char c : seg) {
+                if (!isdigit(c)) return false;
+            }
+
+            int num = std::stoi(seg);
+            if (num < 0 || num > 255) return false;
+        }
+
+        return true;
+    }
+
+    enum class URLScheme {
+        HTTP,
+        HTTPS,
+        Unknown
+    };
+
+    URLScheme get_url_scheme(const std::string& scheme) {
+        if (scheme == "https:") {
+            return URLScheme::HTTPS;
+        } else if (scheme == "http:") {
+            return URLScheme::HTTP;
+        } else {
+            return URLScheme::Unknown;
+        }
     }
 
     void DefaultTransport::send_request_to_server(const app::Request& request,
                                                   std::function<void(const app::Response&)>&& completion_block) {
-        std::string host = host_from_url(request.url);
+        const auto uri = realm::util::Uri(request.url);
+        std::string userinfo, host, port;
+        uri.get_auth(userinfo, host, port);
 
         realm::sync::network::Service service;
         using namespace realm::sync::network::ssl;
@@ -109,12 +141,16 @@ namespace realm::internal {
         DefaultSocket socket{service};
         realm::sync::network::Endpoint ep;
         const bool is_localhost = (host == "localhost");
+        const bool is_ipv4 = is_valid_ipv4(host);
+        const URLScheme url_scheme = get_url_scheme(uri.get_scheme());
 
         try {
             auto resolver = realm::sync::network::Resolver{service};
             if (m_proxy_config) {
-                std::string proxy_address = host_from_url(m_proxy_config->address);
-                if (proxy_address.empty()) {
+                std::string proxy_userinfo, proxy_host, proxy_port;
+                const auto proxy_uri = realm::util::Uri(m_proxy_config->address);
+                proxy_uri.get_auth(proxy_userinfo, proxy_host, proxy_port);
+                if (proxy_host.empty()) {
                     std::error_code e;
                     auto address = realm::sync::network::make_address(m_proxy_config->address, e);
                     if (e.value() > 0) {
@@ -126,12 +162,18 @@ namespace realm::internal {
                     }
                     ep = realm::sync::network::Endpoint(address, m_proxy_config->port);
                 } else {
-                    auto resolved = resolver.resolve(sync::network::Resolver::Query(proxy_address, std::to_string(m_proxy_config->port)));
+                    auto resolved = resolver.resolve(sync::network::Resolver::Query(proxy_host, std::to_string(m_proxy_config->port)));
                     ep = *resolved.begin();
                 }
             } else {
-                auto resolved = resolver.resolve(sync::network::Resolver::Query(host, is_localhost ? "9090" : "443"));
-                ep = *resolved.begin();
+                if (is_ipv4) {
+                    std::error_code e;
+                    auto address = realm::sync::network::make_address(host, e);
+                    ep = realm::sync::network::Endpoint(address, stoi(port));
+                } else {
+                    auto resolved = resolver.resolve(sync::network::Resolver::Query(host, is_localhost ? "9090" : "443"));
+                    ep = *resolved.begin();
+                }
             }
             socket.connect(ep);
         } catch (...) {
@@ -182,7 +224,7 @@ namespace realm::internal {
         m_ssl_context.use_included_certificate_roots();
 #endif
 
-        if (!is_localhost) {
+        if (url_scheme == URLScheme::HTTPS) {
             socket.ssl_stream.emplace(socket, m_ssl_context, Stream::client);
             socket.ssl_stream->set_host_name(host); // Throws
 
@@ -265,7 +307,7 @@ namespace realm::internal {
                     return;
                 }
             };
-            if (is_localhost) {
+            if (url_scheme != URLScheme::HTTPS) {
                 handler(std::error_code());
             } else {
                 socket.async_handshake(std::move(handler)); // Throws

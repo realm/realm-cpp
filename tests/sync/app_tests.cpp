@@ -70,7 +70,7 @@ static std::string create_jwt(const std::string& appId)
 using namespace realm;
 
 TEST_CASE("app", "[app]") {
-    auto app = realm::App(realm::App::configuration({Admin::shared().cached_app_id(), Admin::shared().base_url()}));
+    auto app = realm::App(realm::App::configuration({Admin::Session::shared().cached_app_id(), Admin::Session::shared().base_url()}));
 
     SECTION("get_current_user") {
         auto user = app.login(realm::App::credentials::anonymous()).get();
@@ -94,17 +94,17 @@ TEST_CASE("app", "[app]") {
     }
 
     SECTION("clear_cached_apps") {
-        auto temp_app_id = Admin::shared().create_app({"str_col", "_id"});
-        auto temp_app = realm::App(realm::App::configuration({temp_app_id, Admin::shared().base_url()}));
-        auto cached_app = temp_app.get_cached_app(temp_app_id, Admin::shared().base_url());
+        auto temp_app_id = Admin::Session::shared().create_app({"str_col", "_id"});
+        auto temp_app = realm::App(realm::App::configuration({temp_app_id, Admin::Session::shared().base_url()}));
+        auto cached_app = temp_app.get_cached_app(temp_app_id, Admin::Session::shared().base_url());
         CHECK(cached_app.has_value());
         app.clear_cached_apps();
-        cached_app = temp_app.get_cached_app(temp_app_id, Admin::shared().base_url());
+        cached_app = temp_app.get_cached_app(temp_app_id, Admin::Session::shared().base_url());
         CHECK(cached_app.has_value() == false);
     }
 
     SECTION("error handling") {
-        auto dead_app = realm::App(realm::App::configuration({"NA", Admin::shared().base_url()}));
+        auto dead_app = realm::App(realm::App::configuration({"NA", Admin::Session::shared().base_url()}));
         REQUIRE_THROWS_AS(dead_app.login(realm::App::credentials::anonymous()).get(), realm::app_error);
         REQUIRE_THROWS_AS(dead_app.register_user("", "").get(), realm::app_error);
 
@@ -130,7 +130,7 @@ TEST_CASE("app", "[app]") {
         app.register_user("auth_providers_promise@mongodb.com", "foobar").get();
         run_login(realm::App::credentials::username_password("auth_providers_promise@mongodb.com", "foobar"));
         run_login(realm::App::credentials::anonymous());
-        run_login(realm::App::credentials::custom(create_jwt(Admin::shared().cached_app_id())));
+        run_login(realm::App::credentials::custom(create_jwt(Admin::Session::shared().cached_app_id())));
     }
 
     SECTION("auth_providers_completion_hander") {

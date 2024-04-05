@@ -128,7 +128,7 @@ namespace realm {
 
         return (info.kp_proc.p_flag & P_TRACED) != 0;
     }
-#elif __linux__
+#elif __linux__ && !__ANDROID__
     std::string print_hex(unsigned char *bs, unsigned int len) {
         std::stringstream ss;
         for (size_t i = 0; i < len; i++) {
@@ -219,7 +219,7 @@ namespace realm {
         return "unknown";
     }
     std::string get_host_os_verion() {
-        return "unknown"
+        return "unknown";
     }
     bool debugger_attached() {
         return false;

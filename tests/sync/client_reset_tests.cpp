@@ -36,7 +36,7 @@ void prepare_realm(const realm::db_config& flx_sync_config, const user& sync_use
 
     auto session = synced_realm.get_sync_session()->operator std::weak_ptr<::realm::SyncSession>().lock().get();
     session->pause();
-    Admin::shared().disable_sync();
+    Admin::Session::shared().disable_sync();
     // Add an object to the local realm that won't be synced due to the suspend
     synced_realm.write([&synced_realm]() {
         client_reset_obj o;
@@ -45,13 +45,13 @@ void prepare_realm(const realm::db_config& flx_sync_config, const user& sync_use
         synced_realm.add(std::move(o));
     });
     synced_realm.refresh();
-    Admin::shared().enable_sync();
+    Admin::Session::shared().enable_sync();
 };
 
 TEST_CASE("client_reset", "[sync]") {
 
     SECTION("error handler") {
-        auto app = realm::App(realm::App::configuration({Admin::shared().create_app({"str_col", "_id"}), Admin::shared().base_url()}));
+        auto app = realm::App(realm::App::configuration({Admin::Session::shared().create_app({"str_col", "_id"}), Admin::Session::shared().base_url()}));
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
@@ -74,7 +74,7 @@ TEST_CASE("client_reset", "[sync]") {
     }
 
     SECTION("manual handler") {
-        auto app = realm::App(realm::App::configuration({Admin::shared().create_app({"_id", "str_col"}, "test", false, false), Admin::shared().base_url()}));
+        auto app = realm::App(realm::App::configuration({Admin::Session::shared().create_app({"_id", "str_col"}, "test", false, false), Admin::Session::shared().base_url()}));
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
@@ -108,21 +108,21 @@ TEST_CASE("client_reset", "[sync]") {
 
         auto session = synced_realm.get_sync_session()->operator std::weak_ptr<::realm::SyncSession>().lock().get();
         session->pause();
-        Admin::shared().disable_sync();
+        Admin::Session::shared().disable_sync();
         synced_realm.write([&synced_realm]() {
             client_reset_obj o;
             o._id = 2;
             o.str_col = "local only";
             synced_realm.add(std::move(o));
         });
-        Admin::shared().enable_sync();
+        Admin::Session::shared().enable_sync();
         session->resume();
         CHECK(flx_sync_config.get_client_reset_mode() == realm::client_reset_mode::manual);
         CHECK(f.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
     }
 
     SECTION("discard_unsynced_changes") {
-        auto app = realm::App(realm::App::configuration({Admin::shared().create_app({"str_col", "_id"}, "test", false, false), Admin::shared().base_url()}));
+        auto app = realm::App(realm::App::configuration({Admin::Session::shared().create_app({"str_col", "_id"}, "test", false, false), Admin::Session::shared().base_url()}));
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
 
@@ -165,7 +165,7 @@ TEST_CASE("client_reset", "[sync]") {
     }
 
     SECTION("recover_or_discard_unsynced_changes") {
-        auto app = realm::App(realm::App::configuration({Admin::shared().create_app({"str_col", "_id"}, "test", false, false), Admin::shared().base_url()}));
+        auto app = realm::App(realm::App::configuration({Admin::Session::shared().create_app({"str_col", "_id"}, "test", false, false), Admin::Session::shared().base_url()}));
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
@@ -206,7 +206,7 @@ TEST_CASE("client_reset", "[sync]") {
     }
 
     SECTION("recover_unsynced_changes") {
-        auto app = realm::App(realm::App::configuration({Admin::shared().create_app({"str_col", "_id"}, "test", false, false), Admin::shared().base_url()}));
+        auto app = realm::App(realm::App::configuration({Admin::Session::shared().create_app({"str_col", "_id"}, "test", false, false), Admin::Session::shared().base_url()}));
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
@@ -247,7 +247,7 @@ TEST_CASE("client_reset", "[sync]") {
     }
 
     SECTION("recover_unsynced_changes_with_failure") {
-        auto app = realm::App(realm::App::configuration({Admin::shared().create_app({"str_col", "_id"}, "test", false, true), Admin::shared().base_url()}));
+        auto app = realm::App(realm::App::configuration({Admin::Session::shared().create_app({"str_col", "_id"}, "test", false, true), Admin::Session::shared().base_url()}));
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
