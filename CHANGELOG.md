@@ -1,3 +1,24 @@
+X.Y.Z Release notes (YYYY-MM-DD)
+=============================================================
+
+### Fixed
+* Building from source on Windows would fail due to symbolic links not being automatically 
+  enabled on the platform ([#192](https://github.com/realm/realm-cpp/pull/192), since v1.1.0)
+
+### Enhancements
+* None
+
+### Breaking Changes
+* None
+
+### Compatibility
+* Fileformat: Generates files with format v24. Reads and automatically upgrade from fileformat v10.
+
+### Internals
+* None
+
+----------------------------------------------
+
 1.1.0 Release notes (2024-03-26)
 =============================================================
 
