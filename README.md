@@ -8,7 +8,7 @@ This repository holds the source code for the C++ SDK Preview.
 * **Intuitive to Developers:** Realm’s object-oriented data model is simple to learn, doesn’t need an ORM, and lets you write less code.
 * **Designed for Offline Use:** Realm’s local database persists data on-disk, so apps work as well offline as they do online.
 * **Built for Mobile:** Realm is fully-featured, lightweight, and efficiently uses memory, disk space, and battery life.
-* **[Device Sync](https://www.mongodb.com/atlas/app-services/device-sync)**: Makes it simple to keep data in sync across users, devices, and your backend in real-time. [Get started for free](https://www.mongodb.com/docs/realm/sdk/cpp/sync/) and [create the cloud backend](http://mongodb.com/realm/register?utm_medium=github_atlas_CTA&utm_source=realm_cpp_github).
+* **[Device Sync](https://www.mongodb.com/docs/atlas/app-services/sync/)**: Makes it simple to keep data in sync across users, devices, and your backend in real-time. [Get started for free](https://www.mongodb.com/docs/realm/sdk/cpp/sync/) and [create the cloud backend](http://mongodb.com/realm/register?utm_medium=github_atlas_CTA&utm_source=realm_cpp_github).
 
 ## Object-Oriented: Streamline Your Code
 
@@ -48,7 +48,7 @@ person.dog = &dog;
 // Get the default Realm with automatic schema discovery.
 realm::db_config config;
 auto realm = db(std::move(config));
-// Persist your data easily with a write transaction 
+// Persist your data easily with a write transaction
 auto managed_person = realm.write([&realm, &person] {
     return realm.add(std::move(person));
 });
@@ -109,7 +109,7 @@ realm.write([&cars](){
 
 ## Getting Started
 
-See the detailed instructions in our [docs](https://www.mongodb.com/docs/realm/sdk/cpp/).
+See the detailed instructions in our [docs](https://www.mongodb.com/docs/atlas/device-sdks/sdk/cpp/).
 
 The API reference is located [here](https://www.mongodb.com/docs/realm-sdks/cpp/latest/).
 
@@ -117,14 +117,14 @@ The API reference is located [here](https://www.mongodb.com/docs/realm-sdks/cpp/
 
 ### Prerequisites
 
-To build the Realm C++ SDK, you need CMake 3.20 or newer and a standard set of build tools. 
-This includes a C/C++ compiler and a build system like GNU make. Realm is thoroughly tested with both GCC and Clang. 
+To build the Realm C++ SDK, you need CMake 3.20 or newer and a standard set of build tools.
+This includes a C/C++ compiler and a build system like GNU make. Realm is thoroughly tested with both GCC and Clang.
 It is compatible with GCC 8.3 and newer, as well as with Clang 9 and newer. Your compiler must support C++17.
 
 ### Ubuntu 18.04 or greater
 
     sudo apt-get install build-essential
-    sudo apt-get install libcurl4-openssl-dev 
+    sudo apt-get install libcurl4-openssl-dev
     sudo apt-get install libuv1-dev
     sudo apt-get install libprocps-dev
     sudo apt-get install libssl-dev
@@ -160,7 +160,7 @@ git submodule update --init --recursive
 mkdir build.debug
 cd build.debug
 cmake -D CMAKE_BUILD_TYPE=debug ..
-sudo cmake --build . --target install  
+sudo cmake --build . --target install
 ```
 
 You can then link to your library with `-lcpprealm`.
@@ -170,5 +170,5 @@ You can then link to your library with `-lcpprealm`.
 set_property(TARGET My_Target PROPERTY
       MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>") # If building in release use `CONFIG:Release>:Release`
 ```
- 
+
 <img style="width: 0px; height: 0px;" src="https://3eaz4mshcd.execute-api.us-east-1.amazonaws.com/prod?s=https://github.com/realm/realm-cocoa#README.md">
