@@ -224,7 +224,8 @@ namespace realm {
         return db(config_copy);
     }
     template <typename ...Ts>
-    inline db open(const std::string& path, const std::shared_ptr<scheduler>& scheduler = scheduler::make_default()) {
+    [[deprecated("This function is deprecated and is replaced by `db::open(const db_config& config)`.")]]
+    inline db open(const std::string& path, const std::shared_ptr<scheduler>& scheduler) {
         return open<Ts...>(db_config(path, scheduler));
     }
 

@@ -22,7 +22,7 @@ namespace realm {
             obj.list_mixed_col = std::vector<realm::mixed>({realm::mixed()});
             obj.map_mixed_col = std::map<std::string, realm::mixed>({{"foo", realm::mixed()}});
 
-            db db = open(path);
+            db db = realm::db(config);
             auto managed_obj = db.write([&obj, &db]() {
                 return db.add(std::move(obj));
             });

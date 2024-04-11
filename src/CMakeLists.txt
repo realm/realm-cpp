@@ -67,7 +67,6 @@ set(SOURCES
     cpprealm/internal/bridge/timestamp.cpp
     cpprealm/internal/bridge/uuid.cpp
     cpprealm/logger.cpp
-    cpprealm/scheduler.cpp
     cpprealm/sdk.cpp) # REALM_SOURCES
 
 set(HEADERS

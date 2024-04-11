@@ -32,8 +32,7 @@ namespace realm::internal::bridge {
         *reinterpret_cast<OwnedBinaryData*>(&m_data) = *reinterpret_cast<const OwnedBinaryData*>(&other.m_data);
 
 #else
-        if (m_size > 0)
-            delete[] m_data;
+        delete[] m_data;
         m_size = other.m_size;
         m_data = new char[m_size];
         memcpy(m_data, other.m_data, m_size);
@@ -53,8 +52,7 @@ namespace realm::internal::bridge {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         *reinterpret_cast<OwnedBinaryData*>(&m_data) = std::move(*reinterpret_cast<OwnedBinaryData*>(&other.m_data));
 #else
-        if (m_size > 0)
-            delete[] m_data;
+        delete[] m_data;
         m_size = std::move(other.m_size);
         m_data = new char[m_size];
         memmove(m_data, other.m_data, m_size);
@@ -65,8 +63,7 @@ namespace realm::internal::bridge {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         reinterpret_cast<OwnedBinaryData*>(&m_data)->~OwnedBinaryData();
 #else
-        if (m_size > 0)
-            delete[] m_data;
+        delete[] m_data;
 #endif
     }
     binary::binary(const realm::BinaryData &v) {

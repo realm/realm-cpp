@@ -8,7 +8,7 @@ namespace realm::internal::bridge {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_error) SyncError(*reinterpret_cast<const SyncError*>(&other.m_error));
 #else
-        std::shared_ptr<SyncError> m_error;
+        m_error = other.m_error;
 #endif
     }
 

@@ -27,8 +27,12 @@ namespace realm {
 
             void send_request_to_server(const app::Request& request,
                                         util::UniqueFunction<void(const app::Response&)>&& completion) {
-                m_transport.send_request_to_server(request, [completion = completion.release()](const app::Response& response) {
-                    completion->call(response);
+                auto completion_ptr = completion.release();
+                m_transport.send_request_to_server(request,
+                                                   [f = std::move(completion_ptr)]
+                                                   (const app::Response& response) {
+                    auto uf = util::UniqueFunction<void(const app::Response&)>(std::move(f));
+                    uf(response);
                 });
             }
 
@@ -443,11 +447,23 @@ namespace realm {
         return credentials(app::AppCredentials::function(payload));
     }
 
+    struct DefaultSyncLogger : public ::realm::util::Logger {
+        void do_log(const ::realm::util::LogCategory& category, Level l, const std::string& message) {
+            std::cout << "ADS C++ SDK: " << ::realm::util::Logger::level_to_string(l) << " : " << message << "\n";
+        }
+    };
+
     App::App(const configuration& config) {
 #if QT_CORE_LIB
         util::Scheduler::set_default_factory(util::make_qt);
 #endif
         SyncClientConfig client_config;
+        client_config.logger_factory = ([](::realm::util::Logger::Level level) {
+            auto logger = std::make_unique<::realm::util::ThreadSafeLogger>(std::make_shared<DefaultSyncLogger>());
+            logger->set_level_threshold(level);
+            return logger;
+        });
+        client_config.log_level = util::Logger::Level::off;
 
 #if REALM_PLATFORM_APPLE
         bool should_encrypt = !getenv("REALM_DISABLE_METADATA_ENCRYPTION");

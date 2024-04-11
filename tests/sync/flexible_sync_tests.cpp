@@ -7,7 +7,6 @@ using namespace realm;
 TEST_CASE("flexible_sync", "[sync]") {
     auto app = realm::App(realm::App::configuration({Admin::Session::shared().cached_app_id(), Admin::Session::shared().base_url()}));
     SECTION("all") {
-        app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
         auto synced_realm = db(flx_sync_config);

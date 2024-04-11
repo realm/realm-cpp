@@ -251,7 +251,8 @@ jobs:
             libuv1-dev \
             ninja-build \
             sudo \
-            zlib1g-dev
+            zlib1g-dev \
+            valgrind
 
       - name: Setup Ccache
         uses: hendrikmuhs/ccache-action@v1.1
@@ -279,6 +280,11 @@ jobs:
       - name: Test
         working-directory: .build/cmake-preset-linux/tests/${{ matrix.configuration }}/
         run: ./cpprealm_db_tests
+
+      - name: Valgrind leak check
+        if: ${{ matrix.compiler.name == 'gcc' && matrix.compiler.version == '12.1' }}
+        working-directory: .build/cmake-preset-linux/tests/${{ matrix.configuration }}/
+        run: valgrind --tool=memcheck --leak-check=full --show-leak-kinds=definite --undef-value-errors=yes --track-origins=yes --child-silent-after-fork=no --trace-children=yes --error-exitcode=1 ./cpprealm_db_tests
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v4

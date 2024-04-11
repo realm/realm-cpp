@@ -372,7 +372,7 @@ namespace realm {
             obj.map_link_col = std::map<std::string, AllTypesObjectLink*>({{"foo", &link3}});
             obj.map_embedded_col = std::map<std::string, AllTypesObjectEmbedded*>({{"foo", &embedded_obj3}});
 
-            db db = open(path);
+            db db = realm::db(config);
             auto managed_obj = db.write([&obj, &db]() {
                 return db.add(std::move(obj));
             });
@@ -514,7 +514,7 @@ namespace realm {
         }
 
         SECTION("object_notifications") {
-            db realm = open(path);
+            db realm = realm::db(config);
 
             auto date = std::chrono::time_point<std::chrono::system_clock>();
             auto uuid = realm::uuid();
@@ -741,7 +741,7 @@ namespace realm {
             link._id = 1;
             link.str_col = "link";
 
-            db db = open(path);
+            db db = realm::db(config);
             auto [managed_obj, managed_link] = db.write([&]() -> std::tuple<managed<AllTypesObject>, managed<AllTypesObjectLink>> {
                 auto managed_link = db.add(std::move(link));
                 auto o = db.add(std::move(obj));
@@ -819,7 +819,7 @@ namespace realm {
             AllTypesObjectLink link;
             link._id = 1;
 
-            db db = open(path);
+            db db = realm::db(config);
             auto managed_obj = db.write([&]() {
                 return db.add(std::move(obj));
             });
@@ -922,7 +922,7 @@ namespace realm {
             obj.map_link_col = std::map<std::string, AllTypesObjectLink*>({{"foo", &link3}});
             obj.map_embedded_col = std::map<std::string, AllTypesObjectEmbedded*>({{"foo", &embedded_obj3}});
 
-            db db = open(path);
+            db db = realm::db(config);
             auto managed_obj = db.write([&obj, &db]() {
                 return db.add(std::move(obj));
             });
@@ -981,6 +981,34 @@ namespace realm {
             CHECK(detached_obj.map_uuid_col["foo"] == uuid);
             CHECK(detached_obj.map_mixed_col["foo"] == realm::mixed("bar"));
             CHECK(detached_obj.map_link_col["foo"]->str_col == "link object 3");
+
+            delete detached_obj.opt_obj_col->str_link_col;
+            delete detached_obj.opt_obj_col;
+            delete detached_obj.opt_embedded_obj_col;
+
+            for (auto& o : detached_obj.list_obj_col) {
+                delete o->str_link_col;
+                delete o;
+            }
+
+            for (auto& o : detached_obj.list_embedded_obj_col) {
+                delete o;
+            }
+
+            for (auto& o : detached_obj.set_obj_col) {
+                delete o->str_link_col;
+                delete o;
+            }
+
+            for (auto& [k, o] : detached_obj.map_link_col) {
+                delete o->str_link_col;
+                delete o;
+            }
+
+            for (auto& [k, o] : detached_obj.map_embedded_col) {
+                delete o;
+            }
+
         }
         SECTION("optional objects") {
             auto realm = db(std::move(config));

@@ -1,4 +1,4 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.9
 
 import PackageDescription
 
@@ -25,7 +25,10 @@ var cxxSettings: [CXXSetting] = [
     .define("REALM_VERSION_PATCH", to: String(coreVersion.patch)),
     .define("REALM_VERSION_EXTRA", to: "\"\(coreVersion.prereleaseIdentifiers.first ?? "")\""),
     .define("REALM_VERSION_STRING", to: "\"\(coreVersion)\""),
-    .headerSearchPath("../include/"),
+    .headerSearchPath("."),
+    .headerSearchPath("include"),
+    .headerSearchPath("include/cpprealm")
+
 ]
 
 let applePlatforms: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS]
@@ -36,12 +39,14 @@ let cppSdkTarget: Target = .target(
         .product(name: "RealmCore", package: "realm-core"),
         .product(name: "RealmQueryParser", package: "realm-core"),
     ],
-    path: "src/",
+    path: ".",
     exclude: [
-        "cpprealm/internal/curl",
-        "cpprealm/internal/network"
+        "src/cpprealm/internal/curl",
+        "src/cpprealm/internal/network",
+        "realm-core"
     ],
-    publicHeadersPath: ".",
+    sources: ["src"],
+    publicHeadersPath: "include",
     cxxSettings: cxxSettings,
     linkerSettings: [
         .linkedFramework("Foundation", .when(platforms: applePlatforms)),

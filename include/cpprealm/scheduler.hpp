@@ -25,8 +25,6 @@
 
 namespace realm {
     struct scheduler {
-        static std::shared_ptr<scheduler> make_default();
-
         virtual ~scheduler() = default;
 
         // Invoke the given function on the scheduler's thread.
