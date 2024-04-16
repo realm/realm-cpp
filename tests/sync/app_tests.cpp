@@ -72,6 +72,13 @@ using namespace realm;
 TEST_CASE("app", "[app]") {
     auto app = realm::App(realm::App::configuration({Admin::Session::shared().cached_app_id(), Admin::Session::shared().base_url()}));
 
+    SECTION("base_url") {
+        auto no_url_provided_app = realm::App(realm::App::configuration({"NA"}));
+        CHECK(no_url_provided_app.get_base_url() == "https://services.cloud.mongodb.com");
+        auto with_url_provided_app = realm::App(realm::App::configuration({"NA", "https://foobar.com"}));
+        CHECK(with_url_provided_app.get_base_url() == "https://foobar.com");
+    }
+
     SECTION("get_current_user") {
         auto user = app.login(realm::App::credentials::anonymous()).get();
 
