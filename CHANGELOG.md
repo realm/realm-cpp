@@ -3,7 +3,8 @@ X.Y.Z Release notes (YYYY-MM-DD)
 
 ### Fixed
 * Building from source on Windows would fail due to symbolic links not being automatically 
-  enabled on the platform ([#192](https://github.com/realm/realm-cpp/pull/192), since v1.1.0)
+  enabled on the platform ([#192](https://github.com/realm/realm-cpp/pull/192), since v1.1.0).
+* Fixed a memory leak caused by incorrect usage of `util::UniqueFunction` inside of `std::function`.
 
 ### Enhancements
 * Updated default base URL to be `https://services.cloud.mongodb.com` to support the new domains (was `https://realm.mongodb.com`)

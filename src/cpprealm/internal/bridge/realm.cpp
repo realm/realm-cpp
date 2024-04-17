@@ -28,6 +28,63 @@
 
 #include <filesystem>
 
+#ifdef QT_CORE_LIB
+#include <QStandardPaths>
+#include <QMetaObject>
+#include <QTimer>
+#include <QThread>
+#include <QtWidgets/QApplication>
+#endif
+
+namespace realm {
+#if QT_CORE_LIB
+struct QtMainLoopScheduler : public QObject, public util::Scheduler {
+
+    bool is_on_thread() const noexcept override
+    {
+        return m_id == std::this_thread::get_id();
+    }
+    bool is_same_as(const Scheduler* other) const noexcept override
+    {
+        auto o = dynamic_cast<const QtMainLoopScheduler*>(other);
+        return (o && (o->m_id == m_id));
+    }
+    bool can_deliver_notifications() const noexcept override
+    {
+        return QThread::currentThread()->eventDispatcher();
+    }
+
+    void set_notify_callback(Function<void()> fn) override
+    {
+        m_callback = std::move(fn);
+    }
+
+    void notify() override
+    {
+        schedule(m_callback);
+    }
+
+    void schedule(Function<void()> fn) {
+        QMetaObject::invokeMethod(this, fn);
+    }
+private:
+    Function<void()> m_callback;
+    std::thread::id m_id = std::this_thread::get_id();
+};
+static std::shared_ptr<realm::util::Scheduler> make_qt()
+{
+    return std::make_shared<QtMainLoopScheduler>();
+}
+#endif
+
+    std::shared_ptr<util::Scheduler> make_default_scheduler() {
+#if QT_CORE_LIB
+        util::Scheduler::set_default_factory(make_qt);
+#endif
+        return util::Scheduler::make_default();
+    }
+}
+
 namespace realm::internal::bridge {
     static_assert((uint8_t)realm::config::schema_mode::automatic == (uint8_t)::realm::SchemaMode::Automatic);
     static_assert((uint8_t)realm::config::schema_mode::immutable == (uint8_t)::realm::SchemaMode::Immutable);
@@ -73,8 +130,9 @@ namespace realm::internal::bridge {
 
         ~internal_scheduler() override = default;
         void invoke(util::UniqueFunction<void()> &&fn) override {
-            m_scheduler->invoke([f = fn.release()]() {
-                f->call();
+            m_scheduler->invoke([fn = std::move(fn.release())]() {
+                auto f = util::UniqueFunction<void()>(std::move(fn));
+                f();
             });
         }
 
@@ -107,7 +165,7 @@ namespace realm::internal::bridge {
         RealmConfig config;
         config.cache = true;
         config.path = std::filesystem::current_path().append("default.realm").generic_string();
-        config.scheduler = std::make_shared<internal_scheduler>(scheduler::make_default());
+        config.scheduler = ::realm::make_default_scheduler();
         config.schema_version = 0;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_config) RealmConfig(config);
@@ -433,7 +491,7 @@ namespace realm::internal::bridge {
             return *this;
         auto config = m_realm->config();
         config.cache = true;
-        config.scheduler = std::make_shared<internal_scheduler>(scheduler::make_default());
+        config.scheduler = ::realm::make_default_scheduler();
         return realm(std::move(config));
     }
 

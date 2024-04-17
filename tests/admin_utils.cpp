@@ -459,7 +459,7 @@ namespace Admin {
         if (baas_url)
             m_base_url = *baas_url;
         else
-            m_base_url = "localhost:9090";
+            m_base_url = "http://localhost:9090";
         bson::BsonDocument credentials{
                 {"username", "unique_user@domain.com"},
                 {"password", "password"}};
@@ -479,7 +479,7 @@ namespace Admin {
         m_refresh_token = tokens.second;
         m_group_id = group_id;
 
-        group = Endpoint(util::format("%1/api/admin/v3.0/groups/%2", baas_url, group_id), m_access_token);
+        group = Endpoint(util::format("%1/api/admin/v3.0/groups/%2", m_base_url, group_id), m_access_token);
         apps = group["apps"];
     }
 

@@ -563,6 +563,11 @@ TEST_CASE("set", "[set]") {
         CHECK(other.begin().operator*()->_id == link._id);
         CHECK(other.begin().operator*()->str_col == link.str_col);
 
+        for (auto& o : other) {
+            delete o->str_link_col;
+            delete o;
+        }
+
     }
 
     SECTION("set_algorithms") {
