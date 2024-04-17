@@ -6,7 +6,7 @@ X.Y.Z Release notes (YYYY-MM-DD)
   enabled on the platform ([#192](https://github.com/realm/realm-cpp/pull/192), since v1.1.0)
 
 ### Enhancements
-* None
+* Updated default base URL to be `https://services.cloud.mongodb.com` to support the new domains (was `https://realm.mongodb.com`)
 
 ### Breaking Changes
 * None
@@ -15,7 +15,7 @@ X.Y.Z Release notes (YYYY-MM-DD)
 * Fileformat: Generates files with format v24. Reads and automatically upgrade from fileformat v10.
 
 ### Internals
-* None
+* Upgraded to Core v14.5.1
 
 ----------------------------------------------
 

@@ -505,6 +505,10 @@ namespace realm {
         *this = App(std::move(c));
     }
 
+    std::string App::get_base_url() const {
+        return m_app->get_base_url();
+    }
+
     std::future<void> App::register_user(const std::string &username, const std::string &password) {
         std::promise<void> p;
         std::future<void> f = p.get_future();
