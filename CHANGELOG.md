@@ -1,4 +1,4 @@
-X.Y.Z Release notes (YYYY-MM-DD)
+1.1.1 Release notes (2024-04-17)
 =============================================================
 
 ### Fixed
@@ -8,9 +8,6 @@ X.Y.Z Release notes (YYYY-MM-DD)
 
 ### Enhancements
 * Updated default base URL to be `https://services.cloud.mongodb.com` to support the new domains (was `https://realm.mongodb.com`)
-
-### Breaking Changes
-* None
 
 ### Compatibility
 * Fileformat: Generates files with format v24. Reads and automatically upgrade from fileformat v10.
