@@ -106,8 +106,6 @@ set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     target_compile_options(cpprealm PRIVATE -Wall -Wextra -pedantic -Werror)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    target_compile_options(cpprealm PRIVATE /W4 /WX)
 endif()
 
 if(APPLE OR MSVC)
