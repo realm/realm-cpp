@@ -92,14 +92,14 @@ namespace realm {
             return detach() != rhs;
         }
 
-        rbool operator==(const std::nullopt_t& rhs) const noexcept {
+        rbool operator==(const std::nullopt_t&) const noexcept {
             if (this->m_rbool_query) {
                 return this->m_rbool_query->mixed_equal(m_key, internal::bridge::mixed(std::monostate()));
             }
             return detach() == T(std::monostate());
         }
 
-        rbool operator!=(const std::nullopt_t& rhs) const noexcept {
+        rbool operator!=(const std::nullopt_t&) const noexcept {
             if (this->m_rbool_query) {
                 return this->m_rbool_query->mixed_not_equal(m_key, internal::bridge::mixed(std::monostate()));
             }
@@ -163,7 +163,7 @@ namespace realm {
     };
 
     template<typename T, typename Types>
-    const bool holds_alternative(const realm::managed<Types>& v) noexcept {
+    bool holds_alternative(const realm::managed<Types>& v) noexcept {
         auto val = v.get_stored_type();
         switch (val) {
             case realm::managed<Types>::stored_type::Int:

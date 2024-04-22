@@ -202,7 +202,7 @@ namespace realm {
         {}
 
 
-        void before(const realm::internal::bridge::collection_change_set &c) final {}
+        void before(const realm::internal::bridge::collection_change_set &) final {}
         void after(internal::bridge::collection_change_set const& changes) final {
             if (ignoreChangesInInitialNotification) {
                 ignoreChangesInInitialNotification = false;

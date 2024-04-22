@@ -137,8 +137,8 @@ struct user {
     {
         db_config config;
         config.set_sync_config(sync_config(m_user));
-        config.sync_config().set_error_handler([](const sync_session& session, const internal::bridge::sync_error& error) {
-            std::cerr<<"sync error: "<<error.message()<<std::endl;
+        config.sync_config().set_error_handler([](const sync_session&, const internal::bridge::sync_error& error) {
+            std::cerr<<"ADS C++ SDK: Sync Error: " << error.message() << "\n";
         });
         config.set_path(sync_manager().path_for_realm(config.sync_config()));
         config.sync_config().set_stop_policy(realm::internal::bridge::realm::sync_session_stop_policy::after_changes_uploaded);
@@ -227,10 +227,6 @@ struct user {
 bool operator==(const user& lhs, const user& rhs);
 bool operator!=(const user& lhs, const user& rhs);
 
-namespace util {
-    template <class T>
-    class TaggedString;
-}
 namespace app {
     struct AppCredentials;
 }

@@ -141,8 +141,8 @@ namespace realm {
             static constexpr std::tuple<Properties...> properties{};
             using variant_t = typename unique_variant<std::variant<>, std::monostate, typename Properties::VariantResult...>::type;
 
-            template<size_t N, typename P>
-            constexpr auto apply_name(const std::tuple<Properties...> &tup, P &&prop) {
+            template<size_t N>
+            constexpr auto do_apply_name(const std::tuple<Properties...> &tup) {
                 if constexpr (N + 1 == sizeof...(Properties)) {
                     names[N] = std::get<N>(tup).name;
                     if (std::get<N>(tup).is_primary_key) {
@@ -154,12 +154,12 @@ namespace realm {
                     if (std::get<N>(tup).is_primary_key) {
                         primary_key_name = std::get<N>(tup).name;
                     }
-                    return apply_name<N + 1>(tup, std::get<N + 1>(tup));
+                    return do_apply_name<N + 1>(tup);
                 }
             }
 
             constexpr auto apply_name(const std::tuple<Properties...> &tup) {
-                return apply_name<0>(tup, std::get<0>(tup));
+                return do_apply_name<0>(tup);
             }
 
             std::tuple<Properties...> ps;

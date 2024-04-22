@@ -103,6 +103,7 @@ endif()
 
 target_link_libraries(cpprealm PUBLIC Realm::ObjectStore)
 set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
+target_compile_options(cpprealm PRIVATE -Wextra -pedantic -Werror -Wall)
 
 if(APPLE OR MSVC)
     target_sources(cpprealm PRIVATE src/cpprealm/internal/network/network_transport.cpp)

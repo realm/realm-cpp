@@ -46,8 +46,7 @@ namespace realm {
         friend rbool operator||(const rbool &lhs, const rbool &rhs);
     public:
 
-        rbool& add_link_chain(internal::bridge::realm* realm,
-                            const internal::bridge::col_key& col_key) {
+        rbool& add_link_chain(const internal::bridge::col_key& col_key) {
             if (m_link_chain) {
                 m_link_chain->link(col_key);
             } else {
@@ -96,10 +95,10 @@ namespace realm {
 
         rbool& contains(const internal::bridge::col_key& col_key, const std::string& rhs, bool case_sensitive = true) {
             if (auto lc = m_link_chain) {
-                q = lc->column<std::string>(col_key).contains(::realm::serialize(std::optional<std::string>(rhs)));
+                q = lc->column<std::string>(col_key).contains(::realm::serialize(std::optional<std::string>(rhs)), case_sensitive);
                 m_link_chain = std::nullopt;
             } else {
-                q = internal::bridge::query(q.get_table()).contains(col_key, rhs);
+                q = internal::bridge::query(q.get_table()).contains(col_key, rhs, case_sensitive);
             }
             return *this;
         }
@@ -211,7 +210,7 @@ namespace realm {
             mutable internal::bridge::query q;
         };
 
-        rbool(internal::bridge::query &&q) : q(q), is_for_queries(true) {
+        rbool(internal::bridge::query &&q) : is_for_queries(true), q(q) {
             m_table = q.get_table();
         }
         rbool(bool b) : b(b) {}

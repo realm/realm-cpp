@@ -448,7 +448,7 @@ namespace realm {
     }
 
     struct DefaultSyncLogger : public ::realm::util::Logger {
-        void do_log(const ::realm::util::LogCategory& category, Level l, const std::string& message) {
+        void do_log(const ::realm::util::LogCategory&, Level l, const std::string& message) {
             std::cout << "ADS C++ SDK: " << ::realm::util::Logger::level_to_string(l) << " : " << message << "\n";
         }
     };

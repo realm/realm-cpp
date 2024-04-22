@@ -26,7 +26,7 @@
 
 namespace realm {
     class SyncManager;
-    struct App;
+    class App;
     struct user;
 
     namespace internal::bridge {
@@ -34,7 +34,7 @@ namespace realm {
             [[nodiscard]] std::string path_for_realm(const realm::sync_config&) const;
             void set_log_level(logger::level);
         private:
-            friend struct ::realm::App;
+            friend class ::realm::App;
             friend struct ::realm::user;
             sync_manager(const std::shared_ptr<SyncManager> &);
             std::shared_ptr<SyncManager> m_manager;

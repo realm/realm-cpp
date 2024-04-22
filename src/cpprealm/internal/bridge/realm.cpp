@@ -305,7 +305,7 @@ namespace realm::internal::bridge {
     realm::realm(const config &v) {
         static bool initialized;
         if (!initialized) {
-            auto logger = std::make_shared<struct null_logger>();
+            auto logger = std::make_shared<null_logger>();
             logger->set_level_threshold(logger::level::off);
             set_default_logger(logger);
             realm_analytics::send();

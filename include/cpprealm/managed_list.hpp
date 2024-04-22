@@ -115,7 +115,7 @@ namespace realm {
                                                                   false));
             token.m_realm = *m_realm;
             token.m_list = list;
-            return std::move(token);
+            return token;
         }
 
         // TODO: emulate a reference to the value.
