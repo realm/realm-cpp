@@ -3,14 +3,14 @@
 #include <cpprealm/rbool.hpp>
 
 namespace realm {
-    __cpprealm_build_query(==, equal, realm::decimal128);
-    __cpprealm_build_query(!=, not_equal, realm::decimal128);
-    __cpprealm_build_query(>, greater, realm::decimal128);
-    __cpprealm_build_query(>=, greater_equal, realm::decimal128);
-    __cpprealm_build_query(<, less, realm::decimal128);
-    __cpprealm_build_query(<=, less_equal, realm::decimal128);
-    __cpprealm_build_optional_query(==, equal, realm::decimal128);
-    __cpprealm_build_optional_query(!=, not_equal, realm::decimal128);
+    __cpprealm_build_query(==, equal, realm::decimal128)
+    __cpprealm_build_query(!=, not_equal, realm::decimal128)
+    __cpprealm_build_query(>, greater, realm::decimal128)
+    __cpprealm_build_query(>=, greater_equal, realm::decimal128)
+    __cpprealm_build_query(<, less, realm::decimal128)
+    __cpprealm_build_query(<=, less_equal, realm::decimal128)
+    __cpprealm_build_optional_query(==, equal, realm::decimal128)
+    __cpprealm_build_optional_query(!=, not_equal, realm::decimal128)
 
 #define managed_decimal_arithmetic(op) \
     realm::decimal128 managed<realm::decimal128>::operator op(const decimal128& o) { \
