@@ -148,7 +148,7 @@ include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-        VERSION "1.0.0"
+        VERSION "${REALMCXX_VERSION}"
         COMPATIBILITY AnyNewerVersion
 )
 configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake/Config.cmake.in

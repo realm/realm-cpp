@@ -243,8 +243,11 @@ namespace realm {
             template<size_t N, typename P>
             constexpr variant_t
             property_value_for_name(std::string_view property_name, const managed<Class, void> &cls, P &property, bool excluding_collections = true) const {
-                if (excluding_collections &&
-                    (property.type == realm::internal::bridge::property::type::Array || property.type == realm::internal::bridge::property::type::Dictionary)) {
+                bool is_array = realm::internal::bridge::property_has_flag(property.type, realm::internal::bridge::property::type::Array);
+                bool is_dictionary = realm::internal::bridge::property_has_flag(property.type, realm::internal::bridge::property::type::Dictionary);
+                bool is_set = realm::internal::bridge::property_has_flag(property.type, realm::internal::bridge::property::type::Set);
+                bool is_collection = is_array || is_dictionary || is_set;
+                if (excluding_collections && is_collection) {
                     return variant_t{std::monostate()};
                 }
 
