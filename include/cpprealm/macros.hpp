@@ -539,11 +539,11 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
             return v;                                                                               \
         }                                                                                           \
         auto observe(std::function<void(realm::object_change<managed>&&)>&& fn) { \
-            auto m_object = std::make_shared<internal::bridge::object>(m_realm, m_obj);                   \
-            auto wrapper = realm::ObjectChangeCallbackWrapper<managed>{ \
+            auto m_object = std::make_shared<internal::bridge::object>(m_realm, m_obj);             \
+            auto wrapper = realm::object_change_callback_wrapper<managed>{ \
             std::move(fn), this, m_object}; \
             return m_object->add_notification_callback( \
-            std::make_shared<realm::ObjectChangeCallbackWrapper<managed>>(wrapper));                               \
+            std::make_shared<realm::object_change_callback_wrapper<managed>>(wrapper));            \
         }                                                                                          \
         bool is_invalidated() {                                                                     \
             return !m_obj.is_valid();                                                              \
