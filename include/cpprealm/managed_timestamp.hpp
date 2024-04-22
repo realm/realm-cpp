@@ -24,7 +24,7 @@
 
 namespace realm {
     class rbool;
-};
+}
 namespace realm {
 
     template<>

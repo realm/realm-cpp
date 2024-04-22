@@ -29,7 +29,7 @@ namespace realm {
 }
 
 namespace realm::internal::bridge {
-    struct uuid : core_binding<UUID> {
+    struct uuid {
         uuid();
         uuid(const uuid& other) = default;
         uuid& operator=(const uuid& other) = default;
@@ -40,7 +40,7 @@ namespace realm::internal::bridge {
         explicit uuid(const std::string&);
         uuid(const std::array<uint8_t, 16>&);
         uuid(const struct ::realm::uuid&); //NOLINT(google-explicit-constructor);
-        operator UUID() const final; //NOLINT(google-explicit-constructor);
+        operator UUID() const; //NOLINT(google-explicit-constructor);
         operator ::realm::uuid() const; //NOLINT(google-explicit-constructor);
         [[nodiscard]] std::string to_string() const;
         [[nodiscard]] std::string to_base64() const;

@@ -7,7 +7,7 @@ namespace realm {
     namespace client_reset {
         manual::manual() {
             m_mode = client_reset_mode::manual;
-        };
+        }
 
         discard_unsynced_changes::discard_unsynced_changes(std::function<void(db local)> before,
                                                            std::function<void(db local, db remote)> after) {

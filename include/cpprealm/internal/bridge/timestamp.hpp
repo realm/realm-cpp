@@ -27,7 +27,7 @@ namespace realm {
 }
 
 namespace realm::internal::bridge {
-    struct timestamp : core_binding<Timestamp> {
+    struct timestamp {
         timestamp() = default;
         timestamp(const timestamp& other) = default;
         timestamp& operator=(const timestamp& other) = default;
@@ -35,7 +35,7 @@ namespace realm::internal::bridge {
         timestamp& operator=(timestamp&& other) = default;
         ~timestamp() = default;
         timestamp(const Timestamp&); //NOLINT(google-explicit-constructor)
-        operator Timestamp() const final; //NOLINT(google-explicit-constructor)
+        operator Timestamp() const; //NOLINT(google-explicit-constructor)
         operator std::chrono::time_point<std::chrono::system_clock>() const; //NOLINT(google-explicit-constructor)
         timestamp(int64_t seconds, int32_t nanoseconds);
         timestamp(const std::chrono::time_point<std::chrono::system_clock>& tp); //NOLINT(google-explicit-constructor)

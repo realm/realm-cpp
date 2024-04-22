@@ -27,7 +27,7 @@ namespace realm {
 }
 
 namespace realm::internal::bridge {
-    struct decimal128 : core_binding<Decimal128> {
+    struct decimal128 {
         decimal128() = default;
         decimal128(const decimal128& other) ;
         decimal128& operator=(const decimal128& other) ;
@@ -38,7 +38,7 @@ namespace realm::internal::bridge {
         explicit decimal128(const std::string&);
         decimal128(const double&);
         decimal128(const struct ::realm::decimal128&); //NOLINT(google-explicit-constructor);
-        operator Decimal128() const final; //NOLINT(google-explicit-constructor);
+        operator Decimal128() const; //NOLINT(google-explicit-constructor);
         operator ::realm::decimal128() const; //NOLINT(google-explicit-constructor);
         std::string to_string() const;
         bool is_NaN() const;

@@ -47,12 +47,6 @@ namespace realm::internal::bridge {
     template <typename Left, typename Right>
     struct LayoutCheck<Left, Right, std::enable_if_t<(sizeof(Left) == sizeof(Right) && alignof(Left) == alignof(Right))>> : std::true_type {
     };
-
-    template <typename T>
-    struct core_binding {
-        using underlying = T;
-        virtual operator T() const = 0; //NOLINT(google-explicit-constructor);
-    };
 }
 
 #endif //CPPREALM_BRIDGE_UTILS_HPP

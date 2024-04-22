@@ -336,7 +336,7 @@ namespace realm::internal::bridge {
     }
 
     link_chain& link_chain::backlink(const table& origin, col_key origin_col_key) {
-        reinterpret_cast<LinkChain*>(&m_link_chain)->backlink(origin.operator ConstTableRef().operator*(), origin_col_key);
+        m_link_chain->backlink(origin.operator ConstTableRef().operator*(), origin_col_key);
         return *this;
     }
 
@@ -395,11 +395,11 @@ namespace realm::internal::bridge {
     }
 
     subexpr link_chain::subquery(query subquery) {
-        return reinterpret_cast<LinkChain*>(&m_link_chain)->subquery(subquery);
+        return m_link_chain->subquery(subquery);
     }
 
     table link_chain::get_table() {
-        return reinterpret_cast<LinkChain*>(&m_link_chain)->get_current_table();
+        return m_link_chain->get_current_table();
     }
 
     query::query() {
