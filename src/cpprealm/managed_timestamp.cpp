@@ -11,4 +11,4 @@ namespace realm {
 
     __cpprealm_build_optional_query(==, equal, std::chrono::time_point<std::chrono::system_clock>)
     __cpprealm_build_optional_query(!=, not_equal, std::chrono::time_point<std::chrono::system_clock>)
-};
+}
