@@ -42,7 +42,7 @@ int main()
         '\0'}; \
         required += info_##NAME[0]
 
-    @TYPE_INFO_QUERY_DECLS@
+@TYPE_INFO_QUERY_DECLS@
 
     return required;
 }
