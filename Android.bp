@@ -19,7 +19,7 @@ genrule {
         "dependencies.list",
         "src/cpprealm/internal/version_numbers.hpp.in",
     ],
-    out: ["cpprealm/internal/version_numbers.hpp"],
+    out: ["cpprealm/version_numbers.hpp"],
     tool_files: ["tools/generate-version-numbers-for-soong.sh"],
     cmd: "$(location) $(in) > $(out)",
 }
@@ -47,8 +47,9 @@ cc_library_static {
         "src/cpprealm/internal/apple/**/*",
         "src/cpprealm/internal/curl/**/*"
     ],
-    export_include_dirs: ["src"],
+    export_include_dirs: ["include"],
     export_generated_headers: ["gen_realmcxx_version_numbers"],
     static_libs: ["realm"],
-    include_build_directory: false
+    include_build_directory: false,
+    vendor: true
 }
