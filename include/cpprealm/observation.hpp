@@ -62,7 +62,7 @@ namespace realm {
                 : block(std::move(b)), object(*obj), m_object(internal_object) {
             static_cast<void>(obj);
         }
-        std::function<void(object_change < T > )> block;
+        std::function<void(object_change<T>)> block;
         const T object;
         std::shared_ptr<internal::bridge::object> m_object;
 

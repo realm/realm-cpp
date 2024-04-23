@@ -31,7 +31,6 @@ namespace realm {
 
     namespace internal::bridge {
         struct sync_manager {
-            [[nodiscard]] std::string path_for_realm(const realm::sync_config&) const;
             void set_log_level(logger::level);
         private:
             friend class ::realm::App;

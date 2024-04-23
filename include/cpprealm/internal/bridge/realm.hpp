@@ -33,6 +33,9 @@ namespace realm {
     struct SyncConfig;
     struct scheduler;
     class SyncUser;
+    namespace app {
+        class User;
+    }
 
     enum class client_reset_mode: uint8_t {
         // Fire a client reset error
