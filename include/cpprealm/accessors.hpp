@@ -32,7 +32,7 @@ namespace realm {
     template <typename T, typename = void>
     struct accessor {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const T& value);
     };
@@ -40,7 +40,7 @@ namespace realm {
     template <>
     struct accessor<int64_t> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const int64_t& value) {
             obj.set(key, value);
@@ -49,7 +49,7 @@ namespace realm {
     template <>
     struct accessor<std::optional<int64_t>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const std::optional<int64_t>& value) {
             if (value) {
@@ -62,7 +62,7 @@ namespace realm {
     template <>
     struct accessor<double> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const double& value) {
             obj.set(key, value);
@@ -71,7 +71,7 @@ namespace realm {
     template <>
     struct accessor<std::optional<double>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const std::optional<double>& value) {
             if (value) {
@@ -84,7 +84,7 @@ namespace realm {
     template <>
     struct accessor<bool> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const bool& value) {
             obj.set(key, value);
@@ -93,7 +93,7 @@ namespace realm {
     template <>
     struct accessor<std::optional<bool>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const std::optional<bool>& value) {
             if (value) {
@@ -108,7 +108,7 @@ namespace realm {
     template <typename T>
     struct accessor<T, std::enable_if_t<std::is_enum_v<T>>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const T& value) {
             obj.set(key, static_cast<int64_t>(value));
@@ -117,7 +117,7 @@ namespace realm {
     template <typename T>
     struct accessor<T, std::enable_if_t<std::conjunction_v<internal::type_info::is_optional<T>, std::is_enum<typename T::value_type>>>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const T& value) {
             if (value) {
@@ -131,7 +131,7 @@ namespace realm {
     template <typename T>
     struct accessor<T, std::enable_if_t<internal::type_info::MixedPersistableConcept<T>::value>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const T& value) {
             obj.set(key, serialize(value));
@@ -142,7 +142,7 @@ namespace realm {
     template <>
     struct accessor<uuid> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const uuid& value) {
             obj.set(key, value);
@@ -151,7 +151,7 @@ namespace realm {
     template <>
     struct accessor<std::optional<uuid>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const std::optional<uuid>& value) {
             if (value) {
@@ -164,7 +164,7 @@ namespace realm {
     template <>
     struct accessor<object_id> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const object_id& value) {
             obj.set(key, value);
@@ -173,7 +173,7 @@ namespace realm {
     template <>
     struct accessor<std::optional<object_id>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const std::optional<object_id>& value) {
             if (value) {
@@ -187,7 +187,7 @@ namespace realm {
     template <>
     struct accessor<decimal128> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const decimal128& value) {
             obj.set(key, value);
@@ -196,7 +196,7 @@ namespace realm {
     template <>
     struct accessor<std::optional<decimal128>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const std::optional<decimal128>& value) {
             if (value) {
@@ -210,7 +210,7 @@ namespace realm {
     template <>
     struct accessor<std::chrono::time_point<std::chrono::system_clock>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const std::chrono::time_point<std::chrono::system_clock>& value) {
             obj.set(key, value);
@@ -219,7 +219,7 @@ namespace realm {
     template <>
     struct accessor<std::optional<std::chrono::time_point<std::chrono::system_clock>>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const std::optional<std::chrono::time_point<std::chrono::system_clock>>& value) {
             if (value) {
@@ -233,7 +233,7 @@ namespace realm {
     template <>
     struct accessor<std::string> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const std::string& value) {
             obj.set(key, value);
@@ -242,7 +242,7 @@ namespace realm {
     template <>
     struct accessor<std::optional<std::string>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const std::optional<std::string>& value) {
             if (value) {
@@ -256,7 +256,7 @@ namespace realm {
     template <>
     struct accessor<std::vector<uint8_t>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const std::vector<uint8_t>& value) {
             obj.set(key, value);
@@ -265,7 +265,7 @@ namespace realm {
     template <>
     struct accessor<std::optional<std::vector<uint8_t>>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const std::optional<std::vector<uint8_t>>& value) {
             if (value) {
@@ -278,7 +278,7 @@ namespace realm {
     template <typename T>
     struct accessor<std::vector<T>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const std::vector<T>& value) {
             obj.set_list_values(key, value);
@@ -287,7 +287,7 @@ namespace realm {
     template <typename T>
     struct accessor<std::vector<T*>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm& realm,
                                const std::vector<T*>& value) {
             auto list = obj.get_linklist(key);
@@ -320,7 +320,7 @@ namespace realm {
     template <typename T>
     struct accessor<std::set<T>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm& realm,
                                const std::set<T>& value) {
             auto set = realm::internal::bridge::set(realm, obj, key);
@@ -332,7 +332,7 @@ namespace realm {
     template <typename T>
     struct accessor<std::set<T*>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm& realm,
                                const std::set<T*>& value) {
             auto set = realm::internal::bridge::set(realm, obj, key);
@@ -362,7 +362,7 @@ namespace realm {
     template <typename T>
     struct accessor<std::map<std::string, T>> {
         static void set(internal::bridge::obj& obj,
-                        internal::bridge::col_key&& key,
+                        const internal::bridge::col_key& key,
                         const internal::bridge::realm&,
                         const std::map<std::string, T>& value) {
             auto d = obj.get_dictionary(key);
@@ -395,7 +395,7 @@ namespace realm {
     template <typename T>
     struct accessor<std::map<std::string, T*>> {
         static void set(internal::bridge::obj& obj,
-                        internal::bridge::col_key&& key,
+                        const internal::bridge::col_key& key,
                         const internal::bridge::realm& realm,
                         const std::map<std::string, T*>& value) {
             auto d = obj.get_dictionary(key);
@@ -425,7 +425,7 @@ namespace realm {
     template <typename T>
     struct accessor<T*> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm& realm,
                                const T* value) {
             if (!value) {
@@ -454,7 +454,7 @@ namespace realm {
     template <auto T>
     struct accessor<linking_objects<T>> {
         static inline void set(const internal::bridge::obj&,
-                               internal::bridge::col_key&&,
+                               const internal::bridge::col_key&,
                                const internal::bridge::realm&,
                                const linking_objects<T>&) {
         }
@@ -463,7 +463,7 @@ namespace realm {
     template <typename T>
     struct accessor<primary_key<T>> {
         static inline void set(internal::bridge::obj& obj,
-                               internal::bridge::col_key&& key,
+                               const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
                                const primary_key<T>& value) {
             if constexpr (std::is_enum_v<T>) {
