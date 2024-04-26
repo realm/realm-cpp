@@ -127,7 +127,7 @@ namespace realm {
             }
         }
 
-        iterator insert(const iterator& i, const T& v)
+        iterator insert(const iterator&, const T& v)
         {
             auto set = internal::bridge::set(*m_realm, *m_obj, m_key);
             std::pair<size_t, bool> res = set.insert(v);
@@ -285,7 +285,7 @@ namespace realm {
             return std::pair<iterator, bool>(iterator(res.first, this), res.second);
         }
 
-        iterator insert(const iterator& i, T* value)
+        iterator insert(const iterator&, T* value)
         {
             auto set = internal::bridge::set(*m_realm, *m_obj, m_key);
             auto table = m_obj->get_target_table(m_key);
@@ -313,7 +313,7 @@ namespace realm {
 
         }
 
-        iterator insert(const iterator& i, const managed<T>& value)
+        iterator insert(const iterator&, const managed<T>& value)
         {
             auto set = internal::bridge::set(*m_realm, *m_obj, m_key);
             std::pair<size_t, bool> res = set.insert(value.m_obj.get_key());
@@ -328,7 +328,7 @@ namespace realm {
 
         }
 
-        iterator insert(const iterator& i, const managed<T*>& value)
+        iterator insert(const iterator&, const managed<T*>& value)
         {
             auto set = internal::bridge::set(*m_realm, *m_obj, m_key);
             std::pair<size_t, bool> res = set.insert(value.m_obj.get_key());

@@ -35,7 +35,7 @@
 namespace realm {
     template <typename>
     struct object;
-    struct rbool;
+    class rbool;
 
     namespace sync {
         class MutableSubscriptionSet;

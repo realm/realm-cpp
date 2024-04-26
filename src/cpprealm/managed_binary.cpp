@@ -28,8 +28,8 @@ namespace realm {
         return m_obj->template get<internal::bridge::binary>(m_key).size();
     }
 
-    __cpprealm_build_query(==, equal, std::vector<uint8_t>);
-    __cpprealm_build_query(!=, not_equal, std::vector<uint8_t>);
+    __cpprealm_build_query(==, equal, std::vector<uint8_t>)
+    __cpprealm_build_query(!=, not_equal, std::vector<uint8_t>)
 
     // MARK: Optional
 
@@ -59,6 +59,6 @@ namespace realm {
         return m_parent.get().m_obj->template get<internal::bridge::binary>(m_parent.get().m_key).size();
     }
 
-    __cpprealm_build_optional_query(==, equal, std::vector<uint8_t>);
-    __cpprealm_build_optional_query(!=, not_equal, std::vector<uint8_t>);
+    __cpprealm_build_optional_query(==, equal, std::vector<uint8_t>)
+    __cpprealm_build_optional_query(!=, not_equal, std::vector<uint8_t>)
 }

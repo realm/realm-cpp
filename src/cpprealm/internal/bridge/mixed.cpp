@@ -211,18 +211,18 @@ namespace realm::internal::bridge {
 #endif
     }
 
-    CPPREALM_OPTIONAL_MIXED(std::string);
-    CPPREALM_OPTIONAL_MIXED(timestamp);
-    CPPREALM_OPTIONAL_MIXED(int);
-    CPPREALM_OPTIONAL_MIXED(int64_t);
-    CPPREALM_OPTIONAL_MIXED(double);
-    CPPREALM_OPTIONAL_MIXED(struct uuid);
-    CPPREALM_OPTIONAL_MIXED(struct object_id);
-    CPPREALM_OPTIONAL_MIXED(struct decimal128);
-    CPPREALM_OPTIONAL_MIXED(struct binary);
-    CPPREALM_OPTIONAL_MIXED(struct obj_link);
-    CPPREALM_OPTIONAL_MIXED(struct obj_key);
-    CPPREALM_OPTIONAL_MIXED(bool);
+    CPPREALM_OPTIONAL_MIXED(std::string)
+    CPPREALM_OPTIONAL_MIXED(timestamp)
+    CPPREALM_OPTIONAL_MIXED(int)
+    CPPREALM_OPTIONAL_MIXED(int64_t)
+    CPPREALM_OPTIONAL_MIXED(double)
+    CPPREALM_OPTIONAL_MIXED(struct uuid)
+    CPPREALM_OPTIONAL_MIXED(struct object_id)
+    CPPREALM_OPTIONAL_MIXED(struct decimal128)
+    CPPREALM_OPTIONAL_MIXED(struct binary)
+    CPPREALM_OPTIONAL_MIXED(struct obj_link)
+    CPPREALM_OPTIONAL_MIXED(struct obj_key)
+    CPPREALM_OPTIONAL_MIXED(bool)
 
     mixed::operator Mixed() const {
         if (!is_null()) {

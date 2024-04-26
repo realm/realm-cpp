@@ -96,7 +96,7 @@ namespace realm {
 
     managed_string::operator std::string() const {
         return detach();
-    };
+    }
 
     rbool managed_string::operator==(const char* rhs) const noexcept {
         if (this->m_rbool_query) {

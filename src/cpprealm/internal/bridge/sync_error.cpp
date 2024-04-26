@@ -103,7 +103,7 @@ namespace realm::internal::bridge {
             ret.push_back(std::move(info));
         }
         return ret;
-    };
+    }
 
     status sync_error::get_status() const {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES

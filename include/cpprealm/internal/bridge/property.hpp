@@ -31,7 +31,7 @@ namespace realm::internal::bridge {
     struct col_key;
 
     struct property {
-        enum class type {
+        enum class type : unsigned short {
             Int = 0,
             Bool = 1,
             String = 2,
@@ -101,6 +101,10 @@ namespace realm::internal::bridge {
     inline constexpr property::type operator&(property::type a, property::type b)
     {
         return static_cast<property::type>(to_underlying(a) & to_underlying(b));
+    }
+
+    inline constexpr bool property_has_flag(property::type property, property::type flag) {
+        return static_cast<bool>(property & flag);
     }
 }
 

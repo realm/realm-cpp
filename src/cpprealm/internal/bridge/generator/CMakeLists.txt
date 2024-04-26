@@ -54,13 +54,15 @@ set(BRIDGE_TYPES
     BsonDocument realm::bson::BsonDocument
 )
 
+set(TYPE_INFO_QUERY_DECLS "")
+
 while(BRIDGE_TYPES)
     list(POP_FRONT BRIDGE_TYPES _name _expression)
     string(REGEX MATCHALL "." _name_char_matches "${_name}")
     list(TRANSFORM _name_char_matches PREPEND ')
     list(TRANSFORM _name_char_matches APPEND ')
     list(JOIN _name_char_matches ", " _name_chars)
-    list(APPEND TYPE_INFO_QUERY_DECLS "REALM_TYPE_INFO(${_name}, ${_expression}, ${_name_chars});\n")
+    set(TYPE_INFO_QUERY_DECLS "${TYPE_INFO_QUERY_DECLS}    REALM_TYPE_INFO(${_name}, ${_expression}, ${_name_chars});\n")
 endwhile()
 
 foreach(h ${BRIDGE_TYPE_REQUIRED_HEADERS})

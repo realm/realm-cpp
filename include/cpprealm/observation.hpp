@@ -55,8 +55,8 @@ namespace realm {
     };
 
     template<typename T>
-    struct ObjectChangeCallbackWrapper : internal::bridge::collection_change_callback {
-        ObjectChangeCallbackWrapper(std::function<void(object_change < T > )> &&b,
+    struct object_change_callback_wrapper : internal::bridge::collection_change_callback {
+        object_change_callback_wrapper(std::function<void(object_change < T > )> &&b,
                                     const T *obj,
                                     std::shared_ptr<internal::bridge::object> internal_object)
                 : block(std::move(b)), object(*obj), m_object(internal_object) {
@@ -70,7 +70,7 @@ namespace realm {
         std::optional<std::vector<typename decltype(T::schema)::variant_t>> old_values = std::nullopt;
         bool deleted = false;
 
-        void populateProperties(internal::bridge::collection_change_set const &c) {
+        void populate_properties(internal::bridge::collection_change_set const &c) {
             if (property_names) {
                 return;
             }
@@ -82,8 +82,6 @@ namespace realm {
                 return;
             }
 
-            // FIXME: It's possible for the column key of a persisted property
-            // FIXME: to equal the column key of a computed property.
             auto properties = std::vector<std::string>();
             auto table = m_object->get_obj().get_table();
 
@@ -99,11 +97,11 @@ namespace realm {
         }
 
         std::optional<std::vector<typename decltype(T::schema)::variant_t>>
-        readValues(internal::bridge::collection_change_set const &c) {
+        read_values(internal::bridge::collection_change_set const &c) {
             if (c.empty()) {
                 return std::nullopt;
             }
-            populateProperties(c);
+            populate_properties(c);
             if (!property_names) {
                 return std::nullopt;
             }
@@ -117,11 +115,11 @@ namespace realm {
         }
 
         void before(internal::bridge::collection_change_set const &c) override {
-            old_values = readValues(c);
+            old_values = read_values(c);
         }
 
         void after(internal::bridge::collection_change_set const &c) override {
-            auto new_values = readValues(c);
+            auto new_values = read_values(c);
             if (deleted) {
                 forward_change(nullptr, {}, {}, {}, nullptr);
             } else if (new_values) {
@@ -202,7 +200,7 @@ namespace realm {
         {}
 
 
-        void before(const realm::internal::bridge::collection_change_set &c) final {}
+        void before(const realm::internal::bridge::collection_change_set &) final {}
         void after(internal::bridge::collection_change_set const& changes) final {
             if (ignoreChangesInInitialNotification) {
                 ignoreChangesInInitialNotification = false;

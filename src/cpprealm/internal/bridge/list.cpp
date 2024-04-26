@@ -307,8 +307,6 @@ namespace realm::internal::bridge {
     size_t list::find(const mixed &v) { return get_list()->find(v.operator ::realm::Mixed()); }
     size_t list::find(const timestamp &v) { return get_list()->find(v.operator Timestamp()); }
     size_t list::find(const binary& v) {
-        auto v_actual = v.operator BinaryData();
-        auto val_actual = get_list()->get<BinaryData>(1);
         auto val = get_list()->find(static_cast<BinaryData>(v));
         return val;
     }

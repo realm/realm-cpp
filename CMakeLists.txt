@@ -104,6 +104,10 @@ endif()
 target_link_libraries(cpprealm PUBLIC Realm::ObjectStore)
 set(CMAKE_OSX_SYSROOT ${CMAKE_OSX_SYSROOT_PATH})
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options(cpprealm PRIVATE -Wall -Wextra -pedantic -Werror)
+endif()
+
 if(APPLE OR MSVC)
     target_sources(cpprealm PRIVATE src/cpprealm/internal/network/network_transport.cpp)
 elseif(ANDROID)
@@ -142,7 +146,7 @@ include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-        VERSION "1.0.0"
+        VERSION "${REALMCXX_VERSION}"
         COMPATIBILITY AnyNewerVersion
 )
 configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake/Config.cmake.in
@@ -174,5 +178,6 @@ if (BUILD_SHARED_LIBS)
 endif()
 
 if (NOT REALM_CPP_NO_TESTS)
+    enable_testing()
     add_subdirectory(tests)
 endif()

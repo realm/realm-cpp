@@ -95,7 +95,7 @@ namespace realm::internal {
             CurlGlobalGuard curl_global_guard;
             auto curl = curl_easy_init();
             if (!curl) {
-                return app::Response{500, -1};
+                return app::Response{500, -1, {}, "", std::nullopt};
             }
 
             struct curl_slist* list = nullptr;
@@ -162,6 +162,7 @@ namespace realm::internal {
                     0, // binding_response_code
                     std::move(response_headers),
                     std::move(response),
+                    std::nullopt
             };
         }
     } // namespace

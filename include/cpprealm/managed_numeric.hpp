@@ -359,8 +359,8 @@ namespace realm {
         friend struct managed; \
     }; \
 
-CPP_REALM_MANAGED_OPTIONAL_NUMERIC(int64_t);
-CPP_REALM_MANAGED_OPTIONAL_NUMERIC(double);
+CPP_REALM_MANAGED_OPTIONAL_NUMERIC(int64_t)
+CPP_REALM_MANAGED_OPTIONAL_NUMERIC(double)
 
     template<>
     struct managed<std::optional<bool>> : managed_base {

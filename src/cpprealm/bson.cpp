@@ -393,12 +393,12 @@ namespace realm {
     bool bsoncxx::document::empty()
     {
         return CORE_DOCUMENT->empty();
-    };
+    }
 
     size_t bsoncxx::document::size() const
     {
         return CONST_CORE_DOCUMENT->size();
-    };
+    }
 
     bsoncxx::document::value bsoncxx::document::operator[](const std::string& key)
     {

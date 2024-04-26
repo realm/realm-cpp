@@ -106,5 +106,3 @@ if (BUILD_FROM_PACKAGE_MANAGER)
 else()
     add_test(cpprealm_tests cpprealm_sync_tests cpprealm_db_tests)
 endif()
-
-enable_testing()

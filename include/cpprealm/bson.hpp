@@ -91,7 +91,7 @@ namespace realm {
             private:
                 friend struct bsoncxx;
                 explicit value(CoreDocument* d, const std::string& k)
-                    : m_document(d), key(k) {};
+                    : key(k), m_document(d) {}
                 CoreDocument* m_document;
             };
 

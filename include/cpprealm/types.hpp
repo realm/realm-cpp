@@ -105,59 +105,59 @@ namespace realm {
 
 namespace realm {
 
-    static int64_t serialize(int64_t v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline int64_t serialize(int64_t v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return v;
     }
-    static int64_t deserialize(int64_t v) {
-        return v;
-    }
-
-    static std::optional<int64_t> serialize(const std::optional<int64_t>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
-        return v;
-    }
-    static std::optional<int64_t> deserialize(const std::optional<int64_t>& v) {
+    static inline int64_t deserialize(int64_t v) {
         return v;
     }
 
-    static double serialize(const double& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline std::optional<int64_t> serialize(const std::optional<int64_t>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return v;
     }
-    static double deserialize(const double& v) {
-        return v;
-    }
-
-    static std::optional<double> serialize(const std::optional<double>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
-        return v;
-    }
-    static std::optional<double> deserialize(const std::optional<double>& v) {
+    static inline std::optional<int64_t> deserialize(const std::optional<int64_t>& v) {
         return v;
     }
 
-    static bool serialize(bool v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline double serialize(const double& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return v;
     }
-    static bool deserialize(bool v) {
+    static inline double deserialize(const double& v) {
         return v;
     }
 
-    static std::optional<bool> serialize(std::optional<bool> v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline std::optional<double> serialize(const std::optional<double>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return v;
     }
-    static std::optional<bool> deserialize(std::optional<bool> v) {
+    static inline std::optional<double> deserialize(const std::optional<double>& v) {
+        return v;
+    }
+
+    static inline bool serialize(bool v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+        return v;
+    }
+    static inline bool deserialize(bool v) {
+        return v;
+    }
+
+    static inline std::optional<bool> serialize(std::optional<bool> v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+        return v;
+    }
+    static inline std::optional<bool> deserialize(std::optional<bool> v) {
         return v;
     }
 
     template<typename T>
-    static typename std::enable_if_t<std::is_enum_v<T>, int64_t> serialize(const T& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline typename std::enable_if_t<std::is_enum_v<T>, int64_t> serialize(const T& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return static_cast<int64_t>(v);
     }
     template<typename T, std::enable_if_t<std::is_enum_v<T>>>
-    static T deserialize(int64_t v) {
+    static inline T deserialize(int64_t v) {
         return static_cast<T>(v);
     }
 
     template<typename T>
-    static std::enable_if_t<std::is_enum_v<typename T::value_type>, std::optional<int64_t>> serialize(const T& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline std::enable_if_t<std::is_enum_v<typename T::value_type>, std::optional<int64_t>> serialize(const T& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         if (v) {
             return static_cast<int64_t>(*v);
         } else {
@@ -165,7 +165,7 @@ namespace realm {
         }
     }
     template<typename T, std::enable_if_t<std::is_enum_v<typename T::value_type>>>
-    static std::optional<int64_t> deserialize(std::optional<int64_t> v) {
+    static inline std::optional<int64_t> deserialize(std::optional<int64_t> v) {
         if (v) {
             return static_cast<T>(*v);
         } else {
@@ -173,31 +173,31 @@ namespace realm {
         }
     }
 
-    static std::string serialize(const std::string& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline std::string serialize(const std::string& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return v;
     }
-    static std::string deserialize(const std::string& v) {
-        return v;
-    }
-
-    static std::optional<std::string> serialize(const std::optional<std::string>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
-        return v;
-    }
-    static std::optional<std::string> deserialize(const std::optional<std::string>& v) {
+    static inline std::string deserialize(const std::string& v) {
         return v;
     }
 
-    static internal::bridge::uuid serialize(const uuid& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline std::optional<std::string> serialize(const std::optional<std::string>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return v;
     }
-    static uuid deserialize(const internal::bridge::uuid& v) {
+    static inline std::optional<std::string> deserialize(const std::optional<std::string>& v) {
+        return v;
+    }
+
+    static inline internal::bridge::uuid serialize(const uuid& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+        return v;
+    }
+    static inline uuid deserialize(const internal::bridge::uuid& v) {
         return v.operator ::realm::uuid();
     }
 
-    static std::optional<internal::bridge::uuid> serialize(const std::optional<uuid>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline std::optional<internal::bridge::uuid> serialize(const std::optional<uuid>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return v;
     }
-    static std::optional<uuid> deserialize(const std::optional<internal::bridge::uuid>& v) {
+    static inline std::optional<uuid> deserialize(const std::optional<internal::bridge::uuid>& v) {
         if (v) {
             return v->operator ::realm::uuid();
         } else {
@@ -205,17 +205,17 @@ namespace realm {
         }
     }
 
-    static internal::bridge::binary serialize(const std::vector<uint8_t>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline internal::bridge::binary serialize(const std::vector<uint8_t>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return v;
     }
-    static std::vector<uint8_t> deserialize(const internal::bridge::binary& v) {
+    static inline std::vector<uint8_t> deserialize(const internal::bridge::binary& v) {
         return v.operator std::vector<uint8_t>();
     }
 
-    static std::optional<internal::bridge::binary> serialize(const std::optional<std::vector<uint8_t>>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline std::optional<internal::bridge::binary> serialize(const std::optional<std::vector<uint8_t>>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return v;
     }
-    static std::optional<std::vector<uint8_t>> deserialize(const std::optional<internal::bridge::binary>& v) {
+    static inline std::optional<std::vector<uint8_t>> deserialize(const std::optional<internal::bridge::binary>& v) {
         if (v) {
             return v->operator std::vector<uint8_t>();
         } else {
@@ -223,17 +223,17 @@ namespace realm {
         }
     }
 
-    static internal::bridge::timestamp serialize(const std::chrono::time_point<std::chrono::system_clock>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline internal::bridge::timestamp serialize(const std::chrono::time_point<std::chrono::system_clock>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return v;
     }
-    static std::chrono::time_point<std::chrono::system_clock> deserialize(const internal::bridge::timestamp& v) {
+    static inline std::chrono::time_point<std::chrono::system_clock> deserialize(const internal::bridge::timestamp& v) {
         return v.operator std::chrono::time_point<std::chrono::system_clock>();
     }
 
-    static std::optional<internal::bridge::timestamp> serialize(const std::optional<std::chrono::time_point<std::chrono::system_clock>>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline std::optional<internal::bridge::timestamp> serialize(const std::optional<std::chrono::time_point<std::chrono::system_clock>>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return v;
     }
-    static std::optional<std::chrono::time_point<std::chrono::system_clock>> deserialize(const std::optional<internal::bridge::timestamp>& v) {
+    static inline std::optional<std::chrono::time_point<std::chrono::system_clock>> deserialize(const std::optional<internal::bridge::timestamp>& v) {
         if (v) {
             return v->operator std::chrono::time_point<std::chrono::system_clock>();
         } else {
@@ -241,17 +241,17 @@ namespace realm {
         }
     }
 
-    static internal::bridge::object_id serialize(const realm::object_id& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline internal::bridge::object_id serialize(const realm::object_id& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return v;
     }
-    static realm::object_id deserialize(const internal::bridge::object_id& v) {
+    static inline realm::object_id deserialize(const internal::bridge::object_id& v) {
         return v.operator ::realm::object_id();
     }
 
-    static std::optional<internal::bridge::object_id> serialize(const std::optional<realm::object_id>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline std::optional<internal::bridge::object_id> serialize(const std::optional<realm::object_id>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return v;
     }
-    static std::optional<realm::object_id> deserialize(const std::optional<internal::bridge::object_id>& v) {
+    static inline std::optional<realm::object_id> deserialize(const std::optional<internal::bridge::object_id>& v) {
         if (v) {
             return v->operator ::realm::object_id();
         } else {
@@ -259,17 +259,17 @@ namespace realm {
         }
     }
 
-    static internal::bridge::decimal128 serialize(const realm::decimal128& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline internal::bridge::decimal128 serialize(const realm::decimal128& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return v;
     }
-    static realm::decimal128 deserialize(const internal::bridge::decimal128& v) {
+    static inline realm::decimal128 deserialize(const internal::bridge::decimal128& v) {
         return v.operator ::realm::decimal128();
     }
 
-    static std::optional<internal::bridge::decimal128> serialize(const std::optional<realm::decimal128>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+    static inline std::optional<internal::bridge::decimal128> serialize(const std::optional<realm::decimal128>& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return v;
     }
-    static std::optional<realm::decimal128> deserialize(const std::optional<internal::bridge::decimal128>& v) {
+    static inline std::optional<realm::decimal128> deserialize(const std::optional<internal::bridge::decimal128>& v) {
         if (v) {
             return v->operator ::realm::decimal128();
         } else {
@@ -278,7 +278,7 @@ namespace realm {
     }
 
     template <typename T>
-    static typename std::enable_if_t<internal::type_info::MixedPersistableConcept<T>::value, internal::bridge::mixed> serialize(const T& v, const std::optional<internal::bridge::realm>& realm = std::nullopt) {
+    static inline typename std::enable_if_t<internal::type_info::MixedPersistableConcept<T>::value, internal::bridge::mixed> serialize(const T& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
         return std::visit([&](auto&& arg) {
             using StoredType = std::decay_t<decltype(arg)>;
             using M = typename internal::type_info::type_info<StoredType>::internal_type;
@@ -287,7 +287,7 @@ namespace realm {
     }
 
     template <typename T>
-    static typename std::enable_if_t<!internal::type_info::MixedPersistableConcept<T>::value, T>
+    static inline typename std::enable_if_t<!internal::type_info::MixedPersistableConcept<T>::value, T>
     deserialize(const internal::bridge::mixed& value) {
         if constexpr (internal::type_info::is_optional<T>::value) {
             return std::nullopt;
@@ -317,7 +317,7 @@ namespace realm {
     }
 
     template <typename T>
-    static typename std::enable_if_t<internal::type_info::MixedPersistableConcept<T>::value, T>
+    static inline typename std::enable_if_t<internal::type_info::MixedPersistableConcept<T>::value, T>
             deserialize(const internal::bridge::mixed& value) {
         if (value.is_null()) {
             return std::monostate();

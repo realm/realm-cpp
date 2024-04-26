@@ -290,7 +290,7 @@ namespace realm::internal {
                     req.path = request.url;
                     req.body = request.body.empty() ? std::nullopt : std::optional<std::string>(request.body);
 
-                    m_http_client.async_request(std::move(req), [cb = std::move(completion_block)](const realm::sync::HTTPResponse& r, const std::error_code& e) {
+                    m_http_client.async_request(std::move(req), [cb = std::move(completion_block)](const realm::sync::HTTPResponse& r, const std::error_code&) {
                         app::Response res;
                         res.body = r.body ? *r.body : "";
                         for (auto& [k, v] : r.headers)  {

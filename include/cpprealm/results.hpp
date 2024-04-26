@@ -98,7 +98,7 @@ namespace realm {
                   collection(c),
                   m_ignore_changes_in_initial_notification(ignore_initial_notification) {}
 
-            void before(const realm::internal::bridge::collection_change_set &c) override {}
+            void before(const realm::internal::bridge::collection_change_set&) override {}
 
             void after(internal::bridge::collection_change_set const &changes) final {
                 if (m_ignore_changes_in_initial_notification) {
@@ -135,7 +135,7 @@ namespace realm {
             realm::notification_token token = r->add_notification_callback(std::make_shared<results_callback_wrapper>(std::move(handler), static_cast<Derived*>(this)));
             token.m_realm = r->get_realm();
             token.m_results = r;
-            return std::move(token);
+            return token;
         }
 
         Derived freeze() {

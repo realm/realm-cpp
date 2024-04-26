@@ -64,7 +64,7 @@ namespace realm {
     }
 
 
-// MARK: schema
+    // MARK: schema
     namespace schemagen {
         template <auto Ptr, bool IsPrimaryKey = false>
         struct property {
@@ -141,8 +141,8 @@ namespace realm {
             static constexpr std::tuple<Properties...> properties{};
             using variant_t = typename unique_variant<std::variant<>, std::monostate, typename Properties::VariantResult...>::type;
 
-            template<size_t N, typename P>
-            constexpr auto apply_name(const std::tuple<Properties...> &tup, P &&prop) {
+            template<size_t N>
+            constexpr auto do_apply_name(const std::tuple<Properties...> &tup) {
                 if constexpr (N + 1 == sizeof...(Properties)) {
                     names[N] = std::get<N>(tup).name;
                     if (std::get<N>(tup).is_primary_key) {
@@ -154,12 +154,12 @@ namespace realm {
                     if (std::get<N>(tup).is_primary_key) {
                         primary_key_name = std::get<N>(tup).name;
                     }
-                    return apply_name<N + 1>(tup, std::get<N + 1>(tup));
+                    return do_apply_name<N + 1>(tup);
                 }
             }
 
             constexpr auto apply_name(const std::tuple<Properties...> &tup) {
-                return apply_name<0>(tup, std::get<0>(tup));
+                return do_apply_name<0>(tup);
             }
 
             std::tuple<Properties...> ps;
@@ -242,24 +242,12 @@ namespace realm {
 
             template<size_t N, typename P>
             constexpr variant_t
-            property_value_for_name(std::string_view property_name, const Class &cls, P &property) const {
-                if constexpr (N + 1 == sizeof...(Properties)) {
-                    if (property_name == std::string_view(names[N])) {
-                        return *(cls.*property.ptr);
-                    }
-                    return variant_t{};
-                } else {
-                    if (property_name == std::string_view(names[N])) {
-                        return *(cls.*property.ptr);
-                    }
-                    return property_value_for_name<N + 1>(property_name, cls, std::get<N + 1>(properties));
-                }
-            }
-            template<size_t N, typename P>
-            constexpr variant_t
             property_value_for_name(std::string_view property_name, const managed<Class, void> &cls, P &property, bool excluding_collections = true) const {
-                if (excluding_collections &&
-                    (property.type == realm::internal::bridge::property::type::Array || property.type == realm::internal::bridge::property::type::Dictionary)) {
+                bool is_array = realm::internal::bridge::property_has_flag(property.type, realm::internal::bridge::property::type::Array);
+                bool is_dictionary = realm::internal::bridge::property_has_flag(property.type, realm::internal::bridge::property::type::Dictionary);
+                bool is_set = realm::internal::bridge::property_has_flag(property.type, realm::internal::bridge::property::type::Set);
+                bool is_collection = is_array || is_dictionary || is_set;
+                if (excluding_collections && is_collection) {
                     return variant_t{std::monostate()};
                 }
 
@@ -282,14 +270,11 @@ namespace realm {
                             return (cls.*ptr).detach();
                         }
                     }
-                    return property_value_for_name<N + 1>(property_name, cls, std::get<N + 1>(properties));
+                    return property_value_for_name<N + 1>(property_name, cls, std::get<N + 1>(properties), excluding_collections);
                 }
             }
             constexpr auto property_value_for_name(std::string_view property_name, const managed<Class, void> &cls, bool excluding_collections = true) const {
                 return property_value_for_name<0>(property_name, cls, std::get<0>(properties), excluding_collections);
-            }
-            constexpr auto property_value_for_name(std::string_view property_name, const Class &cls) const {
-                return property_value_for_name<0>(property_name, cls, std::get<0>(properties));
             }
 
             template<size_t N, typename T, typename P>
