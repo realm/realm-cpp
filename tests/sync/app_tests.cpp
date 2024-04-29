@@ -79,6 +79,13 @@ TEST_CASE("app", "[app]") {
         CHECK(with_url_provided_app.get_base_url() == "https://foobar.com");
     }
 
+    SECTION("update_base_url") {
+        auto app = realm::App(realm::App::configuration({"NA", "https://foobar.com"}));
+        CHECK(app.get_base_url() == "https://foobar.com");
+        app.update_base_url("https://barfoo.com").get();
+        CHECK(app.get_base_url() == "https://barfoo.com");
+    }
+
     SECTION("get_current_user") {
         auto user = app.login(realm::App::credentials::anonymous()).get();
 
