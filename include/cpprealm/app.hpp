@@ -287,7 +287,7 @@ public:
     std::optional<App> get_cached_app(const std::string& app_id, const std::optional<std::string>& base_url);
     std::string get_base_url() const;
 
-#ifdef AD_ENABLE_EXPERIMENTAL
+#ifdef REALM_ENABLE_EXPERIMENTAL
     [[nodiscard]] std::future<void> App::update_base_url(std::string base_url) const;
 #endif
 private:

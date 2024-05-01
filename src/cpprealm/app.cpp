@@ -586,7 +586,7 @@ namespace realm {
         return std::nullopt;
     }
 
-#ifdef AD_ENABLE_EXPERIMENTAL
+#ifdef REALM_ENABLE_EXPERIMENTAL
     [[nodiscard]] std::future<void> App::update_base_url(std::string base_url) const {
         std::promise<void> p;
         std::future<void> f = p.get_future();
