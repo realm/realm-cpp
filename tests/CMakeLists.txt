@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 project(cpprealm_tests)
 set(CMAKE_CXX_STANDARD 17)
 
+set(REALM_ENABLE_EXPERIMENTAL 1)
+
 Include(FetchContent)
 FetchContent_Declare(
         Catch2

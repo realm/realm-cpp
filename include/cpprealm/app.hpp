@@ -288,7 +288,7 @@ public:
     std::string get_base_url() const;
 
 #ifdef REALM_ENABLE_EXPERIMENTAL
-    [[nodiscard]] std::future<void> App::update_base_url(std::string base_url) const;
+    [[nodiscard]] std::future<void> update_base_url(std::string base_url) const;
 #endif
 private:
     std::shared_ptr<app::App> m_app;

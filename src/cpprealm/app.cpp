@@ -596,7 +596,7 @@ namespace realm {
             } else {
                 p.set_value();
             }
-        });
+        }));
         return f;
     }
 #endif

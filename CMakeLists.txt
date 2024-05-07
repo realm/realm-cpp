@@ -45,6 +45,7 @@ add_compile_definitions(REALM_ENABLE_SYNC)
 add_compile_definitions(REALM_ENABLE_ENCRYPTION)
 add_compile_definitions(REALM_INSTALL_LIBEXECDIR)
 add_compile_definitions(REALM_BUILD_LIB_ONLY)
+add_compile_definitions(REALM_ENABLE_EXPERIMENTAL)
 
 add_subdirectory(src)
 target_include_directories(${PROJECT_NAME}
