@@ -1,4 +1,5 @@
 #include <cpprealm/schema.hpp>
+#include <mutex>
 
 namespace realm {
 namespace schemagen {
