@@ -59,17 +59,13 @@ namespace realm {
 
     template <typename T>
     struct thread_safe_reference;
-}
-
-namespace realm {
 
     struct db {
-        static inline std::vector<internal::bridge::object_schema> schemas;
         internal::bridge::realm m_realm;
         explicit db(realm::db_config config)
         {
             if (!config.get_schema())
-                config.set_schema(db::schemas);
+                config.set_schema(schemagen::registered_schemas());
             m_realm = internal::bridge::realm(config);
         }
 
@@ -203,7 +199,7 @@ namespace realm {
     inline db open(const db_config& config) {
         auto config_copy = config;
         if constexpr (sizeof...(Ts) == 0) {
-            config_copy.set_schema(db::schemas);
+            config_copy.set_schema(schemagen::registered_schemas());
         } else {
             std::vector<internal::bridge::object_schema> schema;
             (schema.push_back(managed<Ts>::schema.to_core_schema()), ...);

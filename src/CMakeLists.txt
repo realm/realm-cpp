@@ -24,6 +24,7 @@ set(SOURCES
     cpprealm/managed_uuid.cpp
     cpprealm/types.cpp
     cpprealm/flex_sync.cpp
+    cpprealm/schema.cpp
     cpprealm/internal/bridge/async_open_task.cpp
     cpprealm/internal/bridge/binary.cpp
     cpprealm/internal/bridge/col_key.cpp
