@@ -47,6 +47,8 @@ add_compile_definitions(REALM_INSTALL_LIBEXECDIR)
 add_compile_definitions(REALM_BUILD_LIB_ONLY)
 add_compile_definitions(REALM_ENABLE_EXPERIMENTAL)
 
+configure_file(src/cpprealm/util/config.h.in src/cpprealm/util/config.h)
+
 add_subdirectory(src)
 target_include_directories(${PROJECT_NAME}
         PRIVATE

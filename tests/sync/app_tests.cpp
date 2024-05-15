@@ -79,6 +79,7 @@ TEST_CASE("app", "[app]") {
         CHECK(with_url_provided_app.get_base_url() == "https://foobar.com");
     }
 
+#ifdef REALM_ENABLE_EXPERIMENTAL
     SECTION("update_base_url") {
         auto no_url_provided_app = realm::App(realm::App::configuration({"NA"}));
         CHECK(no_url_provided_app.get_base_url() == "https://services.cloud.mongodb.com");
@@ -97,6 +98,7 @@ TEST_CASE("app", "[app]") {
         app.update_base_url(Admin::Session::shared().base_url()).get();
         CHECK(app.get_base_url() == Admin::Session::shared().base_url());
     }
+#endif
 
     SECTION("get_current_user") {
         auto user = app.login(realm::App::credentials::anonymous()).get();

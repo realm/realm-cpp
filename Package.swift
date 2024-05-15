@@ -43,6 +43,7 @@ let cppSdkTarget: Target = .target(
     exclude: [
         "src/cpprealm/internal/curl",
         "src/cpprealm/internal/network",
+        "src/cpprealm/util/config.in.h",
         "realm-core"
     ],
     sources: ["src"],
