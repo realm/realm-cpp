@@ -150,4 +150,7 @@ endforeach()
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm/internal/bridge
         COMPONENT devel)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/util/config.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm/util
+        COMPONENT devel)
 install()

@@ -189,7 +189,7 @@ jobs:
       - uses: ammaraskar/gcc-problem-matcher@master
 
       - name: Configure
-        run: cmake --preset ${{ matrix.preset }} -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF}
+        run: cmake --preset ${{ matrix.preset }} -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF} -DREALM_ENABLE_EXPERIMENTAL=1
 
       - name: Compile
         run: cmake --build --preset ${{ matrix.preset }} --config ${{ matrix.configuration }}
@@ -345,7 +345,7 @@ jobs:
       - uses: ammaraskar/gcc-problem-matcher@master
 
       - name: Configure
-        run: cmake --preset linux -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF}
+        run: cmake --preset linux -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF} -DREALM_ENABLE_EXPERIMENTAL=1
 
       - name: Compile
         run: cmake --build --preset linux --config ${{ matrix.configuration }}
@@ -431,7 +431,7 @@ jobs:
       - uses: ammaraskar/msvc-problem-matcher@master
 
       - name: Configure
-        run: cmake --preset windows-x64 -DENABLE_STATIC=1
+        run: cmake --preset windows-x64 -DENABLE_STATIC=1 -DREALM_ENABLE_EXPERIMENTAL=1
 
       - name: Compile
         run: cmake --build --preset windows-x64 --config ${{ matrix.configuration }}
