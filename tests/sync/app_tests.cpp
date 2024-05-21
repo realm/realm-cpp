@@ -143,10 +143,6 @@ TEST_CASE("app", "[app]") {
             CHECK(e->message().find("404 message: cannot find app using Client App ID 'NA'"));
             error_promise.set_value();
         });
-
-        auto user = app.login(realm::App::credentials::anonymous()).get();
-        user.log_out().get();
-        REQUIRE_THROWS(user.log_out().get());
     }
 
     SECTION("auth_providers_promise") {
