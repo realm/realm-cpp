@@ -48,9 +48,8 @@ add_compile_definitions(REALM_ENABLE_SYNC)
 add_compile_definitions(REALM_ENABLE_ENCRYPTION)
 add_compile_definitions(REALM_INSTALL_LIBEXECDIR)
 add_compile_definitions(REALM_BUILD_LIB_ONLY)
-add_compile_definitions(REALM_ENABLE_EXPERIMENTAL)
 
-configure_file(src/cpprealm/util/config.h.in src/cpprealm/util/config.h)
+configure_file(src/cpprealm/util/config.h.in include/cpprealm/util/config.h)
 
 add_subdirectory(src)
 target_include_directories(${PROJECT_NAME}
@@ -165,7 +164,7 @@ install(FILES
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
         DESTINATION cmake
         )
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/cpprealm/util/config.h
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/cpprealm/util/config.h
         DESTINATION include/cpprealm/util
         COMPONENT devel)
 

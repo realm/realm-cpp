@@ -19,6 +19,10 @@
 #ifndef CPPREALM_SDK_HPP
 #define CPPREALM_SDK_HPP
 
+#if __has_include(<cpprealm/config.h>)
+#include <cpprealm/config.h>
+#endif
+
 #include <utility>
 
 #include <cpprealm/bson.hpp>
@@ -47,9 +51,5 @@
 #include <cpprealm/managed_uuid.hpp>
 #include <cpprealm/observation.hpp>
 #include <cpprealm/results.hpp>
-
-#if __has_include(<cpprealm/config.h>)
-#include <cpprealm/config.h>
-#endif
 
 #endif /* CPPREALM_SDK_HPP */
