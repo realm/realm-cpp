@@ -8,7 +8,7 @@
 
 ### Enhancements
 * Updated default base URL to be `https://services.cloud.mongodb.com` to support the new domains (was `https://realm.mongodb.com`)
-* Added support for updating Atlas Device Sync's base url, in case the need to roam between servers (cloud and/or edge server).
+* Added support for updating Atlas Device Sync's base url, in case the need to roam between servers (cloud and/or edge server). Add `-DREALM_ENABLE_EXPERIMENTAL=1` to your CMake command when generating the buil to enable this feature.
 
 ### Compatibility
 * Fileformat: Generates files with format v24. Reads and automatically upgrade from fileformat v10.
