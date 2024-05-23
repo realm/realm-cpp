@@ -136,17 +136,10 @@ include(GNUInstallDirs)
 
 add_library(cpprealm ${SOURCES} ${HEADERS} ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp)
 
-if (NOT DEFINED VCPKG_TOOLCHAIN)
-    install(TARGETS ${PROJECT_NAME} Sync Storage ObjectStore QueryParser
-            EXPORT "${PROJECT_NAME}Targets"
-            INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-            )
-else()
-    install(TARGETS ${PROJECT_NAME}
-            EXPORT "${PROJECT_NAME}Targets"
-            INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-            )
-endif()
+install(TARGETS ${PROJECT_NAME} ObjectStore Storage QueryParser Sync
+        EXPORT "${PROJECT_NAME}Targets"
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # include
+        )
 
 foreach(header ${HEADERS})
     get_filename_component(dir ${header} DIRECTORY)
