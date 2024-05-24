@@ -61,6 +61,9 @@ endif()
 
 if (NOT BUILD_FROM_PACKAGE_MANAGER)
     target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
+    if (REALM_ENABLE_EXPERIMENTAL)
+        target_compile_definitions(cpprealm_sync_tests PRIVATE REALM_ENABLE_EXPERIMENTAL)
+    endif()
 endif()
 
 if (DEFINED USES_CONAN)

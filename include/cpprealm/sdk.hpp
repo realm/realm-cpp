@@ -19,6 +19,10 @@
 #ifndef CPPREALM_SDK_HPP
 #define CPPREALM_SDK_HPP
 
+#if __has_include(<cpprealm/config.h>)
+#include <cpprealm/config.h>
+#endif
+
 #include <utility>
 
 #include <cpprealm/bson.hpp>

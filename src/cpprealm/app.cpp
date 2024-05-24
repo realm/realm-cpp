@@ -586,4 +586,18 @@ namespace realm {
         return std::nullopt;
     }
 
+#ifdef REALM_ENABLE_EXPERIMENTAL
+    [[nodiscard]] std::future<void> App::update_base_url(std::optional<std::string> base_url) const {
+        std::promise<void> p;
+        std::future<void> f = p.get_future();
+        m_app->update_base_url(base_url, ([p = std::move(p)](auto err) mutable {
+            if (err) {
+                p.set_exception(std::make_exception_ptr(app_error(std::move(*err))));
+            } else {
+                p.set_value();
+            }
+        }));
+        return f;
+    }
+#endif
 }

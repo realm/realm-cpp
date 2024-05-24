@@ -286,6 +286,18 @@ public:
     void clear_cached_apps();
     std::optional<App> get_cached_app(const std::string& app_id, const std::optional<std::string>& base_url);
     std::string get_base_url() const;
+
+#ifdef REALM_ENABLE_EXPERIMENTAL
+    /**
+    Updates the base url used by Atlas device sync, in case the need to roam between 
+    servers (cloud and/or edge server).
+
+    @param name The new base url to connect to.
+    @return A void future once the operation has completed.
+    This handler is executed on the thread the method was called from.
+    */
+    [[nodiscard]] std::future<void> update_base_url(std::optional<std::string> base_url) const;
+#endif
 private:
     std::shared_ptr<app::App> m_app;
     App(std::shared_ptr<app::App>&& a) : m_app(std::move(a)) { }

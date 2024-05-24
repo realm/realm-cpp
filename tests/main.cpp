@@ -41,10 +41,9 @@ int main(int argc, char *argv[]) {
     }
 
 #ifdef CPPREALM_ENABLE_SYNC_TESTS
-    std::string baas_api_key = getenv("APIKEY");
     std::optional<Admin::baas_manager> baas_manager;
-    if (!baas_api_key.empty()) {
-        baas_manager.emplace(baas_api_key);
+    if (const char* api_key = getenv("APIKEY")) {
+        baas_manager.emplace(std::string(api_key));
         baas_manager->start();
         auto url = baas_manager->wait_for_container();
         Admin::Session::shared().prepare(url);

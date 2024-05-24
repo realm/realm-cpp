@@ -79,6 +79,27 @@ TEST_CASE("app", "[app]") {
         CHECK(with_url_provided_app.get_base_url() == "https://foobar.com");
     }
 
+#ifdef REALM_ENABLE_EXPERIMENTAL
+    SECTION("update_base_url") {
+        auto no_url_provided_app = realm::App(realm::App::configuration({"NA"}));
+        CHECK(no_url_provided_app.get_base_url() == "https://services.cloud.mongodb.com");
+        REQUIRE_THROWS_AS(no_url_provided_app.update_base_url("https://foobar.com").get(), realm::app_error);
+        CHECK(no_url_provided_app.get_base_url() == "https://services.cloud.mongodb.com");
+        REQUIRE_THROWS(no_url_provided_app.update_base_url("asdfghjkl").get());
+        CHECK(no_url_provided_app.get_base_url() == "https://services.cloud.mongodb.com");
+
+        CHECK(app.get_base_url() == Admin::Session::shared().base_url());
+        REQUIRE_THROWS_AS(app.update_base_url("https://foobar.com").get(), realm::app_error);
+        CHECK(app.get_base_url() == Admin::Session::shared().base_url());
+         // Cannot be changed because app id not available in atlas
+        REQUIRE_THROWS_AS(app.update_base_url(std::nullopt).get(), realm::app_error);
+        CHECK(app.get_base_url() == Admin::Session::shared().base_url());
+        // This succeeds but the url is the same
+        app.update_base_url(Admin::Session::shared().base_url()).get();
+        CHECK(app.get_base_url() == Admin::Session::shared().base_url());
+    }
+#endif
+
     SECTION("get_current_user") {
         auto user = app.login(realm::App::credentials::anonymous()).get();
 

@@ -27,6 +27,10 @@ set(REALM_NO_TESTS)
 set(REALM_BUILD_LIB_ONLY)
 set(REALM_INSTALL_LIBEXECDIR)
 set(REALM_ENABLE_ENCRYPTION 1)
+option(REALM_ENABLE_EXPERIMENTAL "Enable experimental Realm API's" OFF)
+if(REALM_ENABLE_EXPERIMENTAL)
+    add_compile_definitions(REALM_ENABLE_EXPERIMENTAL)
+endif()
 
 set(CMAKE_DEBUG_POSTFIX "-dbg")
 
@@ -44,6 +48,8 @@ add_compile_definitions(REALM_ENABLE_SYNC)
 add_compile_definitions(REALM_ENABLE_ENCRYPTION)
 add_compile_definitions(REALM_INSTALL_LIBEXECDIR)
 add_compile_definitions(REALM_BUILD_LIB_ONLY)
+
+configure_file(src/cpprealm/util/config.h.in include/cpprealm/util/config.h)
 
 add_subdirectory(src)
 target_include_directories(${PROJECT_NAME}
@@ -158,6 +164,9 @@ install(FILES
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
         DESTINATION cmake
         )
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/cpprealm/util/config.h
+        DESTINATION include/cpprealm/util
+        COMPONENT devel)
 
 if (BUILD_SHARED_LIBS)
     set_target_properties(cpprealm
