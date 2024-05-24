@@ -1,11 +1,5 @@
-X.Y.Z Release notes (YYYY-MM-DD)
+2.0.0 Release notes (2024-05-24)
 =============================================================
-
-### Fixed
-* None
-
-### Enhancements
-* None
 
 ### Breaking changes
 * `sync_manager::path_for_realm(const realm::sync_config&)` is now `App::path_for_realm(const realm::sync_config&)`
