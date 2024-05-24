@@ -146,6 +146,7 @@ namespace realm::internal::bridge {
 #endif
     };
     struct collection_change_callback {
+        virtual ~collection_change_callback() {}
         virtual void before(collection_change_set const& c) = 0;
         virtual void after(collection_change_set const& c) = 0;
     };

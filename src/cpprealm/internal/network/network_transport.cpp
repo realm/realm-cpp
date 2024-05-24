@@ -25,7 +25,7 @@
 #include <realm/object-store/sync/generic_network_transport.hpp>
 #include <realm/sync/network/http.hpp>
 #include <realm/sync/network/network.hpp>
-#include <realm/sync/noinst/client_impl_base.hpp>
+#include <realm/sync/network/network_ssl.hpp>
 #include <realm/util/base64.hpp>
 #include <realm/util/uri.hpp>
 

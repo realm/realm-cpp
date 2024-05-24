@@ -18,9 +18,15 @@
         return *this; \
     }
 
-#define __generate_query_operator_case_sensitive(op, type) \
-    query &query::op(col_key column_key, type value, bool) { \
-        this->operator=(get_query()->op(column_key, value)); \
+#define __generate_string_query_operator_case_sensitive(op, type) \
+    query &query::op(col_key column_key, type value, bool case_sensistive) { \
+        this->operator=(get_query()->op(column_key, StringData(value), case_sensistive)); \
+        return *this; \
+    }
+
+#define __generate_binary_query_operator_case_sensitive(op, type) \
+    query &query::op(col_key column_key, type value, bool case_sensistive) { \
+        this->operator=(get_query()->op(column_key, BinaryData(value), case_sensistive)); \
         return *this; \
     }
 
@@ -597,15 +603,15 @@ namespace realm::internal::bridge {
 #endif
     }
 
-    __generate_query_operator_case_sensitive(equal, std::string_view)
-    __generate_query_operator_case_sensitive(not_equal, std::string_view)
-    __generate_query_operator_case_sensitive(contains, std::string_view)
+    __generate_string_query_operator_case_sensitive(equal, std::string_view)
+    __generate_string_query_operator_case_sensitive(not_equal, std::string_view)
+    __generate_string_query_operator_case_sensitive(contains, std::string_view)
 
     __generate_query_operator_mixed(equal)
     __generate_query_operator_mixed(not_equal)
 
-    __generate_query_operator_case_sensitive(equal, binary)
-    __generate_query_operator_case_sensitive(not_equal, binary)
+    __generate_binary_query_operator_case_sensitive(equal, binary)
+    __generate_binary_query_operator_case_sensitive(not_equal, binary)
 
     query operator||(query const& lhs, query const& rhs) {
         return static_cast<Query>(lhs) || static_cast<Query>(rhs);

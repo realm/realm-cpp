@@ -34,10 +34,10 @@
 namespace realm {
     using proxy_config = sync_config::proxy_config;
     using sync_session = internal::bridge::sync_session;
-    class SyncUser;
 
     namespace app {
         class App;
+        class User;
         struct AppError;
     }// namespace app
     namespace internal::bridge {
@@ -92,7 +92,7 @@ struct user {
     user(user&&) = default;
     user& operator=(const user&) = default;
     user& operator=(user&&) = default;
-    explicit user(std::shared_ptr<SyncUser> user);
+    explicit user(std::shared_ptr<app::User> user);
     bool is_logged_in() const;
 
     /**
@@ -133,18 +133,7 @@ struct user {
 
     struct internal::bridge::sync_manager sync_manager() const;
 
-    [[nodiscard]] db_config flexible_sync_configuration() const
-    {
-        db_config config;
-        config.set_sync_config(sync_config(m_user));
-        config.sync_config().set_error_handler([](const sync_session&, const internal::bridge::sync_error& error) {
-            std::cerr<<"ADS C++ SDK: Sync Error: " << error.message() << "\n";
-        });
-        config.set_path(sync_manager().path_for_realm(config.sync_config()));
-        config.sync_config().set_stop_policy(realm::internal::bridge::realm::sync_session_stop_policy::after_changes_uploaded);
-        config.set_schema_mode(realm::internal::bridge::realm::config::schema_mode::additive_discovered);
-        return config;
-    }
+    [[nodiscard]] db_config flexible_sync_configuration() const;
 
     /**
      Logs out the current user
@@ -221,7 +210,7 @@ struct user {
      */
     [[nodiscard]] std::future<void> refresh_custom_user_data() const;
 
-    std::shared_ptr<SyncUser> m_user;
+    std::shared_ptr<app::User> m_user;
 };
 
 bool operator==(const user& lhs, const user& rhs);
@@ -296,8 +285,10 @@ public:
     @return A void future once the operation has completed.
     This handler is executed on the thread the method was called from.
     */
-    [[nodiscard]] std::future<void> update_base_url(std::optional<std::string> base_url) const;
+    [[nodiscard]] std::future<void> update_base_url(std::string base_url) const;
 #endif
+
+    [[nodiscard]] std::string path_for_realm(const realm::sync_config&) const;
 private:
     std::shared_ptr<app::App> m_app;
     App(std::shared_ptr<app::App>&& a) : m_app(std::move(a)) { }

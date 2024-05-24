@@ -6,8 +6,10 @@
 #endif
 
 #include <realm/object-store/sync/app.hpp>
+#include <realm/object-store/sync/app_user.hpp>
 #include <realm/object-store/sync/sync_manager.hpp>
 #include <realm/object-store/sync/sync_user.hpp>
+#include <realm/sync/config.hpp>
 #include <realm/util/bson/bson.hpp>
 
 #include <utility>
@@ -156,7 +158,7 @@ namespace realm {
 #endif
     }
 
-    user::user(std::shared_ptr<SyncUser> user) : m_user(std::move(user))
+    user::user(std::shared_ptr<app::User> user) : m_user(std::move(user))
     {
     }
 
@@ -166,7 +168,7 @@ namespace realm {
      */
     [[nodiscard]] std::string user::identifier() const
     {
-        return m_user->identity();
+        return m_user->user_id();
     }
 
     /**
@@ -208,7 +210,7 @@ namespace realm {
      */
     void user::log_out(std::function<void(std::optional<app_error>)>&& callback) const
     {
-        m_user->sync_manager()->app().lock()->log_out(m_user, [cb = std::move(callback)](auto error) {
+        m_user->app()->log_out(m_user, [cb = std::move(callback)](auto error) {
             cb(error ? std::optional<app_error>{app_error(std::move(*error))} : std::nullopt);
         });
     }
@@ -217,7 +219,7 @@ namespace realm {
     {
         std::promise<void> p;
         std::future<void> f = p.get_future();
-        m_user->sync_manager()->app().lock()->log_out(m_user, [p = std::move(p)](auto err) mutable {
+        m_user->app()->log_out(m_user, [p = std::move(p)](auto err) mutable {
             if (err) {
                 p.set_exception(std::make_exception_ptr(app_error(std::move(*err))));
             } else {
@@ -225,6 +227,19 @@ namespace realm {
             }
         });
         return f;
+    }
+
+    db_config user::flexible_sync_configuration() const
+    {
+        db_config config;
+        config.set_sync_config(sync_config(m_user));
+        config.sync_config().set_error_handler([](const sync_session&, const internal::bridge::sync_error& error) {
+            std::cerr << "ADS C++ SDK: Sync Error: " << error.message() << "\n";
+        });
+        config.set_path(m_user->app()->path_for_realm(*config.sync_config().operator std::shared_ptr<SyncConfig>()));
+        config.sync_config().set_stop_policy(realm::internal::bridge::realm::sync_session_stop_policy::after_changes_uploaded);
+        config.set_schema_mode(realm::internal::bridge::realm::config::schema_mode::additive_discovered);
+        return config;
     }
 
     std::optional<std::string> user::custom_data() const
@@ -248,7 +263,7 @@ namespace realm {
     void user::call_function(const std::string& name, const std::string& arguments,
                              std::function<void(std::optional<std::string>, std::optional<app_error>)> callback) const
     {
-        m_user->sync_manager()->app().lock()->call_function(m_user, name, arguments, std::nullopt, [cb = std::move(callback)](const std::string* bson_string,
+        m_user->app()->call_function(m_user, name, arguments, std::nullopt, [cb = std::move(callback)](const std::string* bson_string,
                                                                                                                               std::optional<app_error> err) {
             cb(bson_string ? std::optional<std::string>(*bson_string) : std::nullopt, err);
         });
@@ -259,7 +274,7 @@ namespace realm {
         std::promise<std::optional<std::string>> p;
         std::future<std::optional<std::string>> f = p.get_future();
 
-        m_user->sync_manager()->app().lock()->call_function(m_user, name, arguments, std::nullopt, [p = std::move(p)](const std::string* bson_string,
+        m_user->app()->call_function(m_user, name, arguments, std::nullopt, [p = std::move(p)](const std::string* bson_string,
                                                                                                                       std::optional<app_error> err) mutable {
             if (err) {
                 p.set_exception(std::make_exception_ptr(app_error(std::move(*err))));
@@ -277,7 +292,7 @@ namespace realm {
         for(auto& b : args_bson) {
             core_bson.push_back(b);
         }
-        m_user->sync_manager()->app().lock()->call_function(m_user, name, core_bson, std::nullopt, [cb = std::move(callback)](util::Optional<bson::Bson>&& b,
+        m_user->app()->call_function(m_user, name, core_bson, std::nullopt, [cb = std::move(callback)](util::Optional<bson::Bson>&& b,
                                                                                                                               std::optional<app_error> err) {
             cb(b ? std::optional<bsoncxx>(*b) : std::nullopt, err);
         });
@@ -292,7 +307,7 @@ namespace realm {
             core_bson.push_back(b);
         }
 
-        m_user->sync_manager()->app().lock()->call_function(m_user, name, core_bson, std::nullopt, [p = std::move(p)](util::Optional<bson::Bson>&& b,
+        m_user->app()->call_function(m_user, name, core_bson, std::nullopt, [p = std::move(p)](util::Optional<bson::Bson>&& b,
                                                                                                                       std::optional<app_error> err) mutable {
             if (err) {
                 p.set_exception(std::make_exception_ptr(app_error(std::move(*err))));
@@ -326,7 +341,7 @@ namespace realm {
     }
 
     internal::bridge::sync_manager user::sync_manager() const {
-        return m_user->sync_manager();
+        return std::shared_ptr<SyncManager>(m_user->sync_manager());
     }
 
     bool user::is_logged_in() const {
@@ -457,6 +472,8 @@ namespace realm {
 #if QT_CORE_LIB
         util::Scheduler::set_default_factory(util::make_qt);
 #endif
+        auto app_config = app::AppConfig();
+
         SyncClientConfig client_config;
         client_config.logger_factory = ([](::realm::util::Logger::Level level) {
             auto logger = std::make_unique<::realm::util::ThreadSafeLogger>(std::make_shared<DefaultSyncLogger>());
@@ -470,35 +487,36 @@ namespace realm {
 #else
         bool should_encrypt = config.metadata_encryption_key && !getenv("REALM_DISABLE_METADATA_ENCRYPTION");
 #endif
-        client_config.metadata_mode = should_encrypt ? SyncManager::MetadataMode::Encryption : SyncManager::MetadataMode::NoEncryption;
-        if (config.metadata_encryption_key) {
-            auto key = std::vector<char>();
-            key.resize(64);
-            key.assign(config.metadata_encryption_key->begin(), config.metadata_encryption_key->end());
-            client_config.custom_encryption_key = std::move(key);
-        }
 
 #ifdef QT_CORE_LIB
         auto qt_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
         if (!std::filesystem::exists(qt_path)) {
             std::filesystem::create_directory(qt_path);
         }
-        config.base_file_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
+        app_config.base_file_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString();
 #else
         if (config.path) {
-            client_config.base_file_path = *config.path;
+            app_config.base_file_path = *config.path;
         } else {
-            client_config.base_file_path = std::filesystem::current_path().make_preferred().generic_string();
+            app_config.base_file_path = std::filesystem::current_path().make_preferred().generic_string();
         }
 #endif
         client_config.user_agent_binding_info = std::string("RealmCpp/") + std::string(REALMCXX_VERSION_STRING);
         client_config.user_agent_application_info = config.app_id;
 
-        auto app_config = app::App::Config();
         app_config.app_id = config.app_id;
         app_config.transport = std::make_shared<internal::CoreTransport>(config.custom_http_headers, config.proxy_configuration);
         app_config.base_url = config.base_url;
-        auto device_info = app::App::Config::DeviceInfo();
+
+        app_config.metadata_mode = should_encrypt ? app::AppConfig::MetadataMode::Encryption : app::AppConfig::MetadataMode::NoEncryption;
+        if (config.metadata_encryption_key) {
+            auto key = std::vector<char>();
+            key.resize(64);
+            key.assign(config.metadata_encryption_key->begin(), config.metadata_encryption_key->end());
+            app_config.custom_encryption_key = std::move(key);
+        }
+
+        auto device_info = app::AppConfig::DeviceInfo();
 
         device_info.framework_name = "Realm Cpp",
         device_info.platform_version = "?",
@@ -506,7 +524,8 @@ namespace realm {
         device_info.sdk = "Realm Cpp";
         app_config.device_info = std::move(device_info);
 
-        m_app = app::App::get_app(app::App::CacheMode::Enabled, std::move(app_config), client_config);
+        app_config.sync_client_config = client_config;
+        m_app = app::App::get_app(app::App::CacheMode::Enabled, std::move(app_config));
     }
 
     App::App(const std::string &app_id,
@@ -523,6 +542,10 @@ namespace realm {
 
     std::string App::get_base_url() const {
         return m_app->get_base_url();
+    }
+
+    [[nodiscard]] std::string App::path_for_realm(const realm::sync_config& c) const {
+        return m_app->path_for_realm(*c.operator std::shared_ptr<SyncConfig>());
     }
 
     std::future<void> App::register_user(const std::string &username, const std::string &password) {
@@ -570,7 +593,7 @@ namespace realm {
     }
 
     std::optional<user> App::get_current_user() const {
-        if (auto u = m_app->sync_manager()->get_current_user()) {
+        if (auto u = m_app->current_user()) {
             return user(u);
         }
         return std::nullopt;
@@ -587,7 +610,7 @@ namespace realm {
     }
 
 #ifdef REALM_ENABLE_EXPERIMENTAL
-    [[nodiscard]] std::future<void> App::update_base_url(std::optional<std::string> base_url) const {
+    [[nodiscard]] std::future<void> App::update_base_url(std::string base_url) const {
         std::promise<void> p;
         std::future<void> f = p.get_future();
         m_app->update_base_url(base_url, ([p = std::move(p)](auto err) mutable {

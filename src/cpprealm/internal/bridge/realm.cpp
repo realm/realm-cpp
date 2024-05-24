@@ -517,10 +517,8 @@ namespace realm::internal::bridge {
         if (!config) {
             return std::nullopt;
         }
-        if (auto session = config->user->session_for_on_disk_path(m_realm->config().path)) {
-            return sync_session(std::move(session));
-        }
-        return std::nullopt;
+
+        return sync_session(m_realm->sync_session());
     }
 
     table realm::get_table(const uint32_t &key) {

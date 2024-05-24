@@ -1,3 +1,23 @@
+X.Y.Z Release notes (YYYY-MM-DD)
+=============================================================
+
+### Fixed
+* None
+
+### Enhancements
+* None
+
+### Breaking changes
+* `sync_manager::path_for_realm(const realm::sync_config&)` is now `App::path_for_realm(const realm::sync_config&)`
+
+### Compatibility
+* Fileformat: Generates files with format v24. Reads and automatically upgrade from fileformat v10.
+
+### Internals
+* Upgraded to Core v14.7.0
+
+----------------------------------------------
+
 1.1.1 Release notes (2024-04-17)
 =============================================================
 
