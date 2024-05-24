@@ -285,7 +285,7 @@ public:
     @return A void future once the operation has completed.
     This handler is executed on the thread the method was called from.
     */
-    [[nodiscard]] std::future<void> update_base_url(std::optional<std::string> base_url) const;
+    [[nodiscard]] std::future<void> update_base_url(std::string base_url) const;
 #endif
 
     [[nodiscard]] std::string path_for_realm(const realm::sync_config&) const;

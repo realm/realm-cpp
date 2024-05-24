@@ -92,7 +92,7 @@ TEST_CASE("app", "[app]") {
         REQUIRE_THROWS_AS(app.update_base_url("https://foobar.com").get(), realm::app_error);
         CHECK(app.get_base_url() == Admin::Session::shared().base_url());
          // Cannot be changed because app id not available in atlas
-        REQUIRE_THROWS_AS(app.update_base_url(std::nullopt).get(), realm::app_error);
+        REQUIRE_THROWS_AS(app.update_base_url("").get(), realm::app_error);
         CHECK(app.get_base_url() == Admin::Session::shared().base_url());
         // This succeeds but the url is the same
         app.update_base_url(Admin::Session::shared().base_url()).get();
