@@ -27,6 +27,9 @@ genrule {
 
 cc_defaults {
     name: "realm_cpp_defaults",
+    cflags: [
+        "-DREALM_AOSP_VENDOR=1"
+    ],
     cppflags: [
         "-Wno-delete-non-abstract-non-virtual-dtor",
         "-Wno-mismatched-tags",
@@ -51,5 +54,13 @@ cc_library_static {
     export_generated_headers: ["gen_realmcxx_version_numbers"],
     static_libs: ["realm"],
     include_build_directory: false,
+    vendor: true
+}
+
+cc_test {
+    defaults: ["realm_consumer_defaults", "realm_defaults", "realm_cpp_defaults"],
+    name: "realm_integration_test",
+    srcs: ["tests/aosp/main.cpp"],
+    static_libs: ["realm-cpp", "realm"],
     vendor: true
 }

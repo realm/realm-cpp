@@ -164,7 +164,9 @@ namespace realm::internal::bridge {
     realm::config::config() {
         RealmConfig config;
         config.cache = true;
+#if !defined(REALM_AOSP_VENDOR)
         config.path = std::filesystem::current_path().append("default.realm").generic_string();
+#endif
         config.scheduler = ::realm::make_default_scheduler();
         config.schema_version = 0;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES

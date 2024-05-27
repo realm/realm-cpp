@@ -498,7 +498,15 @@ namespace realm {
         if (config.path) {
             app_config.base_file_path = *config.path;
         } else {
+<<<<<<< HEAD
             app_config.base_file_path = std::filesystem::current_path().make_preferred().generic_string();
+=======
+#if defined(REALM_AOSP_VENDOR)
+            throw std::runtime_error("the `path` variable must be set on `realm::App::configuration` when being run inside of AOSP.");
+#else
+            app_config.base_file_path = std::filesystem::current_path().make_preferred().generic_string();
+#endif
+>>>>>>> ea5b8f4 (Fixup android blueprints)
         }
 #endif
         client_config.user_agent_binding_info = std::string("RealmCpp/") + std::string(REALMCXX_VERSION_STRING);
