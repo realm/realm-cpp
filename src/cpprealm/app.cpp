@@ -14,6 +14,10 @@
 
 #include <utility>
 
+#if defined(REALM_AOSP_VENDOR)
+#include <unistd.h>
+#endif
+
 namespace realm {
     static_assert((int)user::state::logged_in == (int)SyncUser::State::LoggedIn);
     static_assert((int)user::state::logged_out == (int)SyncUser::State::LoggedOut);
@@ -499,7 +503,9 @@ namespace realm {
             app_config.base_file_path = *config.path;
         } else {
 #if defined(REALM_AOSP_VENDOR)
-            throw std::runtime_error("the `path` variable must be set on `realm::App::configuration` when being run inside of AOSP.");
+            char cwd[PATH_MAX];
+            getcwd(cwd, sizeof(cwd));
+            app_config.base_file_path = cwd;
 #else
             app_config.base_file_path = std::filesystem::current_path().make_preferred().generic_string();
 #endif
