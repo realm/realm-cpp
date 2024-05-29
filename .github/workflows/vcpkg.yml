@@ -58,7 +58,7 @@ jobs:
         working-directory: ./tests
         if: matrix.os == 'ubuntu-latest'
         run: |
-          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-linux
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-linux
           cd build
           cmake --build . --config ${{matrix.build_type}}
 
