@@ -18,6 +18,7 @@ How to run:
 - `cd realm-cpp`
 - `git submodule update --init --recursive`
 - `mma`
+- `cd tests/aosp`
 - `m realm_integration_test`
 - This will generate realm_integration_test and place it in `out/target/product/vsoc_x86_64/vendor/bin/realm_integration_test`
 - Copy the binary and upload it to an emulator using `adb push some_binary_location/realm_integration_test /data/local/tmp`

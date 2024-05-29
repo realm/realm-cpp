@@ -56,11 +56,3 @@ cc_library_static {
     include_build_directory: false,
     vendor: true
 }
-
-cc_binary {
-    defaults: ["realm_consumer_defaults", "realm_defaults", "realm_cpp_defaults"],
-    name: "realm_integration_test",
-    srcs: ["tests/aosp/main.cpp"],
-    static_libs: ["realm-cpp", "realm"],
-    vendor: true
-}
