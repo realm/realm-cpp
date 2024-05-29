@@ -12,18 +12,18 @@ How to run:
 	- `m`
 
 **Step 2**
-    - `cd` into the root of your AOSP source.
-    - `cd vendor`
-    - `git clone https://github.com/realm/realm-cpp.git`
-    - `cd realm-cpp`
-    - `git submodule update --init --recursive`
-    - `mma`
-    - `m realm_integration_test`
-    - This will generate realm_integration_test and place it in `out/target/product/vsoc_x86_64/vendor/bin/realm_integration_test`
-    - Copy the binary and upload it to an emulator using `adb push some_binary_location/realm_integration_test /data/local/tmp`
-    - Run `adb shell` and then run `su`
-    - run `cd /data/local/tmp` when inside of the emulators shell
-    - run `chmod +x realm_integration_test`
-    - run `./realm_integration_test`
-    - If the execution is successful you will see the output `"Realm C++ ran successfully."`
+- `cd` into the root of your AOSP source.
+- `cd vendor`
+- `git clone https://github.com/realm/realm-cpp.git`
+- `cd realm-cpp`
+- `git submodule update --init --recursive`
+- `mma`
+- `m realm_integration_test`
+- This will generate realm_integration_test and place it in `out/target/product/vsoc_x86_64/vendor/bin/realm_integration_test`
+- Copy the binary and upload it to an emulator using `adb push some_binary_location/realm_integration_test /data/local/tmp`
+- Run `adb shell` and then run `su`
+- run `cd /data/local/tmp` when inside of the emulators shell
+- run `chmod +x realm_integration_test`
+- run `./realm_integration_test`
+- If the execution is successful you will see the output `"Realm C++ ran successfully."`
 

@@ -32,8 +32,6 @@
 #include <filesystem>
 #endif
 
-#include <iostream>
-
 #ifdef QT_CORE_LIB
 #include <QStandardPaths>
 #include <QMetaObject>
