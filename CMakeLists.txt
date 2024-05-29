@@ -20,7 +20,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 
-if (DEFINED VCPKG_TOOLCHAIN)
+if (VCPKG_TOOLCHAIN)
     find_package(Realm REQUIRED)
 else()
     add_subdirectory(realm-core)
@@ -107,9 +107,15 @@ if(NOT APPLE AND NOT WINDOWS_STORE AND NOT ANDROID)
         endif()
     endif()
 
-    target_compile_definitions(ObjectStore PUBLIC REALM_HAVE_UV=1)
     target_link_libraries(cpprealm PUBLIC ${libuv_target})
-    target_link_libraries(ObjectStore PUBLIC ${libuv_target})
+
+    if(VCPKG_TOOLCHAIN)
+        target_compile_definitions(Realm::ObjectStore INTERFACE REALM_HAVE_UV=1)
+        target_link_libraries(Realm::ObjectStore INTERFACE ${libuv_target})
+    else()
+        target_compile_definitions(ObjectStore PUBLIC REALM_HAVE_UV=1)
+        target_link_libraries(ObjectStore PUBLIC ${libuv_target})
+    endif()
 endif()
 
 target_link_libraries(cpprealm PUBLIC Realm::ObjectStore)
