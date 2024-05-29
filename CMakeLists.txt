@@ -19,7 +19,12 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(REALM_USE_SYSTEM_OPENSSL ON)
 endif()
 
-add_subdirectory(realm-core)
+
+if (DEFINED VCPKG_TOOLCHAIN)
+    find_package(Realm REQUIRED)
+else()
+    add_subdirectory(realm-core)
+endif()
 
 set(REALM_NO_CONFIG)
 set(REALM_ENABLE_SYNC)

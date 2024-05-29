@@ -24,7 +24,6 @@ vcpkg_cmake_configure(
 vcpkg_cmake_install()
 
 vcpkg_cmake_config_fixup(PACKAGE_NAME "cpprealm" CONFIG_PATH "cmake")
-vcpkg_cmake_config_fixup(PACKAGE_NAME "Realm" CONFIG_PATH "share/cmake/Realm")
 
 file(READ ${CURRENT_PACKAGES_DIR}/debug/include/cpprealm/internal/bridge/bridge_types.hpp DEBUG_TYPE_HEADER_CONTENTS)
 set(REGEX_PATTERN "\\{([^()]*)\\}")
@@ -47,11 +46,7 @@ string(REGEX REPLACE "\\{([^()]*)\\}" "
     " MODIFIED_HEADER "${DEBUG_TYPE_HEADER_CONTENTS}")
 
 file(WRITE ${CURRENT_PACKAGES_DIR}/include/cpprealm/internal/bridge/bridge_types.hpp "${MODIFIED_HEADER}")
-
-file(REMOVE_RECURSE
-    "${CURRENT_PACKAGES_DIR}/debug/include"
-    "${CURRENT_PACKAGES_DIR}/debug/share"
-)
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
 
 file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/usage" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")
 vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")
