@@ -32,6 +32,8 @@
 #include <filesystem>
 #endif
 
+#include <iostream>
+
 #ifdef QT_CORE_LIB
 #include <QStandardPaths>
 #include <QMetaObject>
@@ -174,10 +176,13 @@ namespace realm::internal::bridge {
         std::string path = cwd;
         path.append("/default.realm");
         config.path = path;
+
+        config.scheduler = ::realm::util::Scheduler::make_generic();
 #else
         config.path = std::filesystem::current_path().append("default.realm").generic_string();
-#endif
         config.scheduler = ::realm::make_default_scheduler();
+#endif
+
         config.schema_version = 0;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_config) RealmConfig(config);

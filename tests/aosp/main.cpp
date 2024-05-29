@@ -33,14 +33,12 @@ namespace realm {
 }
 
 int main(int argc, char *argv[]) {
-
     realm::db_config config;
     auto realm = realm::db(std::move(config));
-
     realm::Person p;
     auto managed_obj = realm.write([&realm, &p] {
         return realm.add(std::move(p));
     });
-    
+    std::cout << "Realm C++ ran successfully." << std::endl;
     return 0;
 }
