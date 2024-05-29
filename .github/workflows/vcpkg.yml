@@ -13,6 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        unix-dynamic-linkage: ["-dynamic", ""]
         build_type: [Debug, Release]
 
     steps:
@@ -50,7 +51,7 @@ jobs:
         working-directory: ./tests
         if: matrix.os == 'macos-latest'
         run: |
-          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-osx
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=arm64-osx${{matrix.unix-dynamic-linkage}}
           cd build
           cmake --build . --config ${{matrix.build_type}}
 
@@ -58,7 +59,7 @@ jobs:
         working-directory: ./tests
         if: matrix.os == 'ubuntu-latest'
         run: |
-          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-linux
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-linux${{matrix.unix-dynamic-linkage}}
           cd build
           cmake --build . --config ${{matrix.build_type}}
 
