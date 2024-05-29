@@ -39,6 +39,10 @@ int main(int argc, char *argv[]) {
     auto managed_obj = realm.write([&realm, &p] {
         return realm.add(std::move(p));
     });
+
+    // Make sure app services symbols exist
+    auto dummy_app = realm::App(realm::App::configuration({"NA"}));
+
     std::cout << "Realm C++ ran successfully." << std::endl;
     return 0;
 }
