@@ -111,8 +111,9 @@ namespace realm::internal {
             if (proxy_config) {
                 curl_easy_setopt(curl, CURLOPT_PROXY, util::format("%1:%2", proxy_config->address, proxy_config->port).c_str());
                 curl_easy_setopt(curl, CURLOPT_HTTPPROXYTUNNEL, 1L);
-                if (proxy_config->username_password) {}
+                if (proxy_config->username_password) {
                     curl_easy_setopt(curl, CURLOPT_PROXYUSERPWD, util::format("%1:%2", proxy_config->username_password->first, proxy_config->username_password->second).c_str());
+                }
             }
 
             /* Now specify the POST data */

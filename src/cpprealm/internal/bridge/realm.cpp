@@ -26,7 +26,11 @@
 #include <realm/object-store/util/scheduler.hpp>
 #include <realm/sync/config.hpp>
 
+#if defined(REALM_AOSP_VENDOR)
+#include <unistd.h>
+#else
 #include <filesystem>
+#endif
 
 #ifdef QT_CORE_LIB
 #include <QStandardPaths>
@@ -164,8 +168,19 @@ namespace realm::internal::bridge {
     realm::config::config() {
         RealmConfig config;
         config.cache = true;
+#if defined(REALM_AOSP_VENDOR)
+        char cwd[PATH_MAX];
+        getcwd(cwd, sizeof(cwd));
+        std::string path = cwd;
+        path.append("/default.realm");
+        config.path = path;
+
+        config.scheduler = ::realm::util::Scheduler::make_generic();
+#else
         config.path = std::filesystem::current_path().append("default.realm").generic_string();
         config.scheduler = ::realm::make_default_scheduler();
+#endif
+
         config.schema_version = 0;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_config) RealmConfig(config);

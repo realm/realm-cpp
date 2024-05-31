@@ -14,6 +14,10 @@
 
 #include <utility>
 
+#if defined(REALM_AOSP_VENDOR)
+#include <unistd.h>
+#endif
+
 namespace realm {
     static_assert((int)user::state::logged_in == (int)SyncUser::State::LoggedIn);
     static_assert((int)user::state::logged_out == (int)SyncUser::State::LoggedOut);
@@ -498,7 +502,13 @@ namespace realm {
         if (config.path) {
             app_config.base_file_path = *config.path;
         } else {
+#if defined(REALM_AOSP_VENDOR)
+            char cwd[PATH_MAX];
+            getcwd(cwd, sizeof(cwd));
+            app_config.base_file_path = cwd;
+#else
             app_config.base_file_path = std::filesystem::current_path().make_preferred().generic_string();
+#endif
         }
 #endif
         client_config.user_agent_binding_info = std::string("RealmCpp/") + std::string(REALMCXX_VERSION_STRING);

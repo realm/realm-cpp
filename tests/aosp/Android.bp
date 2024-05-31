@@ -1,0 +1,7 @@
+cc_binary {
+    defaults: ["realm_consumer_defaults", "realm_defaults", "realm_cpp_defaults"],
+    name: "realm_integration_test",
+    srcs: ["main.cpp"],
+    static_libs: ["realm-cpp", "realm"],
+    vendor: true
+}

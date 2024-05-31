@@ -19,7 +19,7 @@ genrule {
         "dependencies.list",
         "src/cpprealm/internal/version_numbers.hpp.in",
     ],
-    out: ["cpprealm/internal/version_numbers.hpp"],
+    out: ["cpprealm/version_numbers.hpp"],
     tool_files: ["tools/generate-version-numbers-for-soong.sh"],
     cmd: "$(location) $(in) > $(out)",
 }
@@ -27,6 +27,9 @@ genrule {
 
 cc_defaults {
     name: "realm_cpp_defaults",
+    cflags: [
+        "-DREALM_AOSP_VENDOR=1"
+    ],
     cppflags: [
         "-Wno-delete-non-abstract-non-virtual-dtor",
         "-Wno-mismatched-tags",
@@ -47,8 +50,9 @@ cc_library_static {
         "src/cpprealm/internal/apple/**/*",
         "src/cpprealm/internal/curl/**/*"
     ],
-    export_include_dirs: ["src"],
+    export_include_dirs: ["include"],
     export_generated_headers: ["gen_realmcxx_version_numbers"],
     static_libs: ["realm"],
-    include_build_directory: false
+    include_build_directory: false,
+    vendor: true
 }
