@@ -5,13 +5,13 @@ X.Y.Z Release notes (YYYY-MM-DD)
 * None
 
 ### Enhancements
-* Add vendor support in Android Blueprint.
+* Add missing vendor support in Android Blueprint.
 
 ### Compatibility
 * Fileformat: Generates files with format v24. Reads and automatically upgrade from fileformat v10.
 
 ### Internals
-* None
+* Upgraded to Core v14.9.0
 
 ----------------------------------------------
 
