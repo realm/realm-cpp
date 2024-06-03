@@ -1,6 +1,6 @@
 {
   "name": "cpprealm",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Realm is a mobile database that runs directly inside phones, tablets or wearables.",
   "homepage": "https://github.com/realm/realm-cpp",
   "license": "Apache-2.0",

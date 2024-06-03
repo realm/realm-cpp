@@ -1,8 +1,5 @@
-X.Y.Z Release notes (YYYY-MM-DD)
+2.0.1 Release notes (2024-06-03)
 =============================================================
-
-### Breaking changes
-* None
 
 ### Enhancements
 * Add missing vendor support in Android Blueprint.
