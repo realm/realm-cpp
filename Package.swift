@@ -2,7 +2,7 @@
 
 import PackageDescription
 
-let sdkVersion = Version("2.0.0")
+let sdkVersion = Version("2.0.1")
 let coreVersion = Version("14.9.0")
 
 var cxxSettings: [CXXSetting] = [

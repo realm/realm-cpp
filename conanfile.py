@@ -5,7 +5,7 @@ from conan.tools.scm import Git
 
 class cpprealmRecipe(ConanFile):
     name = "cpprealm"
-    version = "2.0.0"
+    version = "2.0.1"
 
     # Optional metadata
     license = "Apache-2.0"
@@ -36,7 +36,7 @@ class cpprealmRecipe(ConanFile):
         git = Git(self)
         git.clone(url="https://github.com/realm/realm-cpp", target=".")
         git.folder = "."
-        git.checkout(commit="a7a5b4c9fd2abcdca79a12963fd1e59f41a2c15b")
+        git.checkout(commit="ec6015386cbab9b6e3d1b0329534b2358851124a")
         git.run("submodule update --init --recursive")
 
     def layout(self):
