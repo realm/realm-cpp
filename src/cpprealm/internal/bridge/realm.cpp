@@ -26,6 +26,10 @@
 #include <realm/object-store/util/scheduler.hpp>
 #include <realm/sync/config.hpp>
 
+#if __has_include(<cpprealm/config.h>)
+#include <cpprealm/config.h>
+#endif
+
 #if defined(REALM_AOSP_VENDOR)
 #include <unistd.h>
 #else

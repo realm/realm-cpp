@@ -54,6 +54,11 @@ add_compile_definitions(REALM_ENABLE_ENCRYPTION)
 add_compile_definitions(REALM_INSTALL_LIBEXECDIR)
 add_compile_definitions(REALM_BUILD_LIB_ONLY)
 
+if(NOT APPLE AND NOT WINDOWS_STORE AND NOT ANDROID AND VCPKG_TOOLCHAIN)
+    set(REALM_HAVE_UV 1)
+    add_compile_definitions(REALM_HAVE_UV=1)
+endif()
+
 configure_file(src/cpprealm/util/config.h.in include/cpprealm/util/config.h)
 
 add_subdirectory(src)

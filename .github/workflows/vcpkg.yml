@@ -13,8 +13,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        unix-dynamic-linkage: ["-dynamic", ""]
-        windows-linkage: ["-DVCPKG_TARGET_TRIPLET=x64-windows-static -DENABLE_STATIC=ON", "-DVCPKG_TARGET_TRIPLET=x64-windows"]
         build_type: [Debug, Release]
 
     steps:
@@ -52,7 +50,7 @@ jobs:
         working-directory: ./tests
         if: matrix.os == 'macos-latest'
         run: |
-          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=arm64-osx${{matrix.unix-dynamic-linkage}}
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=arm64-osx
           cd build
           cmake --build . --config ${{matrix.build_type}}
 
@@ -60,7 +58,7 @@ jobs:
         working-directory: ./tests
         if: matrix.os == 'ubuntu-latest'
         run: |
-          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-linux${{matrix.unix-dynamic-linkage}}
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-linux
           cd build
           cmake --build . --config ${{matrix.build_type}}
 
@@ -68,7 +66,83 @@ jobs:
         working-directory: ./tests
         if: matrix.os == 'windows-latest'
         run: |
-          cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} ${{matrix.windows-linkage}}
+          cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-windows-static -DENABLE_STATIC=ON
+          cd build
+          cmake --build . --config ${{matrix.build_type}}
+
+      - name: Run Application (Unix)
+        working-directory: ./tests/build
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        run: |
+          ./cpprealm_db_tests
+
+      - name: Run Application (Windows)
+        working-directory: ./tests/build
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd ${{matrix.build_type}}
+          start cpprealm_db_tests.exe
+
+  build-dynamic:
+    runs-on: ${{ matrix.os }}
+    name: "Dynamic linkage"
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        build_type: [ Debug, Release ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Set up vcpkg
+        shell: bash
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+        if: runner.os != 'Windows'
+
+      - name: Set up vcpkg (Windows)
+        shell: cmd
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          .\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+        if: runner.os == 'Windows'
+
+      - name: Install dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+          ninja-build
+
+      - name: Setup Ninja
+        if: matrix.os == 'macos-latest'
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Configure and build (macOS)
+        working-directory: ./tests
+        if: matrix.os == 'macos-latest'
+        run: |
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=arm64-osx-dynamic
+          cd build
+          cmake --build . --config ${{matrix.build_type}}
+
+      - name: Configure and build (Ubuntu)
+        working-directory: ./tests
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-linux-dynamic
+          cd build
+          cmake --build . --config ${{matrix.build_type}}
+
+      - name: Configure and build (Windows)
+        working-directory: ./tests
+        if: matrix.os == 'windows-latest'
+        run: |
+          cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-windows
           cd build
           cmake --build . --config ${{matrix.build_type}}
 
