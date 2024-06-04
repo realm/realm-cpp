@@ -25,7 +25,7 @@
     },
     {
       "name": "realm-core",
-      "version>=": "14.6.2"
+      "version>=": "14.8.0"
     }
   ]
 }
