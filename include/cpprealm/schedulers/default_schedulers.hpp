@@ -20,6 +20,10 @@
 
 #include <cpprealm/scheduler.hpp>
 
+#if __has_include(<cpprealm/util/config.h>)
+#include <cpprealm/util/config.h>
+#endif
+
 #if defined(REALM_HAVE_UV) && REALM_HAVE_UV
 typedef struct uv_loop_s uv_loop_t;
 #endif
@@ -39,6 +43,7 @@ namespace realm {
          * - CFRunLoop for Apple platforms
          * - UV for Linux and Windows
          * - ALooper for Android
+         * - Qt event dispatcher
          * If no suitable scheduler is available a generic scheduler will be provided.
          */
         std::shared_ptr<scheduler> make_platform_default();
@@ -51,7 +56,7 @@ namespace realm {
          */
         std::shared_ptr<scheduler> make_uv(uv_loop_t* loop);
 #endif
-    };
+    }
 
     /**
      * A type erased scheduler used for wrapping default scheduler implementations from RealmCore.

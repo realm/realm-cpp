@@ -12,8 +12,6 @@
 #if REALM_PLATFORM_APPLE
 #include "realm/util/cf_ptr.hpp"
 #include <CoreFoundation/CoreFoundation.h>
-#else
-#error "No EventLoop implementation selected, tests will fail"
 #endif
 
 class InvocationQueue {
