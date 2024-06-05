@@ -66,6 +66,7 @@ set(SOURCES
     cpprealm/internal/bridge/thread_safe_reference.cpp
     cpprealm/internal/bridge/timestamp.cpp
     cpprealm/internal/bridge/uuid.cpp
+    cpprealm/schedulers/default_schedulers.cpp
     cpprealm/logger.cpp
     cpprealm/sdk.cpp) # REALM_SOURCES
 
@@ -124,6 +125,7 @@ set(HEADERS
     ../include/cpprealm/internal/bridge/uuid.hpp
     ../include/cpprealm/internal/generic_network_transport.hpp
     ../include/cpprealm/internal/type_info.hpp
+    ../include/cpprealm/schedulers/default_schedulers.hpp
     ../include/cpprealm/logger.hpp
     ../include/cpprealm/notifications.hpp
     ../include/cpprealm/rbool.hpp

@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 #include <cpprealm/internal/bridge/utils.hpp>
+#include <cpprealm/schedulers/default_schedulers.hpp>
 
 namespace realm {
     class Realm;
@@ -241,7 +242,7 @@ namespace realm::internal::bridge {
         bool refresh();
         bool is_frozen() const;
         realm freeze(); // throws
-        realm thaw(); // throws
+        realm thaw(std::shared_ptr<::realm::scheduler> s = ::realm::default_schedulers::make_platform_default()); // throws
         void close();
         bool is_closed();
         void invalidate();

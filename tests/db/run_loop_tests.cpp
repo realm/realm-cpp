@@ -7,7 +7,9 @@
 
 #if REALM_HAVE_UV
 #include <uv.h>
-#elif REALM_PLATFORM_APPLE
+#endif
+
+#if REALM_PLATFORM_APPLE
 #include "realm/util/cf_ptr.hpp"
 #include <CoreFoundation/CoreFoundation.h>
 #else

@@ -177,7 +177,7 @@ namespace realm {
 
         bool is_frozen() const;
         db freeze();
-        db thaw();
+        db thaw(std::shared_ptr<realm::scheduler> s = realm::default_schedulers::make_platform_default());
         void invalidate();
         void close();
         bool is_closed();
