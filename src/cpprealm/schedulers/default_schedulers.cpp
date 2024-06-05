@@ -6,14 +6,6 @@
 #include <uv.h>
 #endif
 
-#ifdef QT_CORE_LIB
-#include <QStandardPaths>
-#include <QMetaObject>
-#include <QTimer>
-#include <QThread>
-#include <QtWidgets/QApplication>
-#endif
-
 namespace realm {
 
     void realm_core_scheduler::invoke(std::function<void()> &&fn) {
@@ -37,38 +29,6 @@ namespace realm {
 
     realm_core_scheduler::operator std::shared_ptr<util::Scheduler>() {
         return s;
-    }
-
-#if QT_CORE_LIB
-    struct qt_main_loop_scheduler : public QObject, public realm::scheduler {
-
-        bool is_on_thread() const noexcept override {
-        {
-            return m_id == std::this_thread::get_id();
-        }
-        bool is_same_as(const scheduler *other) const noexcept override {
-        {
-            auto o = dynamic_cast<const QtMainLoopScheduler*>(other);
-            return (o && (o->m_id == m_id));
-        }
-        bool can_invoke() const noexcept override {
-        {
-            return QThread::currentThread()->eventDispatcher();
-        }
-
-        void invoke(std::function<void()> &&fn) override {
-            QMetaObject::invokeMethod(this, fn);
-        }
-    private:
-        std::thread::id m_id = std::this_thread::get_id();
-    };
-#endif
-
-    std::shared_ptr<util::Scheduler> make_default_scheduler() {
-#if QT_CORE_LIB
-        util::Scheduler::set_default_factory(make_qt);
-#endif
-        return util::Scheduler::make_default();
     }
 
 #if defined(REALM_HAVE_UV) && REALM_HAVE_UV
@@ -161,9 +121,7 @@ namespace realm {
 #endif
 
     std::shared_ptr<scheduler> default_schedulers::make_platform_default() {
-#if QT_CORE_LIB
-        return std::make_shared<qt_main_loop_scheduler>();
-#elif REALM_PLATFORM_APPLE || REALM_ANDROID && !defined(REALM_AOSP_VENDOR)
+#if REALM_PLATFORM_APPLE || REALM_ANDROID && !defined(REALM_AOSP_VENDOR)
         return std::make_shared<realm_core_scheduler>(util::Scheduler::make_platform_default());
 #elif defined(REALM_HAVE_UV) && REALM_HAVE_UV
         return make_uv(uv_default_loop());

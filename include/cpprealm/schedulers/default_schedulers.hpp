@@ -43,7 +43,6 @@ namespace realm {
          * - CFRunLoop for Apple platforms
          * - UV for Linux and Windows
          * - ALooper for Android
-         * - Qt event dispatcher
          * If no suitable scheduler is available a generic scheduler will be provided.
          */
         std::shared_ptr<scheduler> make_platform_default();
