@@ -25,6 +25,10 @@
 #include <cpprealm/util/config.h>
 #endif
 
+#if defined(REALM_HAVE_UV) && REALM_HAVE_UV
+typedef struct uv_loop_s uv_loop_t;
+#endif
+
 namespace realm {
     namespace default_schedulers {
         /**
@@ -43,7 +47,7 @@ namespace realm {
          * @param loop A UV loop to be used on the same thread as Realm.
          * @return A realm::scheduler which wraps UV to power the event loop.
          */
-        std::shared_ptr<scheduler> make_uv();
+        std::shared_ptr<scheduler> make_uv(uv_loop_t* loop);
 #endif
 
         /** Register a factory function which can produce custom schedulers when
