@@ -12,6 +12,8 @@
 #include <cpprealm/internal/bridge/sync_session.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/thread_safe_reference.hpp>
+#include <cpprealm/internal/scheduler/realm_core_scheduler.hpp>
+
 #include <cpprealm/logger.hpp>
 #include <cpprealm/schedulers/default_schedulers.hpp>
 
@@ -120,7 +122,7 @@ namespace realm::internal::bridge {
 #else
         config.path = std::filesystem::current_path().append("default.realm").generic_string();
 #endif
-        config.scheduler = std::make_shared<internal_scheduler>(default_schedulers::make_platform_default());
+        config.scheduler = std::make_shared<internal_scheduler>(default_schedulers::make_default());
         config.schema_version = 0;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_config) RealmConfig(config);
@@ -408,13 +410,13 @@ namespace realm::internal::bridge {
         return realm;
     }
 
-    realm realm::thaw(std::shared_ptr<::realm::scheduler> s) {
+    realm realm::thaw() {
         m_realm->verify_thread();
         if (!is_frozen())
             return *this;
         auto config = m_realm->config();
         config.cache = true;
-        config.scheduler = std::make_shared<internal_scheduler>(s);
+        config.scheduler = std::make_shared<internal_scheduler>(default_schedulers::make_default());
         return realm(std::move(config));
     }
 

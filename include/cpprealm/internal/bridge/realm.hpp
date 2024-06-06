@@ -242,7 +242,7 @@ namespace realm::internal::bridge {
         bool refresh();
         bool is_frozen() const;
         realm freeze(); // throws
-        realm thaw(std::shared_ptr<::realm::scheduler> s = ::realm::default_schedulers::make_platform_default()); // throws
+        realm thaw(); // throws
         void close();
         bool is_closed();
         void invalidate();

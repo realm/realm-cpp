@@ -143,8 +143,8 @@ namespace realm {
             return Derived(internal::bridge::results(frozen_realm, frozen_realm.table_for_object_type(managed<T>::schema.name)));
         }
 
-        Derived thaw(std::shared_ptr<realm::scheduler> s = realm::default_schedulers::make_platform_default()) {
-            auto thawed_realm = m_parent.get_realm().thaw(s);
+        Derived thaw() {
+            auto thawed_realm = m_parent.get_realm().thaw();
             return Derived(internal::bridge::results(thawed_realm, thawed_realm.table_for_object_type(managed<T>::schema.name)));
         }
 

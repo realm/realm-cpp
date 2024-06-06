@@ -13,8 +13,8 @@ namespace realm {
         return db(m_realm.freeze());
     }
 
-    db db::thaw(std::shared_ptr<scheduler> s) {
-        return db(m_realm.thaw(s));
+    db db::thaw() {
+        return db(m_realm.thaw());
     }
 
     void db::invalidate() {
