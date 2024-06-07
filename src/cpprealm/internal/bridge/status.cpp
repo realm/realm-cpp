@@ -98,4 +98,12 @@ namespace realm::internal::bridge {
 #endif
     }
 
+    status::operator ::realm::Status() const noexcept {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        return *reinterpret_cast<const Status*>(&m_status);
+#else
+        return *m_status;
+#endif
+    }
+
 }

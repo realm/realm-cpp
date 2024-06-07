@@ -1,4 +1,5 @@
 #include <cpprealm/app.hpp>
+#include <cpprealm/internal/bridge/status.hpp>
 #include <cpprealm/internal/generic_network_transport.hpp>
 
 #ifndef REALMCXX_VERSION_MAJOR
@@ -10,7 +11,9 @@
 #include <realm/object-store/sync/sync_manager.hpp>
 #include <realm/object-store/sync/sync_user.hpp>
 #include <realm/sync/config.hpp>
+#include <realm/sync/network/default_socket.hpp>
 #include <realm/util/bson/bson.hpp>
+#include <realm/util/platform_info.hpp>
 
 #include <utility>
 
@@ -18,34 +21,220 @@
 #include <unistd.h>
 #endif
 
+namespace realm::networking {
+
+    /// The WebSocket base class that is used by the SyncClient to send data over the
+    /// WebSocket connection with the server. This is the class that is returned by
+    /// SyncSocketProvider::connect() when a connection to an endpoint is requested.
+    /// If an error occurs while establishing the connection, the error is presented
+    /// to the WebSocketObserver provided when the WebSocket was created.
+    struct websocket_interface {
+        /// The destructor must close the websocket connection when the WebSocket object
+        /// is destroyed
+        virtual ~websocket_interface() = default;
+
+        using status = internal::bridge::status;
+        using FunctionHandler = std::function<void(internal::bridge::status)>;
+
+        /// Write data asynchronously to the WebSocket connection. The handler function
+        /// will be called when the data has been sent successfully. The WebSocketOberver
+        /// provided when the WebSocket was created will be called if any errors occur
+        /// during the write operation.
+        /// @param data A util::Span containing the data to be sent to the server.
+        /// @param handler The handler function to be called when the data has been sent
+        ///                successfully or the websocket has been closed (with
+        ///                ErrorCodes::OperationAborted). If an error occurs during the
+        ///                write operation, the websocket will be closed and the error
+        ///                will be provided via the websocket_closed_handler() function.
+        virtual void async_write_binary(util::Span<const char> data, FunctionHandler&& handler) = 0;
+    };
+
+    struct core_websocket_shim : public ::realm::sync::WebSocketInterface {
+        ~core_websocket_shim() = default;
+        explicit core_websocket_shim(const std::shared_ptr<websocket_interface>& ws) : m_interface(ws) {}
+
+        void async_write_binary(util::Span<const char> data, sync::SyncSocketProvider::FunctionHandler&& handler) override {
+            auto handler_ptr = handler.release();
+            m_interface->async_write_binary(data, [ptr = std::move(handler_ptr)](websocket_interface::status s) {
+                auto uf = util::UniqueFunction<void(::realm::Status)>(std::move(ptr));
+                return uf(s.operator ::realm::Status());
+            });
+        };
+
+        std::shared_ptr<websocket_interface> m_interface;
+    };
+
+    struct websocket_shim : public websocket_interface {
+        ~websocket_shim() = default;
+        void async_write_binary(util::Span<const char> data, websocket_interface::FunctionHandler&& handler) override {
+            m_interface->async_write_binary(data, [fn = std::move(handler)](auto s) {
+                fn(s);
+            });
+        };
+
+        std::shared_ptr<::realm::sync::WebSocketInterface> m_interface;
+    };
+
+
+    /// WebSocket observer interface in the SyncClient that receives the websocket
+    /// events during operation.
+    struct websocket_observer {
+        virtual ~websocket_observer() = default;
+
+        /// Called when the websocket is connected, i.e. after the handshake is done.
+        /// The Sync Client is not allowed to send messages on the socket before the
+        /// handshake is complete and no message_received callbacks will be called
+        /// before the handshake is done.
+        ///
+        /// @param protocol The negotiated subprotocol value returned by the server
+        virtual void websocket_connected_handler(const std::string& protocol) = 0;
+
+        /// Called when an error occurs while establishing the WebSocket connection
+        /// to the server or during normal operations. No additional binary messages
+        /// will be processed after this function is called.
+        virtual void websocket_error_handler() = 0;
+
+        /// Called whenever a full message has arrived. The WebSocket implementation
+        /// is responsible for defragmenting fragmented messages internally and
+        /// delivering a full message to the Sync Client.
+        ///
+        /// @param data A util::Span containing the data received from the server.
+        ///             The buffer is only valid until the function returns.
+        ///
+        /// @return bool designates whether the WebSocket object should continue
+        ///         processing messages. The normal return value is true . False must
+        ///         be returned if the websocket object has been destroyed during
+        ///         execution of the function.
+        virtual bool websocket_binary_message_received(util::Span<const char> data) = 0;
+
+        /// Called whenever the WebSocket connection has been closed, either as a result
+        /// of a WebSocket error or a normal close.
+        ///
+        /// @param was_clean Was the TCP connection closed after the WebSocket closing
+        ///                  handshake was completed.
+        /// @param error_code The error code received or synthesized when the websocket was closed.
+        /// @param message    The message received in the close frame when the websocket was closed.
+        ///
+        /// @return bool designates whether the WebSocket object has been destroyed
+        ///         during the execution of this function. The normal return value is
+        ///         True to indicate the WebSocket object is no longer valid. If False
+        ///         is returned, the WebSocket object will be destroyed at some point
+        ///         in the future.
+        virtual bool websocket_closed_handler(bool was_clean, websocket_err_codes error_code,
+                                              std::string_view message) = 0;
+    };
+
+    struct core_websocket_observer_shim : public ::realm::sync::WebSocketObserver {
+        ~core_websocket_observer_shim() = default;
+
+        void websocket_connected_handler(const std::string& protocol) override {
+            m_observer->websocket_connected_handler(protocol);
+        }
+
+        void websocket_error_handler() override {
+            m_observer->websocket_error_handler();
+        }
+
+        bool websocket_binary_message_received(util::Span<const char> data) override {
+            return m_observer->websocket_binary_message_received(data);
+        }
+
+        bool websocket_closed_handler(bool was_clean, ::realm::sync::websocket::WebSocketError error_code,
+                                      std::string_view message) override {
+            return m_observer->websocket_closed_handler(was_clean, static_cast<websocket_err_codes>(error_code), message);
+        }
+
+        std::shared_ptr<websocket_observer> m_observer;
+    };
+
+    struct websocket_observer_shim : public websocket_observer {
+        ~websocket_observer_shim() = default;
+
+        void websocket_connected_handler(const std::string& protocol) override {
+            m_observer->websocket_connected_handler(protocol);
+        }
+
+        void websocket_error_handler() override {
+            m_observer->websocket_error_handler();
+        }
+
+        bool websocket_binary_message_received(util::Span<const char> data) override {
+            return m_observer->websocket_binary_message_received(data);
+        }
+
+        bool websocket_closed_handler(bool was_clean, websocket_err_codes error_code,
+                                      std::string_view message) override {
+            return m_observer->websocket_closed_handler(was_clean, static_cast<::realm::sync::websocket::WebSocketError>(error_code), message);
+        }
+
+        std::shared_ptr<::realm::sync::WebSocketObserver> m_observer;
+    };
+
+
+    struct core_http_transport_shim : app::GenericNetworkTransport {
+        ~core_http_transport_shim() = default;
+        core_http_transport_shim(const std::optional<std::map<std::string, std::string>>& custom_http_headers = std::nullopt,
+                      const std::optional<internal::bridge::realm::sync_config::proxy_config>& proxy_config = std::nullopt) {
+            m_transport = internal::DefaultTransport(custom_http_headers, proxy_config);
+        }
+
+        void send_request_to_server(const app::Request& request,
+                                    util::UniqueFunction<void(const app::Response&)>&& completion) {
+            auto completion_ptr = completion.release();
+            m_transport.send_request_to_server(to_request(request),
+                                                [f = std::move(completion_ptr)]
+                                                (const networking::response& response) {
+                                                    auto uf = util::UniqueFunction<void(const app::Response&)>(std::move(f));
+                                                    uf(to_core_response(response));
+                                                });
+        }
+
+    private:
+        internal::DefaultTransport m_transport;
+    };
+
+    // Internal only wrapper for bridging C++ SDK networking to RealmCore
+    class core_transport_provider final : public ::realm::sync::SyncSocketProvider{
+    public:
+        explicit core_transport_provider(const std::shared_ptr<util::Logger>& logger,
+                                         const std::string& user_agent_binding_info,
+                                         const std::string& user_agent_application_info) {
+            auto user_agent = util::format("RealmSync/%1 (%2) %3 %4", REALM_VERSION_STRING, util::get_platform_info(), user_agent_binding_info, user_agent_application_info);
+            m_default_provider = std::make_unique<::realm::sync::websocket::DefaultSocketProvider>(logger, user_agent);
+        }
+
+        ~core_transport_provider() = default;
+
+        std::unique_ptr<::realm::sync::WebSocketInterface> connect(std::unique_ptr<::realm::sync::WebSocketObserver> observer, ::realm::sync::WebSocketEndpoint&& endpoint) override {
+            if (m_websocket_event_handler) {
+                m_websocket_event_handler->on_connect({});// TODO pass endpoint
+            }
+
+            return m_default_provider->connect(std::move(observer), std::move(endpoint));
+        }
+
+        void post(FunctionHandler&& handler) override {
+            m_default_provider->post(std::move(handler));
+        }
+
+        ::realm::sync::SyncSocketProvider::SyncTimer create_timer(std::chrono::milliseconds delay, ::realm::sync::SyncSocketProvider::FunctionHandler&& handler) override {
+            return m_default_provider->create_timer(delay, std::move(handler));
+        }
+
+        void stop(bool b = false) override {
+            m_default_provider->stop(b);
+        }
+    private:
+        std::shared_ptr<websocket_event_handler> m_websocket_event_handler;
+//        std::unique_ptr<::realm::sync::websocket::DefaultSocketProvider> m_default_provider;
+        std::unique_ptr<::realm::sync::websocket::DefaultSocketProvider> m_default_provider;
+    };
+}
+
 namespace realm {
     static_assert((int)user::state::logged_in == (int)SyncUser::State::LoggedIn);
     static_assert((int)user::state::logged_out == (int)SyncUser::State::LoggedOut);
     static_assert((int)user::state::removed == (int)SyncUser::State::Removed);
-
-    namespace internal {
-        struct CoreTransport : app::GenericNetworkTransport {
-            ~CoreTransport() = default;
-            CoreTransport(const std::optional<std::map<std::string, std::string>>& custom_http_headers = std::nullopt,
-                          const std::optional<bridge::realm::sync_config::proxy_config>& proxy_config = std::nullopt) {
-                m_transport = DefaultTransport(custom_http_headers, proxy_config);
-            }
-
-            void send_request_to_server(const app::Request& request,
-                                        util::UniqueFunction<void(const app::Response&)>&& completion) {
-                auto completion_ptr = completion.release();
-                m_transport.send_request_to_server(request,
-                                                   [f = std::move(completion_ptr)]
-                                                   (const app::Response& response) {
-                    auto uf = util::UniqueFunction<void(const app::Response&)>(std::move(f));
-                    uf(response);
-                });
-            }
-
-        private:
-            DefaultTransport m_transport;
-        };
-    }
 
     app_error::app_error(const app_error& other) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
@@ -514,8 +703,15 @@ namespace realm {
         client_config.user_agent_binding_info = std::string("RealmCpp/") + std::string(REALMCXX_VERSION_STRING);
         client_config.user_agent_application_info = config.app_id;
 
+        auto network_transport = std::make_shared<::realm::networking::core_transport_provider>(
+                client_config.logger_factory(util::Logger::Level::off), // TODO: allow log level to be set from app config
+                client_config.user_agent_binding_info,
+                client_config.user_agent_application_info);
+
+        client_config.socket_provider = network_transport;
+
         app_config.app_id = config.app_id;
-        app_config.transport = std::make_shared<internal::CoreTransport>(config.custom_http_headers, config.proxy_configuration);
+        app_config.transport = std::make_shared<networking::core_http_transport_shim>(config.custom_http_headers, config.proxy_configuration);
         app_config.base_url = config.base_url;
 
         app_config.metadata_mode = should_encrypt ? app::AppConfig::MetadataMode::Encryption : app::AppConfig::MetadataMode::NoEncryption;

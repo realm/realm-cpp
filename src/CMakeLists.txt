@@ -52,6 +52,7 @@ set(SOURCES
     cpprealm/internal/bridge/timestamp.cpp
     cpprealm/internal/bridge/uuid.cpp
     cpprealm/internal/scheduler/realm_core_scheduler.cpp
+    cpprealm/networking/networking.cpp
     cpprealm/schedulers/default_scheduler.cpp
     cpprealm/logger.cpp
     cpprealm/sdk.cpp) # REALM_SOURCES
@@ -113,6 +114,7 @@ set(HEADERS
     ../include/cpprealm/internal/type_info.hpp
     ../include/cpprealm/internal/scheduler/realm_core_scheduler.hpp
     ../include/cpprealm/schedulers/default_scheduler.hpp
+    ../include/cpprealm/networking/networking.hpp
     ../include/cpprealm/logger.hpp
     ../include/cpprealm/notifications.hpp
     ../include/cpprealm/rbool.hpp

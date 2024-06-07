@@ -42,14 +42,14 @@ int main(int argc, char *argv[]) {
 
 #ifdef CPPREALM_ENABLE_SYNC_TESTS
     std::optional<Admin::baas_manager> baas_manager;
-    if (const char* api_key = getenv("APIKEY")) {
-        baas_manager.emplace(std::string(api_key));
-        baas_manager->start();
-        auto url = baas_manager->wait_for_container();
-        Admin::Session::shared().prepare(url);
-    } else {
+//    if (const char* api_key = getenv("APIKEY")) {
+//        baas_manager.emplace(std::string(api_key));
+//        baas_manager->start();
+//        auto url = baas_manager->wait_for_container();
+//        Admin::Session::shared().prepare(url);
+//    } else {
         Admin::Session::shared().prepare();
-    }
+//    }
 
     auto app_id = Admin::Session::shared().create_app({"str_col", "_id"});
     Admin::Session::shared().cache_app_id(app_id);

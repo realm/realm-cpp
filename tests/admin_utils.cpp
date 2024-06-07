@@ -33,9 +33,9 @@ namespace Admin {
         internal::DefaultTransport transport;
         std::promise<app::Response> p;
         std::future<app::Response> f = p.get_future();
-        transport.send_request_to_server(std::move(request),
-                                         [&p](auto &&response) {
-                                             p.set_value(std::move(response));
+        transport.send_request_to_server(networking::to_request(std::move(request)),
+                                         [&p](auto&& response) {
+                                             p.set_value(networking::to_core_response(std::move(response)));
                                          });
         return f.get();
     }

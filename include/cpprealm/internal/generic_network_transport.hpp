@@ -20,6 +20,7 @@
 #define CPPREALM_GENERIC_NETWORK_TRANSPORT_CPP
 
 #include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/networking/networking.hpp>
 
 #include <map>
 #include <optional>
@@ -30,18 +31,20 @@ namespace realm {
         struct Response;
         struct GenericNetworkTransport;
     }
+    namespace sync {
+        class SyncSocketProvider;
+    }
 }
-
 namespace realm::internal {
 
-class DefaultTransport {
+class DefaultTransport : public networking::http_network_transport_client {
 public:
     DefaultTransport(const std::optional<std::map<std::string, std::string>>& custom_http_headers = std::nullopt,
                      const std::optional<bridge::realm::sync_config::proxy_config>& proxy_config = std::nullopt);
     ~DefaultTransport() = default;
 
-    void send_request_to_server(const app::Request& request,
-                                std::function<void(const app::Response&)>&& completion);
+    void send_request_to_server(const ::realm::networking::request& request,
+                                std::function<void(const ::realm::networking::response&)>&& completion);
 private:
     std::optional<std::map<std::string, std::string>> m_custom_http_headers;
     std::optional<bridge::realm::sync_config::proxy_config> m_proxy_config;

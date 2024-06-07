@@ -286,8 +286,8 @@ namespace realm {
         buffer.resize(s);
 
         auto base64_str = std::string(buffer.begin(), buffer.end());
-        app::Request request;
-        request.method = realm::app::HttpMethod::get;
+        networking::request request;
+        request.method = networking::http_method::get;
         request.url = util::format("https://data.mongodb-api.com/app/realmsdkmetrics-zmhtm/endpoint/metric_webhook/metric?data=%1", base64_str);
         transport->send_request_to_server(std::move(request), [](auto) {
                                               // noop

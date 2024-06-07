@@ -21,6 +21,7 @@
 #endif
 #include <cpprealm/app.hpp>
 #include <cpprealm/internal/generic_network_transport.hpp>
+#include <cpprealm/networking/networking.hpp>
 
 #include <realm/object-store/sync/generic_network_transport.hpp>
 #include <realm/sync/network/http.hpp>
@@ -129,8 +130,8 @@ namespace realm::internal {
         }
     }
 
-    void DefaultTransport::send_request_to_server(const app::Request& request,
-                                                  std::function<void(const app::Response&)>&& completion_block) {
+    void DefaultTransport::send_request_to_server(const networking::request& request,
+                                                  std::function<void(const networking::response&)>&& completion_block) {
         const auto uri = realm::util::Uri(request.url);
         std::string userinfo, host, port;
         uri.get_auth(userinfo, host, port);
@@ -154,7 +155,7 @@ namespace realm::internal {
                     std::error_code e;
                     auto address = realm::sync::network::make_address(m_proxy_config->address, e);
                     if (e.value() > 0) {
-                        app::Response response;
+                        networking::response response;
                         response.custom_status_code = e.value();
                         response.body = e.message();
                         completion_block(std::move(response));
@@ -177,7 +178,7 @@ namespace realm::internal {
             }
             socket.connect(ep);
         } catch (...) {
-            app::Response response;
+            networking::response response;
             response.custom_status_code = util::error::operation_aborted;
             completion_block(std::move(response));
             return;
@@ -199,14 +200,14 @@ namespace realm::internal {
             realm::sync::HTTPClient<DefaultSocket> m_proxy_client = realm::sync::HTTPClient<DefaultSocket>(socket, logger);
             auto handler = [&](realm::sync::HTTPResponse response, std::error_code ec) {
                 if (ec && ec != util::error::operation_aborted) {
-                    app::Response res;
+                    networking::response res;
                     res.custom_status_code = util::error::operation_aborted;
                     completion_block(std::move(res));
                     return;
                 }
 
                 if (response.status != realm::sync::HTTPStatus::Ok) {
-                    app::Response res;
+                    networking::response res;
                     res.http_status_code = static_cast<uint16_t>(response.status);
                     completion_block(std::move(res));
                     return;
@@ -252,19 +253,19 @@ namespace realm::internal {
         realm::sync::HTTPClient<DefaultSocket> m_http_client = realm::sync::HTTPClient<DefaultSocket>(socket, logger);
         realm::sync::HTTPMethod method;
         switch (request.method) {
-            case app::HttpMethod::get:
+            case networking::http_method::get:
                 method = realm::sync::HTTPMethod::Get;
                 break;
-            case app::HttpMethod::put:
+            case networking::http_method::put:
                 method = realm::sync::HTTPMethod::Put;
                 break;
-            case app::HttpMethod::post:
+            case networking::http_method::post:
                 method = realm::sync::HTTPMethod::Post;
                 break;
-            case app::HttpMethod::patch:
+            case networking::http_method::patch:
                 method = realm::sync::HTTPMethod::Patch;
                 break;
-            case app::HttpMethod::del:
+            case networking::http_method::del:
                 method = realm::sync::HTTPMethod::Delete;
                 break;
             default:
@@ -291,7 +292,7 @@ namespace realm::internal {
                     req.body = request.body.empty() ? std::nullopt : std::optional<std::string>(request.body);
 
                     m_http_client.async_request(std::move(req), [cb = std::move(completion_block)](const realm::sync::HTTPResponse& r, const std::error_code&) {
-                        app::Response res;
+                        networking::response res;
                         res.body = r.body ? *r.body : "";
                         for (auto& [k, v] : r.headers)  {
                             res.headers[k] = v;
@@ -301,7 +302,7 @@ namespace realm::internal {
                         cb(res);
                     });
                 } else {
-                    app::Response response;
+                    networking::response response;
                     response.custom_status_code = util::error::operation_aborted;
                     completion_block(std::move(response));
                     return;
