@@ -494,12 +494,13 @@ namespace realm {
         client_config.user_agent_binding_info = std::string("RealmCpp/") + std::string(REALMCXX_VERSION_STRING);
         client_config.user_agent_application_info = config.app_id;
 
-        auto websocket_provider = ::realm::networking::default_sync_socket_provider_factory(util::Logger::get_default_logger(),
-                                                                                            client_config.user_agent_binding_info,
-                                                                                            client_config.user_agent_application_info,
-                                                                                            config.websocket_event_handler);
-
-        client_config.socket_provider = websocket_provider;
+        if (config.websocket_event_handler) {
+            auto websocket_provider = ::realm::networking::default_sync_socket_provider_factory(util::Logger::get_default_logger(),
+                                                                                                client_config.user_agent_binding_info,
+                                                                                                client_config.user_agent_application_info,
+                                                                                                config.websocket_event_handler);
+            client_config.socket_provider = websocket_provider;
+        }
 
         app_config.app_id = config.app_id;
         app_config.transport = ::realm::networking::default_http_client_factory(config.custom_http_headers, config.proxy_configuration);
