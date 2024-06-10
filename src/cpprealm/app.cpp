@@ -12,7 +12,6 @@
 #include <realm/object-store/sync/sync_manager.hpp>
 #include <realm/object-store/sync/sync_user.hpp>
 #include <realm/sync/config.hpp>
-//#include <realm/sync/network/default_socket.hpp>
 #include <realm/util/bson/bson.hpp>
 #include <realm/util/platform_info.hpp>
 
@@ -495,15 +494,18 @@ namespace realm {
         client_config.user_agent_application_info = config.app_id;
 
         if (config.websocket_event_handler) {
-            auto websocket_provider = ::realm::networking::default_sync_socket_provider_factory(util::Logger::get_default_logger(),
-                                                                                                client_config.user_agent_binding_info,
-                                                                                                client_config.user_agent_application_info,
-                                                                                                config.websocket_event_handler);
+            auto websocket_provider = ::realm::internal::networking::default_sync_socket_provider_factory(util::Logger::get_default_logger(),
+                                                                                                          client_config.user_agent_binding_info,
+                                                                                                          client_config.user_agent_application_info,
+                                                                                                          config.websocket_event_handler);
             client_config.socket_provider = websocket_provider;
         }
 
+        networking::http_client_factory::custom_http_headers = config.custom_http_headers;
+        networking::http_client_factory::proxy_config = config.proxy_configuration;
+
         app_config.app_id = config.app_id;
-        app_config.transport = ::realm::networking::default_http_client_factory(config.custom_http_headers, config.proxy_configuration);
+        app_config.transport = ::realm::internal::networking::create_http_client_shim(networking::http_client_factory::make_default_http_client());
         app_config.base_url = config.base_url;
 
         app_config.metadata_mode = should_encrypt ? app::AppConfig::MetadataMode::Encryption : app::AppConfig::MetadataMode::NoEncryption;

@@ -21,16 +21,6 @@
 
 #include <map>
 
-namespace realm {
-    namespace app {
-        struct Request;
-        struct Response;
-    }
-    namespace sync {
-        struct WebSocketEndpoint;
-    }
-}
-
 namespace realm::networking {
     /**
      * An HTTP method type.
@@ -144,8 +134,8 @@ namespace realm::networking {
     };
 
     // Interface for providing http  transport
-    struct http_network_transport_client {
-        virtual ~http_network_transport_client() = default;
+    struct http_transport_client {
+        virtual ~http_transport_client() = default;
         // HTTP
         virtual void send_request_to_server(const request& request,
                                             std::function<void(const response&)>&& completion) = 0;
@@ -158,15 +148,27 @@ namespace realm::networking {
         std::function<ws_endpoint(ws_endpoint&&)> on_connect;
     };
 
-    request to_request(const ::realm::app::Request&);
-    ::realm::app::Request to_core_request(const request&);
+} //namespace realm::networking
 
-    response to_response(const ::realm::app::Response&);
-    ::realm::app::Response to_core_response(const response&);
-
-    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ws_endpoint& ep);
-    ws_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& ep);
+namespace realm {
+    namespace app {
+        struct Request;
+        struct Response;
+    }
+    namespace sync {
+        struct WebSocketEndpoint;
+    }
 }
 
+namespace realm::internal::networking {
+    ::realm::networking::request to_request(const ::realm::app::Request&);
+    ::realm::app::Request to_core_request(const ::realm::networking::request&);
+
+    ::realm::networking::response to_response(const ::realm::app::Response&);
+    ::realm::app::Response to_core_response(const ::realm::networking::response&);
+
+    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::ws_endpoint& ep);
+    ::realm::networking::ws_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& ep);
+} //namespace internal::networking
 
 #endif//CPPREALM_NETWORKING_HPP

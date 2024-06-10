@@ -38,15 +38,8 @@ namespace realm {
         class Logger;
     }
 }
+
 namespace realm::networking {
-
-    std::shared_ptr<realm::sync::SyncSocketProvider> default_sync_socket_provider_factory(const std::shared_ptr<util::Logger>& logger,
-                                                                                          const std::string& user_agent_binding_info,
-                                                                                          const std::string& user_agent_application_info,
-                                                                                          const std::shared_ptr<websocket_event_handler>&);
-
-    std::shared_ptr<app::GenericNetworkTransport> default_http_client_factory(const std::optional<std::map<std::string, std::string>>& custom_http_headers = std::nullopt,
-                                                                              const std::optional<internal::bridge::realm::sync_config::proxy_config>& proxy_config = std::nullopt);
 
     /// The WebSocket base class that is used by the SyncClient to send data over the
     /// WebSocket connection with the server. This is the class that is returned by
@@ -227,8 +220,22 @@ namespace realm::networking {
         virtual SyncTimer create_timer(std::chrono::milliseconds delay, FunctionHandler&& handler) = 0;
     };
 
-    std::unique_ptr<::realm::sync::SyncSocketProvider> create_sync_socket_provider_shim(std::unique_ptr<sync_socket_provider>&& provider,
-                                                                                        const std::shared_ptr<websocket_event_handler>& handler);
+    struct http_client_factory {
+        static std::optional<std::map<std::string, std::string>> custom_http_headers;
+        static std::optional<internal::bridge::realm::sync_config::proxy_config> proxy_config;
+
+        static std::shared_ptr<http_transport_client> make_default_http_client();
+        static void set_http_client_factory(std::shared_ptr<http_transport_client> (*factory)());
+    };
+}
+
+namespace realm::internal::networking {
+    std::shared_ptr<realm::sync::SyncSocketProvider> default_sync_socket_provider_factory(const std::shared_ptr<util::Logger>& logger,
+                                                                                          const std::string& user_agent_binding_info,
+                                                                                          const std::string& user_agent_application_info,
+                                                                                          const std::shared_ptr<::realm::networking::websocket_event_handler>&);
+
+    std::shared_ptr<app::GenericNetworkTransport> create_http_client_shim(const std::shared_ptr<::realm::networking::http_transport_client>&);
 }
 
 #endif//CPPREALM_PLATFORM_NETWORKING_HPP

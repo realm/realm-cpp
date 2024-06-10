@@ -3,19 +3,19 @@
 #include <realm/object-store/sync/generic_network_transport.hpp>
 #include <realm/sync/socket_provider.hpp>
 
-namespace realm::networking {
-    request to_request(const ::realm::app::Request& core_request) {
-        request req;
-        req.method = static_cast<http_method>(core_request.method);
+namespace realm::internal::networking {
+    ::realm::networking::request to_request(const ::realm::app::Request& core_request) {
+        ::realm::networking::request req;
+        req.method = static_cast<::realm::networking::http_method>(core_request.method);
         req.url = core_request.url;
         req.timeout_ms = core_request.timeout_ms;
         req.headers = core_request.headers;
         req.body = core_request.body;
         return req;
     }
-    ::realm::app::Request to_core_request(const request& req) {
+    ::realm::app::Request to_core_request(const ::realm::networking::request& req) {
         ::realm::app::Request core_request;
-        core_request.method = static_cast<app::HttpMethod>(req.method);
+        core_request.method = static_cast<::realm::app::HttpMethod>(req.method);
         core_request.url = req.url;
         core_request.timeout_ms = req.timeout_ms;
         core_request.headers = req.headers;
@@ -23,8 +23,8 @@ namespace realm::networking {
         return core_request;
     }
 
-    response to_response(const ::realm::app::Response& core_response) {
-        response req;
+    ::realm::networking::response to_response(const ::realm::app::Response& core_response) {
+        ::realm::networking::response req;
         req.http_status_code = core_response.http_status_code;
         req.custom_status_code = core_response.custom_status_code;
         req.headers = core_response.headers;
@@ -32,19 +32,19 @@ namespace realm::networking {
         req.body = core_response.body;
         return req;
     }
-    ::realm::app::Response to_core_response(const response& req) {
+    ::realm::app::Response to_core_response(const ::realm::networking::response& req) {
         ::realm::app::Response core_response;
         core_response.http_status_code = req.http_status_code;
         core_response.custom_status_code = req.custom_status_code;
         core_response.headers = req.headers;
         core_response.body = req.body;
         if (req.client_error_code) {
-            core_response.client_error_code = static_cast<ErrorCodes::Error>(*req.client_error_code);
+            core_response.client_error_code = static_cast<::realm::ErrorCodes::Error>(*req.client_error_code);
         }
         return core_response;
     }
 
-    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ws_endpoint& ep) {
+    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::ws_endpoint& ep) {
         ::realm::sync::WebSocketEndpoint core_ep;
         core_ep.address = ep.address;
         core_ep.port = ep.port;
@@ -54,8 +54,8 @@ namespace realm::networking {
         return core_ep;
     }
 
-    ws_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& core_ep) {
-        ws_endpoint ep;
+    ::realm::networking::ws_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& core_ep) {
+        ::realm::networking::ws_endpoint ep;
         ep.address = core_ep.address;
         ep.port = core_ep.port;
         ep.path = core_ep.path;
@@ -63,4 +63,4 @@ namespace realm::networking {
         ep.is_ssl = core_ep.is_ssl;
         return ep;
     }
-}
+} //namespace internal::networking
