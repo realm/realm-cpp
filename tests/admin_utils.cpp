@@ -30,7 +30,7 @@ namespace Admin {
     std::mutex Admin::Session::mutex;
 
     static app::Response do_http_request(app::Request &&request) {
-        internal::DefaultTransport transport;
+        internal::networking::DefaultTransport transport;
         std::promise<app::Response> p;
         std::future<app::Response> f = p.get_future();
         transport.send_request_to_server(::realm::internal::networking::to_request(std::move(request)),

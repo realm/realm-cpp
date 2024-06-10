@@ -10,7 +10,7 @@ namespace realm::networking {
     std::optional<internal::bridge::realm::sync_config::proxy_config> http_client_factory::proxy_config = std::nullopt;
 
     std::shared_ptr<http_transport_client> http_client_factory::make_default_http_client() {
-        return std::make_shared<internal::DefaultTransport>(custom_http_headers, proxy_config);
+        return std::make_shared<internal::networking::DefaultTransport>(custom_http_headers, proxy_config);
     }
 
     void http_client_factory::set_http_client_factory(std::shared_ptr<http_transport_client> (*factory)()) {

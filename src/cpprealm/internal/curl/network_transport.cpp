@@ -23,7 +23,7 @@
 
 #include <curl/curl.h>
 
-namespace realm::internal {
+namespace realm::internal::networking {
 
     namespace {
 
@@ -89,13 +89,13 @@ namespace realm::internal {
             return nitems * size;
         }
 
-        static app::Response do_http_request(const app::Request& request,
+        static ::realm::networking::response do_http_request(const ::realm::networking::request& request,
                                              const std::optional<bridge::realm::sync_config::proxy_config>& proxy_config = std::nullopt)
         {
             CurlGlobalGuard curl_global_guard;
             auto curl = curl_easy_init();
             if (!curl) {
-                return app::Response{500, -1, {}, "", std::nullopt};
+                return ::realm::networking::response{500, -1, {}, "", std::nullopt};
             }
 
             struct curl_slist* list = nullptr;
@@ -117,22 +117,22 @@ namespace realm::internal {
             }
 
             /* Now specify the POST data */
-            if (request.method == app::HttpMethod::post) {
+            if (request.method == ::realm::networking::http_method::post) {
                 curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body.c_str());
             }
-            else if (request.method == app::HttpMethod::put) {
+            else if (request.method == ::realm::networking::http_method::put) {
                 curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
                 curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body.c_str());
             }
-            else if (request.method == app::HttpMethod::patch) {
+            else if (request.method == ::realm::networking::http_method::patch) {
                 curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PATCH");
                 curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body.c_str());
             }
-            else if (request.method == app::HttpMethod::del) {
+            else if (request.method == ::realm::networking::http_method::del) {
                 curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
                 curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body.c_str());
             }
-            else if (request.method == app::HttpMethod::patch) {
+            else if (request.method == ::realm::networking::http_method::patch) {
                 curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PATCH");
                 curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body.c_str());
             }
@@ -174,17 +174,16 @@ namespace realm::internal {
         m_proxy_config = proxy_config;
     }
 
-    void DefaultTransport::send_request_to_server(const app::Request& request,
-                                                  std::function<void(const app::Response&)>&& completion_block)
-    {
-        if (m_custom_http_headers) {
-            auto req_copy = request;
-            req_copy.headers.insert(m_custom_http_headers->begin(), m_custom_http_headers->end());
-            completion_block(do_http_request(req_copy, m_proxy_config));
-            return;
+    void DefaultTransport::send_request_to_server(const ::realm::networking::request& request,
+                                                  std::function<void(const ::realm::networking::response&)>&& completion_block) {
+        {
+            if (m_custom_http_headers) {
+                auto req_copy = request;
+                req_copy.headers.insert(m_custom_http_headers->begin(), m_custom_http_headers->end());
+                completion_block(do_http_request(req_copy, m_proxy_config));
+                return;
+            }
+            completion_block(do_http_request(request, m_proxy_config));
         }
-        completion_block(do_http_request(request, m_proxy_config));
     }
-
-
-} // namespace realm::internal
+} // namespace realm::internal::networking

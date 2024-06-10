@@ -32,7 +32,7 @@
 
 #include <regex>
 
-namespace realm::internal {
+namespace realm::internal::networking {
     struct DefaultSocket : realm::sync::network::Socket {
         DefaultSocket(realm::sync::network::Service& service)
             : realm::sync::network::Socket(service)
@@ -317,5 +317,5 @@ namespace realm::internal {
 
         service.run();
     }
-}
+} //namespace realm::internal::networking
 
