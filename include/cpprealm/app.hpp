@@ -27,6 +27,7 @@
 #include <cpprealm/internal/bridge/sync_manager.hpp>
 #include <cpprealm/internal/bridge/sync_session.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
+#include <cpprealm/networking/networking.hpp>
 
 #include <future>
 #include <utility>
@@ -229,6 +230,7 @@ public:
         std::optional<std::map<std::string, std::string>> custom_http_headers;
         std::optional<std::array<char, 64>> metadata_encryption_key;
         std::optional<sync_config::proxy_config> proxy_configuration;
+        std::shared_ptr<::realm::networking::websocket_event_handler> websocket_event_handler;
     };
 
     [[deprecated("Use App(const configuration&) instead.")]]

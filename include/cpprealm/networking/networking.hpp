@@ -26,6 +26,9 @@ namespace realm {
         struct Request;
         struct Response;
     }
+    namespace sync {
+        struct WebSocketEndpoint;
+    }
 }
 
 namespace realm::networking {
@@ -149,6 +152,9 @@ namespace realm::networking {
     };
 
     struct websocket_event_handler {
+        /**
+         * Used to configure outgoing websocket connections.
+         */
         std::function<ws_endpoint(ws_endpoint&&)> on_connect;
     };
 
@@ -157,6 +163,9 @@ namespace realm::networking {
 
     response to_response(const ::realm::app::Response&);
     ::realm::app::Response to_core_response(const response&);
+
+    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ws_endpoint& ep);
+    ws_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& ep);
 }
 
 

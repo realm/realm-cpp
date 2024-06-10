@@ -26,7 +26,8 @@ if (NOT BUILD_FROM_PACKAGE_MANAGER)
                     sync/asymmetric_object_tests.cpp
                     sync/flexible_sync_tests.cpp
                     sync/app_tests.cpp
-                    sync/client_reset_tests.cpp)
+                    sync/client_reset_tests.cpp
+                    sync/proxy_tests.cpp)
 endif()
 
 add_executable(cpprealm_db_tests

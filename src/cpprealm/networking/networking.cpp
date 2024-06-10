@@ -1,6 +1,7 @@
 #include <cpprealm/networking/networking.hpp>
 
 #include <realm/object-store/sync/generic_network_transport.hpp>
+#include <realm/sync/socket_provider.hpp>
 
 namespace realm::networking {
     request to_request(const ::realm::app::Request& core_request) {
@@ -41,5 +42,25 @@ namespace realm::networking {
             core_response.client_error_code = static_cast<ErrorCodes::Error>(*req.client_error_code);
         }
         return core_response;
+    }
+
+    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ws_endpoint& ep) {
+        ::realm::sync::WebSocketEndpoint core_ep;
+        core_ep.address = ep.address;
+        core_ep.port = ep.port;
+        core_ep.path = ep.path;
+        core_ep.protocols = ep.protocols;
+        core_ep.is_ssl = ep.is_ssl;
+        return core_ep;
+    }
+
+    ws_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& core_ep) {
+        ws_endpoint ep;
+        ep.address = core_ep.address;
+        ep.port = core_ep.port;
+        ep.path = core_ep.path;
+        ep.protocols = core_ep.protocols;
+        ep.is_ssl = core_ep.is_ssl;
+        return ep;
     }
 }
