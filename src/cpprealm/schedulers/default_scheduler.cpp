@@ -1,5 +1,5 @@
-#include <cpprealm/schedulers/default_schedulers.hpp>
 #include <cpprealm/internal/scheduler/realm_core_scheduler.hpp>
+#include <cpprealm/schedulers/default_scheduler.hpp>
 
 #include <realm/object-store/util/scheduler.hpp>
 
@@ -7,7 +7,7 @@
 #include <uv.h>
 #endif
 
-namespace realm::default_schedulers {
+namespace realm::default_scheduler {
     std::shared_ptr<scheduler> (*s_factory)() = make_platform_default;
 
     std::shared_ptr<scheduler> make_platform_default() {
@@ -24,10 +24,11 @@ namespace realm::default_schedulers {
         s_factory = std::move(factory);
     }
 
-    /** Create a new instance of the scheduler type returned by the default
-    * scheduler factory. By default, the factory function is
-    * `Scheduler::make_platform_default()`.
-    */
+    /**
+     * Create a new instance of the scheduler type returned by the default
+     * scheduler factory. By default, the factory function is
+     * `Scheduler::make_platform_default()`.
+     */
     std::shared_ptr<scheduler> make_default()
     {
         return s_factory();

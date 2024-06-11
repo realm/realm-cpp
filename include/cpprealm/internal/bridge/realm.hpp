@@ -19,14 +19,14 @@
 #ifndef CPPREALM_BRIDGE_REALM_HPP
 #define CPPREALM_BRIDGE_REALM_HPP
 
+#include <cpprealm/internal/bridge/utils.hpp>
+
 #include <functional>
 #include <map>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-#include <cpprealm/internal/bridge/utils.hpp>
-#include <cpprealm/schedulers/default_schedulers.hpp>
 
 namespace realm {
     class Realm;

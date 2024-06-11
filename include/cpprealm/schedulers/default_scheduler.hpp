@@ -30,7 +30,7 @@ typedef struct uv_loop_s uv_loop_t;
 #endif
 
 namespace realm {
-    namespace default_schedulers {
+    namespace default_scheduler {
         /**
          * Tries to choose a built in scheduler as default for the platform
          * Current options are:
@@ -50,7 +50,8 @@ namespace realm {
         std::shared_ptr<scheduler> make_uv(uv_loop_t* loop);
 #endif
 
-        /** Register a factory function which can produce custom schedulers when
+        /**
+         * Register a factory function which can produce custom schedulers when
          * `scheduler::make_default()` is called. This function is not thread-safe
          * and must be called before any schedulers are created.
          */

@@ -68,6 +68,7 @@ namespace realm::internal {
         std::shared_ptr<util::Scheduler> s;
     };
 
+    std::shared_ptr<util::Scheduler> create_scheduler_shim(const std::shared_ptr<scheduler>& s);
 } // namespace realm::internal
 
 #endif//CPPREALM_REALM_CORE_SCHEDULER_HPP
