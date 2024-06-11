@@ -29,41 +29,39 @@
 typedef struct uv_loop_s uv_loop_t;
 #endif
 
-namespace realm {
-    namespace default_scheduler {
-        /**
-         * Tries to choose a built in scheduler as default for the platform
-         * Current options are:
-         * - CFRunLoop for Apple platforms
-         * - UV for Linux and Windows
-         * - ALooper for Android
-         * If no suitable scheduler is available a generic scheduler will be provided.
-         */
-        std::shared_ptr<scheduler> make_platform_default();
+namespace realm::default_scheduler {
+    /**
+     * Tries to choose a built in scheduler as default for the platform
+     * Current options are:
+     * - CFRunLoop for Apple platforms
+     * - UV for Linux and Windows
+     * - ALooper for Android
+     * If no suitable scheduler is available a generic scheduler will be provided.
+     */
+    std::shared_ptr<scheduler> make_platform_default();
 
 #if defined(REALM_HAVE_UV) && REALM_HAVE_UV
-        /**
-         * Creates a scheduler using UV as the event loop
-         * @param loop A UV loop to be used on the same thread as Realm.
-         * @return A realm::scheduler which wraps UV to power the event loop.
-         */
-        std::shared_ptr<scheduler> make_uv(uv_loop_t* loop);
+    /**
+     * Creates a scheduler using UV as the event loop
+     * @param loop A UV loop to be used on the same thread as Realm.
+     * @return A realm::scheduler which wraps UV to power the event loop.
+     */
+    std::shared_ptr<scheduler> make_uv(uv_loop_t* loop);
 #endif
 
-        /**
-         * Register a factory function which can produce custom schedulers when
-         * `scheduler::make_default()` is called. This function is not thread-safe
-         * and must be called before any schedulers are created.
-         */
-        void set_default_factory(std::shared_ptr<scheduler> (*factory)());
+    /**
+     * Register a factory function which can produce custom schedulers when
+     * `scheduler::make_default()` is called. This function is not thread-safe
+     * and must be called before any schedulers are created.
+     */
+    void set_default_factory(std::shared_ptr<scheduler> (*factory)());
 
-        /**
-         * Create a new instance of the scheduler type returned by the default
-         * scheduler factory. By default, the factory function is
-         * `Scheduler::make_platform_default()`.
-         */
-        std::shared_ptr<scheduler> make_default();
-    }
+    /**
+     * Create a new instance of the scheduler type returned by the default
+     * scheduler factory. By default, the factory function is
+     * `Scheduler::make_platform_default()`.
+     */
+    std::shared_ptr<scheduler> make_default();
 } // namespace realm
 
 #endif//CPPREALM_DEFAULT_SCHEDULERS_HPP
