@@ -357,7 +357,7 @@ namespace realm {
                     auto assign = [&m, &v](auto& pair) {
                         (*v).*(std::decay_t<decltype(pair.first)>::ptr) = (m.*(pair.second)).detach();
                     };
-                    auto zipped = zipTuples(managed<Type>::schema.ps, managed<Type>::managed_pointers());
+                    auto zipped = internal::zip_tuples(managed<Type>::schema.ps, managed<Type>::managed_pointers());
 
                     std::apply([&v, &m, &assign](auto && ...pair) {
                         (assign(pair), ...);

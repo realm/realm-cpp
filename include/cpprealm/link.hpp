@@ -37,7 +37,7 @@ namespace realm {
             auto assign = [&m, &v](auto& pair) {
                 (*v).*(std::decay_t<decltype(pair.first)>::ptr) = (m.*(pair.second)).detach();
             };
-            auto zipped = zipTuples(managed<T>::schema.ps, managed<T>::managed_pointers());
+            auto zipped = internal::zip_tuples(managed<T>::schema.ps, managed<T>::managed_pointers());
             std::apply([&v, &m, &assign](auto && ...pair) {
                 (assign(pair), ...);
             }, zipped);
@@ -139,12 +139,6 @@ namespace realm {
                          obj, obj.get_table().get_column_key(p.name), realm, (*o).*(std::decay_t<decltype(p)>::ptr)
                                  ), ...);
             }, managed<T>::schema.ps);
-            auto m = managed<T>(std::move(obj), *m_realm);
-            std::apply([&m](auto && ...ptr) {
-                std::apply([&](auto&& ...name) {
-                    ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
-                }, managed<T>::managed_pointers_names);
-            }, managed<T>::managed_pointers());
             return *this;
         }
 

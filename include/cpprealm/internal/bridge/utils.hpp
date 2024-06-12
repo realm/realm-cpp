@@ -49,4 +49,17 @@ namespace realm::internal::bridge {
     };
 }
 
+namespace realm::internal {
+    template <typename... Ts, typename... Us, size_t... Is>
+    auto constexpr zip_tuples_impl(const std::tuple<Ts...>& tuple1, const std::tuple<Us...>& tuple2, std::index_sequence<Is...>) {
+        return std::make_tuple(std::make_pair(std::get<Is>(tuple1), std::get<Is>(tuple2))...);
+    }
+
+    template <typename... Ts, typename... Us>
+    auto constexpr zip_tuples(const std::tuple<Ts...>& tuple1, const std::tuple<Us...>& tuple2) {
+        static_assert(sizeof...(Ts) == sizeof...(Us), "Tuples must have the same size");
+        return zip_tuples_impl(tuple1, tuple2, std::index_sequence_for<Ts...>());
+    }
+}
+
 #endif //CPPREALM_BRIDGE_UTILS_HPP
