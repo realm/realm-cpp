@@ -1,3 +1,20 @@
+X.Y.Z Release notes (YYYY-MM-DD)
+=============================================================
+
+### Fixed
+* Fixed a compilation issue seen in MSBuild 17.10.4 due to usage of `std::apply`.
+
+### Enhancements
+* None
+
+### Compatibility
+* Fileformat: Generates files with format v24. Reads and automatically upgrade from fileformat v10.
+
+### Internals
+* None
+
+----------------------------------------------
+
 2.0.1 Release notes (2024-06-03)
 =============================================================
 

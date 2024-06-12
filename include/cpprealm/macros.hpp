@@ -366,17 +366,6 @@ namespace realm {
     struct managed;
 }
 
-template <typename... Ts, typename... Us, size_t... Is>
-auto zipTuplesHelper(const std::tuple<Ts...>& tuple1, const std::tuple<Us...>& tuple2, std::index_sequence<Is...>) {
-    return std::make_tuple(std::make_pair(std::get<Is>(tuple1), std::get<Is>(tuple2))...);
-}
-
-template <typename... Ts, typename... Us>
-auto zipTuples(const std::tuple<Ts...>& tuple1, const std::tuple<Us...>& tuple2) {
-    static_assert(sizeof...(Ts) == sizeof...(Us), "Tuples must have the same size");
-    return zipTuplesHelper(tuple1, tuple2, std::index_sequence_for<Ts...>());
-}
-
 #define __cpprealm_build_query(op, name, type) \
 rbool managed<type>::operator op(const type& rhs) const noexcept { \
     if (this->m_rbool_query) { \
@@ -414,117 +403,104 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         template <typename PtrType> static constexpr auto unmanaged_to_managed_pointer(PtrType ptr) {         \
            FOR_EACH(DECLARE_COND_UNMANAGED_TO_MANAGED, cls, __VA_ARGS__);  \
         } \
-        static constexpr auto managed_pointers_names = std::array<std::string_view, std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value>{FOR_EACH(DECLARE_MANAGED_PROPERTY_NAME, cls, __VA_ARGS__)}; \
-        static constexpr bool is_object = true;                            \
-        explicit managed(const internal::bridge::obj& obj,                 \
-                         internal::bridge::realm realm)                  \
-        : m_obj(std::move(obj))\
-        , m_realm(std::move(realm))       \
-        {     \
-            std::apply([&](auto && ...ptr) { \
-                std::apply([&](auto&& ..._name) { \
-                ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
-                }, managed_pointers_names); \
-            }, managed_pointers()); \
-        }                                                                                          \
-        managed(const managed& other) { \
-            m_obj = other.m_obj; \
-            m_realm = other.m_realm;                                                               \
-            m_rbool_query = other.m_rbool_query;                                     \
-            if (m_rbool_query) {                                                                                       \
-                auto schema = m_realm.schema().find(other.schema.name);                                  \
-                auto group = m_realm.read_group();                                                   \
-                auto table_ref = group.get_table(schema.table_key());                                  \
-                std::apply([&](auto &&...ptr) {                                                        \
-                    std::apply([&](auto &&..._name) {                                                   \
-                        ((*this.*ptr).prepare_for_query(&m_realm, table_ref, _name, m_rbool_query), ...);                \
-                    }, managed_pointers_names);                                                         \
-                }, managed_pointers());                                                                 \
-            } else {                                                                                      \
-                std::apply([&](auto &&...ptr) { \
-                    std::apply([&](auto &&..._name) { \
-                    ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
-                    }, managed_pointers_names); \
-                }, managed_pointers());                                                                \
-            }                                                                                       \
-        } \
-        managed& operator=(const managed& other) { \
-            m_obj = other.m_obj; \
-            m_realm = other.m_realm;                                                               \
-            m_rbool_query = other.m_rbool_query;                                     \
-             if (m_rbool_query) {                                                                                       \
-                 auto schema = m_realm.schema().find(other.schema.name);                                  \
-                 auto group = m_realm.read_group();                                                   \
-                 auto table_ref = group.get_table(schema.table_key());                                  \
-                 std::apply([&](auto &&...ptr) {                                                        \
-                     std::apply([&](auto &&..._name) {                                                   \
-                         ((*this.*ptr).prepare_for_query(&m_realm, table_ref, _name, m_rbool_query), ...);                \
-                     }, managed_pointers_names);                                                         \
-                 }, managed_pointers());                                                                 \
-             } else {                                                                                      \
-                 std::apply([&](auto &&...ptr) { \
-                     std::apply([&](auto &&..._name) { \
-                     ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
-                     }, managed_pointers_names); \
-                 }, managed_pointers());                                                                \
-             }                                                                                       \
-            return *this; \
-        } \
-        managed(managed&& other) { \
-            m_obj = std::move(other.m_obj); \
-            m_realm = std::move(other.m_realm);                                            \
-            m_rbool_query = std::move(other.m_rbool_query);                                     \
-             if (m_rbool_query) {                                                                                       \
-                 auto schema = m_realm.schema().find(other.schema.name);                                  \
-                 auto group = m_realm.read_group();                                                   \
-                 auto table_ref = group.get_table(schema.table_key());                                  \
-                 std::apply([&](auto &&...ptr) {                                                        \
-                     std::apply([&](auto &&..._name) {                                                   \
-                         ((*this.*ptr).prepare_for_query(&m_realm, table_ref, _name, m_rbool_query), ...);                \
-                     }, managed_pointers_names);                                                         \
-                 }, managed_pointers());                                                                 \
-             } else {                                                                                      \
-                 std::apply([&](auto &&...ptr) { \
-                     std::apply([&](auto &&..._name) { \
-                     ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
-                     }, managed_pointers_names); \
-                 }, managed_pointers());                                                                \
-             }                                                                                       \
-        } \
-        managed& operator=(managed&& other) { \
-            m_obj = std::move(other.m_obj); \
-            m_realm = std::move(other.m_realm);                                            \
-            m_rbool_query = std::move(other.m_rbool_query);                                     \
-            if (m_rbool_query) {                                                                                       \
-                auto schema = m_realm.schema().find(other.schema.name);                                  \
-                auto group = m_realm.read_group();                                                   \
-                auto table_ref = group.get_table(schema.table_key());                                  \
-                std::apply([&](auto &&...ptr) {                                                        \
-                   std::apply([&](auto &&..._name) {                                                   \
-                     ((*this.*ptr).prepare_for_query(&m_realm, table_ref, _name, m_rbool_query), ...);                \
-                   }, managed_pointers_names);                                                         \
-                }, managed_pointers());                                                                 \
-                } else {                                                                                      \
-                   std::apply([&](auto &&...ptr) { \
-                        std::apply([&](auto &&..._name) { \
-                        ((*this.*ptr).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(_name)), ...); \
-                    }, managed_pointers_names); \
-                }, managed_pointers());                                                                \
-            }  \
-             return *this;\
-        }                                                                                          \
-        static managed prepare_for_query(const internal::bridge::realm& r, realm::rbool* q) {                       \
-            managed<cls> m;                                                                        \
-            m.m_realm = r;                                                                 \
-            m.m_rbool_query = q;                                                                               \
-            auto schema = m.m_realm.schema().find(m.schema.name);                                  \
-            auto group = m.m_realm.read_group();                                                   \
-            auto table_ref = group.get_table(schema.table_key());                                  \
-            std::apply([&](auto && ...ptr) {                                                        \
-                std::apply([&](auto&& ..._name) {                                                   \
-                    ((m.*ptr).prepare_for_query(&m.m_realm, table_ref, _name, m.m_rbool_query), ...);                \
-                }, managed_pointers_names);                                                         \
-            }, managed_pointers());                                                                 \
+        static constexpr auto managed_pointers_names_todo() { return std::tuple{FOR_EACH(DECLARE_MANAGED_PROPERTY_NAME, cls, __VA_ARGS__)}; }   \
+                                                                                                                \
+        static constexpr bool is_object = true;                                                                 \
+        explicit managed(const internal::bridge::obj& obj,                                                      \
+                         internal::bridge::realm realm)                                                         \
+        : m_obj(std::move(obj))                                                                                 \
+        , m_realm(std::move(realm))                                                                             \
+        {                                                                                                       \
+            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names_todo());              \
+            std::apply([&](auto& ...pair) {                                                                     \
+                ((*this.*pair.first).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(pair.second)), ...); \
+            }, zipped);                                                                                         \
+        }                                                                                                       \
+        managed(const managed& other) {                                                                         \
+            m_obj = other.m_obj;                                                                                \
+            m_realm = other.m_realm;                                                                            \
+            m_rbool_query = other.m_rbool_query;                                                                \
+            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names_todo());              \
+            if (m_rbool_query) {                                                                                \
+                auto schema = m_realm.schema().find(other.schema.name);                                         \
+                auto group = m_realm.read_group();                                                              \
+                auto table_ref = group.get_table(schema.table_key());                                           \
+                std::apply([&](auto& ...pair) {                                                                 \
+                    ((*this.*pair.first).prepare_for_query(&m_realm, table_ref, pair.second, m_rbool_query), ...);  \
+                }, zipped);                                                                                     \
+            } else {                                                                                            \
+                std::apply([&](auto& ...pair) {                                                                 \
+                    ((*this.*pair.first).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(pair.second)), ...); \
+                }, zipped);                                                                                     \
+            }                                                                                                   \
+        }                                                                                                       \
+        managed& operator=(const managed& other) {                                                              \
+            m_obj = other.m_obj;                                                                                \
+            m_realm = other.m_realm;                                                                            \
+            m_rbool_query = other.m_rbool_query;                                                                \
+            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names_todo());              \
+            if (m_rbool_query) {                                                                                \
+                auto schema = m_realm.schema().find(other.schema.name);                                         \
+                auto group = m_realm.read_group();                                                              \
+                auto table_ref = group.get_table(schema.table_key());                                           \
+                std::apply([&](auto& ...pair) {                                                                 \
+                    ((*this.*pair.first).prepare_for_query(&m_realm, table_ref, pair.second, m_rbool_query), ...);  \
+                }, zipped);                                                                                     \
+            } else {                                                                                            \
+                std::apply([&](auto& ...pair) {                                                                 \
+                    ((*this.*pair.first).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(pair.second)), ...); \
+                }, zipped);                                                                                     \
+            }                                                                                                   \
+            return *this;                                                                                       \
+        }                                                                                                       \
+        managed(managed&& other) {                                                                              \
+            m_obj = std::move(other.m_obj);                                                                     \
+            m_realm = std::move(other.m_realm);                                                                 \
+            m_rbool_query = std::move(other.m_rbool_query);                                                     \
+            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names_todo());              \
+            if (m_rbool_query) {                                                                                \
+                auto schema = m_realm.schema().find(other.schema.name);                                         \
+                auto group = m_realm.read_group();                                                              \
+                auto table_ref = group.get_table(schema.table_key());                                           \
+                std::apply([&](auto& ...pair) {                                                                 \
+                    ((*this.*pair.first).prepare_for_query(&m_realm, table_ref, pair.second, m_rbool_query), ...);  \
+                }, zipped);                                                                                     \
+             } else {                                                                                           \
+                std::apply([&](auto& ...pair) {                                                                 \
+                    ((*this.*pair.first).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(pair.second)), ...); \
+                }, zipped);                                                                                     \
+             }                                                                                                  \
+        }                                                                                                       \
+        managed& operator=(managed&& other) {                                                                   \
+            m_obj = std::move(other.m_obj);                                                                     \
+            m_realm = std::move(other.m_realm);                                                                 \
+            m_rbool_query = std::move(other.m_rbool_query);                                                     \
+            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names_todo());              \
+            if (m_rbool_query) {                                                                                \
+                auto schema = m_realm.schema().find(other.schema.name);                                         \
+                auto group = m_realm.read_group();                                                              \
+                auto table_ref = group.get_table(schema.table_key());                                           \
+                std::apply([&](auto& ...pair) {                                                                 \
+                    ((*this.*pair.first).prepare_for_query(&m_realm, table_ref, pair.second, m_rbool_query), ...);  \
+                }, zipped);                                                                                     \
+            } else {                                                                                            \
+                std::apply([&](auto& ...pair) {                                                                 \
+                    ((*this.*pair.first).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(pair.second)), ...); \
+                }, zipped);                                                                                     \
+            }                                                                                                   \
+            return *this;                                                                                       \
+        }                                                                                                       \
+        static managed prepare_for_query(const internal::bridge::realm& r, realm::rbool* q) {                   \
+            managed<cls> m;                                                                                     \
+            m.m_realm = r;                                                                                      \
+            m.m_rbool_query = q;                                                                                \
+            auto schema = m.m_realm.schema().find(m.schema.name);                                               \
+            auto group = m.m_realm.read_group();                                                                \
+            auto table_ref = group.get_table(schema.table_key());                                               \
+            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names_todo());              \
+            std::apply([&m, &table_ref](auto& ...pair) {                                                        \
+                ((m.*pair.first).prepare_for_query(&m.m_realm, table_ref, pair.second, m.m_rbool_query), ...);  \
+            }, zipped);                                                                             \
             return m;                                                                               \
         }                                                                                           \
         cls detach() const {                                                                        \
@@ -532,89 +508,86 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
             auto assign = [&v, this](auto& pair) {                                                  \
                 v.*(std::decay_t<decltype(pair.first)>::ptr) = ((*this).*(pair.second)).detach();   \
             };                                                                                      \
-            auto zipped = zipTuples(managed<cls>::schema.ps, managed<cls>::managed_pointers());     \
-            std::apply([&assign](auto& ...pair) {                                       \
+            auto zipped = internal::zip_tuples(managed<cls>::schema.ps, managed<cls>::managed_pointers()); \
+            std::apply([&assign](auto& ...pair) {                                                   \
                 (assign(pair), ...);                                                                \
             }, zipped);                                                                             \
             return v;                                                                               \
         }                                                                                           \
-        auto observe(std::function<void(realm::object_change<managed>&&)>&& fn) { \
+        auto observe(std::function<void(realm::object_change<managed>&&)>&& fn) {                   \
             auto m_object = std::make_shared<internal::bridge::object>(m_realm, m_obj);             \
-            auto wrapper = realm::object_change_callback_wrapper<managed>{ \
-            std::move(fn), this, m_object}; \
-            return m_object->add_notification_callback( \
-            std::make_shared<realm::object_change_callback_wrapper<managed>>(wrapper));            \
-        }                                                                                          \
+            auto wrapper = realm::object_change_callback_wrapper<managed>{                          \
+            std::move(fn), this, m_object};                                                         \
+            return m_object->add_notification_callback(                                             \
+            std::make_shared<realm::object_change_callback_wrapper<managed>>(wrapper));             \
+        }                                                                                           \
         bool is_invalidated() {                                                                     \
-            return !m_obj.is_valid();                                                              \
-        }                                                                                          \
-        bool is_frozen() {                                                                     \
-            return m_realm.is_frozen();                                                              \
-        }                                                                                          \
-        managed<cls> freeze() {                                                                    \
-            auto realm = m_realm.freeze();                                                         \
-            return managed<cls>(realm.import_copy_of(m_obj), realm);                               \
-        }                                                                                          \
-        managed<cls> thaw() {                                                                      \
-            if (is_invalidated()) {                                                                \
-                throw std::runtime_error("Invalid objects cannot be thawed.");                     \
-            }                                                                                      \
-            if (!is_frozen()) {                                                                    \
-                return *this;                                                                      \
-            }                                                                                      \
-            auto thawed_realm = m_realm.thaw();                                                    \
-            return managed<cls>(thawed_realm.import_copy_of(m_obj), thawed_realm);                 \
-        }                                                                                          \
-        db get_realm() {                                                                           \
-            return db(m_realm);                                                                    \
-        }                                                                                          \
-        bool operator ==(const managed<cls>& other) const {                                        \
-            auto& a = m_obj; \
-            auto& b = other.m_obj; \
-            \
-            if (m_realm != other.m_realm) { \
-                return false; \
-            } \
-            return a.get_table() == b.get_table() \
-                   && a.get_key() == b.get_key(); \
-        }                      \
-        bool operator ==(const managed<cls*>& other) const {   \
-            auto& a = m_obj; \
-            auto& b = other.m_obj; \
-            \
-            if (m_realm != other->m_realm) { \
-                return false; \
-            } \
-    \
-            return a.get_table() == b->get_table() \
-                   && a.get_key() == b->get_key(); \
-        }                                                                                          \
-        bool operator !=(const managed<cls>& other) const {                                        \
-           return !this->operator ==(other);                                                       \
-        }                                                                                          \
-        bool operator !=(const managed<cls*>& other) const {                                       \
-            return !this->operator ==(other);                                                      \
-        }                                                                                          \
-        bool operator < (const managed<cls>& rhs) const {                                          \
-            return m_obj.get_key() < rhs.m_obj.get_key();                                          \
-        }                                                                                          \
-    private:                                                                                       \
-        internal::bridge::obj m_obj;                                                               \
-        internal::bridge::realm m_realm;                                                           \
-        rbool* m_rbool_query = nullptr;                                                       \
-        friend struct db;                                                                          \
-        template <typename, typename> friend struct managed;                                       \
-        template <typename, typename> friend struct box;                                           \
-        template <typename> friend struct ::realm::thread_safe_reference;                \
-    };                                                                                             \
-    struct meta_schema_##cls {   \
-        meta_schema_##cls() {                                                    \
-            auto s = managed<cls>::schema.to_core_schema();                      \
-            auto it = std::find(std::begin(realm::db::schemas), std::end(realm::db::schemas), s);                                  \
-            if (it == std::end(realm::db::schemas))                                                                     \
-                realm::db::schemas.push_back(s);       \
-        }                     \
-    }; \
+            return !m_obj.is_valid();                                                               \
+        }                                                                                           \
+        bool is_frozen() {                                                                          \
+            return m_realm.is_frozen();                                                             \
+        }                                                                                           \
+        managed<cls> freeze() {                                                                     \
+            auto realm = m_realm.freeze();                                                          \
+            return managed<cls>(realm.import_copy_of(m_obj), realm);                                \
+        }                                                                                           \
+        managed<cls> thaw() {                                                                       \
+            if (is_invalidated()) {                                                                 \
+                throw std::runtime_error("Invalid objects cannot be thawed.");                      \
+            }                                                                                       \
+            if (!is_frozen()) {                                                                     \
+                return *this;                                                                       \
+            }                                                                                       \
+            auto thawed_realm = m_realm.thaw();                                                     \
+            return managed<cls>(thawed_realm.import_copy_of(m_obj), thawed_realm);                  \
+        }                                                                                           \
+        db get_realm() {                                                                            \
+            return db(m_realm);                                                                     \
+        }                                                                                           \
+        bool operator ==(const managed<cls>& other) const {                                         \
+            auto& a = m_obj;                                                                        \
+            auto& b = other.m_obj;                                                                  \
+            if (m_realm != other.m_realm) {                                                         \
+                return false;                                                                       \
+            }                                                                                       \
+            return a.get_table() == b.get_table()                                                   \
+                   && a.get_key() == b.get_key();                                                   \
+        }                                                                                           \
+        bool operator ==(const managed<cls*>& other) const {                                        \
+            auto& a = m_obj;                                                                        \
+            auto& b = other.m_obj;                                                                  \
+            if (m_realm != other->m_realm) {                                                        \
+                return false;                                                                       \
+            }                                                                                       \
+            return a.get_table() == b->get_table()                                                  \
+                   && a.get_key() == b->get_key();                                                  \
+        }                                                                                           \
+        bool operator !=(const managed<cls>& other) const {                                         \
+           return !this->operator ==(other);                                                        \
+        }                                                                                           \
+        bool operator !=(const managed<cls*>& other) const {                                        \
+            return !this->operator ==(other);                                                       \
+        }                                                                                           \
+        bool operator < (const managed<cls>& rhs) const {                                           \
+            return m_obj.get_key() < rhs.m_obj.get_key();                                           \
+        }                                                                                           \
+    private:                                                                                        \
+        internal::bridge::obj m_obj;                                                                \
+        internal::bridge::realm m_realm;                                                            \
+        rbool* m_rbool_query = nullptr;                                                             \
+        friend struct db;                                                                           \
+        template <typename, typename> friend struct managed;                                        \
+        template <typename, typename> friend struct box;                                            \
+        template <typename> friend struct ::realm::thread_safe_reference;                           \
+    };                                                                                              \
+    struct meta_schema_##cls {                                                                      \
+        meta_schema_##cls() {                                                                       \
+            auto s = managed<cls>::schema.to_core_schema();                                         \
+            auto it = std::find(std::begin(realm::db::schemas), std::end(realm::db::schemas), s);   \
+            if (it == std::end(realm::db::schemas))                                                 \
+                realm::db::schemas.push_back(s);                                                    \
+        }                                                                                           \
+    };                                                                                              \
     static inline meta_schema_##cls _meta_schema_##cls{};
 
 #endif //CPPREALM_MACROS_HPP

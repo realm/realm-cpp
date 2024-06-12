@@ -106,13 +106,7 @@ namespace realm {
                         m_obj, m_obj.get_table().get_column_key(p.name), m_realm, v.*(std::decay_t<decltype(p)>::ptr)
                 ), ...);
             }, managed<T>::schema.ps);
-            auto m = managed<T>(std::move(m_obj), m_realm);
-            std::apply([&m](auto && ...ptr) {
-                std::apply([&](auto&& ...name) {
-                    ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
-                }, managed<T>::managed_pointers_names);
-            }, managed<T>::managed_pointers());
-            return m;
+            return managed<T>(std::move(m_obj), m_realm);
         }
         template <typename T>
         void remove(T& object)
@@ -178,13 +172,7 @@ namespace realm {
         {
             auto object = internal::bridge::resolve<internal::bridge::object>(m_realm, std::move(tsr.m_tsr));
             internal::bridge::obj m_obj = object.get_obj();
-            auto m = managed<T>(std::move(m_obj), m_realm);
-            std::apply([&m](auto && ...ptr) {
-                std::apply([&](auto&& ...name) {
-                    ((m.*ptr).assign(&m.m_obj, &m.m_realm, m.m_obj.get_table().get_column_key(name)), ...);
-                }, managed<T>::managed_pointers_names);
-            }, managed<T>::managed_pointers());
-            return m;
+            return managed<T>(std::move(m_obj), m_realm);
         }
 
         bool is_frozen() const;
