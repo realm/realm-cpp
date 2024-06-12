@@ -8,7 +8,7 @@
 #endif
 
 namespace realm::default_scheduler {
-    std::shared_ptr<scheduler> (*s_factory)() = make_platform_default;
+    std::function<std::shared_ptr<scheduler>()> s_factory = make_platform_default;
 
     std::shared_ptr<scheduler> make_platform_default() {
 #if REALM_PLATFORM_APPLE || REALM_ANDROID && !defined(REALM_AOSP_VENDOR)
@@ -20,8 +20,8 @@ namespace realm::default_scheduler {
 #endif
     }
 
-    void set_default_factory(std::shared_ptr<scheduler> (*factory)()) {
-        s_factory = std::move(factory);
+    void set_default_factory(std::function<std::shared_ptr<scheduler>()>&& factory_fn) {
+        s_factory = std::move(factory_fn);
     }
 
     /**

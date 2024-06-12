@@ -54,7 +54,7 @@ namespace realm::default_scheduler {
      * `scheduler::make_default()` is called. This function is not thread-safe
      * and must be called before any schedulers are created.
      */
-    void set_default_factory(std::shared_ptr<scheduler> (*factory)());
+    void set_default_factory(std::function<std::shared_ptr<scheduler>()>&& factory_fn);
 
     /**
      * Create a new instance of the scheduler type returned by the default

@@ -333,6 +333,10 @@ namespace realm::internal::bridge {
         return get_config()->sync_config;
     }
 
+    struct std::shared_ptr<scheduler> realm::config::scheduler() const {
+        return std::make_shared<realm_core_scheduler>(realm_core_scheduler(get_config()->scheduler));
+    }
+
     struct std::shared_ptr<scheduler> realm::scheduler() const {
         return std::make_shared<realm_core_scheduler>(realm_core_scheduler(m_realm->scheduler()));
     }

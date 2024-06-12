@@ -5,7 +5,10 @@ X.Y.Z Release notes (YYYY-MM-DD)
 * Fixed a compilation issue seen in MSBuild 17.10.4 due to usage of `std::apply`.
 
 ### Enhancements
-* None
+* Add `realm::default_scheduler::set_default_factory(std::function<std::shared_ptr<realm::scheduler>()>&& factory_fn)` for generating a default scheduler. 
+  Set your scheduler factory before instantiating a `realm::db_config`.
+* Add `realm::default_scheduler::make_uv(uv_loop_t* loop);` which generates a scheduler powered by libuv with a user defined `uv_loop_t`.
+* Add `realm::default_scheduler::make_default()` which generates a platform default scheduler if `realm::default_scheduler::set_default_factory` is not set.
 
 ### Compatibility
 * Fileformat: Generates files with format v24. Reads and automatically upgrade from fileformat v10.

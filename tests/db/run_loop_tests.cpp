@@ -136,17 +136,20 @@ TEST_CASE("user defined uv_loop", "[scheduler]") {
         v2.wait(lock2, [&] { return signal2; });
     }
 
-    SECTION("main thread", "[run loops]") {
+    SECTION("main thread", "[scheduler]") {
         realm::notification_token t1;
         realm::notification_token t2;
 
         bool signal = false;
 
         auto loop = uv_loop_new();
+        auto scheduler = realm::default_scheduler::make_uv(loop);
         auto obj = realm::AllTypesObject();
-        auto config = realm::db_config(path, realm::default_scheduler::make_uv(loop));
+        auto config = realm::db_config();
+        config.set_path(path);
+        config.set_scheduler(scheduler);
+        auto realm = realm::db(config);
 
-        auto realm = realm::db(std::move(config));
         auto managed_obj = realm.write([&realm, &obj] {
             return realm.add(std::move(obj));
         });
@@ -165,6 +168,18 @@ TEST_CASE("user defined uv_loop", "[scheduler]") {
         });
 
         t1.unregister();
+        uv_loop_close(loop);
+        free(loop);
+    }
+
+    SECTION("set default factory", "[scheduler]") {
+        auto loop = uv_loop_new();
+        auto scheduler = realm::default_scheduler::make_uv(loop);
+
+        realm::default_scheduler::set_default_factory([&]() { return scheduler; });
+        auto default_scheduler = realm::default_scheduler::make_default();
+        CHECK(scheduler->is_same_as(default_scheduler.get()));
+
         uv_loop_close(loop);
         free(loop);
     }

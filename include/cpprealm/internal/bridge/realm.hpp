@@ -187,7 +187,7 @@ namespace realm::internal::bridge {
                    const std::shared_ptr<struct scheduler>& scheduler);
             [[nodiscard]] std::string path() const;
             [[nodiscard]] struct sync_config sync_config() const;
-            [[nodiscard]] std::shared_ptr<struct scheduler> scheduler();
+            [[nodiscard]] std::shared_ptr<struct scheduler> scheduler() const;
             operator RealmConfig() const; //NOLINT(google-explicit-constructor)
             void set_path(const std::string&);
             void set_schema(const std::vector<object_schema>&);

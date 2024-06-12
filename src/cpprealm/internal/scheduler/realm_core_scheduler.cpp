@@ -14,7 +14,6 @@ namespace realm::internal {
     bool realm_core_scheduler::is_same_as(const scheduler *other) const noexcept {
         if (auto o = dynamic_cast<const realm_core_scheduler *>(other)) {
             return o->s->is_same_as(this->s.get());
-            ;
         }
         return false;
     }

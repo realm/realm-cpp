@@ -271,7 +271,6 @@ namespace realm {
 #define DECLARE_MANAGED_PROPERTY_NAME(cls, p) #p,
 #define DECLARE_COND_UNMANAGED_TO_MANAGED(cls, p) if constexpr (std::is_same_v<decltype(ptr), decltype(&cls::p)>) { return &managed<cls>::p; }
 
-#include <tuple>
 #include <utility>
 
 #include <cpprealm/internal/bridge/col_key.hpp>
