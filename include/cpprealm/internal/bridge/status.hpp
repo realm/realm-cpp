@@ -61,7 +61,7 @@ namespace realm::internal::bridge {
     };
 
     struct status {
-
+        static status ok();
         status(const ::realm::Status&);
         status(::realm::Status&&);
         status(const status&);

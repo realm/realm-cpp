@@ -24,6 +24,10 @@ namespace realm::internal::bridge {
         return reinterpret_cast<const ErrorCategory*>(&m_error_category)->value();
     }
 
+    status status::ok() {
+        return ::realm::Status::OK();
+    }
+
     status::status(const ::realm::Status& other) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_status) Status(other);

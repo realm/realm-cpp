@@ -225,7 +225,7 @@ namespace realm::networking {
         static std::optional<internal::bridge::realm::sync_config::proxy_config> proxy_config;
 
         static std::shared_ptr<http_transport_client> make_default_http_client();
-        static void set_http_client_factory(std::shared_ptr<http_transport_client> (*factory)());
+        static void set_http_client_factory(std::function<std::shared_ptr<http_transport_client>()>&&);
     };
 }
 
@@ -236,6 +236,9 @@ namespace realm::internal::networking {
                                                                                           const std::shared_ptr<::realm::networking::websocket_event_handler>&);
 
     std::shared_ptr<app::GenericNetworkTransport> create_http_client_shim(const std::shared_ptr<::realm::networking::http_transport_client>&);
+
+    std::unique_ptr<::realm::sync::SyncSocketProvider> create_sync_socket_provider_shim(const std::shared_ptr<::realm::networking::sync_socket_provider>& provider,
+                                                                                        const std::shared_ptr<::realm::networking::websocket_event_handler>& handler);
 }
 
 #endif//CPPREALM_PLATFORM_NETWORKING_HPP

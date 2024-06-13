@@ -500,6 +500,9 @@ namespace realm {
                                                                                                           config.websocket_event_handler);
             client_config.socket_provider = websocket_provider;
         }
+        if (config.sync_socket_provider) {
+            client_config.socket_provider = ::realm::internal::networking::create_sync_socket_provider_shim(config.sync_socket_provider, config.websocket_event_handler);
+        }
 
         networking::http_client_factory::custom_http_headers = config.custom_http_headers;
         networking::http_client_factory::proxy_config = config.proxy_configuration;

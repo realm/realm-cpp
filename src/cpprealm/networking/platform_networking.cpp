@@ -5,7 +5,7 @@
 #include <realm/util/platform_info.hpp>
 
 namespace realm::networking {
-    std::shared_ptr<http_transport_client> (*s_http_client_factory)() = http_client_factory::make_default_http_client;
+    std::function<std::shared_ptr<http_transport_client>()> s_http_client_factory = http_client_factory::make_default_http_client;
     std::optional<std::map<std::string, std::string>> http_client_factory::custom_http_headers = std::nullopt;
     std::optional<internal::bridge::realm::sync_config::proxy_config> http_client_factory::proxy_config = std::nullopt;
 
@@ -13,8 +13,8 @@ namespace realm::networking {
         return std::make_shared<internal::networking::DefaultTransport>(custom_http_headers, proxy_config);
     }
 
-    void http_client_factory::set_http_client_factory(std::shared_ptr<http_transport_client> (*factory)()) {
-        s_http_client_factory = std::move(factory);
+    void http_client_factory::set_http_client_factory(std::function<std::shared_ptr<http_transport_client>()>&& factory_fn) {
+        s_http_client_factory = std::move(factory_fn);
     }
 }
 
@@ -139,7 +139,7 @@ namespace realm::internal::networking {
         return std::make_unique<core_websocket_observer_shim>(std::move(m_observer));
     }
 
-    std::unique_ptr<::realm::sync::SyncSocketProvider> create_sync_socket_provider_shim(std::unique_ptr<::realm::networking::sync_socket_provider>&& provider,
+    std::unique_ptr<::realm::sync::SyncSocketProvider> create_sync_socket_provider_shim(const std::shared_ptr<::realm::networking::sync_socket_provider>& provider,
                                                                                         const std::shared_ptr<::realm::networking::websocket_event_handler>& handler) {
 
         struct sync_timer_shim final : public ::realm::sync::SyncSocketProvider::Timer {
@@ -155,9 +155,9 @@ namespace realm::internal::networking {
         };
 
         struct sync_socket_provider_shim final : public ::realm::sync::SyncSocketProvider {
-            explicit sync_socket_provider_shim(std::unique_ptr<::realm::networking::sync_socket_provider>&& provider,
+            explicit sync_socket_provider_shim(const std::shared_ptr<::realm::networking::sync_socket_provider>& provider,
                                                const std::shared_ptr<::realm::networking::websocket_event_handler>& handler) {
-                m_provider = std::move(provider);
+                m_provider = provider;
                 m_websocket_event_handler = handler;
             }
 
@@ -191,7 +191,7 @@ namespace realm::internal::networking {
             }
         private:
             std::shared_ptr<::realm::networking::websocket_event_handler> m_websocket_event_handler;
-            std::unique_ptr<::realm::networking::sync_socket_provider> m_provider;
+            std::shared_ptr<::realm::networking::sync_socket_provider> m_provider;
         };
 
         return std::make_unique<sync_socket_provider_shim>(std::move(provider), handler);
