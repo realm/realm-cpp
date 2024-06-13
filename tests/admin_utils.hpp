@@ -113,6 +113,7 @@ namespace Admin {
         void enable_sync();
         void disable_sync();
         void refresh_access_token();
+        void trigger_client_reset(int64_t file_ident) const;
 
         static Session& shared() {
             std::lock_guard<std::mutex> lock(mutex);

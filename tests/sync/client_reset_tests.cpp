@@ -34,9 +34,11 @@ void prepare_realm(const realm::db_config& flx_sync_config, const user& sync_use
     CHECK(synced_realm.subscriptions().size() == 1);
     sync_user.call_function("insertClientResetObject", bsoncxx::array()).get();
 
-    auto session = synced_realm.get_sync_session()->operator std::weak_ptr<::realm::SyncSession>().lock().get();
-    session->pause();
-    Admin::Session::shared().disable_sync();
+    auto sync_session = synced_realm.get_sync_session()->operator std::weak_ptr<::realm::SyncSession>().lock().get();
+    auto file_ident = sync_session->get_file_ident();
+    sync_session->pause();
+
+    Admin::Session::shared().trigger_client_reset(file_ident.ident);
     // Add an object to the local realm that won't be synced due to the suspend
     synced_realm.write([&synced_realm]() {
         client_reset_obj o;
@@ -45,7 +47,7 @@ void prepare_realm(const realm::db_config& flx_sync_config, const user& sync_use
         synced_realm.add(std::move(o));
     });
     synced_realm.refresh();
-    Admin::Session::shared().enable_sync();
+    sync_session->resume();
 };
 
 TEST_CASE("client_reset", "[sync]") {
@@ -106,17 +108,18 @@ TEST_CASE("client_reset", "[sync]") {
             p.set_value();
         });
 
-        auto session = synced_realm.get_sync_session()->operator std::weak_ptr<::realm::SyncSession>().lock().get();
-        session->pause();
-        Admin::Session::shared().disable_sync();
+        auto sync_session = synced_realm.get_sync_session()->operator std::weak_ptr<::realm::SyncSession>().lock().get();
+        auto file_ident = sync_session->get_file_ident();
+        sync_session->pause();
+
+        Admin::Session::shared().trigger_client_reset(file_ident.ident);
         synced_realm.write([&synced_realm]() {
             client_reset_obj o;
             o._id = 2;
             o.str_col = "local only";
             synced_realm.add(std::move(o));
         });
-        Admin::Session::shared().enable_sync();
-        session->resume();
+        sync_session->resume();
         CHECK(flx_sync_config.get_client_reset_mode() == realm::client_reset_mode::manual);
         CHECK(f.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
     }
@@ -147,8 +150,7 @@ TEST_CASE("client_reset", "[sync]") {
 
             auto results_remote = remote.objects<client_reset_obj>();
             CHECK(!remote.is_frozen());
-            CHECK(results_remote[0].str_col == "remote obj");
-            CHECK(results_remote.size() == 1);
+            CHECK(results_remote.size() == 0);
             after_handler_promise.set_value();
         };
 
@@ -188,7 +190,7 @@ TEST_CASE("client_reset", "[sync]") {
             CHECK(local.is_frozen());
 
             auto results_remote = remote.objects<client_reset_obj>();
-            CHECK(results_remote.size() == 2);
+            CHECK(results_remote.size() == 1);
             after_handler_promise.set_value();
         };
 
@@ -229,7 +231,7 @@ TEST_CASE("client_reset", "[sync]") {
             CHECK(local.is_frozen());
 
             auto results_remote = remote.objects<client_reset_obj>();
-            CHECK(results_remote.size() == 2);
+            CHECK(results_remote.size() == 1);
             after_handler_promise.set_value();
         };
 
