@@ -8,13 +8,17 @@
 #endif
 
 namespace realm::default_scheduler {
+#if defined(REALM_HAVE_UV) && REALM_HAVE_UV
+    std::shared_ptr<scheduler> make_uv();
+#endif
+
     std::function<std::shared_ptr<scheduler>()> s_factory = make_platform_default;
 
     std::shared_ptr<scheduler> make_platform_default() {
 #if REALM_PLATFORM_APPLE || REALM_ANDROID && !defined(REALM_AOSP_VENDOR)
         return std::make_shared<internal::realm_core_scheduler>(util::Scheduler::make_platform_default());
 #elif defined(REALM_HAVE_UV) && REALM_HAVE_UV
-        return make_uv(uv_default_loop());
+        return make_uv();
 #else
         return std::make_shared<realm_core_scheduler>(util::Scheduler::make_generic());
 #endif
@@ -24,11 +28,6 @@ namespace realm::default_scheduler {
         s_factory = std::move(factory_fn);
     }
 
-    /**
-     * Create a new instance of the scheduler type returned by the default
-     * scheduler factory. By default, the factory function is
-     * `Scheduler::make_platform_default()`.
-     */
     std::shared_ptr<scheduler> make_default()
     {
         return s_factory();
@@ -65,9 +64,9 @@ namespace realm::default_scheduler {
 
     class uv_scheduler final : public realm::scheduler {
     public:
-        uv_scheduler(uv_loop_t* loop = uv_default_loop())
+        uv_scheduler()
             : m_handle(std::make_unique<uv_async_t>()) {
-            int err = uv_async_init(loop, m_handle.get(), [](uv_async_t *handle) {
+            int err = uv_async_init(uv_default_loop(), m_handle.get(), [](uv_async_t *handle) {
                 if (!handle->data) {
                     return;
                 }
@@ -122,8 +121,8 @@ namespace realm::default_scheduler {
         std::thread::id m_id = std::this_thread::get_id();
     };
 
-    std::shared_ptr<scheduler> make_uv(uv_loop_t* loop) {
-        return std::make_shared<uv_scheduler>(loop);
+    std::shared_ptr<scheduler> make_uv() {
+        return std::make_shared<uv_scheduler>();
     }
 #endif
 

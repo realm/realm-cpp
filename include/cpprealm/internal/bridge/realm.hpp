@@ -177,8 +177,8 @@ namespace realm::internal::bridge {
                 manual
             };
             config();
-            config(const config& other) ;
-            config& operator=(const config& other) ;
+            config(const config& other);
+            config& operator=(const config& other);
             config(config&& other);
             config& operator=(config&& other);
             ~config();

@@ -40,15 +40,6 @@ namespace realm::default_scheduler {
      */
     std::shared_ptr<scheduler> make_platform_default();
 
-#if defined(REALM_HAVE_UV) && REALM_HAVE_UV
-    /**
-     * Creates a scheduler using UV as the event loop
-     * @param loop A UV loop to be used on the same thread as Realm.
-     * @return A realm::scheduler which wraps UV to power the event loop.
-     */
-    std::shared_ptr<scheduler> make_uv(uv_loop_t* loop);
-#endif
-
     /**
      * Register a factory function which can produce custom schedulers when
      * `scheduler::make_default()` is called. This function is not thread-safe
@@ -59,7 +50,7 @@ namespace realm::default_scheduler {
     /**
      * Create a new instance of the scheduler type returned by the default
      * scheduler factory. By default, the factory function is
-     * `Scheduler::make_platform_default()`.
+     * `scheduler::make_platform_default()`.
      */
     std::shared_ptr<scheduler> make_default();
 } // namespace realm
