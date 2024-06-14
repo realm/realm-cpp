@@ -31,7 +31,7 @@ jobs:
 
   build-macos:
     runs-on: macos-14
-    name: macOS ${{ matrix.configuration }}, Xcode ${{ matrix.xcode }})
+    name: macOS ${{ matrix.configuration }}, Xcode ${{ matrix.xcode }}
     strategy:
       fail-fast: false
       matrix:
@@ -40,8 +40,6 @@ jobs:
         configuration:
           - Debug
           - Release
-        exclude:
-          - configuration: ${{ (github.event_name == 'pull_request' && 'Release') || 'none' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
