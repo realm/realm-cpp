@@ -224,14 +224,45 @@ namespace app {
 
 class App {
 public:
+    /**
+     * Properties representing the configuration of a client
+     * that communicate with a particular Realm application.
+     *
+     * `App::configuration` options cannot be modified once the `App` using it
+     *  is created. App's configuration values are cached when the App is created so any modifications after it
+     *  will not have any effect.
+     */
     struct configuration {
+        /// The App ID for your Atlas Device Sync Application.
         std::string app_id;
+        /// A custom base URL to request against. If not set or set to nil, the default base url for app services will be returned.
         std::optional<std::string> base_url;
+        /// Custom location for Realm files.
         std::optional<std::string> path;
+        // Extra HTTP headers to be set on each request to Atlas Device Sync when using the internal HTTP client.
         std::optional<std::map<std::string, std::string>> custom_http_headers;
+        // Custom encryption key for the metadata Realm.
         std::optional<std::array<char, 64>> metadata_encryption_key;
+        // HTTP proxy configuration to be set on each HTTP request when using the internal HTTP client.
         std::optional<sync_config::proxy_config> proxy_configuration;
+        /**
+         * Sets a callback that will be used to configure outgoing WebSocket connections to Atlas Device Sync.
+         * You can use this to modify the default WebSocket behavior. Normally this is not required to connect to MongoDB Atlas,
+         * but it can be useful if client devices are behind a corporate firewall or use a more complex networking setup.
+         */
         std::shared_ptr<::realm::networking::websocket_event_handler> websocket_event_handler;
+        /**
+         * Optionally provide a custom transport for network calls to the server.
+         *
+         * Alternatively use `realm::networking::set_http_client_factory` to globally set
+         * the default HTTP transport client.
+         */
+        std::shared_ptr<::realm::networking::http_transport_client> http_transport_client;
+        /**
+         * Optionally provide a custom WebSocket interface for sync.
+         * Alternatively use `realm::networking::set_http_client_factory` to globally set
+         * the default HTTP transport client.
+         */
         std::shared_ptr<::realm::networking::sync_socket_provider> sync_socket_provider;
     };
 

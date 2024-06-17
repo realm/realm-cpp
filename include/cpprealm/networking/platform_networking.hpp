@@ -41,6 +41,15 @@ namespace realm {
 
 namespace realm::networking {
 
+    /**
+     * Class used for setting a callback which is used
+     * to pass network configuration options to the sync_socket_provider
+     * before the websocket establishes a connection.
+     */
+    struct websocket_event_handler {
+        std::function<websocket_endpoint(websocket_endpoint&&)> on_connect;
+    };
+
     /// The WebSocket base class that is used by the SyncClient to send data over the
     /// WebSocket connection with the server. This is the class that is returned by
     /// SyncSocketProvider::connect() when a connection to an endpoint is requested.
@@ -177,7 +186,7 @@ namespace realm::networking {
         /// The WebSocketObserver guarantees that the WebSocket object will be
         /// closed/destroyed before the observer is terminated/destroyed.
         virtual std::unique_ptr<websocket_interface> connect(std::unique_ptr<websocket_observer> observer,
-                                                             ws_endpoint&& endpoint) = 0;
+                                                             websocket_endpoint && endpoint) = 0;
 
         /// Submit a handler function to be executed by the event loop (thread).
         ///
@@ -220,13 +229,8 @@ namespace realm::networking {
         virtual SyncTimer create_timer(std::chrono::milliseconds delay, FunctionHandler&& handler) = 0;
     };
 
-    struct http_client_factory {
-        static std::optional<std::map<std::string, std::string>> custom_http_headers;
-        static std::optional<internal::bridge::realm::sync_config::proxy_config> proxy_config;
-
-        static std::shared_ptr<http_transport_client> make_default_http_client();
-        static void set_http_client_factory(std::function<std::shared_ptr<http_transport_client>()>&&);
-    };
+    std::shared_ptr<http_transport_client> make_http_client();
+    void set_http_client_factory(std::function<std::shared_ptr<http_transport_client>()>&&);
 }
 
 namespace realm::internal::networking {

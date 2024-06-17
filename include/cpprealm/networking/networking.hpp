@@ -93,9 +93,8 @@ namespace realm::networking {
 
     };
 
-    struct ws_endpoint {
+    struct websocket_endpoint {
         using port_type = std::uint_fast16_t;
-
         std::string address;                // Host address
         port_type port;                     // Host port number
         std::string path;                   // Includes access token in query.
@@ -136,18 +135,9 @@ namespace realm::networking {
     // Interface for providing http  transport
     struct http_transport_client {
         virtual ~http_transport_client() = default;
-        // HTTP
         virtual void send_request_to_server(const request& request,
                                             std::function<void(const response&)>&& completion) = 0;
     };
-
-    struct websocket_event_handler {
-        /**
-         * Used to configure outgoing websocket connections.
-         */
-        std::function<ws_endpoint(ws_endpoint&&)> on_connect;
-    };
-
 } //namespace realm::networking
 
 namespace realm {
@@ -167,8 +157,8 @@ namespace realm::internal::networking {
     ::realm::networking::response to_response(const ::realm::app::Response&);
     ::realm::app::Response to_core_response(const ::realm::networking::response&);
 
-    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::ws_endpoint& ep);
-    ::realm::networking::ws_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& ep);
-} //namespace internal::networking
+    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::websocket_endpoint & ep);
+    ::realm::networking::websocket_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& ep);
+} //namespace realm::internal::networking
 
 #endif//CPPREALM_NETWORKING_HPP

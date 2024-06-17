@@ -5,15 +5,13 @@
 #include <realm/util/platform_info.hpp>
 
 namespace realm::networking {
-    std::function<std::shared_ptr<http_transport_client>()> s_http_client_factory = http_client_factory::make_default_http_client;
-    std::optional<std::map<std::string, std::string>> http_client_factory::custom_http_headers = std::nullopt;
-    std::optional<internal::bridge::realm::sync_config::proxy_config> http_client_factory::proxy_config = std::nullopt;
 
-    std::shared_ptr<http_transport_client> http_client_factory::make_default_http_client() {
-        return std::make_shared<internal::networking::DefaultTransport>(custom_http_headers, proxy_config);
+    std::shared_ptr<http_transport_client> make_default_http_client() {
+        return std::make_shared<internal::networking::DefaultTransport>();
     }
+    std::function<std::shared_ptr<http_transport_client>()> s_http_client_factory = make_default_http_client;
 
-    void http_client_factory::set_http_client_factory(std::function<std::shared_ptr<http_transport_client>()>&& factory_fn) {
+    void set_http_client_factory(std::function<std::shared_ptr<http_transport_client>()>&& factory_fn) {
         s_http_client_factory = std::move(factory_fn);
     }
 }

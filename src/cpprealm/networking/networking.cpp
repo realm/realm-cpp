@@ -44,7 +44,7 @@ namespace realm::internal::networking {
         return core_response;
     }
 
-    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::ws_endpoint& ep) {
+    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::websocket_endpoint & ep) {
         ::realm::sync::WebSocketEndpoint core_ep;
         core_ep.address = ep.address;
         core_ep.port = ep.port;
@@ -54,8 +54,8 @@ namespace realm::internal::networking {
         return core_ep;
     }
 
-    ::realm::networking::ws_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& core_ep) {
-        ::realm::networking::ws_endpoint ep;
+    ::realm::networking::websocket_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& core_ep) {
+        ::realm::networking::websocket_endpoint ep;
         ep.address = core_ep.address;
         ep.port = core_ep.port;
         ep.path = core_ep.path;
