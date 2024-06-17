@@ -74,7 +74,7 @@ namespace realm::internal::bridge {
         if (s) {
             m_realm = Realm::get_shared_realm(std::move(tsr), create_scheduler_shim(*s));
         } else {
-            m_realm = Realm::get_shared_realm(std::move(tsr));
+            m_realm = Realm::get_shared_realm(std::move(tsr), create_scheduler_shim(default_scheduler::make_default()));
         }
     }
 
@@ -325,7 +325,7 @@ namespace realm::internal::bridge {
     void realm::config::after_client_reset(std::function<void(realm local_realm, realm remote_realm)> callback) {
         get_config()->sync_config->notify_after_client_reset = [cb = std::move(callback)](::realm::SharedRealm local,
                                                                                           ::realm::ThreadSafeReference remote, bool) {
-            cb(realm(local), realm(::realm::Realm::get_shared_realm(std::move(remote))));
+            cb(realm(local), realm(::realm::Realm::get_shared_realm(std::move(remote), create_scheduler_shim(default_scheduler::make_default()))));
         };
     }
 
