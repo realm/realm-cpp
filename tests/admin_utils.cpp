@@ -535,4 +535,9 @@ namespace Admin {
         auto parsed_response = static_cast<bson::BsonDocument>(bson::parse(result.body));
         m_access_token = static_cast<std::string>(parsed_response["access_token"]);
     }
+
+    void Admin::Session::trigger_client_reset(int64_t file_ident) const
+    {
+        auto app = apps[m_app_id]["sync"]["force_reset"].request(app::HttpMethod::put, util::format("{\"file_ident\": %1}", file_ident));
+    }
 }

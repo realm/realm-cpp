@@ -16,9 +16,9 @@ jobs:
     name: Stop Stray Containers
     if: always()
     needs:
-      - build-macos-sync
-      - build-linux-sync
-      - build-windows-sync
+      - build-macos
+      - build-linux
+      - build-windows
     steps:
       - name: Stop containers
         run: |
@@ -29,22 +29,17 @@ jobs:
           curl --silent -X POST -H "$JSON_HEADER" -H "$AUTH_HEADER" "$BASE_URL/stopContainer?id=$id"
           done
 
-  build-macos-xcode13_1:
-    runs-on: macos-12
-    name: macOS ${{ matrix.configuration }} (preset ${{ matrix.preset }}, Xcode ${{ matrix.xcode }})
+  build-macos:
+    runs-on: macos-14
+    name: macOS ${{ matrix.configuration }}, Xcode ${{ matrix.xcode }}
     strategy:
       fail-fast: false
       matrix:
-        preset:
-          - default
-          - macos
         xcode:
-          - '13.1'
+          - '15.4'
         configuration:
           - Debug
           - Release
-        exclude:
-          - configuration: ${{ (github.event_name == 'pull_request' && 'Release') || 'none' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -54,7 +49,7 @@ jobs:
       - name: Setup Ccache
         uses: hendrikmuhs/ccache-action@v1.1
         with:
-          key: ccache-macos-${{ matrix.preset }}-${{ matrix.xcode }}
+          key: ccache-macos-${{ matrix.xcode }}
 
       - name: Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@master
@@ -67,139 +62,21 @@ jobs:
       - uses: ammaraskar/gcc-problem-matcher@master
 
       - name: Configure
-        run: cmake --preset ${{ matrix.preset }} -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF}
+        run: cmake --preset macos -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF} -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DREALM_ENABLE_EXPERIMENTAL=1 -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Compile
-        run: cmake --build --preset ${{ matrix.preset }} --config ${{ matrix.configuration }}
+        run: cmake --build --preset macos --config ${{ matrix.configuration }}
 
-      - name: Test
-        working-directory: .build/cmake-preset-${{ matrix.preset }}/tests/${{ matrix.configuration }}/
+      - name: Non Sync Tests
+        working-directory: .build/cmake-preset-macos/tests/${{ matrix.configuration }}/
         run: ./cpprealm_db_tests
-
-      - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v3
-        if: always()
-        with:
-          report_paths: '.build/**/TestResults.xml'
-          annotate_only: true
-          require_tests: true
-
-      - name: Open a tmate debug session
-        if: ${{ failure() && runner.debug }}
-        uses: mxschmitt/action-tmate@v3
-        with:
-          timeout-minutes: 15
-
-  build-macos-xcode15:
-    runs-on: macos-13
-    name: macOS ${{ matrix.configuration }} (preset ${{ matrix.preset }}, Xcode ${{ matrix.xcode }})
-    strategy:
-      fail-fast: false
-      matrix:
-        preset:
-          - default
-          - macos
-        xcode:
-          - '15.0'
-        configuration:
-          - Debug
-          - Release
-        exclude:
-          - configuration: ${{ (github.event_name == 'pull_request' && 'Release') || 'none' }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: 'recursive'
-
-      - name: Setup Ccache
-        uses: hendrikmuhs/ccache-action@v1.1
-        with:
-          key: ccache-macos-${{ matrix.preset }}-${{ matrix.xcode }}
-
-      - name: Setup Ninja
-        uses: seanmiddleditch/gha-setup-ninja@master
-
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: ${{ matrix.xcode }}
-
-      - uses: ammaraskar/gcc-problem-matcher@master
-
-      - name: Configure
-        run: cmake --preset ${{ matrix.preset }} -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF}
-
-      - name: Compile
-        run: cmake --build --preset ${{ matrix.preset }} --config ${{ matrix.configuration }}
-
-      - name: Test
-        working-directory: .build/cmake-preset-${{ matrix.preset }}/tests/${{ matrix.configuration }}/
-        run: ./cpprealm_db_tests
-
-      - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v3
-        if: always()
-        with:
-          report_paths: '.build/**/TestResults.xml'
-          annotate_only: true
-          require_tests: true
-
-      - name: Open a tmate debug session
-        if: ${{ failure() && runner.debug }}
-        uses: mxschmitt/action-tmate@v3
-        with:
-          timeout-minutes: 15
-
-  build-macos-sync:
-    runs-on: macos-13
-    name: macOS Sync ${{ matrix.configuration }} (preset ${{ matrix.preset }}, Xcode ${{ matrix.xcode }})
-    strategy:
-      fail-fast: false
-      matrix:
-        preset:
-          - default
-          - macos
-        xcode:
-          - '15.0'
-        configuration:
-          - Debug
-          - Release
-        exclude:
-          - configuration: ${{ (github.event_name == 'pull_request' && 'Release') || 'none' }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: 'recursive'
-
-      - name: Setup Ccache
-        uses: hendrikmuhs/ccache-action@v1.1
-        with:
-          key: ccache-macos-${{ matrix.preset }}-${{ matrix.xcode }}
-
-      - name: Setup Ninja
-        uses: seanmiddleditch/gha-setup-ninja@master
-
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: ${{ matrix.xcode }}
-
-      - uses: ammaraskar/gcc-problem-matcher@master
-
-      - name: Configure
-        run: cmake --preset ${{ matrix.preset }} -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF} -DREALM_ENABLE_EXPERIMENTAL=1
-
-      - name: Compile
-        run: cmake --build --preset ${{ matrix.preset }} --config ${{ matrix.configuration }}
 
       - name: Flexible Sync Tests
-        working-directory: .build/cmake-preset-${{ matrix.preset }}/tests/${{ matrix.configuration }}/
+        working-directory: .build/cmake-preset-macos/tests/${{ matrix.configuration }}/
         run: ./cpprealm_sync_tests "~client_reset"
 
       - name: Client Reset Tests
-        working-directory: .build/cmake-preset-${{ matrix.preset }}/tests/${{ matrix.configuration }}/
+        working-directory: .build/cmake-preset-macos/tests/${{ matrix.configuration }}/
         run: ./cpprealm_sync_tests "client_reset"
 
       - name: Publish Test Report
@@ -272,7 +149,7 @@ jobs:
           submodules: 'recursive'
 
       - name: Configure
-        run: cmake --preset linux -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF}
+        run: cmake --preset linux -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF} -DREALM_ENABLE_EXPERIMENTAL=1 -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Compile
         run: cmake --build --preset linux --config ${{ matrix.configuration }}
@@ -280,75 +157,6 @@ jobs:
       - name: Test
         working-directory: .build/cmake-preset-linux/tests/${{ matrix.configuration }}/
         run: ./cpprealm_db_tests
-
-      - name: Valgrind leak check
-        if: ${{ matrix.compiler.name == 'gcc' && matrix.compiler.version == '12.1' }}
-        working-directory: .build/cmake-preset-linux/tests/${{ matrix.configuration }}/
-        run: valgrind --tool=memcheck --leak-check=full --show-leak-kinds=definite --undef-value-errors=yes --track-origins=yes --child-silent-after-fork=no --trace-children=yes --error-exitcode=1 ./cpprealm_db_tests
-
-      - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v4
-        if: always()
-        with:
-          report_paths: '.build/**/TestResults.xml'
-          annotate_only: true
-          require_tests: true
-
-      - name: Open a tmate debug session
-        if: ${{ failure() && runner.debug }}
-        uses: mxschmitt/action-tmate@v3
-        with:
-          timeout-minutes: 15
-
-  build-linux-sync:
-    runs-on: ubuntu-20.04
-    name: Linux Sync ${{ matrix.configuration }} (${{ matrix.compiler.name }} ${{ matrix.compiler.version }})
-    strategy:
-      fail-fast: false
-      matrix:
-        compiler:
-          - name: gcc
-            version: 8
-        configuration:
-          - Debug
-          - Release
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: 'recursive'
-
-      - name: Setup Ccache
-        uses: hendrikmuhs/ccache-action@v1.1
-        with:
-          key: ccache-linux-${{ matrix.compiler.name }}-${{ matrix.compiler.version }}
-
-      - name: Install Linux Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libcurl4-openssl-dev \
-            libssl-dev \
-            libuv1-dev \
-            ninja-build \
-            zlib1g-dev \
-            ${{ matrix.compiler.name }}-${{ matrix.compiler.version }}
-
-      - name: Setup GCC ${{ matrix.compiler.version }}
-        if: matrix.compiler.name == 'gcc'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y g++-${{ matrix.compiler.version }}
-          sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-${{ matrix.compiler.version }} 100
-          sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-${{ matrix.compiler.version }} 100
-
-      - uses: ammaraskar/gcc-problem-matcher@master
-
-      - name: Configure
-        run: cmake --preset linux -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF} -DREALM_ENABLE_EXPERIMENTAL=1
-
-      - name: Compile
-        run: cmake --build --preset linux --config ${{ matrix.configuration }}
 
       - name: Flexible Sync Tests
         working-directory: .build/cmake-preset-linux/tests/${{ matrix.configuration }}/
@@ -358,8 +166,24 @@ jobs:
         working-directory: .build/cmake-preset-linux/tests/${{ matrix.configuration }}/
         run: ./cpprealm_sync_tests "client_reset"
 
+      - name: Valgrind leak check
+        if: ${{ matrix.compiler.name == 'gcc' && matrix.compiler.version == '12.1' }}
+        working-directory: .build/cmake-preset-linux/tests/${{ matrix.configuration }}/
+        run: valgrind --tool=memcheck --leak-check=full --show-leak-kinds=definite --undef-value-errors=yes --track-origins=yes --child-silent-after-fork=no --trace-children=yes --log-file=valgrind.log ./cpprealm_db_tests
+
+      - name: Check for definitely lost errors
+        if: ${{ matrix.compiler.name == 'gcc' && matrix.compiler.version == '12.1' }}
+        id: check_valgrind
+        run: |
+          if grep -q "definitely lost: [1-9]" valgrind.log; then
+          echo "Valgrind detected definitely lost errors"
+          exit 1
+          else
+          echo "No definitely lost errors detected"
+          fi
+
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v3
+        uses: mikepenz/action-junit-report@v4
         if: always()
         with:
           report_paths: '.build/**/TestResults.xml'
@@ -389,58 +213,25 @@ jobs:
 
       - uses: ammaraskar/msvc-problem-matcher@master
 
+      - name: Setup Ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: windows-${{ matrix.configuration }}
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v1.13
+        with:
+          cmake-version: latest
+
       - name: Configure
-        run: cmake --preset windows-x64 -DENABLE_STATIC=1
+        run: cmake --preset windows-x64 -DENABLE_STATIC=1 -DREALM_ENABLE_EXPERIMENTAL=1 -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Compile
         run: cmake --build --preset windows-x64 --config ${{ matrix.configuration }}
 
-      - name: Open a tmate debug session
-        if: ${{ failure() && runner.debug }}
-        uses: mxschmitt/action-tmate@v3
-        with:
-          timeout-minutes: 15
-
-      - name: Test
+      - name: Non Sync Tests
         working-directory: .build/cmake-preset-windows-x64/tests/${{ matrix.configuration }}/
         run: ./cpprealm_db_tests
-
-      - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v3
-        if: always()
-        with:
-          report_paths: '.build/**/TestResults.xml'
-          annotate_only: true
-          require_tests: true
-
-  build-windows-sync:
-    runs-on: windows-2022
-    name: Windows Sync ${{ matrix.configuration }}
-    strategy:
-      fail-fast: false
-      matrix:
-        configuration:
-          - Debug
-          - Release
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: 'recursive'
-
-      - uses: ammaraskar/msvc-problem-matcher@master
-
-      - name: Configure
-        run: cmake --preset windows-x64 -DENABLE_STATIC=1 -DREALM_ENABLE_EXPERIMENTAL=1
-
-      - name: Compile
-        run: cmake --build --preset windows-x64 --config ${{ matrix.configuration }}
-
-      - name: Open a tmate debug session
-        if: ${{ failure() && runner.debug }}
-        uses: mxschmitt/action-tmate@v3
-        with:
-          timeout-minutes: 15
 
       - name: Flexible Sync Tests
         working-directory: .build/cmake-preset-windows-x64/tests/${{ matrix.configuration }}/

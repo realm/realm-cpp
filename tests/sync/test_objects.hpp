@@ -22,9 +22,9 @@ namespace realm {
             one, two
         };
 
-        primary_key<int64_t> _id;
-        double double_col;
-        bool bool_col;
+        primary_key<int64_t> _id = 0;
+        double double_col = 0.0;
+        bool bool_col = false;
         std::string str_col;
         std::string str_col2;
 
