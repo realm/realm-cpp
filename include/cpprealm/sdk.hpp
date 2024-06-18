@@ -19,8 +19,8 @@
 #ifndef CPPREALM_SDK_HPP
 #define CPPREALM_SDK_HPP
 
-#if __has_include(<cpprealm/config.h>)
-#include <cpprealm/config.h>
+#if __has_include(<cpprealm/util/config.h>)
+#include <cpprealm/util/config.h>
 #endif
 
 #include <utility>

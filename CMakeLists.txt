@@ -19,7 +19,12 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(REALM_USE_SYSTEM_OPENSSL ON)
 endif()
 
-add_subdirectory(realm-core)
+
+if (VCPKG_TOOLCHAIN)
+    find_package(Realm REQUIRED)
+else()
+    add_subdirectory(realm-core)
+endif()
 
 set(REALM_NO_CONFIG)
 set(REALM_ENABLE_SYNC)
@@ -49,6 +54,13 @@ add_compile_definitions(REALM_ENABLE_ENCRYPTION)
 add_compile_definitions(REALM_INSTALL_LIBEXECDIR)
 add_compile_definitions(REALM_BUILD_LIB_ONLY)
 
+# on Apple platforms we use the built-in CFRunLoop
+# everywhere else it's libuv, except UWP where it doesn't build
+if(NOT APPLE AND NOT WINDOWS_STORE AND NOT ANDROID)
+    set(REALM_HAVE_UV 1)
+    add_compile_definitions(REALM_HAVE_UV=1)
+endif()
+
 configure_file(src/cpprealm/util/config.h.in include/cpprealm/util/config.h)
 
 add_subdirectory(src)
@@ -65,9 +77,7 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
         )
 
-# on Apple platforms we use the built-in CFRunLoop
-# everywhere else it's libuv, except UWP where it doesn't build
-if(NOT APPLE AND NOT WINDOWS_STORE AND NOT ANDROID)
+if(REALM_HAVE_UV)
     if(VCPKG_TOOLCHAIN)
         find_package(libuv CONFIG REQUIRED)
         if(BUILD_SHARED_LIBS)
@@ -102,9 +112,7 @@ if(NOT APPLE AND NOT WINDOWS_STORE AND NOT ANDROID)
         endif()
     endif()
 
-    target_compile_definitions(ObjectStore PUBLIC REALM_HAVE_UV=1)
     target_link_libraries(cpprealm PUBLIC ${libuv_target})
-    target_link_libraries(ObjectStore PUBLIC ${libuv_target})
 endif()
 
 target_link_libraries(cpprealm PUBLIC Realm::ObjectStore)

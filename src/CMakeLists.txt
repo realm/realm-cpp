@@ -66,6 +66,8 @@ set(SOURCES
     cpprealm/internal/bridge/thread_safe_reference.cpp
     cpprealm/internal/bridge/timestamp.cpp
     cpprealm/internal/bridge/uuid.cpp
+    cpprealm/internal/scheduler/realm_core_scheduler.cpp
+    cpprealm/schedulers/default_scheduler.cpp
     cpprealm/logger.cpp
     cpprealm/sdk.cpp) # REALM_SOURCES
 
@@ -124,6 +126,8 @@ set(HEADERS
     ../include/cpprealm/internal/bridge/uuid.hpp
     ../include/cpprealm/internal/generic_network_transport.hpp
     ../include/cpprealm/internal/type_info.hpp
+    ../include/cpprealm/internal/scheduler/realm_core_scheduler.hpp
+    ../include/cpprealm/schedulers/default_scheduler.hpp
     ../include/cpprealm/logger.hpp
     ../include/cpprealm/notifications.hpp
     ../include/cpprealm/rbool.hpp
@@ -136,7 +140,11 @@ include(GNUInstallDirs)
 
 add_library(cpprealm ${SOURCES} ${HEADERS} ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp)
 
-install(TARGETS ${PROJECT_NAME} ObjectStore Storage QueryParser Sync
+if (NOT VCPKG_TOOLCHAIN)
+    set(INSTALL_TARGETS ObjectStore Storage QueryParser Sync)
+endif()
+
+install(TARGETS ${PROJECT_NAME} ${INSTALL_TARGETS}
         EXPORT "${PROJECT_NAME}Targets"
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # include
         )

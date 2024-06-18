@@ -1,1 +1,2 @@
 #cmakedefine01 REALM_ENABLE_EXPERIMENTAL
+#cmakedefine01 REALM_HAVE_UV

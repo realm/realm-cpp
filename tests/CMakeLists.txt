@@ -47,7 +47,7 @@ add_executable(cpprealm_db_tests
                 db/query_tests.cpp
                 db/realm_tests.cpp
                 db/results_tests.cpp
-                db/run_loop_tests.cpp
+                db/scheduler_tests.cpp
                 db/string_tests.cpp
                 db/performance_tests.cpp
                 db/numeric_tests.cpp

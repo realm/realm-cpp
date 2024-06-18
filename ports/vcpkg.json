@@ -4,6 +4,7 @@
   "description": "Realm is a mobile database that runs directly inside phones, tablets or wearables.",
   "homepage": "https://github.com/realm/realm-cpp",
   "license": "Apache-2.0",
+  "supports": "!emscripten",
   "dependencies": [
     {
       "name": "vcpkg-cmake",
@@ -24,14 +25,8 @@
       "platform": "linux"
     },
     {
-      "name": "openssl",
-      "version>=": "3.2.0",
-      "platform": "!osx"
-    },
-    {
-      "name": "zlib",
-      "version>=": "1.3",
-      "platform": "!osx, !emscripten"
+      "name": "realm-core",
+      "version>=": "14.8.0"
     }
   ]
 }

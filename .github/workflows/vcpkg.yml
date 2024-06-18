@@ -21,10 +21,8 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: "Set environmental variables"
-        shell: bash
-        run: |
-          echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
+      - uses: friendlyanon/setup-vcpkg@v1
+        with: { committish: 6e31ee33cc9fc93599c4ceb38e229098cf339bb7 }
 
       - name: Install dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -41,7 +39,7 @@ jobs:
         working-directory: ./tests
         if: matrix.os == 'macos-latest'
         run: |
-          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-osx
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=arm64-osx
           cd build
           cmake --build . --config ${{matrix.build_type}}
 
@@ -88,10 +86,8 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: "Set environmental variables"
-        shell: bash
-        run: |
-          echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
+      - uses: friendlyanon/setup-vcpkg@v1
+        with: { committish: 6e31ee33cc9fc93599c4ceb38e229098cf339bb7 }
 
       - name: Install dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -108,7 +104,7 @@ jobs:
         working-directory: ./tests
         if: matrix.os == 'macos-latest'
         run: |
-          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=x64-osx-dynamic
+          cmake -GNinja -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_OVERLAY_PORTS="../ports" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DVCPKG_TARGET_TRIPLET=arm64-osx-dynamic
           cd build
           cmake --build . --config ${{matrix.build_type}}
 

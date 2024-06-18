@@ -2,6 +2,7 @@
 
 #include <cpprealm/analytics.hpp>
 #include <cpprealm/app.hpp>
+#include <cpprealm/logger.hpp>
 #include <cpprealm/internal/bridge/async_open_task.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
@@ -12,8 +13,8 @@
 #include <cpprealm/internal/bridge/sync_session.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/thread_safe_reference.hpp>
-#include <cpprealm/logger.hpp>
-#include <cpprealm/scheduler.hpp>
+#include <cpprealm/internal/scheduler/realm_core_scheduler.hpp>
+#include <cpprealm/schedulers/default_scheduler.hpp>
 
 #include <realm/object-store/dictionary.hpp>
 #include <realm/object-store/object_store.hpp>
@@ -31,63 +32,6 @@
 #else
 #include <filesystem>
 #endif
-
-#ifdef QT_CORE_LIB
-#include <QStandardPaths>
-#include <QMetaObject>
-#include <QTimer>
-#include <QThread>
-#include <QtWidgets/QApplication>
-#endif
-
-namespace realm {
-#if QT_CORE_LIB
-struct QtMainLoopScheduler : public QObject, public util::Scheduler {
-
-    bool is_on_thread() const noexcept override
-    {
-        return m_id == std::this_thread::get_id();
-    }
-    bool is_same_as(const Scheduler* other) const noexcept override
-    {
-        auto o = dynamic_cast<const QtMainLoopScheduler*>(other);
-        return (o && (o->m_id == m_id));
-    }
-    bool can_deliver_notifications() const noexcept override
-    {
-        return QThread::currentThread()->eventDispatcher();
-    }
-
-    void set_notify_callback(Function<void()> fn) override
-    {
-        m_callback = std::move(fn);
-    }
-
-    void notify() override
-    {
-        schedule(m_callback);
-    }
-
-    void schedule(Function<void()> fn) {
-        QMetaObject::invokeMethod(this, fn);
-    }
-private:
-    Function<void()> m_callback;
-    std::thread::id m_id = std::this_thread::get_id();
-};
-static std::shared_ptr<realm::util::Scheduler> make_qt()
-{
-    return std::make_shared<QtMainLoopScheduler>();
-}
-#endif
-
-    std::shared_ptr<util::Scheduler> make_default_scheduler() {
-#if QT_CORE_LIB
-        util::Scheduler::set_default_factory(make_qt);
-#endif
-        return util::Scheduler::make_default();
-    }
-}
 
 namespace realm::internal::bridge {
     static_assert((uint8_t)realm::config::schema_mode::automatic == (uint8_t)::realm::SchemaMode::Automatic);
@@ -126,42 +70,11 @@ namespace realm::internal::bridge {
         m_realm->commit_transaction();
     }
 
-    struct internal_scheduler : util::Scheduler {
-        internal_scheduler(const std::shared_ptr<scheduler>& s)
-        : m_scheduler(s)
-        {
-        }
-
-        ~internal_scheduler() override = default;
-        void invoke(util::UniqueFunction<void()> &&fn) override {
-            m_scheduler->invoke([fn = std::move(fn.release())]() {
-                auto f = util::UniqueFunction<void()>(std::move(fn));
-                f();
-            });
-        }
-
-        bool is_on_thread() const noexcept override {
-            return m_scheduler->is_on_thread();
-        }
-        bool is_same_as(const util::Scheduler *other) const noexcept override {
-            if (auto o = dynamic_cast<const internal_scheduler *>(other)) {
-                return m_scheduler->is_same_as(o->m_scheduler.get());
-            }
-            return false;
-        }
-
-        bool can_invoke() const noexcept override {
-            return m_scheduler->can_invoke();
-        }
-    private:
-        std::shared_ptr<scheduler> m_scheduler;
-    };
-
     realm::realm(thread_safe_reference&& tsr, const std::optional<std::shared_ptr<struct scheduler>>& s) {
         if (s) {
-            m_realm = Realm::get_shared_realm(std::move(tsr), std::make_shared<internal_scheduler>(*s));
+            m_realm = Realm::get_shared_realm(std::move(tsr), create_scheduler_shim(*s));
         } else {
-            m_realm = Realm::get_shared_realm(std::move(tsr));
+            m_realm = Realm::get_shared_realm(std::move(tsr), create_scheduler_shim(default_scheduler::make_default()));
         }
     }
 
@@ -174,13 +87,10 @@ namespace realm::internal::bridge {
         std::string path = cwd;
         path.append("/default.realm");
         config.path = path;
-
-        config.scheduler = ::realm::util::Scheduler::make_generic();
 #else
         config.path = std::filesystem::current_path().append("default.realm").generic_string();
-        config.scheduler = ::realm::make_default_scheduler();
 #endif
-
+        config.scheduler = create_scheduler_shim(default_scheduler::make_default());
         config.schema_version = 0;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_config) RealmConfig(config);
@@ -245,7 +155,7 @@ namespace realm::internal::bridge {
         RealmConfig config;
         config.cache = true;
         config.path = path;
-        config.scheduler = std::make_shared<internal_scheduler>(scheduler);
+        config.scheduler = create_scheduler_shim(scheduler);
         config.schema_version = 0;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         new (&m_config) RealmConfig(config);
@@ -351,7 +261,11 @@ namespace realm::internal::bridge {
 #endif
     }
     void realm::config::set_scheduler(const std::shared_ptr<struct scheduler> &s) {
-        get_config()->scheduler = std::make_shared<internal_scheduler>(s);
+        if (auto core_scheduler = dynamic_cast<realm_core_scheduler *>(s.get())) {
+            get_config()->scheduler = core_scheduler->operator std::shared_ptr<util::Scheduler>();
+            return;
+        }
+        get_config()->scheduler = create_scheduler_shim(s);
     }
     void realm::config::set_sync_config(const std::optional<struct sync_config> &s) {
         if (s)
@@ -411,7 +325,7 @@ namespace realm::internal::bridge {
     void realm::config::after_client_reset(std::function<void(realm local_realm, realm remote_realm)> callback) {
         get_config()->sync_config->notify_after_client_reset = [cb = std::move(callback)](::realm::SharedRealm local,
                                                                                           ::realm::ThreadSafeReference remote, bool) {
-            cb(realm(local), realm(::realm::Realm::get_shared_realm(std::move(remote))));
+            cb(realm(local), realm(::realm::Realm::get_shared_realm(std::move(remote), create_scheduler_shim(default_scheduler::make_default()))));
         };
     }
 
@@ -419,44 +333,12 @@ namespace realm::internal::bridge {
         return get_config()->sync_config;
     }
 
-    struct external_scheduler final : public scheduler {
-        // Invoke the given function on the scheduler's thread.
-        //
-        // This function can be called from any thread.
-        void invoke(std::function<void()> &&fn) final {
-            s->invoke(std::move(fn));
-        }
-
-        // Check if the caller is currently running on the scheduler's thread.
-        //
-        // This function can be called from any thread.
-        [[nodiscard]] bool is_on_thread() const noexcept final {
-            return s->is_on_thread();
-        }
-
-        // Checks if this scheduler instance wraps the same underlying instance.
-        // This is up to the platforms to define, but if this method returns true,
-        // caching may occur.
-        bool is_same_as(const scheduler *other) const noexcept final {
-            return this == other;
-        }
-
-        // Check if this scheduler actually can support invoke(). Invoking may be
-        // either not implemented, not applicable to a scheduler type, or simply not
-        // be possible currently (e.g. if the associated event loop is not actually
-        // running).
-        //
-        // This function is not thread-safe.
-        [[nodiscard]] bool can_invoke() const noexcept final {
-            return s->can_invoke();
-        }
-        std::shared_ptr<util::Scheduler> s;
-        external_scheduler(std::shared_ptr<util::Scheduler>  s) : s(std::move(s)) {}
-        ~external_scheduler() final = default;
-    };
+    struct std::shared_ptr<scheduler> realm::config::scheduler() const {
+        return std::make_shared<realm_core_scheduler>(realm_core_scheduler(get_config()->scheduler));
+    }
 
     struct std::shared_ptr<scheduler> realm::scheduler() const {
-        return std::make_shared<external_scheduler>(external_scheduler(m_realm->scheduler()));
+        return std::make_shared<realm_core_scheduler>(realm_core_scheduler(m_realm->scheduler()));
     }
 
     async_open_task realm::get_synchronized_realm(const config &c) {
@@ -506,7 +388,7 @@ namespace realm::internal::bridge {
             return *this;
         auto config = m_realm->config();
         config.cache = true;
-        config.scheduler = ::realm::make_default_scheduler();
+        config.scheduler = create_scheduler_shim(default_scheduler::make_default());
         return realm(std::move(config));
     }
 

@@ -19,13 +19,14 @@
 #ifndef CPPREALM_BRIDGE_REALM_HPP
 #define CPPREALM_BRIDGE_REALM_HPP
 
+#include <cpprealm/internal/bridge/utils.hpp>
+
 #include <functional>
 #include <map>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-#include <cpprealm/internal/bridge/utils.hpp>
 
 namespace realm {
     class Realm;
@@ -176,8 +177,8 @@ namespace realm::internal::bridge {
                 manual
             };
             config();
-            config(const config& other) ;
-            config& operator=(const config& other) ;
+            config(const config& other);
+            config& operator=(const config& other);
             config(config&& other);
             config& operator=(config&& other);
             ~config();
@@ -186,7 +187,7 @@ namespace realm::internal::bridge {
                    const std::shared_ptr<struct scheduler>& scheduler);
             [[nodiscard]] std::string path() const;
             [[nodiscard]] struct sync_config sync_config() const;
-            [[nodiscard]] std::shared_ptr<struct scheduler> scheduler();
+            [[nodiscard]] std::shared_ptr<struct scheduler> scheduler() const;
             operator RealmConfig() const; //NOLINT(google-explicit-constructor)
             void set_path(const std::string&);
             void set_schema(const std::vector<object_schema>&);
