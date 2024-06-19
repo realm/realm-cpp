@@ -10,5 +10,5 @@ Package.resolved
 examples/*.pro.user
 docs/html
 docs/latex
-.idea
-realm-core/src/realm/parser/generated
+.idea/
+realm-core/src/realm/parser/generated/
