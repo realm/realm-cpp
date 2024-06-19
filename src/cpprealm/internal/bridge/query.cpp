@@ -595,6 +595,10 @@ namespace realm::internal::bridge {
         return *this;
     }
 
+    query query::falsepredicate() {
+        return query(Query(std::make_unique<FalseExpression>()));
+    }
+
     std::string query::description() const {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<const Query *>(&m_query)->get_description();

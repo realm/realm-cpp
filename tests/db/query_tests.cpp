@@ -329,5 +329,42 @@ namespace realm {
             });
             CHECK(res.size() == 3);
         }
+
+        SECTION("TRUEPREDICATE_FALSEPREDICATE") {
+            auto realm = db(std::move(config));
+
+            auto create_obj = [&](int64_t pk) {
+                auto obj = AllTypesObject();
+                obj._id = pk;
+                obj.str_col = "root obj";
+                auto obj_link = AllTypesObjectLink();
+                obj_link._id = pk;
+                obj_link.str_col = "foo";
+                auto obj_link2 = StringObject();
+                obj_link2._id = pk;
+                obj_link2.str_col = "bar";
+
+                obj.opt_obj_col = &obj_link;
+                obj_link.str_link_col = &obj_link2;
+
+                return realm.write([&]() {
+                    return realm.add(std::move(obj));
+                });
+            };
+
+            auto managed_obj = create_obj(0);
+            auto managed_obj2 = create_obj(1);
+            auto managed_obj3 = create_obj(2);
+
+            auto res = realm.objects<AllTypesObject>().where([](auto& o) {
+                return truepredicate(o);
+            });
+            CHECK(res.size() == 3);
+
+            res = realm.objects<AllTypesObject>().where([](auto& o) {
+                return falsepredicate(o);
+            });
+            CHECK(res.size() == 0);
+        }
     }
 }

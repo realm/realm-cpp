@@ -232,6 +232,9 @@ namespace realm::internal::bridge {
         query& links_to(col_key column_key, const internal::bridge::obj& o);
         query& not_links_to(col_key column_key, const internal::bridge::obj& o);
 
+        // Expressions
+        static query falsepredicate();
+
         std::string description() const;
     private:
         inline Query* get_query();
@@ -242,11 +245,6 @@ namespace realm::internal::bridge {
 #endif
 
     };
-
-    template <typename T>
-    using QFn = query& (query::*)(col_key, T);
-    template <typename T>
-    using QFnCS = query& (query::*)(col_key, T, bool);
 
     query operator || (const query& lhs, const query& rhs);
 }
