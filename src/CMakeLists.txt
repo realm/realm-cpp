@@ -138,10 +138,6 @@ if (NOT REALM_DISABLE_ALIGNED_STORAGE)
             COMPONENT devel)
 
     set(BRIDGING_HEADER ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp)
-
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm/internal/bridge
-            COMPONENT devel)
 endif()
 
 include(GNUInstallDirs)
@@ -163,5 +159,11 @@ foreach(header ${HEADERS})
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${dir}
             COMPONENT devel)
 endforeach()
+
+if (NOT REALM_DISABLE_ALIGNED_STORAGE)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm/internal/bridge
+            COMPONENT devel)
+endif()
 
 install()

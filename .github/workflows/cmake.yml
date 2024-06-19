@@ -31,7 +31,7 @@ jobs:
 
   build-macos:
     runs-on: macos-14
-    name: macOS ${{ matrix.configuration }}, Xcode ${{ matrix.xcode }}
+    name: macOS ${{ matrix.configuration }}, Xcode ${{ matrix.xcode }}, uses aligned storage ${{ matrix.use-aligned-storage }}
     strategy:
       fail-fast: false
       matrix:
