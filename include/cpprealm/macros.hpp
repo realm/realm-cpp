@@ -575,6 +575,9 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         bool operator < (const managed<cls>& rhs) const {                                           \
             return m_obj.get_key() < rhs.m_obj.get_key();                                           \
         }                                                                                           \
+        void to_json(std::ostream& out) const noexcept {                                            \
+            m_obj.to_json(out);                                                                     \
+        }                                                                                           \
     private:                                                                                        \
         internal::bridge::obj m_obj;                                                                \
         internal::bridge::realm m_realm;                                                            \

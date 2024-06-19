@@ -226,7 +226,7 @@ namespace realm::internal::bridge {
         void set_null(const col_key&);
         obj create_and_set_linked_object(const col_key&);
         table_view get_backlink_view(table, col_key);
-
+        void to_json(std::ostream& out) const noexcept;
     private:
         inline const Obj* get_obj() const;
         inline Obj* get_obj();

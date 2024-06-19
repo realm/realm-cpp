@@ -1,6 +1,8 @@
 #include "../main.hpp"
 #include "test_objects.hpp"
 
+#include <iostream>
+
 namespace realm {
 
     enum class PrimaryKeyEnum {
@@ -1033,6 +1035,22 @@ namespace realm {
 
             CHECK(realm.objects<AllTypesObject>().size() == 2);
             CHECK(realm.objects<AllTypesObjectLink>().size() == 1);
+        }
+
+        SECTION("to_json") {
+            StringObject str_obj;
+            str_obj.str_col = "test";
+            str_obj._id = 123;
+            auto realm = db(std::move(config));
+
+            auto managed_obj = realm.write([&](){
+                return realm.add(std::move(str_obj));
+            });
+
+            std::stringstream ss;
+            managed_obj.to_json(ss);
+            auto json_str = ss.str();
+            CHECK(json_str == "{\"_id\":123,\"str_col\":\"test\"}");
         }
 
         static_assert(!std::is_constructible_v<typename managed<AllTypesObjectLink *>::ref_type>, "Default constructor is private.");
