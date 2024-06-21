@@ -38,14 +38,11 @@ namespace realm {
         std::optional<internal::bridge::link_chain> m_link_chain;
         internal::bridge::table m_table;
 
-        friend rbool operator&&(const rbool &lhs, const rbool &rhs);
-
         template<typename T>
         friend struct results;
-
+        friend rbool operator&&(const rbool &lhs, const rbool &rhs);
         friend rbool operator||(const rbool &lhs, const rbool &rhs);
     public:
-
         rbool& add_link_chain(const internal::bridge::col_key& col_key) {
             if (m_link_chain) {
                 m_link_chain->link(col_key);
@@ -236,6 +233,29 @@ namespace realm {
             return lhs;
         }
         return lhs.b && rhs.b;
+    }
+
+    /// Return all objects from a collection.
+    template<typename T>
+    inline rbool truepredicate(const T& o) {
+        // An empty query returns all results and one way to indicate this
+        // is to serialise TRUEPREDICATE which is functionally equivalent
+        rbool* rb = internal::get_rbool(o);
+        if (rb == nullptr)
+            throw std::runtime_error("Managed object is not used in a query context");
+        auto table = rb->q.get_table();
+        return rbool(table);
+    }
+
+/// Return no objects from a collection.
+    template<typename T>
+    inline rbool falsepredicate(const T& o) {
+        rbool* rb = internal::get_rbool(o);
+        if (rb == nullptr)
+            throw std::runtime_error("Managed object is not used in a query context");
+        auto table = rb->q.get_table();
+        auto q = internal::bridge::query(table).and_query(internal::bridge::query(table).falsepredicate());
+        return rbool(std::move(q));
     }
 }
 

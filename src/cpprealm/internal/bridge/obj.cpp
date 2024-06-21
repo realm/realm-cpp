@@ -406,6 +406,10 @@ namespace realm::internal::bridge {
     table_view obj::get_backlink_view(table table, col_key col_key) {
         return get_obj()->get_backlink_view(table, col_key);
     }
+
+    void obj::to_json(std::ostream& out) const noexcept {
+        return get_obj()->to_json(out);
+    }
 }
 
 std::string realm::internal::bridge::table_name_for_object_type(const std::string &v) {

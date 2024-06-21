@@ -1,4 +1,4 @@
-X.Y.Z Release notes (YYYY-MM-DD)
+NEXT RELEASE Release notes (YYYY-MM-DD)
 =============================================================
 
 ### Fixed
@@ -8,6 +8,8 @@ X.Y.Z Release notes (YYYY-MM-DD)
 * Add `realm::default_scheduler::set_default_factory(std::function<std::shared_ptr<realm::scheduler>()>&& factory_fn)` for generating a default scheduler. 
   Set your scheduler factory before instantiating a `realm::db_config`.
 * Add `realm::default_scheduler::make_default()` which generates a platform default scheduler if `realm::default_scheduler::set_default_factory` is not set.
+* Add `managed<T>::to_json(std::ostream&)` which allows managed objects to be printed as json.
+* Add `rbool::truepredicate()` and `rbool::falsepredicate()` expressions for type safe queries.
 
 ### Compatibility
 * Fileformat: Generates files with format v24. Reads and automatically upgrade from fileformat v10.

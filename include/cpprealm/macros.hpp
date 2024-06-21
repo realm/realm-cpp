@@ -544,7 +544,9 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         db get_realm() {                                                                            \
             return db(m_realm);                                                                     \
         }                                                                                           \
-        bool operator ==(const managed<cls>& other) const {                                         \
+        bool operator ==(const managed<cls>& other) const {                                        \
+            if (m_rbool_query != nullptr)                                                           \
+                throw std::runtime_error("This comparison operator is not valid inside of `where`");    \
             auto& a = m_obj;                                                                        \
             auto& b = other.m_obj;                                                                  \
             if (m_realm != other.m_realm) {                                                         \
@@ -554,6 +556,8 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
                    && a.get_key() == b.get_key();                                                   \
         }                                                                                           \
         bool operator ==(const managed<cls*>& other) const {                                        \
+            if (m_rbool_query != nullptr)                                                           \
+                throw std::runtime_error("This comparison operator is not valid inside of `where`");    \
             auto& a = m_obj;                                                                        \
             auto& b = other.m_obj;                                                                  \
             if (m_realm != other->m_realm) {                                                        \
@@ -571,6 +575,9 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         bool operator < (const managed<cls>& rhs) const {                                           \
             return m_obj.get_key() < rhs.m_obj.get_key();                                           \
         }                                                                                           \
+        void to_json(std::ostream& out) const noexcept {                                            \
+            m_obj.to_json(out);                                                                     \
+        }                                                                                           \
     private:                                                                                        \
         internal::bridge::obj m_obj;                                                                \
         internal::bridge::realm m_realm;                                                            \
@@ -579,6 +586,8 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         template <typename, typename> friend struct managed;                                        \
         template <typename, typename> friend struct box;                                            \
         template <typename> friend struct ::realm::thread_safe_reference;                           \
+        template <typename T> friend rbool* ::realm::internal::get_rbool(const T&);                 \
+                                                                                                    \
     };                                                                                              \
     struct meta_schema_##cls {                                                                      \
         meta_schema_##cls() {                                                                       \
@@ -589,5 +598,16 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         }                                                                                           \
     };                                                                                              \
     static inline meta_schema_##cls _meta_schema_##cls{};
+
+namespace realm::internal {
+    /*
+     * Helper method for extracting the private `m_rbool_query`
+     * property on a managed<T> object.
+     */
+    template<typename T>
+    rbool* get_rbool(const T& o) {
+        return o.m_rbool_query;
+    }
+}
 
 #endif //CPPREALM_MACROS_HPP
