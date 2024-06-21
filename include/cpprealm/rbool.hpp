@@ -235,6 +235,7 @@ namespace realm {
         return lhs.b && rhs.b;
     }
 
+    /// Return all objects from a collection.
     template<typename T>
     inline rbool truepredicate(const T& o) {
         // An empty query returns all results and one way to indicate this
@@ -246,6 +247,7 @@ namespace realm {
         return rbool(table);
     }
 
+/// Return no objects from a collection.
     template<typename T>
     inline rbool falsepredicate(const T& o) {
         rbool* rb = internal::get_rbool(o);
