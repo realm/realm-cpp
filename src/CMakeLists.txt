@@ -8,21 +8,6 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/version_numbers.hpp
         DESTINATION include/cpprealm
         COMPONENT devel)
 
-add_custom_command(
-    COMMAND ${CMAKE_COMMAND} -D SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/cpprealm/internal/bridge 
-                             -D BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge
-                             -D BRIDGE_TYPE_INFO_BIN=$<TARGET_FILE:BridgeTypeInfoGenerator>
-                             -P ${CMAKE_CURRENT_SOURCE_DIR}/cpprealm/internal/bridge/generator/bridge_type_info_parser.cmake
-    DEPENDS BridgeTypeInfoGenerator
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cpprealm/internal/bridge/generator/bridge_type_info_parser.cmake
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cpprealm/internal/bridge/bridge_types.hpp.in
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp
-)
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp
-        DESTINATION include/cpprealm/internal/bridge
-        COMPONENT devel)
-
 set(SOURCES
     cpprealm/analytics.cpp
     cpprealm/app.cpp
@@ -136,9 +121,28 @@ set(HEADERS
     ../include/cpprealm/thread_safe_reference.hpp
     ../include/cpprealm/sdk.hpp) # REALM_INSTALL_HEADERS
 
+if (NOT REALM_DISABLE_ALIGNED_STORAGE)
+    add_custom_command(
+            COMMAND ${CMAKE_COMMAND} -D SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/cpprealm/internal/bridge
+            -D BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge
+            -D BRIDGE_TYPE_INFO_BIN=$<TARGET_FILE:BridgeTypeInfoGenerator>
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/cpprealm/internal/bridge/generator/bridge_type_info_parser.cmake
+            DEPENDS BridgeTypeInfoGenerator
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cpprealm/internal/bridge/generator/bridge_type_info_parser.cmake
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cpprealm/internal/bridge/bridge_types.hpp.in
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp
+    )
+
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp
+            DESTINATION include/cpprealm/internal/bridge
+            COMPONENT devel)
+
+    set(BRIDGING_HEADER ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp)
+endif()
+
 include(GNUInstallDirs)
 
-add_library(cpprealm ${SOURCES} ${HEADERS} ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp)
+add_library(cpprealm ${SOURCES} ${HEADERS} ${BRIDGING_HEADER})
 
 if (NOT VCPKG_TOOLCHAIN)
     set(INSTALL_TARGETS ObjectStore Storage QueryParser Sync)
@@ -155,7 +159,11 @@ foreach(header ${HEADERS})
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${dir}
             COMPONENT devel)
 endforeach()
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm/internal/bridge
-        COMPONENT devel)
+
+if (NOT REALM_DISABLE_ALIGNED_STORAGE)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/internal/bridge/bridge_types.hpp
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpprealm/internal/bridge
+            COMPONENT devel)
+endif()
+
 install()

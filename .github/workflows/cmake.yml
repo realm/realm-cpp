@@ -31,7 +31,7 @@ jobs:
 
   build-macos:
     runs-on: macos-14
-    name: macOS ${{ matrix.configuration }}, Xcode ${{ matrix.xcode }}
+    name: macOS ${{ matrix.configuration }}, Xcode ${{ matrix.xcode }}, REALM_DISABLE_ALIGNED_STORAGE=${{ matrix.disable-aligned-storage }}
     strategy:
       fail-fast: false
       matrix:
@@ -40,6 +40,9 @@ jobs:
         configuration:
           - Debug
           - Release
+        disable-aligned-storage:
+          - 1
+          - 0
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -62,7 +65,7 @@ jobs:
       - uses: ammaraskar/gcc-problem-matcher@master
 
       - name: Configure
-        run: cmake --preset macos -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF} -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DREALM_ENABLE_EXPERIMENTAL=1 -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        run: cmake --preset macos -DCMAKE_VERBOSE_MAKEFILE=${RUNNER_DEBUG:-OFF} -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DREALM_ENABLE_EXPERIMENTAL=1 -DREALM_DISABLE_ALIGNED_STORAGE=${{ matrix.disable-aligned-storage }} -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Compile
         run: cmake --build --preset macos --config ${{ matrix.configuration }}

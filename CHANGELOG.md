@@ -10,6 +10,7 @@ NEXT RELEASE Release notes (YYYY-MM-DD)
 * Add `realm::default_scheduler::make_default()` which generates a platform default scheduler if `realm::default_scheduler::set_default_factory` is not set.
 * Add `managed<T>::to_json(std::ostream&)` which allows managed objects to be printed as json.
 * Add `rbool::truepredicate()` and `rbool::falsepredicate()` expressions for type safe queries.
+* Add ability to build the Realm C++ SDK without stack allocated bridging types. Use the CMake flag `-DREALM_DISABLE_ALIGNED_STORAGE=1` to disable.
 
 ### Compatibility
 * Fileformat: Generates files with format v24. Reads and automatically upgrade from fileformat v10.
