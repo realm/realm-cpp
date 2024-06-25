@@ -500,15 +500,14 @@ namespace realm {
                                                                                                           client_config.user_agent_application_info,
                                                                                                           config.websocket_event_handler);
             client_config.socket_provider = websocket_provider;
-        }
-        if (config.sync_socket_provider) {
+        } else if (config.sync_socket_provider) {
             client_config.socket_provider = ::realm::internal::networking::create_sync_socket_provider_shim(config.sync_socket_provider,
                                                                                                             config.websocket_event_handler);
         }
 
         if (config.http_transport_client) {
             app_config.transport = internal::networking::create_http_client_shim(config.http_transport_client);
-        } else if (config.custom_http_headers || config.proxy_configuration) {
+        } else {
             app_config.transport = internal::networking::create_http_client_shim(std::make_shared<internal::networking::DefaultTransport>(config.custom_http_headers,
                                                                                                                                           config.proxy_configuration));
         }

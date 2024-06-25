@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     }
 
 #ifdef CPPREALM_ENABLE_SYNC_TESTS
-    std::optional<Admin::baas_manager> baas_manager;
+//    std::optional<Admin::baas_manager> baas_manager;
 //    if (const char* api_key = getenv("APIKEY")) {
 //        baas_manager.emplace(std::string(api_key));
 //        baas_manager->start();

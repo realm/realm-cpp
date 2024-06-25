@@ -20,6 +20,7 @@
 #define CPPREALM_NETWORKING_HPP
 
 #include <map>
+#include <cpprealm/internal/bridge/realm.hpp>
 
 namespace realm::networking {
     /**
@@ -95,11 +96,18 @@ namespace realm::networking {
 
     struct websocket_endpoint {
         using port_type = std::uint_fast16_t;
-        std::string address;                // Host address
-        port_type port;                     // Host port number
-        std::string path;                   // Includes access token in query.
-        std::vector<std::string> protocols; // Array of one or more websocket protocols
-        bool is_ssl;                        // true if SSL should be used
+        /// Host address
+        std::string address;
+        /// Host port number
+        port_type port;
+        /// Includes access token in query.
+        std::string path;
+        /// Array of one or more websocket protocols
+        std::vector<std::string> protocols;
+        /// true if SSL should be used
+        bool is_ssl;
+        /// Optional proxy config
+        std::optional<internal::bridge::realm::sync_config::proxy_config> proxy_configuration;
     };
 
     enum websocket_err_codes {

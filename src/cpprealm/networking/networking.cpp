@@ -2,6 +2,7 @@
 
 #include <realm/object-store/sync/generic_network_transport.hpp>
 #include <realm/sync/socket_provider.hpp>
+#include <realm/util/base64.hpp>
 
 namespace realm::internal::networking {
     ::realm::networking::request to_request(const ::realm::app::Request& core_request) {
@@ -51,6 +52,20 @@ namespace realm::internal::networking {
         core_ep.path = ep.path;
         core_ep.protocols = ep.protocols;
         core_ep.is_ssl = ep.is_ssl;
+
+        if (ep.proxy_configuration) {
+            core_ep.proxy = SyncConfig::ProxyConfig();
+            core_ep.proxy->address = ep.proxy_configuration->address;
+            core_ep.proxy->port = ep.proxy_configuration->port;
+            if (ep.proxy_configuration->username_password) {
+                auto userpass = util::format("%1:%2", ep.proxy_configuration->username_password->first, ep.proxy_configuration->username_password->second);
+                std::string encoded_userpass;
+                encoded_userpass.resize(realm::util::base64_encoded_size(userpass.length()));
+                realm::util::base64_encode(userpass, encoded_userpass);
+                core_ep.headers.emplace("Proxy-Authorization", util::format("Basic %1", encoded_userpass));
+            }
+        }
+
         return core_ep;
     }
 

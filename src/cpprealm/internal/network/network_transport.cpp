@@ -132,6 +132,8 @@ namespace realm::internal::networking {
 
     void DefaultTransport::send_request_to_server(const ::realm::networking::request& request,
                                                   std::function<void(const ::realm::networking::response&)>&& completion_block) {
+        bool disable_ssl = true;
+
         const auto uri = realm::util::Uri(request.url);
         std::string userinfo, host, port;
         uri.get_auth(userinfo, host, port);
@@ -189,7 +191,7 @@ namespace realm::internal::networking {
         if (m_proxy_config) {
             realm::sync::HTTPRequest req;
             req.method = realm::sync::HTTPMethod::Connect;
-            req.headers.emplace("Host", util::format("%1:%2", host, "443"));
+            req.headers.emplace("Host", util::format("%1:%2", host, is_localhost ? "9090" : "443"));
             if (m_proxy_config->username_password) {
                 auto userpass = util::format("%1:%2", m_proxy_config->username_password->first, m_proxy_config->username_password->second);
                 std::string encoded_userpass;
@@ -225,7 +227,7 @@ namespace realm::internal::networking {
         m_ssl_context.use_included_certificate_roots();
 #endif
 
-        if (url_scheme == URLScheme::HTTPS) {
+        if (url_scheme == URLScheme::HTTPS && !disable_ssl) {
             socket.ssl_stream.emplace(socket, m_ssl_context, Stream::client);
             socket.ssl_stream->set_host_name(host); // Throws
 
@@ -308,10 +310,10 @@ namespace realm::internal::networking {
                     return;
                 }
             };
-            if (url_scheme != URLScheme::HTTPS) {
-                handler(std::error_code());
-            } else {
+            if (url_scheme == URLScheme::HTTPS && !disable_ssl) {
                 socket.async_handshake(std::move(handler)); // Throws
+            } else {
+                handler(std::error_code());
             }
         });
 
