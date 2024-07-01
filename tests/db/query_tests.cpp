@@ -454,8 +454,8 @@ namespace realm {
                 obj.map_enum_col["my_enum"] = AllTypesObject::Enum::two;
 
                 obj.map_mixed_col["my_mixed"] = realm::mixed("foo_value");
-                obj.map_mixed_col["my_mixed_numeric"] = realm::mixed(1);
-                obj.map_mixed_col["my_mixed_numeric2"] = realm::mixed(2);
+                obj.map_mixed_col["my_mixed_numeric"] = realm::mixed((int64_t)1);
+                obj.map_mixed_col["my_mixed_numeric2"] = realm::mixed((int64_t)2);
 
                 obj.map_link_col["my_link"] = &obj_link;
                 obj.map_embedded_col["my_embedded_link"] = &embedded_obj;
@@ -554,10 +554,10 @@ namespace realm {
             CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed"] == realm::mixed("bar_value"); }) == 0);
             CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed"] != realm::mixed("bar_value"); }) == 3);
 
-            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed_numeric"] > 1; }) == 0);
-            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed_numeric"] >= 1; }) == 3);
-            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed_numeric2"] < 2; }) == 0);
-            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed_numeric2"] <= 2; }) == 3);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed_numeric"] > (int64_t)1; }) == 0);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed_numeric"] >= (int64_t)1; }) == 3);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed_numeric2"] < (int64_t)2; }) == 0);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed_numeric2"] <= (int64_t)2; }) == 3);
 
             // Link
             auto links = realm.objects<AllTypesObjectLink>().where([](auto& o) { return o._id == 0; });
