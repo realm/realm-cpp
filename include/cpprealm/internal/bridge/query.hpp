@@ -99,7 +99,6 @@ namespace realm::internal::bridge {
 
         query equal(const std::optional<obj>&) const;
         query not_equal(const std::optional<obj>&) const;
-
     private:
         std::shared_ptr<Subexpr> m_subexpr;
     };
@@ -231,6 +230,15 @@ namespace realm::internal::bridge {
         // Conditions: links
         query& links_to(col_key column_key, const internal::bridge::obj& o);
         query& not_links_to(col_key column_key, const internal::bridge::obj& o);
+
+        query& dictionary_has_value_for_key_equals(col_key column_key, const std::string& key, const mixed& value);
+        query& dictionary_has_value_for_key_not_equals(col_key column_key, const std::string& key, const mixed& value);
+        query& dictionary_has_value_for_key_greater_than(col_key column_key, const std::string& key, const mixed& value);
+        query& dictionary_has_value_for_key_less_than(col_key column_key, const std::string& key, const mixed& value);
+        query& dictionary_has_value_for_key_greater_than_equals(col_key column_key, const std::string& key, const mixed& value);
+        query& dictionary_has_value_for_key_less_than_equals(col_key column_key, const std::string& key, const mixed& value);
+        query& dictionary_contains_string_for_key(col_key column_key, const std::string& key, const std::string& value);
+        subexpr dictionary_link_subexpr(col_key column_key, col_key link_column_key, const std::string& key);
 
         // Expressions
         static query falsepredicate();
