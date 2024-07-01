@@ -705,6 +705,7 @@ namespace realm::internal::bridge {
             case type_UUID:
                 return table->column<UUID>(link_column_key).clone();
         }
+        ::REALM_UNREACHABLE();
     }
 
     __generate_string_query_operator_case_sensitive(equal, std::string_view)
