@@ -52,7 +52,7 @@ jobs:
       - name: Setup Ccache
         uses: hendrikmuhs/ccache-action@v1.1
         with:
-          key: ccache-macos-${{ matrix.xcode }}
+          key: ccache-macos-${{ matrix.xcode }}-disable-aligned-storage-${{ matrix.disable-aligned-storage }}-${{ matrix.configuration }}
 
       - name: Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@master
@@ -137,7 +137,7 @@ jobs:
       - name: Setup Ccache
         uses: hendrikmuhs/ccache-action@v1.1
         with:
-          key: ccache-linux-${{ matrix.compiler.name }}-${{ matrix.compiler.version }}
+          key: ccache-linux-${{ matrix.compiler.name }}-${{ matrix.compiler.version }}-${{ matrix.configuration }}
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.13
