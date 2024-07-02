@@ -1,12 +1,13 @@
-NEXT_RELEASE Release notes (YYYY-MM-DD)
+NEXT-RELEASE Release notes (YYYY-MM-DD)
 =============================================================
 
 ### Fixed
 * None
 
 ### Enhancements
-* Add ability to use `managed<std::map<std::string, T>>` in type safe queries.
-  Supported operators are `==`, `!=`, `>`, `<`, `>=`, `<=` and `contains(const std::string&)` (for string values only).
+* Add ability to use `managed<std::map<std::string, T>>` in type safe queries when comparing a value for a key. e.g.
+  `realm.object<MyObject>().where([](auto& o) { return o.my_map["foo_key"] == "some value"; })`
+  Supported operators are `==`, `!=`, `>`, `<`, `>=`, `<=` and `contains(const std::string&)`.
 
 ### Compatibility
 * Fileformat: Generates files with format v24. Reads and automatically upgrade from fileformat v10.

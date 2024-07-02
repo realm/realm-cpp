@@ -21,9 +21,9 @@
 
 #include <cpprealm/accessors.hpp>
 #include <cpprealm/macros.hpp>
-#include <cpprealm/rbool.hpp>
 #include <cpprealm/notifications.hpp>
 #include <cpprealm/observation.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm {
 
@@ -113,7 +113,7 @@ namespace realm {
 
         rbool operator!=(const mapped_type &rhs) const {
             if (this->m_rbool_query) {
-                return this->m_rbool_query->dictionary_has_value_for_key_not_equals(this->m_col_key, m_key, internal::bridge::mixed(serialize(rhs)));
+                return this->m_rbool_query->dictionary_has_value_for_key_not_equals(this->m_col_key, m_key, internal::bridge::mixed(serialize(rhs, m_realm)));
             } else {
                 return !operator==(rhs);
             }
@@ -626,7 +626,6 @@ namespace realm {
         void erase(const std::string& key) {
             m_obj->get_dictionary(m_key).erase(key);
         }
-
 
         notification_token observe(std::function<void(realm::dictionary_collection_change)>&& fn)
         {

@@ -99,6 +99,7 @@ namespace realm::internal::bridge {
 
         query equal(const std::optional<obj>&) const;
         query not_equal(const std::optional<obj>&) const;
+
     private:
         std::shared_ptr<Subexpr> m_subexpr;
     };
