@@ -246,12 +246,6 @@ public:
         // HTTP proxy configuration to be set on each HTTP request when using the internal HTTP client.
         std::optional<sync_config::proxy_config> proxy_configuration;
         /**
-         * Sets a callback that will be used to configure outgoing WebSocket connections to Atlas Device Sync.
-         * You can use this to modify the default WebSocket behavior. Normally this is not required to connect to MongoDB Atlas,
-         * but it can be useful if client devices are behind a corporate firewall or use a more complex networking setup.
-         */
-        std::shared_ptr<::realm::networking::websocket_event_handler> websocket_event_handler;
-        /**
          * Optionally provide a custom transport for network calls to the server.
          *
          * Alternatively use `realm::networking::set_http_client_factory` to globally set
@@ -264,6 +258,7 @@ public:
          * the default HTTP transport client.
          */
         std::shared_ptr<::realm::networking::sync_socket_provider> sync_socket_provider;
+
     };
 
     [[deprecated("Use App(const configuration&) instead.")]]

@@ -1,31 +1,36 @@
 #include "../admin_utils.hpp"
 #include "../main.hpp"
 #include "test_objects.hpp"
-
+#include "../utils/networking/proxy_server.hpp"
 using namespace realm;
 
 TEST_CASE("websocket_handler_called", "[sync]") {
+
+//    tests::utils::proxy_server::config cfg;
+//    cfg.port = 1234;
+//    cfg.client_uses_ssl = false;
+//    cfg.server_uses_ssl = false;
+//    tests::utils::proxy_server server(std::move(cfg));
 
     proxy_config pc;
     pc.port = 1234;
     pc.address = "127.0.0.1";
     realm::App::configuration config;
-    //config.proxy_configuration = pc;
-    config.app_id = Admin::Session::shared().cached_app_id(); //"cpp-sdk-vbfxo";
-//    c.app_id = "cpp-sdk-vbfxo";
+//    config.proxy_configuration = pc;
+    config.app_id = Admin::Session::shared().cached_app_id();
     config.base_url = Admin::Session::shared().base_url();
 
-    realm::networking::websocket_event_handler handler;
-    handler.on_connect = [&](realm::networking::websocket_endpoint && ep) {
-        ep.is_ssl = false;
-//        ep.port = 1234;
-//        ep.address = "localhost";
 
-        ep.proxy_configuration = pc;
+    struct foo_socket_provider : public ::realm::networking::default_socket_provider {
+        std::unique_ptr<::realm::networking::websocket_interface> connect(std::unique_ptr<::realm::networking::websocket_observer> o,
+                                                                          ::realm::networking::websocket_endpoint&& ep) override {
+//            url = url.replace("wss://", "ws://");
 
-        return ep;
+            return ::realm::networking::default_socket_provider::connect(std::move(o), std::move(ep));
+        }
     };
-    config.websocket_event_handler = std::make_shared<realm::networking::websocket_event_handler>(handler);
+
+    config.sync_socket_provider = std::make_shared<foo_socket_provider>();
 
     auto app = realm::App(config);
     app.get_sync_manager().set_log_level(logger::level::all);
@@ -45,8 +50,7 @@ TEST_CASE("websocket_handler_called", "[sync]") {
                                                          return obj.str_col == "foo";
                                                      });
                                                      subs.add<AllTypesObjectLink>("foo-link");
-                                                 })
-                             .get();
+                                                 }).get();
     CHECK(update_success == true);
     CHECK(synced_realm.subscriptions().size() == 2);
 

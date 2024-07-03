@@ -17,6 +17,13 @@ else()
 endif()
 
 if (NOT BUILD_FROM_PACKAGE_MANAGER)
+    # Find Boost
+    find_package(Boost REQUIRED COMPONENTS system thread)
+    include_directories(${Boost_INCLUDE_DIRS})
+    # Find OpenSSL
+    find_package(OpenSSL REQUIRED)
+    include_directories(${OPENSSL_INCLUDE_DIR})
+
     add_executable(cpprealm_sync_tests
                     main.hpp
                     main.cpp
@@ -27,7 +34,9 @@ if (NOT BUILD_FROM_PACKAGE_MANAGER)
                     sync/flexible_sync_tests.cpp
                     sync/app_tests.cpp
                     sync/client_reset_tests.cpp
-                    sync/networking_tests.cpp)
+                    sync/networking_tests.cpp
+                    utils/networking/proxy_server.hpp
+                    utils/networking/proxy_server.cpp)
 endif()
 
 add_executable(cpprealm_db_tests
@@ -101,7 +110,7 @@ if (MSVC AND ENABLE_STATIC)
 endif()
 
 if (NOT BUILD_FROM_PACKAGE_MANAGER)
-    target_link_libraries(cpprealm_sync_tests PUBLIC ${CPPREALM_TARGET} Catch2::Catch2)
+    target_link_libraries(cpprealm_sync_tests PUBLIC ${CPPREALM_TARGET} Catch2::Catch2 ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES})
 endif()
 target_link_libraries(cpprealm_db_tests PUBLIC ${CPPREALM_TARGET} Catch2::Catch2)
 

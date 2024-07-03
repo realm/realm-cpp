@@ -132,7 +132,7 @@ namespace realm::internal::networking {
 
     void DefaultTransport::send_request_to_server(const ::realm::networking::request& request,
                                                   std::function<void(const ::realm::networking::response&)>&& completion_block) {
-        bool disable_ssl = true;
+        bool disable_ssl = true; // TODO: pull this from proxy config
 
         const auto uri = realm::util::Uri(request.url);
         std::string userinfo, host, port;
