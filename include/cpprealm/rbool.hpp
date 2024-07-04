@@ -34,15 +34,12 @@ namespace realm {
     // MARK: rbool
 
     class rbool {
-        bool is_for_queries = false;
-        std::optional<internal::bridge::link_chain> m_link_chain;
-        internal::bridge::table m_table;
-
-        template<typename T>
-        friend struct results;
-        friend rbool operator&&(const rbool &lhs, const rbool &rhs);
-        friend rbool operator||(const rbool &lhs, const rbool &rhs);
     public:
+        struct dictionary_context {
+            internal::bridge::col_key origin_col_key;
+            std::string m_key;
+        };
+
         rbool& add_link_chain(const internal::bridge::col_key& col_key) {
             if (m_link_chain) {
                 m_link_chain->link(col_key);
@@ -57,6 +54,9 @@ namespace realm {
         if (auto lc = m_link_chain) { \
             q = lc->column<type>(col_key).comparison(rhs); \
             m_link_chain = std::nullopt; \
+        } else if (m_dictionary_ctx) { \
+            q = q.dictionary_link_subexpr(m_dictionary_ctx->origin_col_key, col_key, m_dictionary_ctx->m_key).comparison(rhs); \
+            m_dictionary_ctx = std::nullopt; \
         } else {                       \
             if (rhs) {                 \
                 q = internal::bridge::query(q.get_table()).comparison(col_key, *rhs); \
@@ -70,6 +70,9 @@ namespace realm {
         if (auto lc = m_link_chain) { \
             q = lc->column<type>(col_key).comparison(std::optional<type>(rhs)); \
             m_link_chain = std::nullopt; \
+        } else if (m_dictionary_ctx) { \
+            q = q.dictionary_link_subexpr(m_dictionary_ctx->origin_col_key, col_key, m_dictionary_ctx->m_key).comparison(std::optional<type>(rhs)); \
+            m_dictionary_ctx = std::nullopt; \
         } else {                       \
             q = internal::bridge::query(q.get_table()).comparison(col_key, rhs); \
         } \
@@ -81,6 +84,9 @@ namespace realm {
         if (auto lc = m_link_chain) { \
             q = lc->column<type>(col_key).comparison(::realm::serialize(std::optional<type>(rhs))); \
             m_link_chain = std::nullopt; \
+        } else if (m_dictionary_ctx) { \
+            q = q.dictionary_link_subexpr(m_dictionary_ctx->origin_col_key, col_key, m_dictionary_ctx->m_key).comparison(std::optional<type>(rhs)); \
+            m_dictionary_ctx = std::nullopt; \
         } else {                       \
             q = internal::bridge::query(q.get_table()).comparison(col_key, rhs); \
         } \
@@ -188,6 +194,48 @@ namespace realm {
             return *this;
         }
 
+        // Dictionary
+
+        rbool& dictionary_has_value_for_key_equals(internal::bridge::col_key column_key, const std::string& key, const internal::bridge::mixed& value) {
+            q = internal::bridge::query(q.get_table()).dictionary_has_value_for_key_equals(column_key, key, value);
+            return *this;
+        }
+
+        rbool& dictionary_has_value_for_key_not_equals(internal::bridge::col_key column_key, const std::string& key, const internal::bridge::mixed& value) {
+            q = internal::bridge::query(q.get_table()).dictionary_has_value_for_key_not_equals(column_key, key, value);
+            return *this;
+        }
+
+        rbool& dictionary_has_value_for_key_greater_than(internal::bridge::col_key column_key, const std::string& key, const internal::bridge::mixed& value) {
+            q = internal::bridge::query(q.get_table()).dictionary_has_value_for_key_greater_than(column_key, key, value);
+            return *this;
+        }
+
+        rbool& dictionary_has_value_for_key_less_than(internal::bridge::col_key column_key, const std::string& key, const internal::bridge::mixed& value) {
+            q = internal::bridge::query(q.get_table()).dictionary_has_value_for_key_less_than(column_key, key, value);
+            return *this;
+        }
+
+        rbool& dictionary_has_value_for_key_greater_than_equals(internal::bridge::col_key column_key, const std::string& key, const internal::bridge::mixed& value) {
+            q = internal::bridge::query(q.get_table()).dictionary_has_value_for_key_greater_than_equals(column_key, key, value);
+            return *this;
+        }
+
+        rbool& dictionary_has_value_for_key_less_than_equals(internal::bridge::col_key column_key, const std::string& key, const internal::bridge::mixed& value) {
+            q = internal::bridge::query(q.get_table()).dictionary_has_value_for_key_less_than_equals(column_key, key, value);
+            return *this;
+        }
+
+        rbool& dictionary_contains_string_for_key(internal::bridge::col_key column_key, const std::string& key, const std::string& value) {
+            q = internal::bridge::query(q.get_table()).dictionary_contains_string_for_key(column_key, key, value);
+            return *this;
+        }
+
+        rbool& add_dictionary_link_chain(dictionary_context&& ctx) {
+            m_dictionary_ctx = ctx;
+            return *this;
+        }
+
         ~rbool() {
             if (is_for_queries)
                 q.~query();
@@ -207,7 +255,7 @@ namespace realm {
             mutable internal::bridge::query q;
         };
 
-        rbool(internal::bridge::query &&q) : is_for_queries(true), q(q) {
+        rbool(internal::bridge::query &&q) : q(q), is_for_queries(true) {
             m_table = q.get_table();
         }
         rbool(bool b) : b(b) {}
@@ -218,6 +266,18 @@ namespace realm {
             } else
                 b = r.b;
         }
+
+    private:
+        bool is_for_queries = false;
+        bool is_dictionary_link = false;
+        std::optional<internal::bridge::link_chain> m_link_chain;
+        internal::bridge::table m_table;
+        std::optional<dictionary_context> m_dictionary_ctx;
+
+        template<typename T>
+        friend struct results;
+        friend rbool operator&&(const rbool &lhs, const rbool &rhs);
+        friend rbool operator||(const rbool &lhs, const rbool &rhs);
     };
 
     inline rbool operator &&(const rbool& lhs, const rbool& rhs) {
@@ -247,7 +307,7 @@ namespace realm {
         return rbool(table);
     }
 
-/// Return no objects from a collection.
+    /// Return no objects from a collection.
     template<typename T>
     inline rbool falsepredicate(const T& o) {
         rbool* rb = internal::get_rbool(o);

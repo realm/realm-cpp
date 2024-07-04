@@ -255,7 +255,7 @@ namespace realm::internal::bridge {
         if (rhs) {
             return *std::dynamic_pointer_cast<::realm::Columns<StringData>>(m_subexpr) == *rhs;
         } else {
-            return *std::dynamic_pointer_cast<::realm::Columns<StringData>>(m_subexpr) >= ::realm::null();
+            return *std::dynamic_pointer_cast<::realm::Columns<StringData>>(m_subexpr) == ::realm::null();
         }
     }
 
@@ -550,7 +550,6 @@ namespace realm::internal::bridge {
 
     __generate_query_operator(equal, bool)
     __generate_query_operator(not_equal, bool)
-                                                                                                                                                                                                                                                                                                                    query& links_to(col_key column_key, bool value);
     query& query::links_to(col_key column_key, const internal::bridge::obj& o) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->links_to(column_key, o.get_key());
@@ -605,6 +604,108 @@ namespace realm::internal::bridge {
 #else
         return m_query->get_description();
 #endif
+    }
+
+    // Dictionary
+
+    query& query::dictionary_has_value_for_key_equals(col_key column_key, const std::string& key, const mixed& value) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key) == value.operator Mixed();
+#else
+        m_query = std::make_shared<Query>(m_query->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key) == value.operator Mixed());
+#endif
+        return *this;
+    }
+
+    query& query::dictionary_has_value_for_key_not_equals(col_key column_key, const std::string& key, const mixed& value) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key) != value.operator Mixed();
+#else
+        m_query = std::make_shared<Query>(m_query->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key) != value.operator Mixed());
+#endif
+        return *this;
+    }
+
+    query& query::dictionary_has_value_for_key_greater_than(col_key column_key, const std::string& key, const mixed& value) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key) > value.operator Mixed();
+#else
+        m_query = std::make_shared<Query>(m_query->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key) > value.operator Mixed());
+#endif
+        return *this;
+    }
+
+    query& query::dictionary_has_value_for_key_less_than(col_key column_key, const std::string& key, const mixed& value) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key) < value.operator Mixed();
+#else
+        m_query = std::make_shared<Query>(m_query->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key) < value.operator Mixed());
+#endif
+        return *this;
+    }
+
+    query& query::dictionary_has_value_for_key_greater_than_equals(col_key column_key, const std::string& key, const mixed& value) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key) >= value.operator Mixed();
+#else
+        m_query = std::make_shared<Query>(m_query->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key) >= value.operator Mixed());
+#endif
+        return *this;
+    }
+
+    query& query::dictionary_has_value_for_key_less_than_equals(col_key column_key, const std::string& key, const mixed& value) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key) <= value.operator Mixed();
+#else
+        m_query = std::make_shared<Query>(m_query->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key) <= value.operator Mixed());
+#endif
+        return *this;
+    }
+
+    query& query::dictionary_contains_string_for_key(col_key column_key, const std::string& key, const std::string& value) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key).contains(value);
+#else
+        m_query = std::make_shared<Query>(m_query->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key).contains(value));
+#endif
+        return *this;
+    }
+
+    subexpr query::dictionary_link_subexpr(col_key column_key, col_key link_column_key, const std::string& key) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        auto table = reinterpret_cast<Query *>(&m_query)->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key).get_target_table();
+#else
+        auto table = m_query->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key).get_target_table();
+#endif
+        auto col_type = table->get_column_type(link_column_key);
+        switch (col_type) {
+            case type_Int:
+                return table->column<Int>(link_column_key).clone();
+            case type_Bool:
+                return table->column<Bool>(link_column_key).clone();
+            case type_String:
+                return table->column<StringData>(link_column_key).clone();
+            case type_Binary:
+                return table->column<Binary>(link_column_key).clone();
+            case type_Mixed:
+                return table->column<Mixed>(link_column_key).clone();
+            case type_Timestamp:
+                return table->column<Timestamp>(link_column_key).clone();
+            case type_Float:
+                return table->column<Float>(link_column_key).clone();
+            case type_Double:
+                return table->column<Double>(link_column_key).clone();
+            case type_Decimal:
+                return table->column<Decimal>(link_column_key).clone();
+            case type_Link:
+            case type_TypedLink:
+                return table->column<Link>(link_column_key).clone();
+            case type_ObjectId:
+                return table->column<ObjectId>(link_column_key).clone();
+            case type_UUID:
+                return table->column<UUID>(link_column_key).clone();
+        }
+        ::REALM_UNREACHABLE();
     }
 
     __generate_string_query_operator_case_sensitive(equal, std::string_view)

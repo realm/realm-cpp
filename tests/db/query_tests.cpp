@@ -408,5 +408,187 @@ namespace realm {
             });
             CHECK(res.size() == 3);
         }
+
+        SECTION("map") {
+            auto realm = db(std::move(config));
+            auto date = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+            auto obj_id = realm::object_id::generate();
+
+            auto create_obj = [&](int64_t pk) {
+                auto obj = AllTypesObject();
+                obj._id = pk;
+                obj.str_col = "root obj";
+                auto obj_link = AllTypesObjectLink();
+                obj_link._id = pk;
+                obj_link.str_col = "foo";
+                auto obj_link2 = StringObject();
+                obj_link2._id = pk;
+                obj_link2.str_col = "bar";
+                obj_link.str_link_col = &obj_link2;
+
+                auto embedded_obj = AllTypesObjectEmbedded();
+                embedded_obj.str_col = "foo_embedded";
+
+                obj.map_int_col["one"] = 1;
+                obj.map_int_col["two"] = 2;
+
+                obj.map_bool_col["is_true"] = true;
+
+                obj.map_double_col["my_double"] = 1.234;
+                obj.map_double_col["my_double2"] = 2.234;
+
+                obj.map_str_col["foo"] = "bar";
+                obj.map_str_col["name"] = "Fido";
+
+                obj.map_uuid_col["my_uuid"] = realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002");
+                obj.map_object_id_col["my_object_id"] = obj_id;
+
+                obj.map_decimal_col["my_decimal"] = realm::decimal128(1.234);
+                obj.map_decimal_col["my_decimal2"] = realm::decimal128(2.234);
+
+                obj.map_binary_col["my_binary"] = std::vector<uint8_t>({0,0,0,0,1,1,1,1});
+
+                obj.map_date_col["my_date"] = std::chrono::system_clock::from_time_t(date);
+                obj.map_date_col["my_date2"] = std::chrono::system_clock::from_time_t(date + 10);
+
+                obj.map_enum_col["my_enum"] = AllTypesObject::Enum::two;
+
+                obj.map_mixed_col["my_mixed"] = realm::mixed(std::string("foo_value"));
+                obj.map_mixed_col["my_mixed_numeric"] = realm::mixed((int64_t)1);
+                obj.map_mixed_col["my_mixed_numeric2"] = realm::mixed((int64_t)2);
+
+                obj.map_link_col["my_link"] = &obj_link;
+                obj.map_embedded_col["my_embedded_link"] = &embedded_obj;
+
+                return realm.write([&]() {
+                    return realm.add(std::move(obj));
+                });
+            };
+
+            auto managed_obj = create_obj(0);
+            auto managed_obj2 = create_obj(1);
+            auto managed_obj3 = create_obj(2);
+
+            auto do_query = [&](std::function<rbool(realm::managed<AllTypesObject>&)>&& fn) -> size_t {
+                auto res = realm.objects<AllTypesObject>().where([fn = std::move(fn)](realm::managed<AllTypesObject>& o) {
+                    return fn(o);
+                });
+                return res.size();
+            };
+
+            // Int
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_int_col["one"] == 1; }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_int_col["one"] == 2; }) == 0);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_int_col["one"] != 2; }) == 3);
+
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_int_col["two"] > 1; }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_int_col["two"] >= 1; }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_int_col["two"] < 2; }) == 0);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_int_col["two"] <= 2; }) == 3);
+
+            // Bool
+
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_bool_col["is_true"] == true; }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_bool_col["is_true"] == false; }) == 0);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_bool_col["is_true"] != false; }) == 3);
+
+            // Double
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_double_col["my_double"] == 1.234; }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_double_col["my_double"] == 2.234; }) == 0);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_double_col["my_double"] != 2.234; }) == 3);
+
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_double_col["my_double"] > 1; }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_double_col["my_double"] >= 1; }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_double_col["my_double2"] < 2; }) == 0);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_double_col["my_double2"] <= 2.234; }) == 3);
+
+            // String
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_str_col["name"] == "Fido"; }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_str_col["name"] == "Bill"; }) == 0);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_str_col["name"] != "NA"; }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_str_col["name"].contains("ido"); }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_str_col["name"].contains("NA"); }) == 0);
+
+            // UUID
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_uuid_col["my_uuid"] == realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"); }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_uuid_col["my_uuid"] == realm::uuid("20de7916-7f84-11ec-a8a3-0242ac120002"); }) == 0);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_uuid_col["my_uuid"] != realm::uuid("20de7916-7f84-11ec-a8a3-0242ac120002"); }) == 3);
+
+            // Object ID
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_object_id_col["my_object_id"] == obj_id; }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_object_id_col["my_object_id"] == realm::object_id::generate(); }) == 0);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_object_id_col["my_object_id"] != realm::object_id::generate(); }) == 3);
+
+            // Decimal
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_decimal_col["my_decimal"] == realm::decimal128(1.234); }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_decimal_col["my_decimal"] == realm::decimal128(2.234); }) == 0);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_decimal_col["my_decimal"] != realm::decimal128(2.234); }) == 3);
+
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_decimal_col["my_decimal"] > 1; }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_decimal_col["my_decimal"] >= 1; }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_decimal_col["my_decimal2"] < 2; }) == 0);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_decimal_col["my_decimal2"] <= 2.234; }) == 3);
+
+            // Binary
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_binary_col["my_binary"] == std::vector<uint8_t>({0,0,0,0,1,1,1,1}); }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_binary_col["my_binary"] == std::vector<uint8_t>({1,0,0,0,1,1,1,1}); }) == 0);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_binary_col["my_binary"] != std::vector<uint8_t>({1,0,0,0,1,1,1,1}); }) == 3);
+
+            // Date
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_date_col["my_date"] == std::chrono::system_clock::from_time_t(date); }) == 3);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_date_col["my_date"] == std::chrono::system_clock::from_time_t(date + 10); }) == 0);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_date_col["my_date"] != std::chrono::system_clock::from_time_t(date + 10); }) == 3);
+
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_date_col["my_date"] > std::chrono::system_clock::from_time_t(date - 1); }) == 3);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_date_col["my_date"] >= std::chrono::system_clock::from_time_t(date); }) == 3);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_date_col["my_date2"] < std::chrono::system_clock::from_time_t(date + 10); }) == 0);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_date_col["my_date2"] <= std::chrono::system_clock::from_time_t(date + 20); }) == 3);
+
+            // Enum
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_enum_col["my_enum"] == AllTypesObject::Enum::two; }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_enum_col["my_enum"] == AllTypesObject::Enum::one; }) == 0);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_enum_col["my_enum"] != AllTypesObject::Enum::one; }) == 3);
+
+            // Mixed
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed"] == realm::mixed(std::string("foo_value")); }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed"] == realm::mixed(std::string("bar_value")); }) == 0);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed"] != realm::mixed(std::string("bar_value")); }) == 3);
+
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed_numeric"] > (int64_t)1; }) == 0);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed_numeric"] >= (int64_t)1; }) == 3);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed_numeric2"] < (int64_t)2; }) == 0);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_mixed_col["my_mixed_numeric2"] <= (int64_t)2; }) == 3);
+
+            // Link
+            auto links = realm.objects<AllTypesObjectLink>().where([](auto& o) { return o._id == 0; });
+            CHECK(links.size() == 1);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_link_col["my_link"] == links[0]; }) == 1);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_link_col["my_link"] != links[0]; }) == 2);
+
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_link_col["my_link"]->str_col == "foo"; }) == 3);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_link_col["my_link"]->str_col == "bar"; }) == 0);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_link_col["my_link"]->str_col != "bar"; }) == 3);
+
+            // RHS is null
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_link_col["my_link"] == managed_obj.opt_obj_col; }) == 0);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_link_col["my_link"] != managed_obj.opt_obj_col; }) == 3);
+
+            auto managed_link = realm.write([&]() {
+                AllTypesObjectLink link;
+                link._id = 1234;
+                return realm.add(std::move(link));
+            });
+            realm.write([&]() {
+                managed_obj.map_link_col["my_link"] = managed_link;
+            });
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_link_col["my_link"] == managed_link; }) == 1);
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_link_col["my_link"] == managed_link; }) != 2);
+
+            // Embedded
+            CHECK(do_query([&](realm::managed<AllTypesObject>& o) -> rbool { return o.map_embedded_col["my_embedded_link"]->str_col == "foo_embedded"; }) == 3);
+
+            // Test non existent key
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_int_col["NA"] == 1; }) == 0);
+        }
     }
 }

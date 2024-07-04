@@ -23,6 +23,7 @@
 #include <cpprealm/macros.hpp>
 #include <cpprealm/notifications.hpp>
 #include <cpprealm/observation.hpp>
+#include <cpprealm/rbool.hpp>
 
 namespace realm {
 
@@ -32,6 +33,16 @@ namespace realm {
                  const std::string &key,
                  const internal::bridge::realm &r)
             : m_backing_map(std::move(backing_map)), m_key(key), m_realm(r) {}
+
+        box_base(rbool* query,
+                 internal::bridge::col_key column_key,
+                 const std::string &key,
+                 const internal::bridge::realm &r) {
+            m_rbool_query = query;
+            m_col_key = column_key;
+            m_key = key;
+            m_realm = r;
+        }
 
         box_base &operator=(const mapped_type &o) {
             m_backing_map.insert(m_key, internal::bridge::mixed(std::move(o)));
@@ -86,25 +97,33 @@ namespace realm {
             return *this;
         }
 
-        bool operator==(const mapped_type &rhs) const {
-            if constexpr (internal::type_info::is_optional<mapped_type>::value) {
-                auto v = m_backing_map.get(m_key);
-                if (v.is_null() && !rhs) {
-                    return true;
+        rbool operator==(const mapped_type &rhs) const {
+            if constexpr (realm::internal::type_info::MixedPersistableConcept<mapped_type>::value) {
+                if (this->m_rbool_query) {
+                    return this->m_rbool_query->dictionary_has_value_for_key_equals(this->m_col_key, m_key, serialize(rhs, m_realm));
                 }
-                return m_backing_map.get(m_key) == rhs;
-            } else if constexpr (realm::internal::type_info::MixedPersistableConcept<mapped_type>::value) {
                 return m_backing_map.get(m_key) == serialize(rhs, m_realm);
             } else {
-                return m_backing_map.get(m_key) == internal::bridge::mixed(rhs);
+                if (this->m_rbool_query) {
+                    return this->m_rbool_query->dictionary_has_value_for_key_equals(this->m_col_key, m_key, internal::bridge::mixed(serialize(rhs)));
+                }
+                return m_backing_map.get(m_key) == internal::bridge::mixed(serialize(rhs));
             }
         }
-        bool operator!=(const mapped_type &rhs) const {
-            return !this->operator==(rhs);
+
+        rbool operator!=(const mapped_type &rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_not_equals(this->m_col_key, m_key, internal::bridge::mixed(serialize(rhs, m_realm)));
+            } else {
+                return !operator==(rhs);
+            }
         }
+
         internal::bridge::core_dictionary m_backing_map;
         internal::bridge::realm m_realm;
         std::string m_key;
+        internal::bridge::col_key m_col_key;
+        rbool* m_rbool_query = nullptr;
     };
     template<typename V, typename = void>
     struct box;
@@ -115,6 +134,34 @@ namespace realm {
         int64_t operator*() {
             return m_backing_map.get(m_key).operator int64_t();
         }
+
+        rbool operator>(int64_t rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_greater_than(this->m_col_key, m_key, rhs);
+            }
+            return m_backing_map.get(m_key) > internal::bridge::mixed(rhs);
+        }
+
+        rbool operator>=(int64_t rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_greater_than_equals(this->m_col_key, m_key, rhs);
+            }
+            return m_backing_map.get(m_key) >= internal::bridge::mixed(rhs);
+        }
+
+        rbool operator<(int64_t rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_less_than(this->m_col_key, m_key, rhs);
+            }
+            return m_backing_map.get(m_key) < internal::bridge::mixed(rhs);
+        }
+
+        rbool operator<=(int64_t rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_less_than_equals(this->m_col_key, m_key, rhs);
+            }
+            return m_backing_map.get(m_key) <= internal::bridge::mixed(rhs);
+        }
     };
     template<>
     struct box<double> : public box_base<double> {
@@ -122,6 +169,34 @@ namespace realm {
         using box_base<double>::operator=;
         double operator*() {
             return m_backing_map.get(m_key).operator double();
+        }
+
+        rbool operator>(double rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_greater_than(this->m_col_key, m_key, rhs);
+            }
+            return m_backing_map.get(m_key) > internal::bridge::mixed(rhs);
+        }
+
+        rbool operator>=(double rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_greater_than_equals(this->m_col_key, m_key, rhs);
+            }
+            return m_backing_map.get(m_key) >= internal::bridge::mixed(rhs);
+        }
+
+        rbool operator<(double rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_less_than(this->m_col_key, m_key, rhs);
+            }
+            return m_backing_map.get(m_key) < internal::bridge::mixed(rhs);
+        }
+
+        rbool operator<=(double rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_less_than_equals(this->m_col_key, m_key, rhs);
+            }
+            return m_backing_map.get(m_key) <= internal::bridge::mixed(rhs);
         }
     };
     template<>
@@ -139,39 +214,8 @@ namespace realm {
         V operator*() {
             return this->m_backing_map.get(this->m_key).operator int64_t();
         }
-
-        bool operator==(const V& rhs) const {
-            return this->m_backing_map.get(this->m_key).operator int64_t() == static_cast<int64_t>(rhs);
-        }
-        bool operator!=(const V& rhs) const {
-            return !this->operator==(rhs);
-        }
     };
-    template<typename V>
-    struct box<V, std::enable_if_t<std::is_enum_v<typename V::value_type>>> : public box_base<V> {
-        using box_base<V>::box_base;
-        using box_base<V>::operator=;
 
-        V operator*() {
-            auto v = this->m_backing_map.get(this->m_key);
-            if (v.is_null()) {
-                return std::nullopt;
-            } else {
-                return static_cast<typename V::value_type>(v.operator int64_t());
-            };
-        }
-
-        bool operator==(const V& rhs) const {
-            auto v = this->m_backing_map.get(this->m_key);
-            if (v.is_null() && !rhs) {
-                return true;
-            }
-            return static_cast<typename V::value_type>(v.operator int64_t()) == rhs;
-        }
-        bool operator!=(const V& rhs) const {
-            return !this->operator==(rhs);
-        }
-    };
     template<>
     struct box<uuid> : public box_base<uuid> {
         using box_base<uuid>::box_base;
@@ -184,6 +228,34 @@ namespace realm {
     struct box<Mixed, std::enable_if_t<internal::type_info::MixedPersistableConcept<Mixed>::value>> : public box_base<Mixed> {
         using box_base<Mixed>::box_base;
         using box_base<Mixed>::operator=;
+
+        rbool operator>(Mixed rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_greater_than(this->m_col_key, this->m_key, serialize(rhs, this->m_realm));
+            }
+            return this->m_backing_map.get(this->m_key) > serialize(rhs, this->m_realm);
+        }
+
+        rbool operator>=(Mixed rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_greater_than_equals(this->m_col_key, this->m_key, serialize(rhs, this->m_realm));
+            }
+            return this->m_backing_map.get(this->m_key) >= serialize(rhs, this->m_realm);
+        }
+
+        rbool operator<(Mixed rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_less_than(this->m_col_key, this->m_key, serialize(rhs, this->m_realm));
+            }
+            return this->m_backing_map.get(this->m_key) < serialize(rhs, this->m_realm);
+        }
+
+        rbool operator<=(Mixed rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_less_than_equals(this->m_col_key, this->m_key, serialize(rhs, this->m_realm));
+            }
+            return this->m_backing_map.get(this->m_key) <= serialize(rhs, this->m_realm);
+        }
     };
     template<>
     struct box<object_id> : public box_base<object_id> {
@@ -200,6 +272,34 @@ namespace realm {
         decimal128 operator*() {
             return this->m_backing_map.get(this->m_key).operator internal::bridge::decimal128().operator ::realm::decimal128();
         }
+
+        rbool operator>(decimal128 rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_greater_than(this->m_col_key, m_key, serialize(rhs));
+            }
+            return m_backing_map.get(m_key) > internal::bridge::mixed(serialize(rhs));
+        }
+
+        rbool operator>=(decimal128 rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_greater_than_equals(this->m_col_key, m_key, serialize(rhs));
+            }
+            return m_backing_map.get(m_key) >= internal::bridge::mixed(serialize(rhs));
+        }
+
+        rbool operator<(decimal128 rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_less_than(this->m_col_key, m_key, serialize(rhs));
+            }
+            return m_backing_map.get(m_key) < internal::bridge::mixed(serialize(rhs));
+        }
+
+        rbool operator<=(decimal128 rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_less_than_equals(this->m_col_key, m_key, serialize(rhs));
+            }
+            return m_backing_map.get(m_key) <= internal::bridge::mixed(serialize(rhs));
+        }
     };
     template<>
     struct box<std::chrono::time_point<std::chrono::system_clock>> : public box_base<std::chrono::time_point<std::chrono::system_clock>> {
@@ -207,6 +307,34 @@ namespace realm {
         using box_base<std::chrono::time_point<std::chrono::system_clock>>::operator=;
         std::chrono::time_point<std::chrono::system_clock> operator*() {
             return this->m_backing_map.get(this->m_key).operator internal::bridge::timestamp().operator std::chrono::time_point<std::chrono::system_clock>();
+        }
+
+        rbool operator>(std::chrono::time_point<std::chrono::system_clock> rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_greater_than(this->m_col_key, m_key, serialize(rhs));
+            }
+            return m_backing_map.get(m_key) > internal::bridge::mixed(rhs);
+        }
+
+        rbool operator>=(std::chrono::time_point<std::chrono::system_clock> rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_greater_than_equals(this->m_col_key, m_key, serialize(rhs));
+            }
+            return m_backing_map.get(m_key) >= internal::bridge::mixed(rhs);
+        }
+
+        rbool operator<(std::chrono::time_point<std::chrono::system_clock> rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_less_than(this->m_col_key, m_key, serialize(rhs));
+            }
+            return m_backing_map.get(m_key) < internal::bridge::mixed(rhs);
+        }
+
+        rbool operator<=(std::chrono::time_point<std::chrono::system_clock> rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_less_than_equals(this->m_col_key, m_key, serialize(rhs));
+            }
+            return m_backing_map.get(m_key) <= internal::bridge::mixed(rhs);
         }
     };
     template<>
@@ -224,6 +352,14 @@ namespace realm {
         std::string operator*() {
             return this->m_backing_map.get(this->m_key).operator std::string();
         }
+
+        rbool contains(const std::string& rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_contains_string_for_key(this->m_col_key, m_key, rhs);
+            }
+            std::string lhs = m_backing_map.get(m_key);
+            return lhs.find(rhs) != std::string::npos;
+        }
     };
 
     //MARK: - Boxed Link
@@ -233,19 +369,12 @@ namespace realm {
         using box_base<managed<V*>>::operator=;
         using box_base<managed<V*>>::operator==;
 
-        bool operator==(const V*& rhs) const {
-            auto a = const_cast<box<V*> *>(this)->m_backing_map.get_object(this->m_key);
-            auto &b = rhs->m_managed.m_obj;
-            if (this->m_realm != rhs->m_managed.m_realm) {
-                return false;
+        rbool operator==(const managed<V*> &rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_equals(this->m_col_key,
+                                                                                this->m_key,
+                                                                                rhs ? internal::bridge::mixed(internal::bridge::obj_link(rhs.m_obj->get_table().get_key(), rhs.m_obj->get_key())) : internal::bridge::mixed());
             }
-            return a.get_table() == b.get_table() && a.get_key() == b.get_key();
-        }
-        bool operator!=(const V*& rhs) const {
-            return !this->operator==(rhs);
-        }
-
-        bool operator==(const managed<V*> &rhs) const {
             auto a = const_cast<box<managed<V*>> *>(this)->m_backing_map.get_object(this->m_key);
             auto &b = rhs.m_obj;
             if (this->m_realm != *rhs.m_realm) {
@@ -253,11 +382,23 @@ namespace realm {
             }
             return a.get_key() == b->get_key();
         }
-        bool operator!=(const managed<V*> rhs) const {
+
+        rbool operator!=(const managed<V*> rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_not_equals(this->m_col_key,
+                                                                                    this->m_key,
+                                                                                    rhs ? internal::bridge::mixed(internal::bridge::obj_link(rhs.m_obj->get_table().get_key(), rhs.m_obj->get_key())) : internal::bridge::mixed());
+            }
             return !this->operator==(rhs);
         }
 
-        bool operator==(const managed<V> &rhs) const {
+        rbool operator==(const managed<V> &rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_equals(this->m_col_key,
+                                                                                this->m_key,
+                                                                                internal::bridge::obj_link(rhs.m_obj.get_table().get_key(), rhs.m_obj.get_key()));
+            }
+
             auto a = const_cast<box<managed<V*>> *>(this)->m_backing_map.get_object(this->m_key);
             auto &b = rhs.m_obj;
             if (this->m_realm != rhs.m_realm) {
@@ -265,7 +406,14 @@ namespace realm {
             }
             return a.get_key() == b.get_key();
         }
-        bool operator!=(const managed<V> rhs) const {
+
+        rbool operator!=(const managed<V> rhs) const {
+            if (this->m_rbool_query) {
+                return this->m_rbool_query->dictionary_has_value_for_key_not_equals(this->m_col_key,
+                                                                                    this->m_key,
+                                                                                    internal::bridge::obj_link(rhs.m_obj.get_table().get_key(), rhs.m_obj.get_key()));
+            }
+
             return !this->operator==(rhs);
         }
 
@@ -278,6 +426,13 @@ namespace realm {
         }
 
         typename managed<V*>::ref_type operator->() {
+            if (this->m_rbool_query) {
+                rbool::dictionary_context ctx;
+                ctx.m_key = this->m_key;
+                ctx.origin_col_key = this->m_col_key;
+                this->m_rbool_query->add_dictionary_link_chain(std::move(ctx));
+                return typename managed<V*>::ref_type(managed<V>::prepare_for_query(this->m_realm, this->m_rbool_query));
+            }
             auto obj = this->m_backing_map.get_object(this->m_key);
             return typename managed<V*>::ref_type(managed<V>(std::move(obj), this->m_realm));
         }
@@ -322,6 +477,7 @@ namespace realm {
             }
             return a.get_key() == b.get_key();
         }
+
         bool operator!=(const box<managed<V*>> rhs) const {
             return !this->operator==(rhs);
         }
@@ -334,6 +490,7 @@ namespace realm {
             }
             return a.get_key() == b.get_key();
         }
+
         bool operator!=(const box<V*>& rhs) const {
             return !this->operator==(rhs);
         }
@@ -452,18 +609,23 @@ namespace realm {
             }
         }
 
-        box<std::conditional_t<std::is_pointer_v<T>, managed<T>, T>>  operator[](const std::string &a) {
+        box<std::conditional_t<std::is_pointer_v<T>, managed<T>, T>>  operator[](const std::string &key) {
             if constexpr (std::is_pointer_v<T>) {
-                return box<managed<T>>(m_obj->get_dictionary(m_key), a, *m_realm);
+                if (m_rbool_query) {
+                    return box<managed<T>>(m_rbool_query, m_key, key, *m_realm);
+                }
+                return box<managed<T>>(m_obj->get_dictionary(m_key), key, *m_realm);
             } else {
-                return box<T>(m_obj->get_dictionary(m_key), a, *m_realm);
+                if (m_rbool_query) {
+                    return box<T>(m_rbool_query, m_key, key, *m_realm);
+                }
+                return box<T>(m_obj->get_dictionary(m_key), key, *m_realm);
             }
         }
 
         void erase(const std::string& key) {
             m_obj->get_dictionary(m_key).erase(key);
         }
-
 
         notification_token observe(std::function<void(realm::dictionary_collection_change)>&& fn)
         {
