@@ -2,7 +2,7 @@ NEXT-RELEASE Release notes (YYYY-MM-DD)
 =============================================================
 
 ### Fixed
-* None
+* Using the `==` operator in a type safe query for a nullable string property would return the incorrect result when algined storage was disabled.
 
 ### Enhancements
 * Add ability to use `managed<std::map<std::string, T>>` in type safe queries when comparing a value for a key. e.g.
