@@ -37,7 +37,7 @@
 #endif
 
 #include <cpprealm/app.hpp>
-#include <cpprealm/internal/generic_network_transport.hpp>
+#include <cpprealm/networking/platform_networking.hpp>
 
 #include <realm/object-store/sync/generic_network_transport.hpp>
 #include <realm/util/base64.hpp>
@@ -273,7 +273,7 @@ namespace realm {
         std::stringstream json_ss;
         json_ss << post_data;
         auto json_str = json_ss.str();
-        auto transport = std::make_unique<internal::networking::DefaultTransport>();
+        auto transport = std::make_unique<networking::default_http_transport>();
 
         std::vector<char> buffer;
         buffer.resize(5000);

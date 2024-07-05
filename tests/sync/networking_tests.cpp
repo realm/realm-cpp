@@ -4,33 +4,49 @@
 #include "../utils/networking/proxy_server.hpp"
 using namespace realm;
 
-TEST_CASE("websocket_handler_called", "[sync]") {
+TEST_CASE("sends plaintext data to proxy", "[proxy]") {
 
-//    tests::utils::proxy_server::config cfg;
-//    cfg.port = 1234;
-//    cfg.client_uses_ssl = false;
-//    cfg.server_uses_ssl = false;
-//    tests::utils::proxy_server server(std::move(cfg));
+    tests::utils::proxy_server::config cfg;
+    cfg.port = 1234;
+    cfg.server_uses_ssl = false; // Set to true if using services.cloud.mongodb.com
+    tests::utils::proxy_server server(std::move(cfg));
 
     proxy_config pc;
     pc.port = 1234;
     pc.address = "127.0.0.1";
     realm::App::configuration config;
-//    config.proxy_configuration = pc;
-    config.app_id = Admin::Session::shared().cached_app_id();
+    config.proxy_configuration = pc;
+    config.app_id =Admin::Session::shared().cached_app_id();
     config.base_url = Admin::Session::shared().base_url();
-
 
     struct foo_socket_provider : public ::realm::networking::default_socket_provider {
         std::unique_ptr<::realm::networking::websocket_interface> connect(std::unique_ptr<::realm::networking::websocket_observer> o,
                                                                           ::realm::networking::websocket_endpoint&& ep) override {
-//            url = url.replace("wss://", "ws://");
+            const std::string from = "wss:";
+            const std::string to = "ws:";
+            if (ep.url.find(from) == 0) {
+                ep.url.replace(0, from.length(), to);
+            }
 
             return ::realm::networking::default_socket_provider::connect(std::move(o), std::move(ep));
         }
     };
-
     config.sync_socket_provider = std::make_shared<foo_socket_provider>();
+
+    struct foo_http_transport : public ::realm::networking::default_http_transport {
+        void send_request_to_server(const ::realm::networking::request& request,
+                                    std::function<void(const ::realm::networking::response&)>&& completion) override {
+            auto req_copy = request;
+            const std::string from = "https:";
+            const std::string to = "http:";
+            if (req_copy.url.find(from) == 0) {
+                req_copy.url.replace(0, from.length(), to);
+            }
+
+            return ::realm::networking::default_http_transport::send_request_to_server(req_copy, std::move(completion));
+        }
+    };
+    config.http_transport_client = std::make_shared<foo_http_transport>();
 
     auto app = realm::App(config);
     app.get_sync_manager().set_log_level(logger::level::all);
@@ -58,5 +74,4 @@ TEST_CASE("websocket_handler_called", "[sync]") {
     CHECK(sub.name == "foo-strings");
     CHECK(sub.object_class_name == "AllTypesObject");
     CHECK(sub.query_string == "str_col == \"foo\"");
-
 }

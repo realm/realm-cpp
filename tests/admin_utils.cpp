@@ -20,7 +20,7 @@
 #include <sstream>
 #include <thread>
 #include <iostream>
-#include <cpprealm/internal/generic_network_transport.hpp>
+#include <cpprealm/networking/platform_networking.hpp>
 
 #include "admin_utils.hpp"
 #include "external/json/json.hpp"
@@ -30,7 +30,7 @@ namespace Admin {
     std::mutex Admin::Session::mutex;
 
     static app::Response do_http_request(app::Request &&request) {
-        internal::networking::DefaultTransport transport;
+        networking::default_http_transport transport;
         std::promise<app::Response> p;
         std::future<app::Response> f = p.get_future();
         transport.send_request_to_server(::realm::internal::networking::to_request(std::move(request)),

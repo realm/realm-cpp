@@ -13,7 +13,6 @@ namespace realm::tests::utils {
     public:
         struct config {
             short port = 1234;
-            bool client_uses_ssl = false;
             bool server_uses_ssl = false;
         };
 

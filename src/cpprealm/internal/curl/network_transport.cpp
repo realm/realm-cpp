@@ -17,13 +17,13 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include <cpprealm/app.hpp>
-#include <cpprealm/internal/generic_network_transport.hpp>
+#include <cpprealm/networking/platform_networking.hpp>
 
 #include <realm/object-store/sync/generic_network_transport.hpp>
 
 #include <curl/curl.h>
 
-namespace realm::internal::networking {
+namespace realm::networking {
 
     namespace {
 
@@ -90,7 +90,7 @@ namespace realm::internal::networking {
         }
 
         static ::realm::networking::response do_http_request(const ::realm::networking::request& request,
-                                             const std::optional<bridge::realm::sync_config::proxy_config>& proxy_config = std::nullopt)
+                                             const std::optional<internal::bridge::realm::sync_config::proxy_config>& proxy_config = std::nullopt)
         {
             CurlGlobalGuard curl_global_guard;
             auto curl = curl_easy_init();
@@ -168,14 +168,8 @@ namespace realm::internal::networking {
         }
     } // namespace
 
-    DefaultTransport::DefaultTransport(const std::optional<std::map<std::string, std::string>>& custom_http_headers,
-                                       const std::optional<bridge::realm::sync_config::proxy_config>& proxy_config) {
-        m_custom_http_headers = custom_http_headers;
-        m_proxy_config = proxy_config;
-    }
-
-    void DefaultTransport::send_request_to_server(const ::realm::networking::request& request,
-                                                  std::function<void(const ::realm::networking::response&)>&& completion_block) {
+    void default_http_transport::send_request_to_server(const ::realm::networking::request& request,
+                                                        std::function<void(const ::realm::networking::response&)>&& completion_block) {
         {
             if (m_custom_http_headers) {
                 auto req_copy = request;
@@ -186,4 +180,4 @@ namespace realm::internal::networking {
             completion_block(do_http_request(request, m_proxy_config));
         }
     }
-} // namespace realm::internal::networking
+} // namespace realm::networking

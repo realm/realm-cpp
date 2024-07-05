@@ -20,7 +20,7 @@
 #define CPPREALM_PLATFORM_NETWORKING_HPP
 
 #include <cpprealm/internal/bridge/status.hpp>
-#include <cpprealm/internal/generic_network_transport.hpp>
+#include <cpprealm/networking/networking.hpp>
 
 #ifndef REALMCXX_VERSION_MAJOR
 #include <cpprealm/version_numbers.hpp>
@@ -41,15 +41,6 @@ namespace realm {
 }
 
 namespace realm::networking {
-
-    /**
-     * Class used for setting a callback which is used
-     * to pass network configuration options to the sync_socket_provider
-     * before the websocket establishes a connection.
-     */
-    struct websocket_event_handler {
-        std::function<websocket_endpoint(websocket_endpoint&&)> on_connect;
-    };
 
     /// The WebSocket base class that is used by the SyncClient to send data over the
     /// WebSocket connection with the server. This is the class that is returned by
@@ -233,6 +224,14 @@ namespace realm::networking {
     std::shared_ptr<http_transport_client> make_http_client();
     void set_http_client_factory(std::function<std::shared_ptr<http_transport_client>()>&&);
 
+    struct default_http_transport : public ::realm::networking::http_transport_client {
+        default_http_transport() = default;
+        ~default_http_transport() = default;
+
+        void send_request_to_server(const ::realm::networking::request& request,
+                                    std::function<void(const ::realm::networking::response&)>&& completion);
+    };
+
     struct default_socket : public websocket_interface {
         default_socket(std::unique_ptr<::realm::sync::WebSocketInterface>&&);
         ~default_socket() = default;
@@ -243,31 +242,24 @@ namespace realm::networking {
         std::shared_ptr<::realm::sync::WebSocketInterface> m_ws_interface;
     };
 
-
     struct default_socket_provider : public sync_socket_provider {
-
         default_socket_provider();
-
         ~default_socket_provider() = default;
 
         std::unique_ptr<websocket_interface> connect(std::unique_ptr<websocket_observer>, websocket_endpoint &&) override;
-
         void post(FunctionHandler&&) override;
-
         SyncTimer create_timer(std::chrono::milliseconds delay, FunctionHandler&&) override;
+
     private:
         std::shared_ptr<::realm::sync::SyncSocketProvider> m_provider;
     };
 }
 
 namespace realm::internal::networking {
-    std::shared_ptr<realm::sync::SyncSocketProvider> default_sync_socket_provider_factory(const std::shared_ptr<util::Logger>& logger,
-                                                                                          const std::string& user_agent_binding_info,
-                                                                                          const std::string& user_agent_application_info);
-
     std::shared_ptr<app::GenericNetworkTransport> create_http_client_shim(const std::shared_ptr<::realm::networking::http_transport_client>&);
 
-    std::unique_ptr<::realm::sync::SyncSocketProvider> create_sync_socket_provider_shim(const std::shared_ptr<::realm::networking::sync_socket_provider>& provider);
+    std::unique_ptr<::realm::sync::SyncSocketProvider> create_sync_socket_provider_shim(const std::shared_ptr<::realm::networking::sync_socket_provider>& provider,
+                                                                                        std::optional<internal::bridge::realm::sync_config::proxy_config> proxy);
 }
 
 #endif//CPPREALM_PLATFORM_NETWORKING_HPP

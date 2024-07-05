@@ -1,6 +1,5 @@
 #include <cpprealm/app.hpp>
 #include <cpprealm/internal/bridge/status.hpp>
-#include <cpprealm/internal/generic_network_transport.hpp>
 #include <cpprealm/networking/platform_networking.hpp>
 
 #ifndef REALMCXX_VERSION_MAJOR
@@ -494,22 +493,24 @@ namespace realm {
         client_config.user_agent_application_info = config.app_id;
         app_config.app_id = config.app_id;
 
-//        if (config.websocket_event_handler) {
-//            auto websocket_provider = ::realm::internal::networking::default_sync_socket_provider_factory(util::Logger::get_default_logger(),
-//                                                                                                          client_config.user_agent_binding_info,
-//                                                                                                          client_config.user_agent_application_info,
-//                                                                                                          config.websocket_event_handler);
-//            client_config.socket_provider = websocket_provider;
-//        }
+        // Websocket provider configuration
         if (config.sync_socket_provider) {
-            client_config.socket_provider = ::realm::internal::networking::create_sync_socket_provider_shim(config.sync_socket_provider);
+            client_config.socket_provider = ::realm::internal::networking::create_sync_socket_provider_shim(config.sync_socket_provider,
+                                                                                                            config.proxy_configuration);
         }
 
+        // HTTP Transport configuration
         if (config.http_transport_client) {
             app_config.transport = internal::networking::create_http_client_shim(config.http_transport_client);
         } else {
-            app_config.transport = internal::networking::create_http_client_shim(std::make_shared<internal::networking::DefaultTransport>(config.custom_http_headers,
-                                                                                                                                          config.proxy_configuration));
+            app_config.transport = internal::networking::create_http_client_shim(std::make_shared<networking::default_http_transport>());
+        }
+
+        if (config.proxy_configuration) {
+            config.http_transport_client->set_proxy_configuration(*config.proxy_configuration);
+        }
+        if (config.custom_http_headers) {
+            config.http_transport_client->set_custom_http_headers(*config.custom_http_headers);
         }
 
         app_config.base_url = config.base_url;

@@ -20,7 +20,7 @@
 #include <realm/util/config.h>
 #endif
 #include <cpprealm/app.hpp>
-#include <cpprealm/internal/generic_network_transport.hpp>
+#include <cpprealm/networking/platform_networking.hpp>
 #include <cpprealm/networking/networking.hpp>
 
 #include <realm/object-store/sync/generic_network_transport.hpp>
@@ -32,7 +32,7 @@
 
 #include <regex>
 
-namespace realm::internal::networking {
+namespace realm::networking {
     struct DefaultSocket : realm::sync::network::Socket {
         DefaultSocket(realm::sync::network::Service& service)
             : realm::sync::network::Socket(service)
@@ -84,12 +84,6 @@ namespace realm::internal::networking {
         realm::sync::network::ReadAheadBuffer m_read_buffer;
     };
 
-    DefaultTransport::DefaultTransport(const std::optional<std::map<std::string, std::string>>& custom_http_headers,
-                                       const std::optional<bridge::realm::sync_config::proxy_config>& proxy_config) {
-        m_custom_http_headers = custom_http_headers;
-        m_proxy_config = proxy_config;
-    }
-
     inline bool is_valid_ipv4(const std::string& ip) {
         std::stringstream ss(ip);
         std::string segment;
@@ -130,10 +124,8 @@ namespace realm::internal::networking {
         }
     }
 
-    void DefaultTransport::send_request_to_server(const ::realm::networking::request& request,
-                                                  std::function<void(const ::realm::networking::response&)>&& completion_block) {
-        bool disable_ssl = true; // TODO: pull this from proxy config
-
+    void default_http_transport::send_request_to_server(const ::realm::networking::request& request,
+                                                        std::function<void(const ::realm::networking::response&)>&& completion_block) {
         const auto uri = realm::util::Uri(request.url);
         std::string userinfo, host, port;
         uri.get_auth(userinfo, host, port);
@@ -191,7 +183,13 @@ namespace realm::internal::networking {
         if (m_proxy_config) {
             realm::sync::HTTPRequest req;
             req.method = realm::sync::HTTPMethod::Connect;
-            req.headers.emplace("Host", util::format("%1:%2", host, is_localhost ? "9090" : "443"));
+
+            if (is_ipv4) {
+                req.headers.emplace("Host", util::format("%1:%2", host, port));
+            } else {
+                req.headers.emplace("Host", util::format("%1:%2", host, is_localhost ? "9090" : "443"));
+            }
+
             if (m_proxy_config->username_password) {
                 auto userpass = util::format("%1:%2", m_proxy_config->username_password->first, m_proxy_config->username_password->second);
                 std::string encoded_userpass;
@@ -227,7 +225,7 @@ namespace realm::internal::networking {
         m_ssl_context.use_included_certificate_roots();
 #endif
 
-        if (url_scheme == URLScheme::HTTPS && !disable_ssl) {
+        if (url_scheme == URLScheme::HTTPS) {
             socket.ssl_stream.emplace(socket, m_ssl_context, Stream::client);
             socket.ssl_stream->set_host_name(host); // Throws
 
@@ -246,8 +244,8 @@ namespace realm::internal::networking {
             headers["Content-Length"] = util::to_string(request.body.size());
         }
 
-        if (m_custom_http_headers) {
-            for (auto& header : *m_custom_http_headers) {
+        if (this->m_custom_http_headers) {
+            for (auto& header : *this->m_custom_http_headers) {
                 headers.emplace(header);
             }
         }
@@ -310,7 +308,7 @@ namespace realm::internal::networking {
                     return;
                 }
             };
-            if (url_scheme == URLScheme::HTTPS && !disable_ssl) {
+            if (url_scheme == URLScheme::HTTPS) {
                 socket.async_handshake(std::move(handler)); // Throws
             } else {
                 handler(std::error_code());
@@ -319,5 +317,5 @@ namespace realm::internal::networking {
 
         service.run();
     }
-} //namespace realm::internal::networking
+} //namespace realm::networking
 

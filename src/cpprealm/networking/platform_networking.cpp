@@ -8,38 +8,13 @@
 namespace realm::networking {
 
     std::shared_ptr<http_transport_client> make_default_http_client() {
-        return std::make_shared<internal::networking::DefaultTransport>();
+        return std::make_shared<networking::default_http_transport>();
     }
     std::function<std::shared_ptr<http_transport_client>()> s_http_client_factory = make_default_http_client;
 
     void set_http_client_factory(std::function<std::shared_ptr<http_transport_client>()>&& factory_fn) {
         s_http_client_factory = std::move(factory_fn);
     }
-
-    struct default_websocket_observer_cpprealm : public websocket_observer {
-        default_websocket_observer_cpprealm(std::unique_ptr<::realm::sync::WebSocketObserver>&& o) : m_observer(std::move(o)) { }
-        ~default_websocket_observer_cpprealm() = default;
-
-        void websocket_connected_handler(const std::string& protocol) override {
-            m_observer->websocket_connected_handler(protocol);
-        }
-
-        void websocket_error_handler() override {
-            m_observer->websocket_error_handler();
-        }
-
-        bool websocket_binary_message_received(std::string_view data) override {
-            return m_observer->websocket_binary_message_received(data);
-        }
-
-        bool websocket_closed_handler(bool was_clean, websocket_err_codes error_code,
-                                              std::string_view message) override {
-            return m_observer->websocket_closed_handler(was_clean, static_cast<::realm::sync::websocket::WebSocketError>(error_code), message);
-        }
-
-    private:
-        std::shared_ptr<::realm::sync::WebSocketObserver> m_observer;
-    };
 
     struct default_websocket_observer_core : public ::realm::sync::WebSocketObserver {
         default_websocket_observer_core(std::unique_ptr<websocket_observer>&& o) : m_observer(std::move(o)) { }
@@ -54,7 +29,7 @@ namespace realm::networking {
         }
 
         bool websocket_binary_message_received(util::Span<const char> data) override {
-            return m_observer->websocket_binary_message_received(data.data());
+            return m_observer->websocket_binary_message_received(std::string_view(data.data(), data.size()));
         }
 
         bool websocket_closed_handler(bool was_clean, ::realm::sync::websocket::WebSocketError error_code,
@@ -77,16 +52,14 @@ namespace realm::networking {
     };
 
     default_socket_provider::default_socket_provider() {
-        auto user_agent = util::format("RealmSync/%1 (%2) %3 %4", REALM_VERSION_STRING, util::get_platform_info(), "user_agent_binding_info", "user_agent_application_info");
+        auto user_agent_binding_info = std::string("RealmCpp/") + std::string(REALMCXX_VERSION_STRING);
+        auto user_agent_application_info = "";//app_id; TODO: Should we pass the app id?
+
+        auto user_agent = util::format("RealmSync/%1 (%2) %3 %4", REALM_VERSION_STRING, util::get_platform_info(), user_agent_binding_info, user_agent_application_info);
         m_provider = std::make_unique<::realm::sync::websocket::DefaultSocketProvider>(util::Logger::get_default_logger(), user_agent);
     }
 
     std::unique_ptr<websocket_interface> default_socket_provider::connect(std::unique_ptr<websocket_observer> o, websocket_endpoint&& ep) {
-//        internal::bridge::realm::sync_config::proxy_config pc;
-//        pc.port = 1234;
-//        pc.address = "127.0.0.1";
-//        ep.proxy_configuration = pc;
-
         auto ws_interface = m_provider->connect(std::make_unique<default_websocket_observer_core>(std::move(o)), internal::networking::to_core_websocket_endpoint(ep));
         return std::make_unique<default_socket>(std::move(ws_interface));
     }
@@ -115,53 +88,6 @@ namespace realm::networking {
 }
 
 namespace realm::internal::networking {
-    std::shared_ptr<realm::sync::SyncSocketProvider> default_sync_socket_provider_factory(const std::shared_ptr<util::Logger>& logger,
-                                                                                          const std::string& user_agent_binding_info,
-                                                                                          const std::string& user_agent_application_info,
-                                                                                          const std::shared_ptr<::realm::networking::websocket_event_handler>& configuration_handler) {
-        class default_sync_socket_provider_shim final : public ::realm::sync::SyncSocketProvider {
-        public:
-            explicit default_sync_socket_provider_shim(const std::shared_ptr<util::Logger>& logger,
-                                                       const std::string& user_agent_binding_info,
-                                                       const std::string& user_agent_application_info,
-                                                       const std::shared_ptr<::realm::networking::websocket_event_handler>& configuration_handler) {
-                auto user_agent = util::format("RealmSync/%1 (%2) %3 %4", REALM_VERSION_STRING, util::get_platform_info(), user_agent_binding_info, user_agent_application_info);
-                m_default_provider = std::make_unique<::realm::sync::websocket::DefaultSocketProvider>(logger, user_agent);
-                m_websocket_event_handler = configuration_handler;
-            }
-
-            ~default_sync_socket_provider_shim() = default;
-
-            std::unique_ptr<::realm::sync::WebSocketInterface> connect(std::unique_ptr<::realm::sync::WebSocketObserver> observer,
-                                                                       ::realm::sync::WebSocketEndpoint&& endpoint) override {
-                if (m_websocket_event_handler) {
-                    auto ep = m_websocket_event_handler->on_connect(to_websocket_endpoint(endpoint));
-                    return m_default_provider->connect(std::move(observer), to_core_websocket_endpoint(std::move(ep)));
-                }
-
-                return m_default_provider->connect(std::move(observer), std::move(endpoint));
-            }
-
-            void post(FunctionHandler&& handler) override {
-                m_default_provider->post(std::move(handler));
-            }
-
-            ::realm::sync::SyncSocketProvider::SyncTimer create_timer(std::chrono::milliseconds delay,
-                                                                      ::realm::sync::SyncSocketProvider::FunctionHandler&& handler) override {
-                return m_default_provider->create_timer(delay, std::move(handler));
-            }
-
-            void stop(bool b = false) override {
-                m_default_provider->stop(b);
-            }
-        private:
-            std::shared_ptr<::realm::networking::websocket_event_handler> m_websocket_event_handler;
-            std::unique_ptr<::realm::sync::websocket::DefaultSocketProvider> m_default_provider;
-        };
-
-        return std::make_shared<default_sync_socket_provider_shim>(logger, user_agent_binding_info,
-                                                                   user_agent_application_info, configuration_handler);
-    }
 
     std::unique_ptr<::realm::sync::WebSocketInterface> create_websocket_interface_shim(std::unique_ptr<::realm::networking::websocket_interface>&& m_interface) {
         struct core_websocket_interface_shim : public ::realm::sync::WebSocketInterface {
@@ -170,7 +96,8 @@ namespace realm::internal::networking {
 
             void async_write_binary(util::Span<const char> data, sync::SyncSocketProvider::FunctionHandler&& handler) override {
                 auto handler_ptr = handler.release();
-                m_interface->async_write_binary(data.data(), [ptr = std::move(handler_ptr)](::realm::networking::websocket_interface::status s) {
+                auto b = std::string_view(data.data(), data.size());
+                m_interface->async_write_binary(b, [ptr = std::move(handler_ptr)](::realm::networking::websocket_interface::status s) {
                     auto uf = util::UniqueFunction<void(::realm::Status)>(std::move(ptr));
                     return uf(s.operator ::realm::Status());
                 });
@@ -235,8 +162,8 @@ namespace realm::internal::networking {
         return std::make_unique<core_websocket_observer_shim>(std::move(m_observer));
     }
 
-    std::unique_ptr<::realm::sync::SyncSocketProvider> create_sync_socket_provider_shim(const std::shared_ptr<::realm::networking::sync_socket_provider>& provider) {
-
+    std::unique_ptr<::realm::sync::SyncSocketProvider> create_sync_socket_provider_shim(const std::shared_ptr<::realm::networking::sync_socket_provider>& provider,
+                                                                                        std::optional<internal::bridge::realm::sync_config::proxy_config> pc) {
         struct sync_timer_shim final : public ::realm::sync::SyncSocketProvider::Timer {
             sync_timer_shim(std::unique_ptr<::realm::networking::sync_socket_provider::timer>&& timer) : m_timer(std::move(timer)) {}
             ~sync_timer_shim() = default;
@@ -250,15 +177,17 @@ namespace realm::internal::networking {
         };
 
         struct sync_socket_provider_shim final : public ::realm::sync::SyncSocketProvider {
-            explicit sync_socket_provider_shim(const std::shared_ptr<::realm::networking::sync_socket_provider>& provider) {
+            explicit sync_socket_provider_shim(const std::shared_ptr<::realm::networking::sync_socket_provider>& provider,
+                                               std::optional<internal::bridge::realm::sync_config::proxy_config> proxy_config) {
                 m_provider = provider;
+                m_proxy_config = proxy_config;
             }
 
             sync_socket_provider_shim() = delete;
             ~sync_socket_provider_shim() = default;
 
             std::unique_ptr<::realm::sync::WebSocketInterface> connect(std::unique_ptr<::realm::sync::WebSocketObserver> observer, ::realm::sync::WebSocketEndpoint&& ep) override {
-                auto cpprealm_ws_interface = m_provider->connect(create_websocket_observer_from_core_shim(std::move(observer)), to_websocket_endpoint(std::move(ep)));
+                auto cpprealm_ws_interface = m_provider->connect(create_websocket_observer_from_core_shim(std::move(observer)), to_websocket_endpoint(std::move(ep), m_proxy_config));
                 return  create_websocket_interface_shim(std::move(cpprealm_ws_interface));
             }
 
@@ -279,10 +208,10 @@ namespace realm::internal::networking {
                 return  std::make_unique<sync_timer_shim>(m_provider->create_timer(delay, std::move(fn)));
             }
         private:
-            std::shared_ptr<::realm::networking::websocket_event_handler> m_websocket_event_handler;
             std::shared_ptr<::realm::networking::sync_socket_provider> m_provider;
+            std::optional<internal::bridge::realm::sync_config::proxy_config> m_proxy_config;
         };
 
-        return std::make_unique<sync_socket_provider_shim>(std::move(provider));
+        return std::make_unique<sync_socket_provider_shim>(std::move(provider), pc);
     }
 } //namespace internal::networking

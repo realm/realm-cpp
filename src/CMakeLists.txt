@@ -111,7 +111,6 @@ set(HEADERS
     ../include/cpprealm/internal/bridge/timestamp.hpp
     ../include/cpprealm/internal/bridge/utils.hpp
     ../include/cpprealm/internal/bridge/uuid.hpp
-    ../include/cpprealm/internal/generic_network_transport.hpp
     ../include/cpprealm/internal/type_info.hpp
     ../include/cpprealm/internal/scheduler/realm_core_scheduler.hpp
     ../include/cpprealm/schedulers/default_scheduler.hpp
