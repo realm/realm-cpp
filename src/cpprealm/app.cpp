@@ -491,29 +491,34 @@ namespace realm {
 #endif
         client_config.user_agent_binding_info = std::string("RealmCpp/") + std::string(REALMCXX_VERSION_STRING);
         client_config.user_agent_application_info = config.app_id;
-        app_config.app_id = config.app_id;
 
-        // Websocket provider configuration
+        app_config.app_id = config.app_id;
+        app_config.base_url = config.base_url;
+
+        // Sync socket provider configuration
         if (config.sync_socket_provider) {
             client_config.socket_provider = ::realm::internal::networking::create_sync_socket_provider_shim(config.sync_socket_provider,
                                                                                                             config.proxy_configuration);
+        } else {
+            client_config.socket_provider = ::realm::internal::networking::create_sync_socket_provider_shim(std::make_shared<networking::default_socket_provider>(),
+                                                                                                            config.proxy_configuration);
         }
 
+        std::shared_ptr<networking::http_transport_client> http_client;
         // HTTP Transport configuration
         if (config.http_transport_client) {
-            app_config.transport = internal::networking::create_http_client_shim(config.http_transport_client);
+            http_client = config.http_transport_client;
         } else {
-            app_config.transport = internal::networking::create_http_client_shim(std::make_shared<networking::default_http_transport>());
+            http_client = networking::make_http_client();
         }
 
         if (config.proxy_configuration) {
-            config.http_transport_client->set_proxy_configuration(*config.proxy_configuration);
+            http_client->set_proxy_configuration(*config.proxy_configuration);
         }
         if (config.custom_http_headers) {
-            config.http_transport_client->set_custom_http_headers(*config.custom_http_headers);
+            http_client->set_custom_http_headers(*config.custom_http_headers);
         }
-
-        app_config.base_url = config.base_url;
+        app_config.transport = internal::networking::create_http_client_shim(http_client);
 
         app_config.metadata_mode = should_encrypt ? app::AppConfig::MetadataMode::Encryption : app::AppConfig::MetadataMode::NoEncryption;
         if (config.metadata_encryption_key) {

@@ -44,9 +44,9 @@ namespace realm::networking {
 
     /// The WebSocket base class that is used by the SyncClient to send data over the
     /// WebSocket connection with the server. This is the class that is returned by
-    /// SyncSocketProvider::connect() when a connection to an endpoint is requested.
+    /// sync_socket_provider::connect() when a connection to an endpoint is requested.
     /// If an error occurs while establishing the connection, the error is presented
-    /// to the WebSocketObserver provided when the WebSocket was created.
+    /// to the web_socket_observer provided when the WebSocket was created.
     struct websocket_interface {
         /// The destructor must close the websocket connection when the WebSocket object
         /// is destroyed
@@ -56,7 +56,7 @@ namespace realm::networking {
         using FunctionHandler = std::function<void(internal::bridge::status)>;
 
         /// Write data asynchronously to the WebSocket connection. The handler function
-        /// will be called when the data has been sent successfully. The WebSocketOberver
+        /// will be called when the data has been sent successfully. The web_socket_oberver
         /// provided when the WebSocket was created will be called if any errors occur
         /// during the write operation.
         /// @param data A std::string_view containing the data to be sent to the server.
@@ -68,12 +68,12 @@ namespace realm::networking {
         virtual void async_write_binary(std::string_view data, FunctionHandler&& handler) = 0;
     };
 
-    /// WebSocket observer interface in the SyncClient that receives the websocket
+    /// WebSocket observer interface in the Sync Client that receives the websocket
     /// events during operation.
     struct websocket_observer {
         virtual ~websocket_observer() = default;
 
-        /// Called when the websocket is connected, i.e. after the handshake is done.
+        /// Called when the WebSocket is connected, i.e. after the handshake is done.
         /// The Sync Client is not allowed to send messages on the socket before the
         /// handshake is complete and no message_received callbacks will be called
         /// before the handshake is done.
@@ -126,7 +126,7 @@ namespace realm::networking {
     /// thread pool as long as it is guaranteed that the callback handler
     /// functions are processed in order and not run concurrently.
     ///
-    /// The implementation of a SyncSocketProvider must support the following
+    /// The implementation of a sync_socket_provider must support the following
     /// operations that post handler functions (via by the Sync client) onto the
     /// event loop:
     /// * Post a handler function directly onto the event loop
@@ -139,14 +139,14 @@ namespace realm::networking {
     /// * a handler function runs to completion before the next handler function
     /// is called.
     ///
-    /// The SyncSocketProvider also provides a WebSocket interface for
+    /// The sync_socket_provider also provides a WebSocket interface for
     /// connecting to the server via a WebSocket connection.
     class sync_socket_provider {
     public:
         /// Function handler typedef
         using FunctionHandler = std::function<void(internal::bridge::status)>;
 
-        /// The Timer object used to track a timer that was started on the event
+        /// The timer object used to track a timer that was started on the event
         /// loop.
         ///
         /// This object provides a cancel() mechanism to cancel the timer. The
@@ -165,7 +165,7 @@ namespace realm::networking {
         };
 
         /// Other class typedefs
-        using SyncTimer = std::unique_ptr<sync_socket_provider::timer>;
+        using sync_timer = std::unique_ptr<sync_socket_provider::timer>;
 
         /// The event loop implementation must ensure the event loop is stopped and
         /// flushed when the object is destroyed. If the event loop is processed by
@@ -175,7 +175,7 @@ namespace realm::networking {
         /// Create a new websocket pointed to the server indicated by endpoint and
         /// connect to the server. Any events that occur during the execution of the
         /// websocket will call directly to the handlers provided by the observer.
-        /// The WebSocketObserver guarantees that the WebSocket object will be
+        /// The web_socket_observer guarantees that the WebSocket object will be
         /// closed/destroyed before the observer is terminated/destroyed.
         virtual std::unique_ptr<websocket_interface> connect(std::unique_ptr<websocket_observer> observer,
                                                              websocket_endpoint && endpoint) = 0;
@@ -218,12 +218,15 @@ namespace realm::networking {
         /// @return A pointer to the Timer object that can be used to cancel the
         /// timer. The timer will also be canceled if the Timer object returned is
         /// destroyed.
-        virtual SyncTimer create_timer(std::chrono::milliseconds delay, FunctionHandler&& handler) = 0;
+        virtual sync_timer create_timer(std::chrono::milliseconds delay, FunctionHandler&& handler) = 0;
     };
 
+    /// Produces a http transport client from the factory.
     std::shared_ptr<http_transport_client> make_http_client();
+    /// Globally overwrites the default http transport client factory
     void set_http_client_factory(std::function<std::shared_ptr<http_transport_client>()>&&);
 
+    /// Built in HTTP transport client.
     struct default_http_transport : public ::realm::networking::http_transport_client {
         default_http_transport() = default;
         ~default_http_transport() = default;
@@ -232,23 +235,24 @@ namespace realm::networking {
                                     std::function<void(const ::realm::networking::response&)>&& completion);
     };
 
+    /// Built in websocket client.
     struct default_socket : public websocket_interface {
         default_socket(std::unique_ptr<::realm::sync::WebSocketInterface>&&);
         ~default_socket() = default;
 
         void async_write_binary(std::string_view data, websocket_interface::FunctionHandler&& handler) override;
-
     private:
         std::shared_ptr<::realm::sync::WebSocketInterface> m_ws_interface;
     };
 
+    /// Built in websocket provider
     struct default_socket_provider : public sync_socket_provider {
         default_socket_provider();
         ~default_socket_provider() = default;
 
         std::unique_ptr<websocket_interface> connect(std::unique_ptr<websocket_observer>, websocket_endpoint &&) override;
         void post(FunctionHandler&&) override;
-        SyncTimer create_timer(std::chrono::milliseconds delay, FunctionHandler&&) override;
+        sync_timer create_timer(std::chrono::milliseconds delay, FunctionHandler&&) override;
 
     private:
         std::shared_ptr<::realm::sync::SyncSocketProvider> m_provider;

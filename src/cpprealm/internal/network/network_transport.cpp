@@ -184,11 +184,11 @@ namespace realm::networking {
             realm::sync::HTTPRequest req;
             req.method = realm::sync::HTTPMethod::Connect;
 
-            if (is_ipv4) {
+//            if (is_ipv4) {
                 req.headers.emplace("Host", util::format("%1:%2", host, port));
-            } else {
-                req.headers.emplace("Host", util::format("%1:%2", host, is_localhost ? "9090" : "443"));
-            }
+//            } else {
+//                req.headers.emplace("Host", util::format("%1:%2", host, is_localhost ? "9090" : port));
+//            }
 
             if (m_proxy_config->username_password) {
                 auto userpass = util::format("%1:%2", m_proxy_config->username_password->first, m_proxy_config->username_password->second);

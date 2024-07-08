@@ -20,18 +20,15 @@
 #define CPPREALM_DB_HPP
 
 #include <cpprealm/accessors.hpp>
-
+#include <cpprealm/macros.hpp>
+#include <cpprealm/results.hpp>
+#include <cpprealm/scheduler.hpp>
 #include <cpprealm/schema.hpp>
+#include <cpprealm/types.hpp>
 
 #include <cpprealm/internal/bridge/sync_session.hpp>
 #include <cpprealm/internal/bridge/thread_safe_reference.hpp>
 #include <cpprealm/internal/bridge/sync_session.hpp>
-
-#include <cpprealm/scheduler.hpp>
-
-#include <cpprealm/macros.hpp>
-#include <cpprealm/results.hpp>
-#include <cpprealm/types.hpp>
 
 #include <filesystem>
 #include <optional>

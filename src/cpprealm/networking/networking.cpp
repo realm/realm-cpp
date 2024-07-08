@@ -1,10 +1,10 @@
 #include <cpprealm/networking/networking.hpp>
 
 #include <realm/object-store/sync/generic_network_transport.hpp>
+#include <realm/sync/protocol.hpp>
 #include <realm/sync/socket_provider.hpp>
 #include <realm/util/base64.hpp>
 #include <realm/util/uri.hpp>
-#include <realm/sync/protocol.hpp>
 
 namespace realm::internal::networking {
     ::realm::networking::request to_request(const ::realm::app::Request& core_request) {

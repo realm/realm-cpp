@@ -34,6 +34,7 @@
 #include <utility>
 
 namespace realm {
+
     using proxy_config = sync_config::proxy_config;
     using sync_session = internal::bridge::sync_session;
 
@@ -243,10 +244,10 @@ public:
         std::optional<std::map<std::string, std::string>> custom_http_headers;
         // Custom encryption key for the metadata Realm.
         std::optional<std::array<char, 64>> metadata_encryption_key;
-        // HTTP proxy configuration to be set on each HTTP request when using the internal HTTP client.
+        // Network proxy configuration to be set on each HTTP and WebSocket request.
         std::optional<sync_config::proxy_config> proxy_configuration;
         /**
-         * Optionally provide a custom transport for network calls to the server.
+         * Optionally provide a custom HTTP transport for network calls to the server.
          *
          * Alternatively use `realm::networking::set_http_client_factory` to globally set
          * the default HTTP transport client.
@@ -254,8 +255,6 @@ public:
         std::shared_ptr<::realm::networking::http_transport_client> http_transport_client;
         /**
          * Optionally provide a custom WebSocket interface for sync.
-         * Alternatively use `realm::networking::set_http_client_factory` to globally set
-         * the default HTTP transport client.
          */
         std::shared_ptr<::realm::networking::sync_socket_provider> sync_socket_provider;
 

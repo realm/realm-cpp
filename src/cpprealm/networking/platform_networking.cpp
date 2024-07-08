@@ -16,6 +16,10 @@ namespace realm::networking {
         s_http_client_factory = std::move(factory_fn);
     }
 
+    std::shared_ptr<http_transport_client> make_http_client() {
+        return s_http_client_factory();
+    }
+
     struct default_websocket_observer_core : public ::realm::sync::WebSocketObserver {
         default_websocket_observer_core(std::unique_ptr<websocket_observer>&& o) : m_observer(std::move(o)) { }
         ~default_websocket_observer_core() = default;
@@ -55,12 +59,14 @@ namespace realm::networking {
         auto user_agent_binding_info = std::string("RealmCpp/") + std::string(REALMCXX_VERSION_STRING);
         auto user_agent_application_info = "";//app_id; TODO: Should we pass the app id?
 
-        auto user_agent = util::format("RealmSync/%1 (%2) %3 %4", REALM_VERSION_STRING, util::get_platform_info(), user_agent_binding_info, user_agent_application_info);
+        auto user_agent = util::format("RealmSync/%1 (%2) %3 %4", REALM_VERSION_STRING, util::get_platform_info(),
+                                       user_agent_binding_info, user_agent_application_info);
         m_provider = std::make_unique<::realm::sync::websocket::DefaultSocketProvider>(util::Logger::get_default_logger(), user_agent);
     }
 
     std::unique_ptr<websocket_interface> default_socket_provider::connect(std::unique_ptr<websocket_observer> o, websocket_endpoint&& ep) {
-        auto ws_interface = m_provider->connect(std::make_unique<default_websocket_observer_core>(std::move(o)), internal::networking::to_core_websocket_endpoint(ep));
+        auto ws_interface = m_provider->connect(std::make_unique<default_websocket_observer_core>(std::move(o)),
+                                                                                                  internal::networking::to_core_websocket_endpoint(ep));
         return std::make_unique<default_socket>(std::move(ws_interface));
     }
 
@@ -70,7 +76,7 @@ namespace realm::networking {
         });
     }
 
-    default_socket_provider::SyncTimer default_socket_provider::create_timer(std::chrono::milliseconds delay, FunctionHandler&& fn) {
+    default_socket_provider::sync_timer default_socket_provider::create_timer(std::chrono::milliseconds delay, FunctionHandler&& fn) {
         return std::make_unique<default_timer>(m_provider->create_timer(delay, [fn = std::move(fn)](::realm::Status s) {
             fn(s);
         }));
@@ -187,7 +193,8 @@ namespace realm::internal::networking {
             ~sync_socket_provider_shim() = default;
 
             std::unique_ptr<::realm::sync::WebSocketInterface> connect(std::unique_ptr<::realm::sync::WebSocketObserver> observer, ::realm::sync::WebSocketEndpoint&& ep) override {
-                auto cpprealm_ws_interface = m_provider->connect(create_websocket_observer_from_core_shim(std::move(observer)), to_websocket_endpoint(std::move(ep), m_proxy_config));
+                auto cpprealm_ws_interface = m_provider->connect(create_websocket_observer_from_core_shim(std::move(observer)),
+                                                                 to_websocket_endpoint(std::move(ep), m_proxy_config));
                 return  create_websocket_interface_shim(std::move(cpprealm_ws_interface));
             }
 
