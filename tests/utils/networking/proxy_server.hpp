@@ -18,6 +18,21 @@ namespace realm::tests::utils {
 
         proxy_server(const config &cfg);
         ~proxy_server();
+
+        enum event {
+            connect,
+            ssl_handshake,
+            client,
+            nonssl,
+            ssl,
+            websocket_upgrade,
+            websocket,
+        };
+
+        // Sets an event handler callback
+        void set_callback(std::function<void(event)> fn) {
+            m_event_handler = std::move(fn);
+        }
     private:
         void do_accept();
         boost::asio::io_context m_io_context;
@@ -27,6 +42,7 @@ namespace realm::tests::utils {
         std::mutex m_mutex;
         std::thread m_io_thread;
         asio::io_context::strand m_strand;
+        std::function<void(event)> m_event_handler;
     };
 }
 

@@ -10,13 +10,14 @@ namespace realm::tests::utils {
 
     class proxy_session : public std::enable_shared_from_this<proxy_session> {
     public:
-        proxy_session(tcp::socket client_socket, std::shared_ptr<asio::ssl::context> ctx, bool server_uses_ssl)
+        proxy_session(tcp::socket client_socket, std::shared_ptr<asio::ssl::context> ctx, bool server_uses_ssl, std::function<void(proxy_server::event)> fn)
             : m_client_socket(std::move(client_socket)),
               m_server_socket(m_client_socket.get_executor()),
               m_resolver(m_client_socket.get_executor()),
               m_ssl_ctx(ctx),
               m_ssl_server_socket(m_client_socket.get_executor(), *ctx),
-              m_server_uses_ssl(server_uses_ssl) {}
+              m_server_uses_ssl(server_uses_ssl),
+              m_event_handler(std::move(fn)) {}
 
         void start() {
             do_read_client_request();
@@ -46,6 +47,10 @@ namespace realm::tests::utils {
             std::string::size_type host_end = request.find(":", host_start);
             std::string host = request.substr(host_start, host_end - host_start);
             std::string port = request.substr(host_end + 1, request.find(" ", host_end) - host_end - 1);
+
+            if (m_event_handler) {
+                m_event_handler(proxy_server::event::connect);
+            }
 
             if (host == "127.0.0.1" || host == "localhost") {
                 tcp::endpoint endpoint(boost::asio::ip::make_address("127.0.0.1"), std::stoi(port));
@@ -96,6 +101,10 @@ namespace realm::tests::utils {
         void do_ssl_handshake_to_server(const std::string &hostname) {
             auto self(shared_from_this());
 
+            if (m_event_handler) {
+                m_event_handler(proxy_server::event::ssl_handshake);
+            }
+
             m_ssl_server_socket.set_verify_callback(asio::ssl::host_name_verification(hostname));
             m_ssl_server_socket.set_verify_mode(boost::asio::ssl::verify_peer);
 
@@ -128,6 +137,9 @@ namespace realm::tests::utils {
 
         void do_ssl_write_to_server(std::size_t length) {
             auto self(shared_from_this());
+            if (m_event_handler) {
+                m_event_handler(proxy_server::event::ssl);
+            }
             boost::asio::async_write(m_ssl_server_socket, boost::asio::buffer(std::string(m_client_buffer.data()), length),
                                      [this, self](boost::system::error_code ec, std::size_t) {
                                          if (!ec) {
@@ -140,6 +152,9 @@ namespace realm::tests::utils {
 
         void do_ssl_read_server() {
             auto self(shared_from_this());
+            if (m_event_handler) {
+                m_event_handler(proxy_server::event::ssl);
+            }
             m_ssl_server_socket.async_read_some(boost::asio::buffer(m_server_buffer),
                                                 [this, self](boost::system::error_code ec, std::size_t length) {
                                                     if (!ec) {
@@ -152,6 +167,9 @@ namespace realm::tests::utils {
 
         void do_read_client() {
             auto self(shared_from_this());
+            if (m_event_handler) {
+                m_event_handler(proxy_server::event::client);
+            }
             m_client_socket.async_read_some(boost::asio::buffer(m_client_buffer),
                                             [this, self](boost::system::error_code ec, std::size_t length) {
                                                 if (!ec) {
@@ -170,6 +188,9 @@ namespace realm::tests::utils {
 
         void do_read_from_websocket_client() {
             auto self(shared_from_this());
+            if (m_event_handler) {
+                m_event_handler(proxy_server::event::websocket);
+            }
             m_client_socket.async_read_some(boost::asio::buffer(m_client_buffer),
                                             [this, self](boost::system::error_code ec, std::size_t length) {
                                                 if (!ec) {
@@ -184,6 +205,9 @@ namespace realm::tests::utils {
 
         void do_write_to_websocket_server(std::size_t length) {
             auto self(shared_from_this());
+            if (m_event_handler) {
+                m_event_handler(proxy_server::event::websocket);
+            }
             if (m_server_uses_ssl) {
                 boost::asio::async_write(m_ssl_server_socket, boost::asio::buffer(m_client_buffer.data(), length),
                                          [this, self](boost::system::error_code ec, std::size_t) {
@@ -207,6 +231,9 @@ namespace realm::tests::utils {
 
         void do_read_from_websocket_server() {
             auto self(shared_from_this());
+            if (m_event_handler) {
+                m_event_handler(proxy_server::event::websocket);
+            }
             if (m_server_uses_ssl) {
                 m_ssl_server_socket.async_read_some(boost::asio::buffer(m_server_buffer),
                                                 [this, self](boost::system::error_code ec, std::size_t length) {
@@ -232,24 +259,32 @@ namespace realm::tests::utils {
 
         void do_write_to_websocket_client(std::size_t length) {
             auto self(shared_from_this());
-                boost::asio::async_write(m_client_socket, boost::asio::buffer(m_server_buffer.data(), length),
-                                         [this, self](boost::system::error_code ec, std::size_t) {
-                                             if (!ec) {
-                                                 do_read_from_websocket_server();
-                                             } else {
-                                                 REALM_TERMINATE("Proxy: Error writing from websocket client.");
-                                             }
-                                         });
-
+            if (m_event_handler) {
+                m_event_handler(proxy_server::event::websocket);
+            }
+            boost::asio::async_write(m_client_socket, boost::asio::buffer(m_server_buffer.data(), length),
+                                     [this, self](boost::system::error_code ec, std::size_t) {
+                                         if (!ec) {
+                                             do_read_from_websocket_server();
+                                         } else {
+                                             REALM_TERMINATE("Proxy: Error writing from websocket client.");
+                                         }
+                                     });
         }
 
         void upgrade_client_to_websocket(std::size_t length) {
+            if (m_event_handler) {
+                m_event_handler(proxy_server::event::websocket_upgrade);
+            }
             do_read_from_websocket_client();
             do_read_from_websocket_server();
         }
 
         void do_write_to_server(std::size_t length) {
             auto self(shared_from_this());
+            if (m_event_handler) {
+                m_event_handler(proxy_server::event::nonssl);
+            }
             boost::asio::async_write(m_server_socket, boost::asio::buffer(std::string(m_client_buffer.data()), length),
                                      [this, self](boost::system::error_code ec, std::size_t) {
                                          if (!ec) {
@@ -262,6 +297,9 @@ namespace realm::tests::utils {
 
         void do_read_server() {
             auto self(shared_from_this());
+            if (m_event_handler) {
+                m_event_handler(proxy_server::event::nonssl);
+            }
             m_server_socket.async_read_some(boost::asio::buffer(m_server_buffer),
                                             [this, self](boost::system::error_code ec, std::size_t length) {
                                                 if (!ec) {
@@ -274,6 +312,9 @@ namespace realm::tests::utils {
 
         void do_write_to_client(std::size_t length) {
             auto self(shared_from_this());
+            if (m_event_handler) {
+                m_event_handler(proxy_server::event::client);
+            }
             auto res = std::string(m_server_buffer.data(), length);
             bool upgrade_to_websocket = res.find("HTTP/1.1 101 Switching Protocols") != std::string::npos;
 
@@ -309,6 +350,7 @@ namespace realm::tests::utils {
         std::array<char, 8192> m_server_buffer;
 
         const std::string server_endpoint = "services.cloud.mongodb.com";
+        std::function<void(proxy_server::event)> m_event_handler;
     };
 
     proxy_server::proxy_server(const config &cfg) : m_config(cfg), m_strand(m_io_context) {
@@ -337,7 +379,7 @@ namespace realm::tests::utils {
                 asio::bind_executor(m_strand,
                                     [this](std::error_code ec, asio::ip::tcp::socket socket) {
                                         if (!ec) {
-                                            std::make_shared<proxy_session>(std::move(socket), m_ssl_ctx, m_config.server_uses_ssl)->start();
+                                            std::make_shared<proxy_session>(std::move(socket), m_ssl_ctx, m_config.server_uses_ssl, std::move(m_event_handler))->start();
                                         }
                                         do_accept();
                                     }));

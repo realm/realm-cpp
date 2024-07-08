@@ -139,6 +139,10 @@ namespace realm::networking {
         const bool is_ipv4 = is_valid_ipv4(host);
         const URLScheme url_scheme = get_url_scheme(uri.get_scheme());
 
+        if (port.empty()) {
+            port = is_localhost ? "9090" : "443";
+        }
+
         try {
             auto resolver = realm::sync::network::Resolver{service};
             if (m_proxy_config) {
@@ -183,12 +187,7 @@ namespace realm::networking {
         if (m_proxy_config) {
             realm::sync::HTTPRequest req;
             req.method = realm::sync::HTTPMethod::Connect;
-
-//            if (is_ipv4) {
-                req.headers.emplace("Host", util::format("%1:%2", host, port));
-//            } else {
-//                req.headers.emplace("Host", util::format("%1:%2", host, is_localhost ? "9090" : port));
-//            }
+            req.headers.emplace("Host", util::format("%1:%2", host, port));
 
             if (m_proxy_config->username_password) {
                 auto userpass = util::format("%1:%2", m_proxy_config->username_password->first, m_proxy_config->username_password->second);

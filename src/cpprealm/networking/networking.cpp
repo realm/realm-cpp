@@ -63,28 +63,13 @@ namespace realm::internal::networking {
 
     ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::websocket_endpoint& ep) {
         ::realm::sync::WebSocketEndpoint core_ep;
-
         auto uri = util::Uri(ep.url);
         auto protocol = to_protocol_envelope(uri.get_scheme());
 
-        auto uri_path = uri.get_auth();
-        if (uri_path.find("//") == 0) {
-            uri_path = uri_path.substr(2);
-        }
+        std::string userinfo, host, port;
+        uri.get_auth(userinfo, host, port);
 
-        std::string address;
-        std::string port;
-        size_t colon_pos = uri_path.find(':');
-        if (colon_pos != std::string::npos) {
-            // Extract the address
-            address = uri_path.substr(0, colon_pos);
-            // Extract the port
-            port = uri_path.substr(colon_pos + 1);
-        } else {
-            REALM_TERMINATE("Invalid URL");
-        }
-
-        core_ep.address = address;
+        core_ep.address = host;
         core_ep.port = std::stoi(port);
         core_ep.path = uri.get_path() + uri.get_query();
         core_ep.protocols = ep.protocols;
