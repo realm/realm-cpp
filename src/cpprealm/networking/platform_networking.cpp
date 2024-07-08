@@ -138,7 +138,7 @@ namespace realm::internal::networking {
         };
 
         return std::make_shared<core_http_transport_shim>(http_client);
-    };
+    }
 
     std::unique_ptr<::realm::networking::websocket_observer> create_websocket_observer_from_core_shim(std::unique_ptr<::realm::sync::WebSocketObserver>&& m_observer) {
         struct core_websocket_observer_shim : public ::realm::networking::websocket_observer {

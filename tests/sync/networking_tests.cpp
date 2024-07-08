@@ -132,6 +132,7 @@ TEST_CASE("proxy roundtrip", "[proxy]") {
     config.proxy_configuration = pc;
     config.app_id = Admin::Session::shared().cached_app_id();
     config.base_url = Admin::Session::shared().base_url();
+    config.enable_caching = false;
 
     auto app = realm::App(config);
 
