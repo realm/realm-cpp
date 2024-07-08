@@ -62,6 +62,9 @@ jobs:
         with:
           xcode-version: ${{ matrix.xcode }}
 
+      - name: Install Boost
+        run: brew install boost
+
       - uses: ammaraskar/gcc-problem-matcher@master
 
       - name: Configure
@@ -132,7 +135,8 @@ jobs:
             ninja-build \
             sudo \
             zlib1g-dev \
-            valgrind
+            valgrind \
+            libboost-all-dev
 
       - name: Setup Ccache
         uses: hendrikmuhs/ccache-action@v1.1
@@ -226,8 +230,12 @@ jobs:
         with:
           cmake-version: latest
 
+      - name: Install Boost
+        run: |
+          choco install boost-msvc-14.2
+
       - name: Configure
-        run: cmake --preset windows-x64 -DENABLE_STATIC=1 -DREALM_ENABLE_EXPERIMENTAL=1 -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        run: cmake --preset windows-x64 -DENABLE_STATIC=1 -DREALM_ENABLE_EXPERIMENTAL=1 -DCMAKE_TOOLCHAIN_FILE=%VCPKG_INSTALLATION_ROOT%\scripts\buildsystems\vcpkg.cmake -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Compile
         run: cmake --build --preset windows-x64 --config ${{ matrix.configuration }}
