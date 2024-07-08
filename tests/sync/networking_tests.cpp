@@ -28,6 +28,8 @@ TEST_CASE("sends plaintext data to proxy", "[proxy]") {
     config.app_id = Admin::Session::shared().cached_app_id();
     config.base_url = Admin::Session::shared().base_url();
 
+    std::cout << "should call foo_socket_provider" << "\n";
+
     struct foo_socket_provider : public ::realm::networking::default_socket_provider {
         std::unique_ptr<::realm::networking::websocket_interface> connect(std::unique_ptr<::realm::networking::websocket_observer> o,
                                                                           ::realm::networking::websocket_endpoint&& ep) override {
@@ -51,6 +53,7 @@ TEST_CASE("sends plaintext data to proxy", "[proxy]") {
 
     auto foo_socket = std::make_shared<foo_socket_provider>();
     config.sync_socket_provider = foo_socket;
+    std::cout << "should call foo_http_transport" << "\n";
 
     struct foo_http_transport : public ::realm::networking::default_http_transport {
         void send_request_to_server(const ::realm::networking::request& request,
