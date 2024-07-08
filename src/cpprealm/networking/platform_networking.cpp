@@ -5,8 +5,6 @@
 #include <realm/sync/network/default_socket.hpp>
 #include <realm/util/platform_info.hpp>
 
-#include <chrono>
-
 namespace realm::networking {
 
     std::shared_ptr<http_transport_client> make_default_http_client() {

@@ -537,7 +537,8 @@ namespace realm {
         app_config.device_info = std::move(device_info);
 
         app_config.sync_client_config = client_config;
-        m_app = app::App::get_app(app::App::CacheMode::Enabled, std::move(app_config));
+        m_app = app::App::get_app(config.enable_caching ? app::App::CacheMode::Enabled : app::App::CacheMode::Disabled, 
+                                  std::move(app_config));
     }
 
     App::App(const std::string &app_id,

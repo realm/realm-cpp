@@ -240,11 +240,13 @@ public:
         std::optional<std::string> base_url;
         /// Custom location for Realm files.
         std::optional<std::string> path;
-        // Extra HTTP headers to be set on each request to Atlas Device Sync when using the internal HTTP client.
+        /// Extra HTTP headers to be set on each request to Atlas Device Sync when using the internal HTTP client.
         std::optional<std::map<std::string, std::string>> custom_http_headers;
-        // Custom encryption key for the metadata Realm.
+        /// Custom encryption key for the metadata Realm.
         std::optional<std::array<char, 64>> metadata_encryption_key;
-        // Network proxy configuration to be set on each HTTP and WebSocket request.
+        /// Caches an App and its configuration for a given App ID. On by default.
+        bool enable_caching = true;
+        /// Network proxy configuration to be set on each HTTP and WebSocket request.
         std::optional<sync_config::proxy_config> proxy_configuration;
         /**
          * Optionally provide a custom HTTP transport for network calls to the server.

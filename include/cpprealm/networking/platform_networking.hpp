@@ -26,6 +26,8 @@
 #include <cpprealm/version_numbers.hpp>
 #endif
 
+#include <chrono>
+
 namespace realm {
     namespace app {
         struct GenericNetworkTransport;
