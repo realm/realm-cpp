@@ -17,7 +17,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include <cpprealm/app.hpp>
-#include <cpprealm/internal/generic_network_transport.hpp>
+#include <cpprealm/networking/platform_networking.hpp>
 
 #include <Foundation/NSData.h>
 #include <Foundation/NSURL.h>
@@ -28,34 +28,28 @@
 #include <realm/object-store/sync/generic_network_transport.hpp>
 #include <realm/util/base64.hpp>
 
-namespace realm::internal {
+namespace realm::networking {
 
-    DefaultTransport::DefaultTransport(const std::optional<std::map<std::string, std::string>>& custom_http_headers,
-                                       const std::optional<bridge::realm::sync_config::proxy_config>& proxy_config) {
-        m_custom_http_headers = custom_http_headers;
-        m_proxy_config = proxy_config;
-    }
-
-    void DefaultTransport::send_request_to_server(const app::Request& request,
-                                              std::function<void(const app::Response&)>&& completion_block) {
+    void default_http_transport::send_request_to_server(const request& request,
+                                                        std::function<void(const response&)>&& completion_block) {
         NSURL* url = [NSURL URLWithString:[NSString stringWithCString:request.url.c_str()
                                                              encoding:NSUTF8StringEncoding]];
         NSMutableURLRequest *urlRequest = [[NSMutableURLRequest alloc] initWithURL:url];
 
         switch (request.method) {
-            case app::HttpMethod::get:
+            case http_method::get:
                 [urlRequest setHTTPMethod:@"GET"];
                 break;
-            case app::HttpMethod::post:
+            case http_method::post:
                 [urlRequest setHTTPMethod:@"POST"];
                 break;
-            case app::HttpMethod::put:
+            case http_method::put:
                 [urlRequest setHTTPMethod:@"PUT"];
                 break;
-            case app::HttpMethod::patch:
+            case http_method::patch:
                 [urlRequest setHTTPMethod:@"PATCH"];
                 break;
-            case app::HttpMethod::del:
+            case http_method::del:
                 [urlRequest setHTTPMethod:@"DELETE"];
                 break;
         }
@@ -70,7 +64,7 @@ namespace realm::internal {
                         forHTTPHeaderField:[NSString stringWithCString:header.first.c_str() encoding:NSUTF8StringEncoding]];
             }
         }
-        if (request.method != app::HttpMethod::get && !request.body.empty()) {
+        if (request.method != http_method::get && !request.body.empty()) {
             [urlRequest setHTTPBody:[[NSString stringWithCString:request.body.c_str() encoding:NSUTF8StringEncoding]
                     dataUsingEncoding:NSUTF8StringEncoding]];
         }
@@ -117,7 +111,7 @@ namespace realm::internal {
                 status_code = static_cast<int>(httpResponse.statusCode);
             }
 
-            completion(app::Response {
+            completion({
                 .http_status_code=status_code,
                 .body=body
             });
