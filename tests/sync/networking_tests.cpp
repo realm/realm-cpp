@@ -24,11 +24,7 @@ TEST_CASE("sends plaintext data to proxy", "[proxy]") {
     config.app_id = Admin::Session::shared().cached_app_id();
     config.base_url = Admin::Session::shared().base_url();
 
-    bool provider_called, http_transport_called = false;
-
     struct foo_socket_provider : public ::realm::networking::default_socket_provider {
-        foo_socket_provider(bool& provider_called) : m_called(provider_called) { }
-
         std::unique_ptr<::realm::networking::websocket_interface> connect(std::unique_ptr<::realm::networking::websocket_observer> o,
                                                                           ::realm::networking::websocket_endpoint&& ep) override {
             const std::string from = "wss:";
@@ -40,14 +36,18 @@ TEST_CASE("sends plaintext data to proxy", "[proxy]") {
             return ::realm::networking::default_socket_provider::connect(std::move(o), std::move(ep));
         }
 
+        bool was_called() const {
+            return m_called;
+        }
+
     private:
-        bool& m_called;
+        bool m_called = false;
     };
-    config.sync_socket_provider = std::make_shared<foo_socket_provider>(provider_called);
+
+    auto foo_socket = std::make_shared<foo_socket_provider>();
+    config.sync_socket_provider = foo_socket;
 
     struct foo_http_transport : public ::realm::networking::default_http_transport {
-        foo_http_transport(bool& provider_called) : m_called(provider_called) { }
-
         void send_request_to_server(const ::realm::networking::request& request,
                                     std::function<void(const ::realm::networking::response&)>&& completion) override {
             auto req_copy = request;
@@ -60,13 +60,18 @@ TEST_CASE("sends plaintext data to proxy", "[proxy]") {
             return ::realm::networking::default_http_transport::send_request_to_server(req_copy, std::move(completion));
         }
 
+        bool was_called() const {
+            return m_called;
+        }
+
     private:
-        bool& m_called;
+        bool m_called = false;
     };
-    config.http_transport_client = std::make_shared<foo_http_transport>(http_transport_called);
+
+    auto foo_transport = std::make_shared<foo_http_transport>();
+    config.http_transport_client = foo_transport;
 
     auto app = realm::App(config);
-    app.get_sync_manager().set_log_level(logger::level::all);
 
     auto user = app.login(realm::App::credentials::anonymous()).get();
     auto flx_sync_config = user.flexible_sync_configuration();
@@ -101,8 +106,8 @@ TEST_CASE("sends plaintext data to proxy", "[proxy]") {
 
     bool is_subset = std::includes(expected_events.begin(), expected_events.end(), proxy_events.begin(), proxy_events.end());
     CHECK(is_subset);
-    CHECK(provider_called);
-    CHECK(http_transport_called);
+    CHECK(foo_transport->was_called());
+    CHECK(foo_socket->was_called());
 }
 
 TEST_CASE("proxy roundtrip", "[proxy]") {
@@ -126,7 +131,6 @@ TEST_CASE("proxy roundtrip", "[proxy]") {
     config.base_url = Admin::Session::shared().base_url();
 
     auto app = realm::App(config);
-    app.get_sync_manager().set_log_level(logger::level::all);
 
     auto user = app.login(realm::App::credentials::anonymous()).get();
     auto flx_sync_config = user.flexible_sync_configuration();

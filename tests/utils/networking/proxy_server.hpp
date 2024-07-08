@@ -1,11 +1,9 @@
 #ifndef CPPREALM_PROXY_SERVER_HPP
 #define CPPREALM_PROXY_SERVER_HPP
 
-#include <boost/asio.hpp>
-#include <boost/beast.hpp>
-#include <boost/asio/ssl.hpp>
+#include <asio.hpp>
+#include <asio/ssl.hpp>
 
-namespace asio = boost::asio;
 using tcp = asio::ip::tcp;
 
 namespace realm::tests::utils {
@@ -35,7 +33,7 @@ namespace realm::tests::utils {
         }
     private:
         void do_accept();
-        boost::asio::io_context m_io_context;
+        asio::io_context m_io_context;
         std::unique_ptr<tcp::acceptor> m_acceptor;
         std::shared_ptr<asio::ssl::context> m_ssl_ctx;
         config m_config;
