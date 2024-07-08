@@ -115,6 +115,9 @@ TEST_CASE("sends plaintext data to proxy", "[proxy]") {
 
     bool is_subset = std::includes(expected_events.begin(), expected_events.end(), proxy_events.begin(), proxy_events.end());
     CHECK(is_subset);
+    std::cout << "foo_http_transport: called" << foo_transport->was_called() <<"\n";
+    std::cout << "foo_socket: called" << foo_socket->was_called() <<"\n";
+
 //    CHECK(foo_transport->was_called());
 //    CHECK(foo_socket->was_called());
 }
