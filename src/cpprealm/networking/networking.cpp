@@ -61,7 +61,9 @@ namespace realm::internal::networking {
         REALM_TERMINATE("Unrecognized websocket protocol");
     }
 
-    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::websocket_endpoint& ep) {
+    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::websocket_endpoint& ep,
+                                                                const std::optional<internal::bridge::realm::sync_config::proxy_config>& pc,
+                                                                const std::optional<std::map<std::string, std::string>>& custom_headers) {
         ::realm::sync::WebSocketEndpoint core_ep;
         auto uri = util::Uri(ep.url);
         auto protocol = to_protocol_envelope(uri.get_scheme());
@@ -75,12 +77,12 @@ namespace realm::internal::networking {
         core_ep.protocols = ep.protocols;
         core_ep.is_ssl = ::realm::sync::is_ssl(protocol);
 
-        if (ep.proxy_configuration) {
+        if (pc) {
             core_ep.proxy = SyncConfig::ProxyConfig();
-            core_ep.proxy->address = ep.proxy_configuration->address;
-            core_ep.proxy->port = ep.proxy_configuration->port;
-            if (ep.proxy_configuration->username_password) {
-                auto userpass = util::format("%1:%2", ep.proxy_configuration->username_password->first, ep.proxy_configuration->username_password->second);
+            core_ep.proxy->address = pc->address;
+            core_ep.proxy->port = pc->port;
+            if (pc->username_password) {
+                auto userpass = util::format("%1:%2", pc->username_password->first, pc->username_password->second);
                 std::string encoded_userpass;
                 encoded_userpass.resize(realm::util::base64_encoded_size(userpass.length()));
                 realm::util::base64_encode(userpass, encoded_userpass);
@@ -88,16 +90,18 @@ namespace realm::internal::networking {
             }
         }
 
+        if (custom_headers) {
+            core_ep.headers = *custom_headers;
+        }
+
         return core_ep;
     }
 
-    ::realm::networking::websocket_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& core_ep,
-                                                                  std::optional<internal::bridge::realm::sync_config::proxy_config> pc) {
+    ::realm::networking::websocket_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& core_ep) {
         ::realm::networking::websocket_endpoint ep;
         ep.protocols = core_ep.protocols;
         const auto& port = core_ep.proxy ? core_ep.proxy->port : core_ep.port;
-        ep.url = util::format("%1://%2:%3%4", core_ep.is_ssl ? "wss" : "ws", core_ep.proxy ? core_ep.proxy->address : core_ep.address, port, core_ep.path);
-        ep.proxy_configuration = pc;
+        ep.url = util::format("%1://%2:%3%4", core_ep.is_ssl ? "wss" : "ws", core_ep.address, port, core_ep.path);
         return ep;
     }
 } //namespace internal::networking

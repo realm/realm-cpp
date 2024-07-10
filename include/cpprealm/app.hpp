@@ -240,13 +240,29 @@ public:
         std::optional<std::string> base_url;
         /// Custom location for Realm files.
         std::optional<std::string> path;
-        /// Extra HTTP headers to be set on each request to Atlas Device Sync when using the internal HTTP client.
+        /**
+         * Extra HTTP headers to be set on each request to Atlas Device Sync when using the internal HTTP client.
+         *
+         * Note: This has been deprecated and custom network options must now be supplied by either:
+         *
+         * - Your own subclass of `realm::networking::http_transport_client` / `realm::networking::sync_socket_provider`
+         * - Use default_http_transport and pass custom headers & proxy via the constructor. Set via `configuration.http_transport_client`.
+         */
+        [[deprecated("Network options must be supplied via custom network implementations.")]]
         std::optional<std::map<std::string, std::string>> custom_http_headers;
         /// Custom encryption key for the metadata Realm.
         std::optional<std::array<char, 64>> metadata_encryption_key;
         /// Caches an App and its configuration for a given App ID. On by default.
         bool enable_caching = true;
-        /// Network proxy configuration to be set on each HTTP and WebSocket request.
+        /**
+         * Network proxy configuration to be set on each HTTP and WebSocket request.
+         *
+         * Note: This has been deprecated and custom network options must now be supplied by either:
+         *
+         * - Your own subclass of `realm::networking::http_transport_client` / `realm::networking::sync_socket_provider`
+         * - Use default_http_transport and pass custom headers & proxy via the constructor. Set via `configuration.http_transport_client`.
+         */
+        [[deprecated("Network options must be supplied via custom network implementations.")]]
         std::optional<sync_config::proxy_config> proxy_configuration;
         /**
          * Optionally provide a custom HTTP transport for network calls to the server.
@@ -254,11 +270,11 @@ public:
          * Alternatively use `realm::networking::set_http_client_factory` to globally set
          * the default HTTP transport client.
          */
-        std::shared_ptr<::realm::networking::http_transport_client> http_transport_client;
+        std::shared_ptr<networking::http_transport_client> http_transport_client;
         /**
          * Optionally provide a custom WebSocket interface for sync.
          */
-        std::shared_ptr<::realm::networking::sync_socket_provider> sync_socket_provider;
+        std::shared_ptr<networking::sync_socket_provider> sync_socket_provider;
 
     };
 

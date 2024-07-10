@@ -33,6 +33,7 @@
 #include <regex>
 
 namespace realm::networking {
+
     struct DefaultSocket : realm::sync::network::Socket {
         DefaultSocket(realm::sync::network::Service& service)
             : realm::sync::network::Socket(service)
@@ -145,13 +146,13 @@ namespace realm::networking {
 
         try {
             auto resolver = realm::sync::network::Resolver{service};
-            if (m_proxy_config) {
+            if (m_configuration.proxy_config) {
                 std::string proxy_userinfo, proxy_host, proxy_port;
-                const auto proxy_uri = realm::util::Uri(m_proxy_config->address);
+                const auto proxy_uri = realm::util::Uri(m_configuration.proxy_config->address);
                 proxy_uri.get_auth(proxy_userinfo, proxy_host, proxy_port);
                 if (proxy_host.empty()) {
                     std::error_code e;
-                    auto address = realm::sync::network::make_address(m_proxy_config->address, e);
+                    auto address = realm::sync::network::make_address(m_configuration.proxy_config->address, e);
                     if (e.value() > 0) {
                         ::realm::networking::response response;
                         response.custom_status_code = e.value();
@@ -159,9 +160,9 @@ namespace realm::networking {
                         completion_block(std::move(response));
                         return;
                     }
-                    ep = realm::sync::network::Endpoint(address, m_proxy_config->port);
+                    ep = realm::sync::network::Endpoint(address, m_configuration.proxy_config->port);
                 } else {
-                    auto resolved = resolver.resolve(sync::network::Resolver::Query(proxy_host, std::to_string(m_proxy_config->port)));
+                    auto resolved = resolver.resolve(sync::network::Resolver::Query(proxy_host, std::to_string(m_configuration.proxy_config->port)));
                     ep = *resolved.begin();
                 }
             } else {
@@ -184,13 +185,13 @@ namespace realm::networking {
 
         auto logger = util::Logger::get_default_logger();
 
-        if (m_proxy_config) {
+        if (m_configuration.proxy_config) {
             realm::sync::HTTPRequest req;
             req.method = realm::sync::HTTPMethod::Connect;
             req.headers.emplace("Host", util::format("%1:%2", host, port));
 
-            if (m_proxy_config->username_password) {
-                auto userpass = util::format("%1:%2", m_proxy_config->username_password->first, m_proxy_config->username_password->second);
+            if (m_configuration.proxy_config->username_password) {
+                auto userpass = util::format("%1:%2", m_configuration.proxy_config->username_password->first, m_configuration.proxy_config->username_password->second);
                 std::string encoded_userpass;
                 encoded_userpass.resize(realm::util::base64_encoded_size(userpass.length()));
                 realm::util::base64_encode(userpass, encoded_userpass);
@@ -243,8 +244,8 @@ namespace realm::networking {
             headers["Content-Length"] = util::to_string(request.body.size());
         }
 
-        if (this->m_custom_http_headers) {
-            for (auto& header : *this->m_custom_http_headers) {
+        if (m_configuration.custom_http_headers) {
+            for (auto& header : *m_configuration.custom_http_headers) {
                 headers.emplace(header);
             }
         }

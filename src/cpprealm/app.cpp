@@ -1,6 +1,7 @@
 #include <cpprealm/app.hpp>
 #include <cpprealm/internal/bridge/status.hpp>
 #include <cpprealm/networking/platform_networking.hpp>
+#include <cpprealm/internal/networking/shims.hpp>
 
 #ifndef REALMCXX_VERSION_MAJOR
 #include <cpprealm/version_numbers.hpp>
@@ -497,27 +498,17 @@ namespace realm {
 
         // Sync socket provider configuration
         if (config.sync_socket_provider) {
-            client_config.socket_provider = ::realm::internal::networking::create_sync_socket_provider_shim(config.sync_socket_provider,
-                                                                                                            config.proxy_configuration);
-        } else {
-            client_config.socket_provider = ::realm::internal::networking::create_sync_socket_provider_shim(std::make_shared<networking::default_socket_provider>(),
-                                                                                                            config.proxy_configuration);
+            client_config.socket_provider = ::realm::internal::networking::create_sync_socket_provider_shim(config.sync_socket_provider);
         }
 
-        std::shared_ptr<networking::http_transport_client> http_client;
         // HTTP Transport configuration
+        std::shared_ptr<networking::http_transport_client> http_client;
         if (config.http_transport_client) {
             http_client = config.http_transport_client;
         } else {
             http_client = networking::make_http_client();
         }
 
-        if (config.proxy_configuration) {
-            http_client->set_proxy_configuration(*config.proxy_configuration);
-        }
-        if (config.custom_http_headers) {
-            http_client->set_custom_http_headers(*config.custom_http_headers);
-        }
         app_config.transport = internal::networking::create_http_client_shim(http_client);
 
         app_config.metadata_mode = should_encrypt ? app::AppConfig::MetadataMode::Encryption : app::AppConfig::MetadataMode::NoEncryption;

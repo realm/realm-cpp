@@ -99,8 +99,6 @@ namespace realm::networking {
         std::vector<std::string> protocols;
         /// The websocket url to connect to.
         std::string url;
-        /// Optional proxy config taken in from `realm::App::config`.
-        std::optional<internal::bridge::realm::sync_config::proxy_config> proxy_configuration;
     };
 
     enum websocket_err_codes {
@@ -138,18 +136,6 @@ namespace realm::networking {
         virtual ~http_transport_client() = default;
         virtual void send_request_to_server(const request& request,
                                             std::function<void(const response&)>&& completion) = 0;
-
-        void set_proxy_configuration(::realm::internal::bridge::realm::sync_config::proxy_config proxy_config) {
-            m_proxy_config = proxy_config;
-        };
-
-        void set_custom_http_headers(std::map<std::string, std::string> http_headers) {
-            m_custom_http_headers = http_headers;
-        };
-
-    protected:
-        std::optional<std::map<std::string, std::string>> m_custom_http_headers;
-        std::optional<::realm::internal::bridge::realm::sync_config::proxy_config> m_proxy_config;
     };
 
 } //namespace realm::networking
@@ -171,9 +157,10 @@ namespace realm::internal::networking {
     ::realm::networking::response to_response(const ::realm::app::Response&);
     ::realm::app::Response to_core_response(const ::realm::networking::response&);
 
-    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::websocket_endpoint & ep);
-    ::realm::networking::websocket_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& ep,
-                                                                  std::optional<::realm::internal::bridge::realm::sync_config::proxy_config> pc);
+    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::websocket_endpoint& ep,
+                                                                const std::optional<internal::bridge::realm::sync_config::proxy_config>& pc,
+                                                                const std::optional<std::map<std::string, std::string>>& custom_headers);
+    ::realm::networking::websocket_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& ep);
 } //namespace realm::internal::networking
 
 #endif//CPPREALM_NETWORKING_HPP

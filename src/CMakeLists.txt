@@ -51,6 +51,7 @@ set(SOURCES
     cpprealm/internal/bridge/thread_safe_reference.cpp
     cpprealm/internal/bridge/timestamp.cpp
     cpprealm/internal/bridge/uuid.cpp
+    cpprealm/internal/networking/shims.cpp
     cpprealm/internal/scheduler/realm_core_scheduler.cpp
     cpprealm/networking/networking.cpp
     cpprealm/networking/platform_networking.cpp
@@ -112,6 +113,7 @@ set(HEADERS
     ../include/cpprealm/internal/bridge/utils.hpp
     ../include/cpprealm/internal/bridge/uuid.hpp
     ../include/cpprealm/internal/type_info.hpp
+    ../include/cpprealm/internal/networking/shims.hpp
     ../include/cpprealm/internal/scheduler/realm_core_scheduler.hpp
     ../include/cpprealm/schedulers/default_scheduler.hpp
     ../include/cpprealm/networking/networking.hpp

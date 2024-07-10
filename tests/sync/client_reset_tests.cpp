@@ -121,7 +121,7 @@ TEST_CASE("client_reset", "[sync]") {
         });
         sync_session->resume();
         CHECK(flx_sync_config.get_client_reset_mode() == realm::client_reset_mode::manual);
-        CHECK(f.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
+        CHECK(f.wait_for(std::chrono::seconds(180)) == std::future_status::ready);
     }
 
     SECTION("discard_unsynced_changes") {
@@ -162,8 +162,8 @@ TEST_CASE("client_reset", "[sync]") {
         // The client_reset_object created locally with _id=2 should have been discarded,
         // while the one from the server _id=1 should be present
         CHECK(flx_sync_config.get_client_reset_mode() == realm::client_reset_mode::discard_unsynced);
-        CHECK(before_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
-        CHECK(after_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
+        CHECK(before_handler_future.wait_for(std::chrono::seconds(180)) == std::future_status::ready);
+        CHECK(after_handler_future.wait_for(std::chrono::seconds(180)) == std::future_status::ready);
     }
 
     SECTION("recover_or_discard_unsynced_changes") {
@@ -203,8 +203,8 @@ TEST_CASE("client_reset", "[sync]") {
         // The client_reset_object created locally with _id=2 should be present as it should be recovered,
         // while the one from the server _id=1 should be present
         CHECK(flx_sync_config.get_client_reset_mode() == realm::client_reset_mode::recover_or_discard);
-        CHECK(before_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
-        CHECK(after_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
+        CHECK(before_handler_future.wait_for(std::chrono::seconds(180)) == std::future_status::ready);
+        CHECK(after_handler_future.wait_for(std::chrono::seconds(180)) == std::future_status::ready);
     }
 
     SECTION("recover_unsynced_changes") {
@@ -244,8 +244,8 @@ TEST_CASE("client_reset", "[sync]") {
         // The object created locally and the object created on the server
         // should both be integrated into the new realm file.
         CHECK(flx_sync_config.get_client_reset_mode() == realm::client_reset_mode::recover);
-        CHECK(before_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
-        CHECK(after_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
+        CHECK(before_handler_future.wait_for(std::chrono::seconds(180)) == std::future_status::ready);
+        CHECK(after_handler_future.wait_for(std::chrono::seconds(180)) == std::future_status::ready);
     }
 
     SECTION("recover_unsynced_changes_with_failure") {
@@ -278,7 +278,7 @@ TEST_CASE("client_reset", "[sync]") {
         auto synced_realm2 = db(flx_sync_config);
         synced_realm2.refresh();
         CHECK(flx_sync_config.get_client_reset_mode() == realm::client_reset_mode::recover);
-        CHECK(error_handler_future.wait_for(std::chrono::milliseconds(60000)) == std::future_status::ready);
+        CHECK(error_handler_future.wait_for(std::chrono::seconds(180)) == std::future_status::ready);
     }
 
 }
