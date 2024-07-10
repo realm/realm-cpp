@@ -121,7 +121,7 @@ TEST_CASE("custom transport to proxy", "[proxy]") {
 TEST_CASE("built in transport to proxy roundtrip", "[proxy]") {
 
     tests::utils::proxy_server::config cfg;
-    cfg.port = 1234;
+    cfg.port = 1235;
     cfg.server_uses_ssl = false; // Set to true if using services.cloud.mongodb.com
     tests::utils::proxy_server server(std::move(cfg));
 
@@ -137,7 +137,7 @@ TEST_CASE("built in transport to proxy roundtrip", "[proxy]") {
 
     auto transport_config = ::realm::networking::default_transport_configuration();
     proxy_config pc;
-    pc.port = 1234;
+    pc.port = 1235;
     pc.address = "127.0.0.1";
     transport_config.proxy_config = pc;
 

@@ -42,18 +42,18 @@ namespace realm::networking {
         }
 
     private:
-        std::shared_ptr<websocket_observer> m_observer;
+        std::unique_ptr<websocket_observer> m_observer;
     };
 
     struct default_timer : public default_socket_provider::timer {
-        default_timer(const std::shared_ptr<::realm::sync::SyncSocketProvider::Timer>& t) : m_timer(t) {}
+        default_timer(std::unique_ptr<::realm::sync::SyncSocketProvider::Timer>&& t) : m_timer(std::move(t)) {}
         ~default_timer() = default;
         void cancel() {
             m_timer->cancel();
         };
 
     private:
-        std::shared_ptr<::realm::sync::SyncSocketProvider::Timer> m_timer;
+        std::unique_ptr<::realm::sync::SyncSocketProvider::Timer> m_timer;
     };
 
     /// Built in websocket client.
@@ -63,7 +63,7 @@ namespace realm::networking {
 
         void async_write_binary(std::string_view data, websocket_interface::FunctionHandler&& handler) override;
     private:
-        std::shared_ptr<::realm::sync::WebSocketInterface> m_ws_interface;
+        std::unique_ptr<::realm::sync::WebSocketInterface> m_ws_interface;
     };
 
     default_socket_provider::default_socket_provider() {

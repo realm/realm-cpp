@@ -68,9 +68,7 @@ namespace realm::tests::utils {
                                              } else {
                                                  if (ec == asio::error::eof) {
                                                      std::cout << "Connection closed by peer (EOF)." << std::endl;
-                                                     return;
                                                  }
-                                                 REALM_TERMINATE("Proxy: Error resolving host");
                                              }
                                          });
             } else {
@@ -91,9 +89,7 @@ namespace realm::tests::utils {
                                                                      } else {
                                                                          if (ec == asio::error::eof) {
                                                                              std::cout << "Connection closed by peer (EOF)." << std::endl;
-                                                                             return;
                                                                          }
-                                                                         REALM_TERMINATE("Proxy: Error connecting to server");
                                                                      }
                                                                  });
             } else {
@@ -106,9 +102,7 @@ namespace realm::tests::utils {
                                                   } else {
                                                       if (ec == asio::error::eof) {
                                                           std::cout << "Connection closed by peer (EOF)." << std::endl;
-                                                          return;
                                                       }
-                                                      REALM_TERMINATE("Proxy: Error connecting to server");
                                                   }
                                               });
             }
@@ -163,9 +157,7 @@ namespace realm::tests::utils {
                                  } else {
                                      if (ec == asio::error::eof) {
                                          std::cout << "Connection closed by peer (EOF)." << std::endl;
-                                         return;
                                      }
-                                     REALM_TERMINATE("Proxy: Error writing to server.");
                                  }
                              });
         }
@@ -182,9 +174,7 @@ namespace realm::tests::utils {
                                                     } else {
                                                         if (ec == asio::error::eof) {
                                                             std::cout << "Connection closed by peer (EOF)." << std::endl;
-                                                            return;
                                                         }
-                                                        REALM_TERMINATE("Proxy: Error reading from server.");
                                                     }
                                                 });
         }
@@ -207,9 +197,7 @@ namespace realm::tests::utils {
                                                 } else {
                                                     if (ec == asio::error::eof) {
                                                         std::cout << "Connection closed by peer (EOF)." << std::endl;
-                                                        return;
                                                     }
-                                                    REALM_TERMINATE("Proxy: Error reading from client.");
                                                 }
                                             });
         }
@@ -227,9 +215,7 @@ namespace realm::tests::utils {
                                                 } else {
                                                     if (ec == asio::error::eof) {
                                                         std::cout << "Connection closed by peer (EOF)." << std::endl;
-                                                        return;
                                                     }
-                                                    REALM_TERMINATE("Proxy: Error reading from websocket client.");
                                                 }
                                             });
 
@@ -257,9 +243,7 @@ namespace realm::tests::utils {
                     } else {
                         if (ec == asio::error::eof) {
                             std::cout << "Connection closed by peer (EOF)." << std::endl;
-                            return;
                         }
-                        REALM_TERMINATE("Proxy: Error writing to websocket server.");
                     }
                 });
             }
@@ -279,9 +263,7 @@ namespace realm::tests::utils {
                                                     } else {
                                                         if (ec == asio::error::eof) {
                                                             std::cout << "Connection closed by peer (EOF)." << std::endl;
-                                                            return;
                                                         }
-                                                        REALM_TERMINATE("Proxy: Error reading from websocket server.");
                                                     }
                                                 });
             } else {
@@ -293,9 +275,7 @@ namespace realm::tests::utils {
                                                     } else {
                                                         if (ec == asio::error::eof) {
                                                             std::cout << "Connection closed by peer (EOF)." << std::endl;
-                                                            return;
                                                         }
-                                                        REALM_TERMINATE("Proxy: Error reading from websocket server.");
                                                     }
                                                 });
             }
@@ -313,9 +293,7 @@ namespace realm::tests::utils {
                                          } else {
                                              if (ec == asio::error::eof) {
                                                  std::cout << "Connection closed by peer (EOF)." << std::endl;
-                                                 return;
                                              }
-                                             REALM_TERMINATE("Proxy: Error writing from websocket client.");
                                          }
                                      });
         }
@@ -340,9 +318,7 @@ namespace realm::tests::utils {
                                          } else {
                                              if (ec == asio::error::eof) {
                                                  std::cout << "Connection closed by peer (EOF)." << std::endl;
-                                                 return;
                                              }
-                                             REALM_TERMINATE("Proxy: Error writing to server.");
                                          }
                                      });
         }
@@ -359,9 +335,7 @@ namespace realm::tests::utils {
                                                 } else {
                                                     if (ec == asio::error::eof) {
                                                         std::cout << "Connection closed by peer (EOF)." << std::endl;
-                                                        return;
                                                     }
-                                                    REALM_TERMINATE("Proxy: Error reading from server.");
                                                 }
                                             });
         }
@@ -389,9 +363,7 @@ namespace realm::tests::utils {
                                  } else {
                                      if (ec == asio::error::eof) {
                                          std::cout << "Connection closed by peer (EOF)." << std::endl;
-                                         return;
                                      }
-                                     REALM_TERMINATE("Proxy: Error writing to client.");
                                  }
                              });
         }

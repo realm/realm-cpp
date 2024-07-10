@@ -70,7 +70,10 @@ static std::string create_jwt(const std::string& appId)
 using namespace realm;
 
 TEST_CASE("app", "[app]") {
-    auto app = realm::App(realm::App::configuration({Admin::Session::shared().cached_app_id(), Admin::Session::shared().base_url()}));
+    auto config = realm::App::configuration();
+    config.app_id = Admin::Session::shared().cached_app_id();
+    config.base_url = Admin::Session::shared().base_url();
+    auto app = realm::App(config);
 
     SECTION("base_url") {
         auto no_url_provided_app = realm::App(realm::App::configuration({"NA"}));

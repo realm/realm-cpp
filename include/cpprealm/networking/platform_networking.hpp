@@ -269,7 +269,7 @@ namespace realm::networking {
         default_transport_configuration m_configuration;
     private:
         void initialize();
-        std::shared_ptr<::realm::sync::SyncSocketProvider> m_provider;
+        std::unique_ptr<::realm::sync::SyncSocketProvider> m_provider;
     };
 }
 

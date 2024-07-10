@@ -53,7 +53,11 @@ void prepare_realm(const realm::db_config& flx_sync_config, const user& sync_use
 TEST_CASE("client_reset", "[sync]") {
 
     SECTION("error handler") {
-        auto app = realm::App(realm::App::configuration({Admin::Session::shared().create_app({"str_col", "_id"}), Admin::Session::shared().base_url()}));
+        auto config = realm::App::configuration();
+        config.app_id = Admin::Session::shared().create_app({"str_col", "_id"});
+        config.base_url = Admin::Session::shared().base_url();
+        auto app = realm::App(config);
+
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
@@ -76,7 +80,11 @@ TEST_CASE("client_reset", "[sync]") {
     }
 
     SECTION("manual handler") {
-        auto app = realm::App(realm::App::configuration({Admin::Session::shared().create_app({"_id", "str_col"}, "test", false, false), Admin::Session::shared().base_url()}));
+        auto config = realm::App::configuration();
+        config.app_id = Admin::Session::shared().create_app({"_id", "str_col"}, "test", false, false);
+        config.base_url = Admin::Session::shared().base_url();
+        auto app = realm::App(config);
+
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
@@ -125,7 +133,10 @@ TEST_CASE("client_reset", "[sync]") {
     }
 
     SECTION("discard_unsynced_changes") {
-        auto app = realm::App(realm::App::configuration({Admin::Session::shared().create_app({"str_col", "_id"}, "test", false, false), Admin::Session::shared().base_url()}));
+        auto config = realm::App::configuration();
+        config.app_id = Admin::Session::shared().create_app({"_id", "str_col"}, "test", false, false);
+        config.base_url = Admin::Session::shared().base_url();
+        auto app = realm::App(config);
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
 
@@ -167,7 +178,10 @@ TEST_CASE("client_reset", "[sync]") {
     }
 
     SECTION("recover_or_discard_unsynced_changes") {
-        auto app = realm::App(realm::App::configuration({Admin::Session::shared().create_app({"str_col", "_id"}, "test", false, false), Admin::Session::shared().base_url()}));
+        auto config = realm::App::configuration();
+        config.app_id = Admin::Session::shared().create_app({"_id", "str_col"}, "test", false, false);
+        config.base_url = Admin::Session::shared().base_url();
+        auto app = realm::App(config);
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
@@ -208,7 +222,10 @@ TEST_CASE("client_reset", "[sync]") {
     }
 
     SECTION("recover_unsynced_changes") {
-        auto app = realm::App(realm::App::configuration({Admin::Session::shared().create_app({"str_col", "_id"}, "test", false, false), Admin::Session::shared().base_url()}));
+        auto config = realm::App::configuration();
+        config.app_id = Admin::Session::shared().create_app({"_id", "str_col"}, "test", false, false);
+        config.base_url = Admin::Session::shared().base_url();
+        auto app = realm::App(config);
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
@@ -249,7 +266,10 @@ TEST_CASE("client_reset", "[sync]") {
     }
 
     SECTION("recover_unsynced_changes_with_failure") {
-        auto app = realm::App(realm::App::configuration({Admin::Session::shared().create_app({"str_col", "_id"}, "test", false, true), Admin::Session::shared().base_url()}));
+        auto config = realm::App::configuration();
+        config.app_id = Admin::Session::shared().create_app({"_id", "str_col"}, "test", false, true);
+        config.base_url = Admin::Session::shared().base_url();
+        auto app = realm::App(config);
         app.get_sync_manager().set_log_level(logger::level::all);
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
