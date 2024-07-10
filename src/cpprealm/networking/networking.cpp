@@ -1,4 +1,5 @@
 #include <cpprealm/networking/networking.hpp>
+#include <cpprealm/networking/platform_networking.hpp>
 
 #include <realm/object-store/sync/generic_network_transport.hpp>
 #include <realm/sync/protocol.hpp>
@@ -62,36 +63,45 @@ namespace realm::internal::networking {
     }
 
     ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::websocket_endpoint& ep,
-                                                                const std::optional<internal::bridge::realm::sync_config::proxy_config>& pc,
-                                                                const std::optional<std::map<std::string, std::string>>& custom_headers) {
+                                                                const std::optional<::realm::networking::default_transport_configuration>& config) {
         ::realm::sync::WebSocketEndpoint core_ep;
         auto uri = util::Uri(ep.url);
         auto protocol = to_protocol_envelope(uri.get_scheme());
 
         std::string userinfo, host, port;
         uri.get_auth(userinfo, host, port);
-
-        core_ep.address = host;
-        core_ep.port = std::stoi(port);
-        core_ep.path = uri.get_path() + uri.get_query();
-        core_ep.protocols = ep.protocols;
         core_ep.is_ssl = ::realm::sync::is_ssl(protocol);
 
-        if (pc) {
-            core_ep.proxy = SyncConfig::ProxyConfig();
-            core_ep.proxy->address = pc->address;
-            core_ep.proxy->port = pc->port;
-            if (pc->username_password) {
-                auto userpass = util::format("%1:%2", pc->username_password->first, pc->username_password->second);
-                std::string encoded_userpass;
-                encoded_userpass.resize(realm::util::base64_encoded_size(userpass.length()));
-                realm::util::base64_encode(userpass, encoded_userpass);
-                core_ep.headers.emplace("Proxy-Authorization", util::format("Basic %1", encoded_userpass));
-            }
+        core_ep.address = host;
+        if (port.empty()) {
+            core_ep.port = core_ep.is_ssl ? 443 : 80;
+        } else {
+            core_ep.port = std::stoi(port);
         }
+        core_ep.path = uri.get_path() + uri.get_query();
+        core_ep.protocols = ep.protocols;
 
-        if (custom_headers) {
-            core_ep.headers = *custom_headers;
+        if (config) {
+            if (config->proxy_config) {
+                core_ep.proxy = SyncConfig::ProxyConfig();
+                core_ep.proxy->address = config->proxy_config->address;
+                core_ep.proxy->port = config->proxy_config->port;
+                if (config->proxy_config->username_password) {
+                    auto userpass = util::format("%1:%2", config->proxy_config->username_password->first, config->proxy_config->username_password->second);
+                    std::string encoded_userpass;
+                    encoded_userpass.resize(realm::util::base64_encoded_size(userpass.length()));
+                    realm::util::base64_encode(userpass, encoded_userpass);
+                    core_ep.headers.emplace("Proxy-Authorization", util::format("Basic %1", encoded_userpass));
+                }
+            }
+
+            if (config->custom_http_headers) {
+                core_ep.headers = *config->custom_http_headers;
+            }
+
+            core_ep.verify_servers_ssl_certificate = config->client_validate_ssl;
+            core_ep.ssl_trust_certificate_path = config->ssl_trust_certificate_path;
+            core_ep.ssl_verify_callback = config->ssl_verify_callback;
         }
 
         return core_ep;

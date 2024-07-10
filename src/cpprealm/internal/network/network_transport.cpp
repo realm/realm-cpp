@@ -221,9 +221,13 @@ namespace realm::networking {
             service.reset();
         }
 
+        if (m_configuration.ssl_trust_certificate_path) {
+            m_ssl_context.use_certificate_chain_file(*m_configuration.ssl_trust_certificate_path);
+        } else {
 #if REALM_INCLUDE_CERTS
-        m_ssl_context.use_included_certificate_roots();
+            m_ssl_context.use_included_certificate_roots();
 #endif
+        }
 
         if (url_scheme == URLScheme::HTTPS) {
             socket.ssl_stream.emplace(socket, m_ssl_context, Stream::client);

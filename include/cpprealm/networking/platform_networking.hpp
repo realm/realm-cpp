@@ -229,15 +229,22 @@ namespace realm::networking {
     /// Globally overwrites the default http transport client factory
     void set_http_client_factory(std::function<std::shared_ptr<http_transport_client>()>&&);
 
-    struct default_transport_configuraton {
+    struct default_transport_configuration {
         std::optional<std::map<std::string, std::string>> custom_http_headers;
         std::optional<::realm::internal::bridge::realm::sync_config::proxy_config> proxy_config;
+
+        using SSLVerifyCallback = bool(const std::string& server_address,
+                                       internal::bridge::realm::sync_config::proxy_config::port_type server_port,
+                                       const char* pem_data, size_t pem_size, int preverify_ok, int depth);
+        bool client_validate_ssl = true;
+        std::optional<std::string> ssl_trust_certificate_path;
+        std::function<SSLVerifyCallback> ssl_verify_callback;
     };
 
     /// Built in HTTP transport client.
     struct default_http_transport : public http_transport_client {
         default_http_transport() = default;
-        default_http_transport(const default_transport_configuraton& c) : m_configuration(c) {}
+        default_http_transport(const default_transport_configuration& c) : m_configuration(c) {}
 
         ~default_http_transport() = default;
 
@@ -245,13 +252,13 @@ namespace realm::networking {
                                     std::function<void(const ::realm::networking::response&)>&& completion);
 
     protected:
-        default_transport_configuraton m_configuration;
+        default_transport_configuration m_configuration;
     };
 
     /// Built in websocket provider
     struct default_socket_provider : public sync_socket_provider {
         default_socket_provider();
-        default_socket_provider(const default_transport_configuraton& c) : m_configuration(c) {}
+        default_socket_provider(const default_transport_configuration& c);
         ~default_socket_provider() = default;
 
         std::unique_ptr<websocket_interface> connect(std::unique_ptr<websocket_observer>, websocket_endpoint &&) override;
@@ -259,8 +266,9 @@ namespace realm::networking {
         sync_timer create_timer(std::chrono::milliseconds delay, FunctionHandler&&) override;
 
     protected:
-        default_transport_configuraton m_configuration;
+        default_transport_configuration m_configuration;
     private:
+        void initialize();
         std::shared_ptr<::realm::sync::SyncSocketProvider> m_provider;
     };
 }

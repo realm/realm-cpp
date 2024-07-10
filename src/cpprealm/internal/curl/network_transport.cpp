@@ -19,7 +19,7 @@
 #include <cpprealm/app.hpp>
 #include <cpprealm/networking/platform_networking.hpp>
 
-#include <realm/object-store/sync/generic_network_transport.hpp>
+#include <realm/util/to_string.hpp>
 
 #include <curl/curl.h>
 
@@ -60,7 +60,6 @@ namespace realm::networking {
 
         static size_t curl_write_cb(char* ptr, size_t size, size_t nmemb, std::string* response)
         {
-            REALM_ASSERT(response);
             size_t realsize = size * nmemb;
             response->append(ptr, realsize);
             return realsize;
@@ -68,7 +67,6 @@ namespace realm::networking {
 
         static size_t curl_header_cb(char* buffer, size_t size, size_t nitems, std::map<std::string, std::string>* response_headers)
         {
-            REALM_ASSERT(response_headers);
             std::string combined(buffer, size * nitems);
             if (auto pos = combined.find(':'); pos != std::string::npos) {
                 std::string key = combined.substr(0, pos);
@@ -101,11 +99,8 @@ namespace realm::networking {
             struct curl_slist* list = nullptr;
 
             std::string response;
-            app::HttpHeaders response_headers;
+            ::realm::networking::http_headers response_headers;
 
-            /* First set the URL that is about to receive our POST. This URL can
-     just as well be a https:// URL if that is what should receive the
-     data. */
             curl_easy_setopt(curl, CURLOPT_URL, request.url.c_str());
 
             if (proxy_config) {
@@ -170,14 +165,12 @@ namespace realm::networking {
 
     void default_http_transport::send_request_to_server(const ::realm::networking::request& request,
                                                         std::function<void(const ::realm::networking::response&)>&& completion_block) {
-        {
-            if (m_custom_http_headers) {
-                auto req_copy = request;
-                req_copy.headers.insert(m_custom_http_headers->begin(), m_custom_http_headers->end());
-                completion_block(do_http_request(req_copy, m_proxy_config));
-                return;
-            }
-            completion_block(do_http_request(request, m_proxy_config));
+        if (m_configuration.custom_http_headers) {
+            auto req_copy = request;
+            req_copy.headers.insert(m_configuration.custom_http_headers->begin(), m_configuration.custom_http_headers->end());
+            completion_block(do_http_request(req_copy, m_configuration.proxy_config));
+            return;
         }
+        completion_block(do_http_request(request, m_configuration.proxy_config));
     }
 } // namespace realm::networking

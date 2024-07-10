@@ -148,6 +148,10 @@ namespace realm {
     namespace sync {
         struct WebSocketEndpoint;
     }
+
+    namespace networking {
+        struct default_transport_configuration;
+    }
 }
 
 namespace realm::internal::networking {
@@ -158,8 +162,7 @@ namespace realm::internal::networking {
     ::realm::app::Response to_core_response(const ::realm::networking::response&);
 
     ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::websocket_endpoint& ep,
-                                                                const std::optional<internal::bridge::realm::sync_config::proxy_config>& pc,
-                                                                const std::optional<std::map<std::string, std::string>>& custom_headers);
+                                                                const std::optional<::realm::networking::default_transport_configuration>& config);
     ::realm::networking::websocket_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& ep);
 } //namespace realm::internal::networking
 

@@ -67,6 +67,14 @@ namespace realm::networking {
     };
 
     default_socket_provider::default_socket_provider() {
+        initialize();
+    }
+
+    default_socket_provider::default_socket_provider(const default_transport_configuration& c) : m_configuration(c) {
+        initialize();
+    }
+
+    void default_socket_provider::initialize() {
         auto user_agent_binding_info = std::string("RealmCpp/") + std::string(REALMCXX_VERSION_STRING);
         auto user_agent_application_info = "";//app_id; TODO: Should we pass the app id?
 
@@ -77,9 +85,7 @@ namespace realm::networking {
 
     std::unique_ptr<websocket_interface> default_socket_provider::connect(std::unique_ptr<websocket_observer> o, websocket_endpoint&& ep) {
 
-        auto core_ep = internal::networking::to_core_websocket_endpoint(ep,
-                                                                        m_configuration.proxy_config,
-                                                                        m_configuration.custom_http_headers);
+        auto core_ep = internal::networking::to_core_websocket_endpoint(ep, m_configuration);
         auto ws_interface = m_provider->connect(std::make_unique<default_websocket_observer_core>(std::move(o)), std::move(core_ep));
         return std::make_unique<default_socket>(std::move(ws_interface));
     }
