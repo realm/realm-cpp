@@ -224,9 +224,7 @@ namespace realm::networking {
         if (m_configuration.ssl_trust_certificate_path) {
             m_ssl_context.use_certificate_chain_file(*m_configuration.ssl_trust_certificate_path);
         } else {
-#if REALM_INCLUDE_CERTS
-            m_ssl_context.use_included_certificate_roots();
-#endif
+            m_ssl_context.use_default_verify();
         }
 
         if (url_scheme == URLScheme::HTTPS) {
