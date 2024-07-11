@@ -29,7 +29,7 @@ namespace realm::tests::utils {
 
         // Sets an event handler callback
         void set_callback(std::function<void(event)> fn) {
-            m_event_handler = std::move(fn);
+            m_event_handler = std::make_shared<std::function<void(event)>>(std::move(fn));
         }
     private:
         void do_accept();
@@ -40,7 +40,7 @@ namespace realm::tests::utils {
         std::mutex m_mutex;
         std::thread m_io_thread;
         asio::io_context::strand m_strand;
-        std::function<void(event)> m_event_handler;
+        std::shared_ptr<std::function<void(event)>> m_event_handler;
     };
 }
 
