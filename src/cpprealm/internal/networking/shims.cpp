@@ -1,4 +1,5 @@
 #include <cpprealm/internal/networking/shims.hpp>
+#include <cpprealm/internal/networking/utils.hpp>
 
 #include <realm/object-store/sync/generic_network_transport.hpp>
 #include <realm/sync/network/default_socket.hpp>
@@ -14,7 +15,7 @@ namespace realm::internal::networking {
             void async_write_binary(util::Span<const char> data, sync::SyncSocketProvider::FunctionHandler&& handler) override {
                 auto handler_ptr = handler.release();
                 auto b = std::string_view(data.data(), data.size());
-                m_interface->async_write_binary(b, [ptr = std::move(handler_ptr)](::realm::networking::websocket_interface::status s) {
+                m_interface->async_write_binary(b, [ptr = std::move(handler_ptr)](::realm::networking::status s) {
                     auto uf = util::UniqueFunction<void(::realm::Status)>(std::move(ptr));
                     return uf(s.operator ::realm::Status());
                 });
@@ -108,7 +109,7 @@ namespace realm::internal::networking {
 
             void post(FunctionHandler&& handler) override {
                 auto handler_ptr = handler.release();
-                m_provider->post([ptr = std::move(handler_ptr)](::realm::networking::websocket_interface::status s) {
+                m_provider->post([ptr = std::move(handler_ptr)](::realm::networking::status s) {
                     auto uf = util::UniqueFunction<void(::realm::Status)>(std::move(ptr));
                     return uf(s.operator ::realm::Status());
                 });
@@ -116,7 +117,7 @@ namespace realm::internal::networking {
 
             ::realm::sync::SyncSocketProvider::SyncTimer create_timer(std::chrono::milliseconds delay, ::realm::sync::SyncSocketProvider::FunctionHandler&& handler) override {
                 auto handler_ptr = handler.release();
-                auto fn = [ptr = std::move(handler_ptr)](::realm::networking::websocket_interface::status s) {
+                auto fn = [ptr = std::move(handler_ptr)](::realm::networking::status s) {
                     auto uf = util::UniqueFunction<void(::realm::Status)>(std::move(ptr));
                     return uf(s.operator ::realm::Status());
                 };

@@ -58,8 +58,8 @@ namespace realm::networking {
             [urlRequest addValue:[NSString stringWithCString:header.second.c_str() encoding:NSUTF8StringEncoding]
               forHTTPHeaderField:[NSString stringWithCString:header.first.c_str() encoding:NSUTF8StringEncoding]];
         }
-        if (m_custom_http_headers) {
-            for (auto& header : *m_custom_http_headers) {
+        if (m_configuration.custom_http_headers) {
+            for (auto& header : *m_configuration.custom_http_headers) {
                 [urlRequest addValue:[NSString stringWithCString:header.second.c_str() encoding:NSUTF8StringEncoding]
                         forHTTPHeaderField:[NSString stringWithCString:header.first.c_str() encoding:NSUTF8StringEncoding]];
             }
@@ -70,10 +70,10 @@ namespace realm::networking {
         }
 
         NSURLSession *session;
-        if (m_proxy_config) {
+        if (m_configuration.proxy_config) {
             NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration defaultSessionConfiguration];
-            NSString *proxyHost = @(m_proxy_config->address.c_str());
-            NSInteger proxyPort = m_proxy_config->port;
+            NSString *proxyHost = @(m_configuration.proxy_config->address.c_str());
+            NSInteger proxyPort = m_configuration.proxy_config->port;
             sessionConfiguration.connectionProxyDictionary = @{
                 @"HTTPSEnable": @YES,
                 @"HTTPSProxy": @(proxyPort),
@@ -84,8 +84,9 @@ namespace realm::networking {
             [[NSURLCache sharedURLCache] removeAllCachedResponses];
 
             session = [NSURLSession sessionWithConfiguration:sessionConfiguration];
-            if (m_proxy_config->username_password) {
-                auto userpass = util::format("%1:%2", m_proxy_config->username_password->first, m_proxy_config->username_password->second);
+            if (m_configuration.proxy_config->username_password) {
+                auto userpass = util::format("%1:%2", m_configuration.proxy_config->username_password->first,
+                                             m_configuration.proxy_config->username_password->second);
                 std::string encoded_userpass;
                 encoded_userpass.resize(realm::util::base64_encoded_size(userpass.length()));
                 realm::util::base64_encode(userpass, encoded_userpass);

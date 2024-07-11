@@ -1,5 +1,6 @@
 #include <cpprealm/networking/platform_networking.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/internal/networking/utils.hpp>
 
 #include <realm/object-store/sync/generic_network_transport.hpp>
 #include <realm/sync/network/default_socket.hpp>

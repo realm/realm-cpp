@@ -140,30 +140,4 @@ namespace realm::networking {
 
 } //namespace realm::networking
 
-namespace realm {
-    namespace app {
-        struct Request;
-        struct Response;
-    }
-    namespace sync {
-        struct WebSocketEndpoint;
-    }
-
-    namespace networking {
-        struct default_transport_configuration;
-    }
-}
-
-namespace realm::internal::networking {
-    ::realm::networking::request to_request(const ::realm::app::Request&);
-    ::realm::app::Request to_core_request(const ::realm::networking::request&);
-
-    ::realm::networking::response to_response(const ::realm::app::Response&);
-    ::realm::app::Response to_core_response(const ::realm::networking::response&);
-
-    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::websocket_endpoint& ep,
-                                                                const std::optional<::realm::networking::default_transport_configuration>& config);
-    ::realm::networking::websocket_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& ep);
-} //namespace realm::internal::networking
-
 #endif//CPPREALM_NETWORKING_HPP

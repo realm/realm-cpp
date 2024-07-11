@@ -3,6 +3,9 @@
 #include "test_objects.hpp"
 
 #include "../utils/networking/proxy_server.hpp"
+#include <cpprealm/internal/networking/utils.hpp>
+
+#include <thread>
 
 using namespace realm;
 

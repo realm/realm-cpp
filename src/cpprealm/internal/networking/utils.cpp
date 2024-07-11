@@ -1,4 +1,4 @@
-#include <cpprealm/networking/networking.hpp>
+#include <cpprealm/internal/networking/utils.hpp>
 #include <cpprealm/networking/platform_networking.hpp>
 
 #include <realm/object-store/sync/generic_network_transport.hpp>

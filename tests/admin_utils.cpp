@@ -21,6 +21,7 @@
 #include <thread>
 #include <iostream>
 #include <cpprealm/networking/platform_networking.hpp>
+#include <cpprealm/internal/networking/utils.hpp>
 
 #include "admin_utils.hpp"
 #include "external/json/json.hpp"

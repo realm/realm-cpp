@@ -43,7 +43,7 @@ namespace realm {
 
 namespace realm::networking {
     
-    using status = internal::bridge::status;
+    using status = ::realm::internal::bridge::status;
 
     /// The WebSocket base class that is used by the SyncClient to send data over the
     /// WebSocket connection with the server. This is the class that is returned by
@@ -55,7 +55,6 @@ namespace realm::networking {
         /// is destroyed
         virtual ~websocket_interface() = default;
 
-        using status = status;
         using FunctionHandler = std::function<void(status)>;
 
         /// Write data asynchronously to the WebSocket connection. The handler function
