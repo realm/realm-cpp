@@ -532,18 +532,6 @@ namespace realm {
                                   std::move(app_config));
     }
 
-    App::App(const std::string &app_id,
-             const std::optional<std::string> &base_url,
-             const std::optional<std::string> &path,
-             const std::optional<std::map<std::string, std::string>> &custom_http_headers) {
-        configuration c;
-        c.app_id = app_id;
-        c.base_url = base_url;
-        c.path = path;
-        c.custom_http_headers = custom_http_headers;
-        *this = App(std::move(c));
-    }
-
     std::string App::get_base_url() const {
         return m_app->get_base_url();
     }

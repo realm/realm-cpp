@@ -278,11 +278,6 @@ public:
 
     };
 
-    [[deprecated("Use App(const configuration&) instead.")]]
-    explicit App(const std::string& app_id,
-                 const std::optional<std::string>& base_url = {},
-                 const std::optional<std::string>& path = {},
-                 const std::optional<std::map<std::string, std::string>>& custom_http_headers = {});
 
     App(const configuration&);
 
