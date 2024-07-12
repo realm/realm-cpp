@@ -60,6 +60,16 @@ namespace realm::internal {
         static_assert(sizeof...(Ts) == sizeof...(Us), "Tuples must have the same size");
         return zip_tuples_impl(tuple1, tuple2, std::index_sequence_for<Ts...>());
     }
+
+    template <typename T, std::size_t N, std::size_t... Is>
+    auto constexpr array_to_tuple_impl(const std::array<T, N>& arr, std::index_sequence<Is...>) {
+        return std::make_tuple(arr[Is]...);
+    }
+
+    template <typename T, std::size_t N>
+    auto constexpr array_to_tuple(const std::array<T, N>& arr) {
+        return array_to_tuple_impl(arr, std::make_index_sequence<N>{});
+    }
 }
 
 #endif //CPPREALM_BRIDGE_UTILS_HPP

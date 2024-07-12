@@ -20,7 +20,7 @@ namespace realm::default_scheduler {
 #elif defined(REALM_HAVE_UV) && REALM_HAVE_UV
         return make_uv();
 #else
-        return std::make_shared<realm_core_scheduler>(util::Scheduler::make_generic());
+        return std::make_shared<internal::realm_core_scheduler>(util::Scheduler::make_generic());
 #endif
     }
 
