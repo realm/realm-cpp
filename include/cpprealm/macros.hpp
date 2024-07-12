@@ -400,10 +400,13 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         static constexpr auto managed_pointers() { \
             return std::tuple{FOR_EACH(DECLARE_MANAGED_PROPERTY, cls, __VA_ARGS__)};  \
         }                                                                                          \
-        template <typename PtrType> static constexpr auto unmanaged_to_managed_pointer(PtrType ptr) {         \
-           FOR_EACH(DECLARE_COND_UNMANAGED_TO_MANAGED, cls, __VA_ARGS__);  \
-        } \
-        static constexpr auto managed_pointers_names_todo() { return std::tuple{FOR_EACH(DECLARE_MANAGED_PROPERTY_NAME, cls, __VA_ARGS__)}; }   \
+        template <typename PtrType> static constexpr auto unmanaged_to_managed_pointer(PtrType ptr) {           \
+           FOR_EACH(DECLARE_COND_UNMANAGED_TO_MANAGED, cls, __VA_ARGS__);                                       \
+        }                                                                                                       \
+        static constexpr auto managed_pointers_names() {                                                        \
+            constexpr auto managed_pointers_names = std::array<std::string_view, std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value>{FOR_EACH(DECLARE_MANAGED_PROPERTY_NAME, cls, __VA_ARGS__)}; \
+            return internal::array_to_tuple(managed_pointers_names);                                            \
+        }                                                                                                       \
                                                                                                                 \
         static constexpr bool is_object = true;                                                                 \
         explicit managed(const internal::bridge::obj& obj,                                                      \
@@ -411,7 +414,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         : m_obj(std::move(obj))                                                                                 \
         , m_realm(std::move(realm))                                                                             \
         {                                                                                                       \
-            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names_todo());              \
+            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names());                   \
             std::apply([&](auto& ...pair) {                                                                     \
                 ((*this.*pair.first).assign(&m_obj, &m_realm, m_obj.get_table().get_column_key(pair.second)), ...); \
             }, zipped);                                                                                         \
@@ -420,7 +423,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
             m_obj = other.m_obj;                                                                                \
             m_realm = other.m_realm;                                                                            \
             m_rbool_query = other.m_rbool_query;                                                                \
-            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names_todo());              \
+            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names());                   \
             if (m_rbool_query) {                                                                                \
                 auto schema = m_realm.schema().find(other.schema.name);                                         \
                 auto group = m_realm.read_group();                                                              \
@@ -438,7 +441,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
             m_obj = other.m_obj;                                                                                \
             m_realm = other.m_realm;                                                                            \
             m_rbool_query = other.m_rbool_query;                                                                \
-            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names_todo());              \
+            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names());                   \
             if (m_rbool_query) {                                                                                \
                 auto schema = m_realm.schema().find(other.schema.name);                                         \
                 auto group = m_realm.read_group();                                                              \
@@ -457,7 +460,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
             m_obj = std::move(other.m_obj);                                                                     \
             m_realm = std::move(other.m_realm);                                                                 \
             m_rbool_query = std::move(other.m_rbool_query);                                                     \
-            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names_todo());              \
+            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names());                   \
             if (m_rbool_query) {                                                                                \
                 auto schema = m_realm.schema().find(other.schema.name);                                         \
                 auto group = m_realm.read_group();                                                              \
@@ -475,7 +478,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
             m_obj = std::move(other.m_obj);                                                                     \
             m_realm = std::move(other.m_realm);                                                                 \
             m_rbool_query = std::move(other.m_rbool_query);                                                     \
-            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names_todo());              \
+            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names());                   \
             if (m_rbool_query) {                                                                                \
                 auto schema = m_realm.schema().find(other.schema.name);                                         \
                 auto group = m_realm.read_group();                                                              \
@@ -497,7 +500,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
             auto schema = m.m_realm.schema().find(m.schema.name);                                               \
             auto group = m.m_realm.read_group();                                                                \
             auto table_ref = group.get_table(schema.table_key());                                               \
-            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names_todo());              \
+            auto zipped = internal::zip_tuples(managed_pointers(), managed_pointers_names());                   \
             std::apply([&m, &table_ref](auto& ...pair) {                                                        \
                 ((m.*pair.first).prepare_for_query(&m.m_realm, table_ref, pair.second, m.m_rbool_query), ...);  \
             }, zipped);                                                                             \
