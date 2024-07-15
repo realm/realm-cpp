@@ -17,7 +17,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include <cpprealm/app.hpp>
-#include <cpprealm/networking/platform_networking.hpp>
+#include <cpprealm/networking/http.hpp>
 
 #include <Foundation/NSData.h>
 #include <Foundation/NSURL.h>
