@@ -104,7 +104,7 @@ namespace realm::networking {
         curl_easy_getinfo(curl, CURLINFO_PRIMARY_PORT, &port);
 
         const char *pem_data = "-----BEGIN CERTIFICATE-----\n...certificate data...\n-----END CERTIFICATE-----\n";
-        size_t pem_size = strlen(pem_data);
+        size_t pem_size = std::strlen(pem_data);
 
         int preverify_ok = 1;
         int depth = 0;
