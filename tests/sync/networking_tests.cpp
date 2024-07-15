@@ -143,7 +143,7 @@ TEST_CASE("built in transport to proxy roundtrip", "[proxy]") {
 
     auto socket_config = ::realm::networking::default_socket_provider::configuration();
     proxy_config pc;
-    pc.port = 1234;
+    pc.port = 1235;
     pc.address = "127.0.0.1";
     socket_config.proxy_config = pc;
 
