@@ -230,11 +230,17 @@ namespace realm::networking {
             m_ssl_context.use_default_verify();
         }
 
+        if (m_configuration.ssl_verify_callback) {
+            socket.ssl_stream->use_verify_callback(std::move(m_configuration.ssl_verify_callback));
+        }
+
         if (url_scheme == URLScheme::HTTPS) {
             socket.ssl_stream.emplace(socket, m_ssl_context, Stream::client);
             socket.ssl_stream->set_host_name(host); // Throws
 
-            socket.ssl_stream->set_verify_mode(VerifyMode::peer);
+            if (m_configuration.client_validate_ssl) {
+                socket.ssl_stream->set_verify_mode(VerifyMode::peer);
+            }
             socket.ssl_stream->set_logger(logger.get());
         }
 

@@ -1,7 +1,7 @@
 #include <cpprealm/app.hpp>
 #include <cpprealm/internal/bridge/status.hpp>
-#include <cpprealm/networking/platform_networking.hpp>
 #include <cpprealm/internal/networking/shims.hpp>
+#include <cpprealm/networking/platform_networking.hpp>
 
 #ifndef REALMCXX_VERSION_MAJOR
 #include <cpprealm/version_numbers.hpp>
@@ -13,7 +13,6 @@
 #include <realm/object-store/sync/sync_user.hpp>
 #include <realm/sync/config.hpp>
 #include <realm/util/bson/bson.hpp>
-#include <realm/util/platform_info.hpp>
 
 #include <utility>
 

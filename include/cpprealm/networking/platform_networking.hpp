@@ -229,14 +229,31 @@ namespace realm::networking {
     void set_http_client_factory(std::function<std::shared_ptr<http_transport_client>()>&&);
 
     struct default_transport_configuration {
+        /**
+         * Extra HTTP headers to be set on each request to Atlas Device Sync when using the internal HTTP client.
+         */
         std::optional<std::map<std::string, std::string>> custom_http_headers;
+        /**
+         * Network proxy configuration to be set on each request.
+         */
         std::optional<::realm::internal::bridge::realm::sync_config::proxy_config> proxy_config;
 
         using SSLVerifyCallback = bool(const std::string& server_address,
                                        internal::bridge::realm::sync_config::proxy_config::port_type server_port,
                                        const char* pem_data, size_t pem_size, int preverify_ok, int depth);
+        /**
+         * If set to false, no validation will take place and the client will accept any certificate.
+         */
         bool client_validate_ssl = true;
+        /**
+         * Used for providing your own root certificate.
+         */
         std::optional<std::string> ssl_trust_certificate_path;
+        /**
+         * `ssl_verify_callback` is used to implement custom SSL certificate
+         * verification. It is only used if the protocol is SSL & `ssl_trust_certificate_path`
+         * is not set.
+         */
         std::function<SSLVerifyCallback> ssl_verify_callback;
     };
 

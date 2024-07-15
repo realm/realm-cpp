@@ -86,91 +86,123 @@ namespace realm::networking {
             }
             return nitems * size;
         }
-
-        static ::realm::networking::response do_http_request(const ::realm::networking::request& request,
-                                             const std::optional<internal::bridge::realm::sync_config::proxy_config>& proxy_config = std::nullopt)
-        {
-            CurlGlobalGuard curl_global_guard;
-            auto curl = curl_easy_init();
-            if (!curl) {
-                return ::realm::networking::response{500, -1, {}, "", std::nullopt};
-            }
-
-            struct curl_slist* list = nullptr;
-
-            std::string response;
-            ::realm::networking::http_headers response_headers;
-
-            curl_easy_setopt(curl, CURLOPT_URL, request.url.c_str());
-
-            if (proxy_config) {
-                curl_easy_setopt(curl, CURLOPT_PROXY, util::format("%1:%2", proxy_config->address, proxy_config->port).c_str());
-                curl_easy_setopt(curl, CURLOPT_HTTPPROXYTUNNEL, 1L);
-                if (proxy_config->username_password) {
-                    curl_easy_setopt(curl, CURLOPT_PROXYUSERPWD, util::format("%1:%2", proxy_config->username_password->first, proxy_config->username_password->second).c_str());
-                }
-            }
-
-            /* Now specify the POST data */
-            if (request.method == ::realm::networking::http_method::post) {
-                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body.c_str());
-            }
-            else if (request.method == ::realm::networking::http_method::put) {
-                curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
-                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body.c_str());
-            }
-            else if (request.method == ::realm::networking::http_method::patch) {
-                curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PATCH");
-                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body.c_str());
-            }
-            else if (request.method == ::realm::networking::http_method::del) {
-                curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
-                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body.c_str());
-            }
-            else if (request.method == ::realm::networking::http_method::patch) {
-                curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PATCH");
-                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body.c_str());
-            }
-
-            curl_easy_setopt(curl, CURLOPT_TIMEOUT, request.timeout_ms);
-
-            for (auto header : request.headers) {
-                auto header_str = util::format("%1: %2", header.first, header.second);
-                list = curl_slist_append(list, header_str.c_str());
-            }
-            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_cb);
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-            curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, curl_header_cb);
-            curl_easy_setopt(curl, CURLOPT_HEADERDATA, &response_headers);
-
-            auto response_code = curl_easy_perform(curl);
-            if (response_code != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed when sending request to '%s' with body '%s': %s\n",
-                        request.url.c_str(), request.body.c_str(), curl_easy_strerror(response_code));
-            }
-            long http_code = 0;
-            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-            curl_easy_cleanup(curl);
-            curl_slist_free_all(list);
-            return {
-                    static_cast<int>(http_code),
-                    0, // binding_response_code
-                    std::move(response_headers),
-                    std::move(response),
-                    std::nullopt
-            };
-        }
     } // namespace
+
+    using SSLVerifyCallback = std::function<bool(const std::string& server_address,
+                                   int server_port,
+                                   const char* pem_data, size_t pem_size,
+                                   int preverify_ok, int depth)>;
+
+    CURLcode ssl_ctx_callback(CURL *curl, void */*sslctx*/, SSLVerifyCallback *parm) {
+        auto verify_callback = (SSLVerifyCallback)(*parm);
+
+        char *url;
+        curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &url);
+        std::string server_address(url);
+
+        long port;
+        curl_easy_getinfo(curl, CURLINFO_PRIMARY_PORT, &port);
+
+        const char *pem_data = "-----BEGIN CERTIFICATE-----\n...certificate data...\n-----END CERTIFICATE-----\n";
+        size_t pem_size = strlen(pem_data);
+
+        int preverify_ok = 1;
+        int depth = 0;
+
+        bool result = verify_callback(server_address, port, pem_data, pem_size, preverify_ok, depth);
+        return result ? CURLE_OK : CURLE_SSL_CERTPROBLEM;
+    }
 
     void default_http_transport::send_request_to_server(const ::realm::networking::request& request,
                                                         std::function<void(const ::realm::networking::response&)>&& completion_block) {
-        if (m_configuration.custom_http_headers) {
-            auto req_copy = request;
-            req_copy.headers.insert(m_configuration.custom_http_headers->begin(), m_configuration.custom_http_headers->end());
-            completion_block(do_http_request(req_copy, m_configuration.proxy_config));
+        CurlGlobalGuard curl_global_guard;
+        auto curl = curl_easy_init();
+        if (!curl) {
+            completion_block(::realm::networking::response{500, -1, {}, "", std::nullopt});
             return;
         }
-        completion_block(do_http_request(request, m_configuration.proxy_config));
+
+        struct curl_slist* list = nullptr;
+
+        std::string response;
+        ::realm::networking::http_headers response_headers;
+
+        curl_easy_setopt(curl, CURLOPT_URL, request.url.c_str());
+
+
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, m_configuration.client_validate_ssl);
+
+        if (m_configuration.ssl_verify_callback) {
+            curl_easy_setopt(curl, CURLOPT_SSL_CTX_FUNCTION, ssl_ctx_callback);
+            curl_easy_setopt(curl, CURLOPT_SSL_CTX_DATA, &m_configuration.ssl_verify_callback);
+        }
+
+        if (m_configuration.ssl_trust_certificate_path) {
+            curl_easy_setopt(curl, CURLOPT_CAINFO, m_configuration.ssl_trust_certificate_path->c_str());
+        }
+
+        if (m_configuration.proxy_config) {
+            curl_easy_setopt(curl, CURLOPT_PROXY, util::format("%1:%2", m_configuration.proxy_config->address, m_configuration.proxy_config->port).c_str());
+            curl_easy_setopt(curl, CURLOPT_HTTPPROXYTUNNEL, 1L);
+            if (m_configuration.proxy_config->username_password) {
+                curl_easy_setopt(curl, CURLOPT_PROXYUSERPWD, util::format("%1:%2", m_configuration.proxy_config->username_password->first, m_configuration.proxy_config->username_password->second).c_str());
+            }
+        }
+
+        /* Now specify the POST data */
+        if (request.method == ::realm::networking::http_method::post) {
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body.c_str());
+        }
+        else if (request.method == ::realm::networking::http_method::put) {
+            curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body.c_str());
+        }
+        else if (request.method == ::realm::networking::http_method::patch) {
+            curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PATCH");
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body.c_str());
+        }
+        else if (request.method == ::realm::networking::http_method::del) {
+            curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body.c_str());
+        }
+        else if (request.method == ::realm::networking::http_method::patch) {
+            curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PATCH");
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body.c_str());
+        }
+
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, request.timeout_ms);
+
+        for (auto header : request.headers) {
+            auto header_str = util::format("%1: %2", header.first, header.second);
+            list = curl_slist_append(list, header_str.c_str());
+        }
+        if (m_configuration.custom_http_headers) {
+            for (auto header : *m_configuration.custom_http_headers) {
+                auto header_str = util::format("%1: %2", header.first, header.second);
+                list = curl_slist_append(list, header_str.c_str());
+            }
+        }
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_cb);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+        curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, curl_header_cb);
+        curl_easy_setopt(curl, CURLOPT_HEADERDATA, &response_headers);
+
+        auto response_code = curl_easy_perform(curl);
+        if (response_code != CURLE_OK) {
+            fprintf(stderr, "curl_easy_perform() failed when sending request to '%s' with body '%s': %s\n",
+                    request.url.c_str(), request.body.c_str(), curl_easy_strerror(response_code));
+        }
+        long http_code = 0;
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+        curl_easy_cleanup(curl);
+        curl_slist_free_all(list);
+        completion_block({
+                static_cast<int>(http_code),
+                0, // binding_response_code
+                std::move(response_headers),
+                std::move(response),
+                std::nullopt
+        });
     }
 } // namespace realm::networking
