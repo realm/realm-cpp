@@ -589,6 +589,14 @@ namespace realm {
 
             // Test non existent key
             CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_int_col["NA"] == 1; }) == 0);
+
+            // Check invalid operation
+            CHECK_THROWS(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_int_col.find("one") != o.map_int_col.end(); }));
+            // Check key exists in dictionary
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_int_col.contains_key("one"); }) == 3);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_int_col.contains_key("three"); }) == 0);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_int_col.contains_key("one"); }) != 0);
+            CHECK(do_query([](realm::managed<AllTypesObject>& o) -> rbool { return o.map_int_col.contains_key("three"); }) != 3);
         }
     }
 }

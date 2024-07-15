@@ -207,6 +207,22 @@ TEST_CASE("map", "[map]") {
         CHECK(as_values == std::map<std::string, std::string>({{"a", std::string("baz")}, {"b", std::string("foo")}}));
     }
 
+    SECTION("contains_key") {
+        auto obj = AllTypesObject();
+        obj.map_str_col = {
+                {"a", std::string("baz")},
+                {"b", std::string("foo")}
+        };
+
+        auto realm = db(std::move(config));
+        auto managed_obj = realm.write([&realm, &obj] {
+            return realm.add(std::move(obj));
+        });
+
+        CHECK(managed_obj.map_str_col.contains_key("a"));
+        CHECK_FALSE(managed_obj.map_str_col.contains_key("c"));
+    }
+
     SECTION("object lifetime") {
         managed<AllTypesObjectLink> ptr;
         {

@@ -599,6 +599,9 @@ namespace realm {
         }
 
         iterator find(const std::string& key) {
+            if (m_rbool_query) {
+                throw std::runtime_error("`find` is not available in Type Safe Queries, use `contains_key` instead.");
+            }
             // Dictionary's `find` searches for the index of the value and not the key.
             auto d = m_obj->get_dictionary(m_key);
             auto i = d.find_any_key(key);
@@ -625,6 +628,15 @@ namespace realm {
 
         void erase(const std::string& key) {
             m_obj->get_dictionary(m_key).erase(key);
+        }
+
+        /// Convenience method to be primarily used in type safe queries.
+        rbool contains_key(const std::string& key) {
+            if (m_rbool_query) {
+                return m_rbool_query->dictionary_has_key(m_key, key);
+            } else {
+                return m_obj->get_dictionary(m_key).find_any_key(key) != size_t(-1);
+            }
         }
 
         notification_token observe(std::function<void(realm::dictionary_collection_change)>&& fn)

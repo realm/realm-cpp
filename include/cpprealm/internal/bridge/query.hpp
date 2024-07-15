@@ -239,6 +239,7 @@ namespace realm::internal::bridge {
         query& dictionary_has_value_for_key_greater_than_equals(col_key column_key, const std::string& key, const mixed& value);
         query& dictionary_has_value_for_key_less_than_equals(col_key column_key, const std::string& key, const mixed& value);
         query& dictionary_contains_string_for_key(col_key column_key, const std::string& key, const std::string& value);
+        query& dictionary_contains_key(col_key column_key, const std::string& key);
         subexpr dictionary_link_subexpr(col_key column_key, col_key link_column_key, const std::string& key);
 
         // Expressions
