@@ -1,7 +1,7 @@
 #include <cpprealm/app.hpp>
 #include <cpprealm/internal/bridge/status.hpp>
 #include <cpprealm/internal/networking/shims.hpp>
-#include <cpprealm/networking/platform_networking.hpp>
+#include <cpprealm/networking/http.hpp>
 
 #ifndef REALMCXX_VERSION_MAJOR
 #include <cpprealm/version_numbers.hpp>

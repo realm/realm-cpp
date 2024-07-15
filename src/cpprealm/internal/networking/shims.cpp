@@ -69,7 +69,7 @@ namespace realm::internal::networking {
                 return m_observer->websocket_binary_message_received(data);
             }
 
-            bool websocket_closed_handler(bool was_clean, ::realm::networking::websocket_err_codes error_code,
+            bool websocket_closed_handler(bool was_clean, ::realm::networking::sync_socket_provider::websocket_err_codes error_code,
                                           std::string_view message) override {
                 return m_observer->websocket_closed_handler(was_clean, static_cast<::realm::sync::websocket::WebSocketError>(error_code), message);
             }

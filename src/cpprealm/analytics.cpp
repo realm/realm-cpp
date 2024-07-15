@@ -37,7 +37,7 @@
 #endif
 
 #include <cpprealm/app.hpp>
-#include <cpprealm/networking/platform_networking.hpp>
+#include <cpprealm/networking/http.hpp>
 
 #include <realm/object-store/sync/generic_network_transport.hpp>
 #include <realm/util/base64.hpp>

@@ -1,5 +1,4 @@
-#include <cpprealm/networking/platform_networking.hpp>
-#include <cpprealm/internal/bridge/realm.hpp>
+#include <cpprealm/networking/websocket.hpp>
 #include <cpprealm/internal/networking/utils.hpp>
 
 #include <realm/object-store/sync/generic_network_transport.hpp>
@@ -7,19 +6,6 @@
 #include <realm/util/platform_info.hpp>
 
 namespace realm::networking {
-
-    std::shared_ptr<http_transport_client> make_default_http_client() {
-        return std::make_shared<networking::default_http_transport>();
-    }
-    std::function<std::shared_ptr<http_transport_client>()> s_http_client_factory = make_default_http_client;
-
-    void set_http_client_factory(std::function<std::shared_ptr<http_transport_client>()>&& factory_fn) {
-        s_http_client_factory = std::move(factory_fn);
-    }
-
-    std::shared_ptr<http_transport_client> make_http_client() {
-        return s_http_client_factory();
-    }
 
     struct default_websocket_observer_core : public ::realm::sync::WebSocketObserver {
         default_websocket_observer_core(std::unique_ptr<websocket_observer>&& o) : m_observer(std::move(o)) { }
@@ -39,7 +25,7 @@ namespace realm::networking {
 
         bool websocket_closed_handler(bool was_clean, ::realm::sync::websocket::WebSocketError error_code,
                                       std::string_view message) override {
-            return m_observer->websocket_closed_handler(was_clean, static_cast<websocket_err_codes>(error_code), message);
+            return m_observer->websocket_closed_handler(was_clean, static_cast<sync_socket_provider::websocket_err_codes>(error_code), message);
         }
 
     private:
@@ -71,7 +57,7 @@ namespace realm::networking {
         initialize();
     }
 
-    default_socket_provider::default_socket_provider(const default_transport_configuration& c) : m_configuration(c) {
+    default_socket_provider::default_socket_provider(const configuration& c) : m_configuration(c) {
         initialize();
     }
 

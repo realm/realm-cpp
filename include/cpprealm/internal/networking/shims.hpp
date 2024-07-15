@@ -19,7 +19,8 @@
 #ifndef CPPREALM_SHIMS_HPP
 #define CPPREALM_SHIMS_HPP
 
-#include <cpprealm/networking/platform_networking.hpp>
+#include <cpprealm/networking/http.hpp>
+#include <cpprealm/networking/websocket.hpp>
 
 namespace realm {
     namespace sync {
@@ -31,11 +32,8 @@ namespace realm {
 }
 
 namespace realm::internal::networking {
-
     std::shared_ptr<app::GenericNetworkTransport> create_http_client_shim(const std::shared_ptr<::realm::networking::http_transport_client>&);
-
     std::unique_ptr<::realm::sync::SyncSocketProvider> create_sync_socket_provider_shim(const std::shared_ptr<::realm::networking::sync_socket_provider>& provider);
-
 }
 
 #endif //CPPREALM_SHIMS_HPP

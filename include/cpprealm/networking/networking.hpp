@@ -20,7 +20,6 @@
 #define CPPREALM_NETWORKING_HPP
 
 #include <map>
-#include <cpprealm/internal/bridge/realm.hpp>
 
 namespace realm::networking {
     /**
@@ -92,50 +91,6 @@ namespace realm::networking {
          */
         std::optional<std::int32_t> client_error_code;
 
-    };
-
-    struct websocket_endpoint {
-        /// Array of one or more websocket protocols.
-        std::vector<std::string> protocols;
-        /// The websocket url to connect to.
-        std::string url;
-    };
-
-    enum websocket_err_codes {
-        RLM_ERR_WEBSOCKET_OK = 1000,
-        RLM_ERR_WEBSOCKET_GOINGAWAY = 1001,
-        RLM_ERR_WEBSOCKET_PROTOCOLERROR = 1002,
-        RLM_ERR_WEBSOCKET_UNSUPPORTEDDATA = 1003,
-        RLM_ERR_WEBSOCKET_RESERVED = 1004,
-        RLM_ERR_WEBSOCKET_NOSTATUSRECEIVED = 1005,
-        RLM_ERR_WEBSOCKET_ABNORMALCLOSURE = 1006,
-        RLM_ERR_WEBSOCKET_INVALIDPAYLOADDATA = 1007,
-        RLM_ERR_WEBSOCKET_POLICYVIOLATION = 1008,
-        RLM_ERR_WEBSOCKET_MESSAGETOOBIG = 1009,
-        RLM_ERR_WEBSOCKET_INAVALIDEXTENSION = 1010,
-        RLM_ERR_WEBSOCKET_INTERNALSERVERERROR = 1011,
-        RLM_ERR_WEBSOCKET_TLSHANDSHAKEFAILED = 1015,
-
-        RLM_ERR_WEBSOCKET_UNAUTHORIZED = 4001,
-        RLM_ERR_WEBSOCKET_FORBIDDEN = 4002,
-        RLM_ERR_WEBSOCKET_MOVEDPERMANENTLY = 4003,
-        RLM_ERR_WEBSOCKET_CLIENT_TOO_OLD = 4004,
-        RLM_ERR_WEBSOCKET_CLIENT_TOO_NEW = 4005,
-        RLM_ERR_WEBSOCKET_PROTOCOL_MISMATCH = 4006,
-
-        RLM_ERR_WEBSOCKET_RESOLVE_FAILED = 4400,
-        RLM_ERR_WEBSOCKET_CONNECTION_FAILED = 4401,
-        RLM_ERR_WEBSOCKET_READ_ERROR = 4402,
-        RLM_ERR_WEBSOCKET_WRITE_ERROR = 4403,
-        RLM_ERR_WEBSOCKET_RETRY_ERROR = 4404,
-        RLM_ERR_WEBSOCKET_FATAL_ERROR = 4405,
-    };
-
-    // Interface for providing http transport
-    struct http_transport_client {
-        virtual ~http_transport_client() = default;
-        virtual void send_request_to_server(const request& request,
-                                            std::function<void(const response&)>&& completion) = 0;
     };
 
 } //namespace realm::networking

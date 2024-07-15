@@ -26,19 +26,19 @@ TEST_CASE("custom transport to proxy", "[proxy]") {
     config.base_url = Admin::Session::shared().base_url();
     config.enable_caching = true;
 
-    auto transport_config = ::realm::networking::default_transport_configuration();
+    auto socket_config = ::realm::networking::default_socket_provider::configuration();
     proxy_config pc;
     pc.port = 1234;
     pc.address = "127.0.0.1";
-    transport_config.proxy_config = pc;
+    socket_config.proxy_config = pc;
     
     struct foo_socket_provider : public ::realm::networking::default_socket_provider {
 
-        foo_socket_provider(const ::realm::networking::default_transport_configuration& configuration) {
+        foo_socket_provider(const ::realm::networking::default_socket_provider::configuration& configuration) {
             m_configuration = configuration;
         }
         std::unique_ptr<::realm::networking::websocket_interface> connect(std::unique_ptr<::realm::networking::websocket_observer> o,
-                                                                          ::realm::networking::websocket_endpoint&& ep) override {
+                                                                          ::realm::networking::sync_socket_provider::websocket_endpoint&& ep) override {
             m_called = true;
             return ::realm::networking::default_socket_provider::connect(std::move(o), std::move(ep));
         }
@@ -51,12 +51,12 @@ TEST_CASE("custom transport to proxy", "[proxy]") {
         bool m_called = false;
     };
 
-    auto foo_socket = std::make_shared<foo_socket_provider>(transport_config);
+    auto foo_socket = std::make_shared<foo_socket_provider>(socket_config);
     config.sync_socket_provider = foo_socket;
 
     struct foo_http_transport : public ::realm::networking::default_http_transport {
 
-        foo_http_transport(const ::realm::networking::default_transport_configuration& configuration) {
+        foo_http_transport(const ::realm::networking::default_http_transport::configuration& configuration) {
             m_configuration = configuration;
         }
 
@@ -80,7 +80,10 @@ TEST_CASE("custom transport to proxy", "[proxy]") {
         bool m_called = false;
     };
 
-    auto foo_transport = std::make_shared<foo_http_transport>(transport_config);
+    auto http_config = ::realm::networking::default_http_transport::configuration();
+    http_config.proxy_config = pc;
+
+    auto foo_transport = std::make_shared<foo_http_transport>(http_config);
     config.http_transport_client = foo_transport;
 
     auto app = realm::App(config);
@@ -138,14 +141,17 @@ TEST_CASE("built in transport to proxy roundtrip", "[proxy]") {
     config.base_url = Admin::Session::shared().base_url();
     config.enable_caching = false;
 
-    auto transport_config = ::realm::networking::default_transport_configuration();
+    auto socket_config = ::realm::networking::default_socket_provider::configuration();
     proxy_config pc;
-    pc.port = 1235;
+    pc.port = 1234;
     pc.address = "127.0.0.1";
-    transport_config.proxy_config = pc;
+    socket_config.proxy_config = pc;
 
-    config.sync_socket_provider = std::make_shared<realm::networking::default_socket_provider>(transport_config);
-    config.http_transport_client = std::make_shared<realm::networking::default_http_transport>(transport_config);
+    auto http_config = ::realm::networking::default_http_transport::configuration();
+    http_config.proxy_config = pc;
+
+    config.sync_socket_provider = std::make_shared<realm::networking::default_socket_provider>(socket_config);
+    config.http_transport_client = std::make_shared<realm::networking::default_http_transport>(http_config);
 
     auto app = realm::App(config);
 
@@ -184,11 +190,11 @@ TEST_CASE("built in transport to proxy roundtrip", "[proxy]") {
 }
 
 TEST_CASE("WebsocketEndpoint", "[proxy]") {
-    realm::networking::websocket_endpoint ep;
+    realm::networking::sync_socket_provider::websocket_endpoint ep;
     ep.url = "wss://my-server.com:443";
     ep.protocols = std::vector<std::string>({"test_protocol"});
 
-    ::realm::networking::default_transport_configuration config;
+    ::realm::networking::default_socket_provider::configuration config;
     config.proxy_config = ::realm::proxy_config();
     config.proxy_config->address = "127.0.0.1";
     config.proxy_config->port = 1234;
