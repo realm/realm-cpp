@@ -20,6 +20,7 @@
 #define CPPREALM_NETWORKING_HPP
 
 #include <map>
+#include <string>
 
 namespace realm::networking {
     /**
