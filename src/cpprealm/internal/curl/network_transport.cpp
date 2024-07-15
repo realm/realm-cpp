@@ -22,6 +22,7 @@
 #include <realm/util/to_string.hpp>
 
 #include <curl/curl.h>
+#include <cstring>
 
 namespace realm::networking {
 
