@@ -236,6 +236,11 @@ namespace realm {
             return *this;
         }
 
+        rbool& dictionary_has_key(internal::bridge::col_key column_key, const std::string& key) {
+            q = internal::bridge::query(q.get_table()).dictionary_contains_key(column_key, key);
+            return *this;
+        }
+
         ~rbool() {
             if (is_for_queries)
                 q.~query();

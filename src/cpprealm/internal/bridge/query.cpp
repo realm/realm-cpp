@@ -671,6 +671,15 @@ namespace realm::internal::bridge {
         return *this;
     }
 
+    query& query::dictionary_contains_key(col_key column_key, const std::string& key) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        *reinterpret_cast<Query *>(&m_query) = reinterpret_cast<Query *>(&m_query)->get_table()->column<CoreDictionary>(column_key.operator ColKey()).keys().contains(key);
+#else
+        m_query = std::make_shared<Query>(m_query->get_table()->column<CoreDictionary>(column_key.operator ColKey()).keys().contains(key));
+#endif
+        return *this;
+    }
+
     subexpr query::dictionary_link_subexpr(col_key column_key, col_key link_column_key, const std::string& key) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         auto table = reinterpret_cast<Query *>(&m_query)->get_table()->column<CoreDictionary>(column_key.operator ColKey()).key(key).get_target_table();
