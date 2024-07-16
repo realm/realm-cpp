@@ -19,6 +19,7 @@
 #ifndef CPPREALM_NETWORKING_HPP
 #define CPPREALM_NETWORKING_HPP
 
+#include <optional>
 #include <map>
 #include <string>
 

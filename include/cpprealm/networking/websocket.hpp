@@ -28,6 +28,7 @@
 #endif
 
 #include <chrono>
+#include <optional>
 
 namespace realm {
     namespace sync {

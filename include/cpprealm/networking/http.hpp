@@ -26,6 +26,8 @@
 #include <cpprealm/version_numbers.hpp>
 #endif
 
+#include <optional>
+
 namespace realm::networking {
 
     // Interface for providing http transport

@@ -40,9 +40,6 @@ namespace realm {
 
 namespace realm::internal::networking {
     ::realm::networking::request to_request(const ::realm::app::Request&);
-//    ::realm::app::Request to_core_request(const ::realm::networking::request&);
-
-//    ::realm::networking::response to_response(const ::realm::app::Response&);
     ::realm::app::Response to_core_response(const ::realm::networking::response&);
 
     ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::sync_socket_provider::websocket_endpoint& ep,
