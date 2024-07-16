@@ -11,7 +11,6 @@ namespace realm::networking {
     }
     std::function<std::shared_ptr<http_transport_client>()> s_http_client_factory = make_default_http_client;
 
-    [[maybe_unused]]
     void set_http_client_factory(std::function<std::shared_ptr<http_transport_client>()>&& factory_fn) {
         s_http_client_factory = std::move(factory_fn);
     }
