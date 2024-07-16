@@ -38,7 +38,7 @@ TEST_CASE("custom transport to proxy", "[proxy]") {
             m_configuration = configuration;
         }
         std::unique_ptr<::realm::networking::websocket_interface> connect(std::unique_ptr<::realm::networking::websocket_observer> o,
-                                                                          ::realm::networking::sync_socket_provider::websocket_endpoint&& ep) override {
+                                                                          ::realm::networking::websocket_endpoint&& ep) override {
             m_called = true;
             return ::realm::networking::default_socket_provider::connect(std::move(o), std::move(ep));
         }
@@ -190,7 +190,7 @@ TEST_CASE("built in transport to proxy roundtrip", "[proxy]") {
 }
 
 TEST_CASE("WebsocketEndpoint", "[proxy]") {
-    realm::networking::sync_socket_provider::websocket_endpoint ep;
+    realm::networking::websocket_endpoint ep;
     ep.url = "wss://my-server.com:443";
     ep.protocols = std::vector<std::string>({"test_protocol"});
 

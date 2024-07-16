@@ -118,7 +118,6 @@ set(HEADERS
     ../include/cpprealm/internal/networking/utils.hpp
     ../include/cpprealm/internal/scheduler/realm_core_scheduler.hpp
     ../include/cpprealm/schedulers/default_scheduler.hpp
-    ../include/cpprealm/networking/networking.hpp
     ../include/cpprealm/networking/http.hpp
     ../include/cpprealm/networking/websocket.hpp
     ../include/cpprealm/logger.hpp

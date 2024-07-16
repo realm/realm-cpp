@@ -21,7 +21,6 @@
 #endif
 #include <cpprealm/app.hpp>
 #include <cpprealm/networking/http.hpp>
-#include <cpprealm/networking/networking.hpp>
 
 #include <realm/object-store/sync/generic_network_transport.hpp>
 #include <realm/sync/network/http.hpp>

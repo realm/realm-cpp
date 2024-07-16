@@ -45,7 +45,7 @@ namespace realm::internal::networking {
         REALM_TERMINATE("Unrecognized websocket protocol");
     }
 
-    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::sync_socket_provider::websocket_endpoint& ep,
+    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::websocket_endpoint& ep,
                                                                 const std::optional<::realm::networking::default_socket_provider::configuration>& config) {
         ::realm::sync::WebSocketEndpoint core_ep;
         auto uri = util::Uri(ep.url);
@@ -90,8 +90,8 @@ namespace realm::internal::networking {
         return core_ep;
     }
 
-    ::realm::networking::sync_socket_provider::websocket_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& core_ep) {
-        ::realm::networking::sync_socket_provider::websocket_endpoint ep;
+    ::realm::networking::websocket_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& core_ep) {
+        ::realm::networking::websocket_endpoint ep;
         ep.protocols = core_ep.protocols;
         const auto& port = core_ep.proxy ? core_ep.proxy->port : core_ep.port;
         ep.url = util::format("%1://%2:%3%4", core_ep.is_ssl ? "wss" : "ws", core_ep.address, port, core_ep.path);

@@ -42,9 +42,9 @@ namespace realm::internal::networking {
     ::realm::networking::request to_request(const ::realm::app::Request&);
     ::realm::app::Response to_core_response(const ::realm::networking::response&);
 
-    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::sync_socket_provider::websocket_endpoint& ep,
+    ::realm::sync::WebSocketEndpoint to_core_websocket_endpoint(const ::realm::networking::websocket_endpoint& ep,
                                                                 const std::optional<::realm::networking::default_socket_provider::configuration>& config);
-    ::realm::networking::sync_socket_provider::websocket_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& ep);
+    ::realm::networking::websocket_endpoint to_websocket_endpoint(const ::realm::sync::WebSocketEndpoint& ep);
 } //namespace realm::internal::networking
 
 #endif //CPPREALM_NETWORKING_UTILS_HPP

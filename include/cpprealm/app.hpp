@@ -28,7 +28,6 @@
 #include <cpprealm/internal/bridge/sync_session.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
 #include <cpprealm/networking/http.hpp>
-#include <cpprealm/networking/networking.hpp>
 #include <cpprealm/networking/websocket.hpp>
 
 #include <future>

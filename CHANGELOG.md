@@ -22,15 +22,19 @@ NEXT-RELEASE Release notes (YYYY-MM-DD)
 * Add `default_socket_provider` a built-in class for providing the components necessary for transport via WebSocket.
 * A custom WebSocket & HTTP transport implementation can be used by passing 
   the instance via `realm::app::App::configuration.http_transport_client` & `realm::app::App::configuration.sync_socket_provider`.
-* Proxy and custom header configuration for built-in transport must be supplied via the constructor on
-  `realm::networking::default_http_transport` & `realm::networking::default_socket_provider` using the
-  `realm::networking::default_transport_configuration` struct.
+* Network configuration for the built-in http transport must be supplied via it's constructor using the
+  `realm::networking::default_http_transport::configuration` struct.
+* Network configuration for the built-in websocket provider must be supplied via it's constructor using the
+  `realm::networking::default_socket_provider::configuration` struct.
+
+### Deprecations
+* Proxy and custom http headers should no longer be set via `realm::app::App::configuration`.
 
 ### Compatibility
 * Fileformat: Generates files with format v24. Reads and automatically upgrade from fileformat v10.
 
 ### Internals
-* None
+* Upgraded to Core v14.10.4
 
 2.1.0 Release notes (2024-06-27)
 =============================================================

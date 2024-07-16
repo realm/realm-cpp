@@ -19,7 +19,6 @@
 #ifndef CPPREALM_NETWORKING_HTTP_HPP
 #define CPPREALM_NETWORKING_HTTP_HPP
 
-#include <cpprealm/networking/networking.hpp>
 #include <cpprealm/internal/bridge/realm.hpp>
 
 #ifndef REALMCXX_VERSION_MAJOR
@@ -27,8 +26,81 @@
 #endif
 
 #include <optional>
+#include <map>
+#include <string>
 
 namespace realm::networking {
+
+    /**
+     * A HTTP method type.
+     */
+    enum class http_method { get, post, patch, put, del };
+    /**
+     * Request/Response headers type
+     */
+    using http_headers = std::map<std::string, std::string>;
+
+    /**
+     * An HTTP request that can be made to an arbitrary server.
+     */
+    struct request {
+        /**
+         * The HTTP method of this request.
+         */
+        http_method method = http_method::get;
+
+        /**
+         * The URL to which this request will be made.
+         */
+        std::string url;
+
+        /**
+         * The number of milliseconds that the underlying transport should spend on an HTTP round trip before failing with
+         * an error.
+         */
+        uint64_t timeout_ms = 0;
+
+        /**
+         * The HTTP headers of this request - keys are case insensitive.
+         */
+        http_headers headers;
+
+        /**
+         * The body of the request.
+         */
+        std::string body;
+    };
+
+    /**
+     * The contents of an HTTP response.
+     */
+    struct response {
+        /**
+         * The status code of the HTTP response.
+         */
+        int http_status_code;
+
+        /**
+         * A custom status code provided by the language binding (SDK).
+         */
+        int custom_status_code;
+
+        /**
+         * The headers of the HTTP response - keys are case insensitive.
+         */
+        http_headers headers;
+
+        /**
+         * The body of the HTTP response.
+         */
+        std::string body;
+
+        /**
+         * An error code used by the client to report http processing errors.
+         */
+        std::optional<std::int32_t> client_error_code;
+
+    };
 
     // Interface for providing http transport
     struct http_transport_client {
