@@ -51,6 +51,7 @@ set(SOURCES
     cpprealm/internal/bridge/thread_safe_reference.cpp
     cpprealm/internal/bridge/timestamp.cpp
     cpprealm/internal/bridge/uuid.cpp
+    cpprealm/internal/networking/network_transport.cpp
     cpprealm/internal/networking/shims.cpp
     cpprealm/internal/networking/utils.cpp
     cpprealm/internal/scheduler/realm_core_scheduler.cpp

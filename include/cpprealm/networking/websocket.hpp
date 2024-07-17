@@ -77,7 +77,7 @@ namespace realm::networking {
         read_error = 4402,
         write_error = 4403,
         retry_error = 4404,
-        fata_error = 4405,
+        fatal_error = 4405,
     };
 
     using status = ::realm::internal::bridge::status;

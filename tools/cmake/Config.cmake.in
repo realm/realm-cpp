@@ -11,7 +11,6 @@ if(NOT APPLE AND NOT EMSCRIPTEN AND NOT WINDOWS_STORE AND NOT ANDROID)
   set(REALM_HAVE_UV 1)
   find_package(libuv REQUIRED)
   find_dependency(libuv)
-  find_package(CURL)
 endif()
 
 find_package(Realm CONFIG REQUIRED)

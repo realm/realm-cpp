@@ -17,17 +17,17 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #if __has_include(<realm/util/config.h>)
-#include <realm/util/config.h>
+#include "realm/util/config.h"
 #endif
-#include <cpprealm/app.hpp>
-#include <cpprealm/networking/http.hpp>
+#include "cpprealm/app.hpp"
+#include "cpprealm/networking/http.hpp"
 
-#include <realm/object-store/sync/generic_network_transport.hpp>
-#include <realm/sync/network/http.hpp>
-#include <realm/sync/network/network.hpp>
-#include <realm/sync/network/network_ssl.hpp>
-#include <realm/util/base64.hpp>
-#include <realm/util/uri.hpp>
+#include "realm/object-store/sync/generic_network_transport.hpp"
+#include "realm/sync/network/http.hpp"
+#include "realm/sync/network/network.hpp"
+#include "realm/sync/network/network_ssl.hpp"
+#include "realm/util/base64.hpp"
+#include "realm/util/uri.hpp"
 
 #include <regex>
 
