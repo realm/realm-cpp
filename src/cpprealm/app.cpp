@@ -1,5 +1,7 @@
 #include <cpprealm/app.hpp>
-#include <cpprealm/internal/generic_network_transport.hpp>
+#include <cpprealm/internal/bridge/status.hpp>
+#include <cpprealm/internal/networking/shims.hpp>
+#include <cpprealm/networking/http.hpp>
 
 #ifndef REALMCXX_VERSION_MAJOR
 #include <cpprealm/version_numbers.hpp>
@@ -22,30 +24,6 @@ namespace realm {
     static_assert((int)user::state::logged_in == (int)SyncUser::State::LoggedIn);
     static_assert((int)user::state::logged_out == (int)SyncUser::State::LoggedOut);
     static_assert((int)user::state::removed == (int)SyncUser::State::Removed);
-
-    namespace internal {
-        struct CoreTransport : app::GenericNetworkTransport {
-            ~CoreTransport() = default;
-            CoreTransport(const std::optional<std::map<std::string, std::string>>& custom_http_headers = std::nullopt,
-                          const std::optional<bridge::realm::sync_config::proxy_config>& proxy_config = std::nullopt) {
-                m_transport = DefaultTransport(custom_http_headers, proxy_config);
-            }
-
-            void send_request_to_server(const app::Request& request,
-                                        util::UniqueFunction<void(const app::Response&)>&& completion) {
-                auto completion_ptr = completion.release();
-                m_transport.send_request_to_server(request,
-                                                   [f = std::move(completion_ptr)]
-                                                   (const app::Response& response) {
-                    auto uf = util::UniqueFunction<void(const app::Response&)>(std::move(f));
-                    uf(response);
-                });
-            }
-
-        private:
-            DefaultTransport m_transport;
-        };
-    }
 
     app_error::app_error(const app_error& other) {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
@@ -515,8 +493,22 @@ namespace realm {
         client_config.user_agent_application_info = config.app_id;
 
         app_config.app_id = config.app_id;
-        app_config.transport = std::make_shared<internal::CoreTransport>(config.custom_http_headers, config.proxy_configuration);
         app_config.base_url = config.base_url;
+
+        // Sync socket provider configuration
+        if (config.sync_socket_provider) {
+            client_config.socket_provider = ::realm::internal::networking::create_sync_socket_provider_shim(config.sync_socket_provider);
+        }
+
+        // HTTP Transport configuration
+        std::shared_ptr<networking::http_transport_client> http_client;
+        if (config.http_transport_client) {
+            http_client = config.http_transport_client;
+        } else {
+            http_client = networking::make_http_client();
+        }
+
+        app_config.transport = internal::networking::create_http_client_shim(http_client);
 
         app_config.metadata_mode = should_encrypt ? app::AppConfig::MetadataMode::Encryption : app::AppConfig::MetadataMode::NoEncryption;
         if (config.metadata_encryption_key) {
@@ -535,19 +527,8 @@ namespace realm {
         app_config.device_info = std::move(device_info);
 
         app_config.sync_client_config = client_config;
-        m_app = app::App::get_app(app::App::CacheMode::Enabled, std::move(app_config));
-    }
-
-    App::App(const std::string &app_id,
-             const std::optional<std::string> &base_url,
-             const std::optional<std::string> &path,
-             const std::optional<std::map<std::string, std::string>> &custom_http_headers) {
-        configuration c;
-        c.app_id = app_id;
-        c.base_url = base_url;
-        c.path = path;
-        c.custom_http_headers = custom_http_headers;
-        *this = App(std::move(c));
+        m_app = app::App::get_app(config.enable_caching ? app::App::CacheMode::Enabled : app::App::CacheMode::Disabled, 
+                                  std::move(app_config));
     }
 
     std::string App::get_base_url() const {

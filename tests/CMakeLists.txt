@@ -17,6 +17,21 @@ else()
 endif()
 
 if (NOT BUILD_FROM_PACKAGE_MANAGER)
+    # Find Boost
+    include(FetchContent)
+
+    # Fetch ASIO
+    FetchContent_Declare(
+            asio
+            GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
+            GIT_TAG        asio-1-30-2
+    )
+    FetchContent_MakeAvailable(asio)
+
+    # Find OpenSSL
+    find_package(OpenSSL REQUIRED)
+    include_directories(${OPENSSL_INCLUDE_DIR})
+
     add_executable(cpprealm_sync_tests
                     main.hpp
                     main.cpp
@@ -26,7 +41,16 @@ if (NOT BUILD_FROM_PACKAGE_MANAGER)
                     sync/asymmetric_object_tests.cpp
                     sync/flexible_sync_tests.cpp
                     sync/app_tests.cpp
-                    sync/client_reset_tests.cpp)
+                    sync/client_reset_tests.cpp
+                    sync/networking_tests.cpp
+                    utils/networking/proxy_server.hpp
+                    utils/networking/proxy_server.cpp)
+
+    target_include_directories(cpprealm_sync_tests PRIVATE ${asio_SOURCE_DIR}/asio/include)
+
+    if(UNIX)
+        set(ASIO_deps pthread)
+    endif()
 endif()
 
 add_executable(cpprealm_db_tests
@@ -100,7 +124,7 @@ if (MSVC AND ENABLE_STATIC)
 endif()
 
 if (NOT BUILD_FROM_PACKAGE_MANAGER)
-    target_link_libraries(cpprealm_sync_tests PUBLIC ${CPPREALM_TARGET} Catch2::Catch2)
+    target_link_libraries(cpprealm_sync_tests PUBLIC ${CPPREALM_TARGET} Catch2::Catch2 ${ASIO_deps} ${OPENSSL_LIBRARIES})
 endif()
 target_link_libraries(cpprealm_db_tests PUBLIC ${CPPREALM_TARGET} Catch2::Catch2)
 

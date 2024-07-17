@@ -11,12 +11,30 @@ NEXT-RELEASE Release notes (YYYY-MM-DD)
   Supported operators are `==`, `!=`, `>`, `<`, `>=`, `<=` and `contains(const std::string&)`.
 * Add `managed<std::map<std::string, T>>::contains_key` for conveniently checking if a managed map
   contains a given key. Use this method in the Type Safe Query API instead of `managed<std::map<std::string, T>>::find`.
+* Add `realm::networking` namespace which contains interfaces for providing your own custom network transport
+  implementations. The following interfaces are exposed:
+  * `websocket_interface`
+  * `websocket_observer`
+  * `sync_socket_provider`
+  * `sync_socket_provider::timer`
+  * `http_transport_client`
+* Add `default_http_transport` for built-in HTTP transport.
+* Add `default_socket_provider` a built-in class for providing the components necessary for transport via WebSocket.
+* A custom WebSocket & HTTP transport implementation can be used by passing 
+  the instance via `realm::app::App::configuration.http_transport_client` & `realm::app::App::configuration.sync_socket_provider`.
+* Network configuration for the built-in http transport must be supplied via it's constructor using the
+  `realm::networking::default_http_transport::configuration` struct.
+* Network configuration for the built-in websocket provider must be supplied via it's constructor using the
+  `realm::networking::default_socket_provider::configuration` struct.
+
+### Deprecations
+* Proxy and custom http headers should no longer be set via `realm::app::App::configuration`.
 
 ### Compatibility
 * Fileformat: Generates files with format v24. Reads and automatically upgrade from fileformat v10.
 
 ### Internals
-* None
+* Upgraded to Core v14.10.4
 
 2.1.0 Release notes (2024-06-27)
 =============================================================

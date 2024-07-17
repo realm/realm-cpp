@@ -27,11 +27,14 @@
 #include <cpprealm/internal/bridge/sync_manager.hpp>
 #include <cpprealm/internal/bridge/sync_session.hpp>
 #include <cpprealm/internal/bridge/utils.hpp>
+#include <cpprealm/networking/http.hpp>
+#include <cpprealm/networking/websocket.hpp>
 
 #include <future>
 #include <utility>
 
 namespace realm {
+
     using proxy_config = sync_config::proxy_config;
     using sync_session = internal::bridge::sync_session;
 
@@ -222,20 +225,43 @@ namespace app {
 
 class App {
 public:
+    /**
+     * Properties representing the configuration of a client
+     * that communicate with a particular Realm application.
+     *
+     * `App::configuration` options cannot be modified once the `App` using it
+     *  is created. App's configuration values are cached when the App is created so any modifications after it
+     *  will not have any effect.
+     */
     struct configuration {
+        /// The App ID for your Atlas Device Sync Application.
         std::string app_id;
+        /// A custom base URL to request against. If not set or set to nil, the default base url for app services will be returned.
         std::optional<std::string> base_url;
+        /// Custom location for Realm files.
         std::optional<std::string> path;
+        [[deprecated("Network options must be supplied via custom network implementations.")]]
         std::optional<std::map<std::string, std::string>> custom_http_headers;
+        /// Custom encryption key for the metadata Realm.
         std::optional<std::array<char, 64>> metadata_encryption_key;
+        /// Caches an App and its configuration for a given App ID. On by default.
+        bool enable_caching = true;
+        [[deprecated("Network options must be supplied via custom network implementations.")]]
         std::optional<sync_config::proxy_config> proxy_configuration;
+        /**
+         * Optionally provide a custom HTTP transport for network calls to the server.
+         *
+         * Alternatively use `realm::networking::set_http_client_factory` to globally set
+         * the default HTTP transport client.
+         */
+        std::shared_ptr<networking::http_transport_client> http_transport_client;
+        /**
+         * Optionally provide a custom WebSocket interface for sync.
+         */
+        std::shared_ptr<networking::sync_socket_provider> sync_socket_provider;
+
     };
 
-    [[deprecated("Use App(const configuration&) instead.")]]
-    explicit App(const std::string& app_id,
-                 const std::optional<std::string>& base_url = {},
-                 const std::optional<std::string>& path = {},
-                 const std::optional<std::map<std::string, std::string>>& custom_http_headers = {});
 
     App(const configuration&);
 

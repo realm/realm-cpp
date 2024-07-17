@@ -70,18 +70,29 @@ static std::string create_jwt(const std::string& appId)
 using namespace realm;
 
 TEST_CASE("app", "[app]") {
-    auto app = realm::App(realm::App::configuration({Admin::Session::shared().cached_app_id(), Admin::Session::shared().base_url()}));
+    auto config = realm::App::configuration();
+    config.app_id = Admin::Session::shared().cached_app_id();
+    config.base_url = Admin::Session::shared().base_url();
+    auto app = realm::App(config);
 
     SECTION("base_url") {
-        auto no_url_provided_app = realm::App(realm::App::configuration({"NA"}));
+        auto config = realm::App::configuration();
+        config.app_id = "NA";
+        auto no_url_provided_app = realm::App(config);
         CHECK(no_url_provided_app.get_base_url() == "https://services.cloud.mongodb.com");
-        auto with_url_provided_app = realm::App(realm::App::configuration({"NA", "https://foobar.com"}));
+
+        auto config2 = realm::App::configuration();
+        config2.app_id = "NA";
+        config2.base_url = "https://foobar.com";
+        auto with_url_provided_app = realm::App(config2);
         CHECK(with_url_provided_app.get_base_url() == "https://foobar.com");
     }
 
 #ifdef REALM_ENABLE_EXPERIMENTAL
     SECTION("update_base_url") {
-        auto no_url_provided_app = realm::App(realm::App::configuration({"NA"}));
+        auto config = realm::App::configuration();
+        config.app_id = "NA";
+        auto no_url_provided_app = realm::App(config);
         CHECK(no_url_provided_app.get_base_url() == "https://services.cloud.mongodb.com");
         REQUIRE_THROWS_AS(no_url_provided_app.update_base_url("https://foobar.com").get(), realm::app_error);
         CHECK(no_url_provided_app.get_base_url() == "https://services.cloud.mongodb.com");
@@ -123,7 +134,11 @@ TEST_CASE("app", "[app]") {
 
     SECTION("clear_cached_apps") {
         auto temp_app_id = Admin::Session::shared().create_app({"str_col", "_id"});
-        auto temp_app = realm::App(realm::App::configuration({temp_app_id, Admin::Session::shared().base_url()}));
+        auto config = realm::App::configuration();
+        config.app_id = temp_app_id;
+        config.base_url = Admin::Session::shared().base_url();
+
+        auto temp_app = realm::App(config);
         auto cached_app = temp_app.get_cached_app(temp_app_id, Admin::Session::shared().base_url());
         CHECK(cached_app.has_value());
         app.clear_cached_apps();
@@ -132,7 +147,10 @@ TEST_CASE("app", "[app]") {
     }
 
     SECTION("error handling") {
-        auto dead_app = realm::App(realm::App::configuration({"NA", Admin::Session::shared().base_url()}));
+        auto config = realm::App::configuration();
+        config.app_id = "NA";
+        config.base_url = Admin::Session::shared().base_url();
+        auto dead_app = realm::App(config);
         REQUIRE_THROWS_AS(dead_app.login(realm::App::credentials::anonymous()).get(), realm::app_error);
         REQUIRE_THROWS_AS(dead_app.register_user("", "").get(), realm::app_error);
 

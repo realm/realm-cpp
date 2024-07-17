@@ -5,7 +5,10 @@
 using namespace realm;
 
 TEST_CASE("flexible_sync", "[sync]") {
-    auto app = realm::App(realm::App::configuration({Admin::Session::shared().cached_app_id(), Admin::Session::shared().base_url()}));
+    auto config = realm::App::configuration();
+    config.app_id = Admin::Session::shared().cached_app_id();
+    config.base_url = Admin::Session::shared().base_url();
+    auto app = realm::App(config);
     SECTION("all") {
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
@@ -108,7 +111,10 @@ void test_set(realm::managed<T>* property, Func f,
 }
 
 TEST_CASE("set collection sync", "[set]") {
-    auto app = realm::App(realm::App::configuration({Admin::Session::shared().cached_app_id(), Admin::Session::shared().base_url()}));
+    auto config = realm::App::configuration();
+    config.app_id = Admin::Session::shared().cached_app_id();
+    config.base_url = Admin::Session::shared().base_url();
+    auto app = realm::App(config);
     SECTION("insert") {
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
@@ -185,7 +191,10 @@ TEST_CASE("set collection sync", "[set]") {
 }
 
 TEST_CASE("pause_resume_sync", "[sync]") {
-    auto app = realm::App(realm::App::configuration({Admin::Session::shared().cached_app_id(), Admin::Session::shared().base_url()}));
+    auto config = realm::App::configuration();
+    config.app_id = Admin::Session::shared().cached_app_id();
+    config.base_url = Admin::Session::shared().base_url();
+    auto app = realm::App(config);
 
     SECTION("pause_resume") {
         auto user = app.login(realm::App::credentials::anonymous()).get();

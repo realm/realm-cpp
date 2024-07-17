@@ -37,7 +37,7 @@
 #endif
 
 #include <cpprealm/app.hpp>
-#include <cpprealm/internal/generic_network_transport.hpp>
+#include <cpprealm/networking/http.hpp>
 
 #include <realm/object-store/sync/generic_network_transport.hpp>
 #include <realm/util/base64.hpp>
@@ -273,7 +273,7 @@ namespace realm {
         std::stringstream json_ss;
         json_ss << post_data;
         auto json_str = json_ss.str();
-        auto transport = std::make_unique<internal::DefaultTransport>();
+        auto transport = std::make_unique<networking::default_http_transport>();
 
         std::vector<char> buffer;
         buffer.resize(5000);
@@ -286,8 +286,8 @@ namespace realm {
         buffer.resize(s);
 
         auto base64_str = std::string(buffer.begin(), buffer.end());
-        app::Request request;
-        request.method = realm::app::HttpMethod::get;
+        networking::request request;
+        request.method = networking::http_method::get;
         request.url = util::format("https://data.mongodb-api.com/app/realmsdkmetrics-zmhtm/endpoint/metric_webhook/metric?data=%1", base64_str);
         transport->send_request_to_server(std::move(request), [](auto) {
                                               // noop

@@ -3,10 +3,6 @@
 #include <realm/object-store/shared_realm.hpp>
 #include <realm/sync/subscriptions.hpp>
 
-#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
-#else
-#endif
-
 namespace realm {
     sync_subscription::sync_subscription(const sync::Subscription &v)
     {

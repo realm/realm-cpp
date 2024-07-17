@@ -61,7 +61,7 @@ namespace realm::internal::bridge {
     };
 
     struct status {
-
+        static status ok();
         status(const ::realm::Status&);
         status(::realm::Status&&);
         status(const status&);
@@ -73,7 +73,7 @@ namespace realm::internal::bridge {
         bool is_ok() const noexcept;
         const std::string& reason() const noexcept;
         std::string_view code_string() const noexcept;
-
+        operator ::realm::Status() const noexcept;
     private:
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         storage::Status m_status[1];
