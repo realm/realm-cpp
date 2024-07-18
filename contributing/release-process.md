@@ -34,7 +34,8 @@ Cd into your project folder and run `mma`
 Whenever Core has a new release we should take it upon ourselves to update the portfile on the vcpkg repo. The main steps are:
 Fork Vcpkg
 Create a branch for the Core update
-Update the versions in the portfile, example here: https://github.com/microsoft/vcpkg/pull/39888
+Update the versions in the portfile, example [here](https://github.com/microsoft/vcpkg/pull/39888).
+
 Once the Core update has performed, the same process should be taken for the C++ SDK. On Vcpkg the SDK is called cpprealm
 
 ### Conanfile:
@@ -42,9 +43,9 @@ We haven’t submitted to the Conan index yet, but users can consume the conanfi
 
 # Releasing from main:
 - Ensure changelog is correct
-- Ensure Core submodule is updated in both Package.swift and git submodules
-- Ensure Conanfile.py is pointing to the latest upstream.
-- Ensure version in local vcpkg portfile is correct
-- Ensure the version in dependencies.list is correct.
+- Ensure Core submodule is updated in both [Package.swift](https://github.com/realm/realm-cpp/blob/5ec1bda338dfd0c91ce1eea2ccb2c0adf7d86690/Package.swift#L5) and git submodules
+- Ensure Conanfile.py is [pointing to the latest upstream](https://github.com/realm/realm-cpp/blob/main/conanfile.py#L39) and the [version is correct](https://github.com/realm/realm-cpp/blob/main/conanfile.py#L8).
+- Ensure [version in local vcpkg portfile](https://github.com/realm/realm-cpp/blob/5ec1bda338dfd0c91ce1eea2ccb2c0adf7d86690/ports/vcpkg.json#L3) is correct
+- Ensure the version in [dependencies.list](https://github.com/realm/realm-cpp/blob/5ec1bda338dfd0c91ce1eea2ccb2c0adf7d86690/dependencies.list#L1) is correct.
 - Create a tag prefixed with v and publish the release.
 - Copy the link for the release to appx-releases.

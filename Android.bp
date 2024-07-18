@@ -46,10 +46,6 @@ cc_library_static {
     name: "realm-cpp",
     defaults: ["realm_consumer_defaults", "realm_defaults", "realm_cpp_defaults"],
     srcs: ["src/cpprealm/**/*.cpp"],
-    exclude_srcs: [
-        "src/cpprealm/internal/apple/**/*",
-        "src/cpprealm/internal/curl/**/*"
-    ],
     export_include_dirs: ["include"],
     export_generated_headers: ["gen_realmcxx_version_numbers"],
     static_libs: ["realm"],
