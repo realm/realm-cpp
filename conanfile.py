@@ -30,13 +30,11 @@ class cpprealmRecipe(ConanFile):
         if not self.is_darwin():
             self.requires("openssl/3.2.0")
             self.requires("libuv/1.48.0")
-        if self.settings.os == "Linux":
-            self.requires("libcurl/8.4.0")
     def source(self):
         git = Git(self)
         git.clone(url="https://github.com/realm/realm-cpp", target=".")
         git.folder = "."
-        git.checkout(commit="9170fe12bd3527b8287734a518962b3609c6ec50")
+        git.checkout(commit="5ec1bda338dfd0c91ce1eea2ccb2c0adf7d86690")
         git.run("submodule update --init --recursive")
 
     def layout(self):
