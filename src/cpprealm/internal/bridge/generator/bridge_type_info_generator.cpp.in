@@ -44,7 +44,7 @@ int main()
 
 @TYPE_INFO_QUERY_DECLS@
 
-    static char arch_key[] = {'a','r','c','h','_','k','e','y','_',KEY};
+    static char arch_key[] = {'a','r','c','h','_','k','e','y','_',KEY, '\0'};
     required += 1;
 
     return required;
