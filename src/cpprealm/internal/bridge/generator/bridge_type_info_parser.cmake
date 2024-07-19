@@ -8,7 +8,6 @@ set(BRIDGE_TYPE_DECLS_TYPES "")
 set(BRIDGE_TYPE_DECLS_REQUIRES_ELSE_IF OFF)
 
 foreach(i ${compiled_string_literals})
-    message(STATUS "${i}")
     if("${i}" MATCHES "${regex_realm}")
         set(BRIDGE_TYPE_DECLS_TYPES "${BRIDGE_TYPE_DECLS_TYPES}    using ${CMAKE_MATCH_1} = std::aligned_storage<${CMAKE_MATCH_2}, ${CMAKE_MATCH_3}>::type;\n")
     elseif("${i}" MATCHES "${regex_arch}")
