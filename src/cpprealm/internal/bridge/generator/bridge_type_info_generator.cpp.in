@@ -19,6 +19,18 @@
 # define KEY '_','_','A','R','M','_','A','R','C','H','_','7','A','_','_'
 #elif defined(__ARM_ARCH_7S__)
 # define KEY '_','_','A','R','M','_','A','R','C','H','_','7','S','_','_'
+#elif defined(_M_X64) 
+# define KEY '_','M','_','X','6','4'
+#elif defined(__amd64__)
+# define KEY '_','_','a','m','d','6','4','_','_'
+#elif defined(_M_IX86)
+# define KEY '_','M','_','I','X','8','6'
+#elif defined(__i386__)
+# define KEY '_','_','i','3','8','6','_','_'
+#elif defined(_M_ARM)
+# define KEY '_','M','_','A','R','M'
+#elif defined(__arm__)
+# define KEY '_','_','a','r','m','_','_'
 #endif
 
 int main()
