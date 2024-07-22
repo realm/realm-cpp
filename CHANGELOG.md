@@ -1,4 +1,4 @@
-NEXT-RELEASE Release notes (YYYY-MM-DD)
+2.2.0 Release notes (2024-07-22)
 =============================================================
 
 ### Fixed
