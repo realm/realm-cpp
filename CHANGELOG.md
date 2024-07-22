@@ -1,4 +1,4 @@
-NEXT-RELEASE Release notes (YYYY-MM-DD)
+2.2.0 Release notes (2024-07-22)
 =============================================================
 
 ### Fixed
@@ -34,7 +34,7 @@ NEXT-RELEASE Release notes (YYYY-MM-DD)
 * Fileformat: Generates files with format v24. Reads and automatically upgrade from fileformat v10.
 
 ### Internals
-* Upgraded to Core v14.10.4
+* Upgraded to Core v14.11.0
 
 2.1.0 Release notes (2024-06-27)
 =============================================================
