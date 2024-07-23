@@ -240,7 +240,7 @@ namespace realm {
         config.sync_config().set_error_handler([](const sync_session&, const internal::bridge::sync_error& error) {
             std::cerr << "ADS C++ SDK: Sync Error: " << error.message() << "\n";
         });
-        config.set_path(m_user->app()->path_for_realm(*config.sync_config().operator std::shared_ptr<SyncConfig>()));
+        config.set_path(m_user->path_for_realm(*config.sync_config().operator std::shared_ptr<SyncConfig>()));
         config.sync_config().set_stop_policy(realm::internal::bridge::realm::sync_session_stop_policy::after_changes_uploaded);
         config.set_schema_mode(realm::internal::bridge::realm::config::schema_mode::additive_discovered);
         return config;
