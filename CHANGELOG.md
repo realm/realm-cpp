@@ -1,3 +1,19 @@
+NEXT_RELEASE Release notes (YYYY-MM-DD)
+=============================================================
+
+### Fixed
+* None
+
+### Enhancements
+* Add `realm::db_config::enable_forced_sync_history()` which allows you to open a synced Realm
+  even if a sync configuration is not supplied.
+
+### Compatibility
+* Fileformat: Generates files with format v24. Reads and automatically upgrade from fileformat v10.
+
+### Internals
+* None
+
 2.2.0 Release notes (2024-07-22)
 =============================================================
 

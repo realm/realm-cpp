@@ -102,6 +102,81 @@ TEST_CASE("flexible_sync", "[sync]") {
         auto flx_sync_config2 = user.flexible_sync_configuration();
         REQUIRE_THROWS(db(flx_sync_config2));
     }
+
+    SECTION("open synced realm without sync config") {
+        realm_path path;
+        auto user = app.login(realm::App::credentials::anonymous()).get();
+
+        {
+            auto flx_sync_config = user.flexible_sync_configuration();
+            flx_sync_config.set_path(path);
+            auto synced_realm = db(flx_sync_config);
+
+            auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
+                subs.clear();
+            }).get();
+            CHECK(update_success == true);
+            CHECK(synced_realm.subscriptions().size() == 0);
+
+            update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
+                        subs.add<AllTypesObject>("foo-strings", [](auto &obj) {
+                            return obj.str_col == "foo";
+                        });
+                        subs.add<AllTypesObjectLink>("foo-link");
+                    })
+                    .get();
+            CHECK(update_success == true);
+            CHECK(synced_realm.subscriptions().size() == 2);
+
+            synced_realm.get_sync_session()->wait_for_upload_completion().get();
+            synced_realm.get_sync_session()->wait_for_download_completion().get();
+
+            synced_realm.write([&synced_realm]() {
+                AllTypesObject o;
+                o._id = 1;
+                o.str_col = "foo";
+                synced_realm.add(std::move(o));
+            });
+
+            synced_realm.get_sync_session()->wait_for_upload_completion().get();
+            synced_realm.get_sync_session()->wait_for_download_completion().get();
+
+            synced_realm.refresh();
+            auto objs = synced_realm.objects<AllTypesObject>();
+            CHECK(objs.size() == 1);
+        }
+
+        {
+            auto local_config = realm::db_config();
+            local_config.set_path(path);
+            local_config.enable_forced_sync_history();
+            auto local_realm = realm::open<AllTypesObject, AllTypesObjectLink, AllTypesObjectEmbedded>(local_config);
+            auto s = local_realm.objects<AllTypesObject>().size();
+            CHECK(s == 1);
+            local_realm.write([&local_realm]() {
+                AllTypesObject o;
+                o._id = 2;
+                o.str_col = "foo";
+                local_realm.add(std::move(o));
+            });
+        }
+
+        {
+            auto flx_sync_config = user.flexible_sync_configuration();
+            flx_sync_config.set_path(path);
+            auto synced_realm = db(flx_sync_config);
+            auto subs_size = synced_realm.subscriptions().size();
+            CHECK(subs_size == 2);
+
+            synced_realm.get_sync_session()->wait_for_upload_completion().get();
+            synced_realm.get_sync_session()->wait_for_download_completion().get();
+
+            synced_realm.refresh();
+            auto objs = synced_realm.objects<AllTypesObject>();
+            CHECK(objs.size() == 2);
+        }
+    }
+
 }
 
 template<typename T, typename Func>
