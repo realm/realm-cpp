@@ -277,78 +277,78 @@ namespace realm {
         }
     }
 
-    template <typename T>
-    static inline typename std::enable_if_t<internal::type_info::MixedPersistableConcept<T>::value, internal::bridge::mixed> serialize(const T& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
-        return std::visit([&](auto&& arg) {
-            using StoredType = std::decay_t<decltype(arg)>;
-            using M = typename internal::type_info::type_info<StoredType>::internal_type;
-            return internal::bridge::mixed(M(arg));
-        }, v);
-    }
+//    template <typename T>
+//    static inline typename std::enable_if_t<internal::type_info::MixedPersistableConcept<T>::value, internal::bridge::mixed> serialize(const T& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+//        return std::visit([&](auto&& arg) {
+//            using StoredType = std::decay_t<decltype(arg)>;
+//            using M = typename internal::type_info::type_info<StoredType>::internal_type;
+//            return internal::bridge::mixed(M(arg));
+//        }, v);
+//    }
 
-    template <typename T>
-    static inline typename std::enable_if_t<!internal::type_info::MixedPersistableConcept<T>::value, T>
-    deserialize(const internal::bridge::mixed& value) {
-        if constexpr (internal::type_info::is_optional<T>::value) {
-            return std::nullopt;
-        } else if constexpr (std::is_same_v<T, int64_t>) {
-            return value.operator int64_t();
-        } else if constexpr (std::is_same_v<T, bool>) {
-            return value.operator bool();
-        } else if constexpr (std::is_same_v<T, std::string>) {
-            return static_cast<std::string>(value);
-        } else if constexpr (std::is_same_v<T, std::vector<uint8_t>>) {
-            return static_cast<std::vector<uint8_t>>(static_cast<internal::bridge::binary>(value));
-        } else if constexpr (std::is_same_v<T, std::chrono::time_point<std::chrono::system_clock>>) {
-            return static_cast<internal::bridge::timestamp>(value);
-        } else if constexpr (std::disjunction_v<std::is_same<T, double>, std::is_same<T, float>>) {
-            return static_cast<double>(value);
-        } else if constexpr (std::is_same_v<T, realm::uuid>) {
-            return value.operator internal::bridge::uuid().operator ::realm::uuid();
-        } else if constexpr (std::is_same_v<T, realm::object_id>) {
-            return value.operator internal::bridge::object_id().operator ::realm::object_id();
-        } else if constexpr (std::is_same_v<T, realm::decimal128>) {
-            return value.operator internal::bridge::decimal128() .operator ::realm::decimal128();
-        } else if constexpr (std::is_enum_v<T>) {
-            return static_cast<T>(value.operator int64_t());
-        } else {
-            abort();
-        }
-    }
+//    template <typename T>
+//    static inline typename std::enable_if_t<!internal::type_info::MixedPersistableConcept<T>::value, T>
+//    deserialize(const internal::bridge::mixed& value) {
+//        if constexpr (internal::type_info::is_optional<T>::value) {
+//            return std::nullopt;
+//        } else if constexpr (std::is_same_v<T, int64_t>) {
+//            return value.operator int64_t();
+//        } else if constexpr (std::is_same_v<T, bool>) {
+//            return value.operator bool();
+//        } else if constexpr (std::is_same_v<T, std::string>) {
+//            return static_cast<std::string>(value);
+//        } else if constexpr (std::is_same_v<T, std::vector<uint8_t>>) {
+//            return static_cast<std::vector<uint8_t>>(static_cast<internal::bridge::binary>(value));
+//        } else if constexpr (std::is_same_v<T, std::chrono::time_point<std::chrono::system_clock>>) {
+//            return static_cast<internal::bridge::timestamp>(value);
+//        } else if constexpr (std::disjunction_v<std::is_same<T, double>, std::is_same<T, float>>) {
+//            return static_cast<double>(value);
+//        } else if constexpr (std::is_same_v<T, realm::uuid>) {
+//            return value.operator internal::bridge::uuid().operator ::realm::uuid();
+//        } else if constexpr (std::is_same_v<T, realm::object_id>) {
+//            return value.operator internal::bridge::object_id().operator ::realm::object_id();
+//        } else if constexpr (std::is_same_v<T, realm::decimal128>) {
+//            return value.operator internal::bridge::decimal128() .operator ::realm::decimal128();
+//        } else if constexpr (std::is_enum_v<T>) {
+//            return static_cast<T>(value.operator int64_t());
+//        } else {
+//            abort();
+//        }
+//    }
 
-    template <typename T>
-    static inline typename std::enable_if_t<internal::type_info::MixedPersistableConcept<T>::value, T>
-            deserialize(const internal::bridge::mixed& value) {
-        if (value.is_null()) {
-            return std::monostate();
-        }
-
-        switch (value.type()) {
-            case internal::bridge::data_type::Int:
-                return value.operator int64_t();
-            case internal::bridge::data_type::Bool:
-                return value.operator bool();
-            case internal::bridge::data_type::String:
-                return static_cast<std::string>(value);
-            case internal::bridge::data_type::Binary:
-                return static_cast<std::vector<uint8_t>>(static_cast<internal::bridge::binary>(value));
-            case internal::bridge::data_type::Timestamp:
-                return static_cast<internal::bridge::timestamp>(value);
-            case internal::bridge::data_type::Float:
-            case internal::bridge::data_type::Double:
-                return static_cast<double>(value);
-            case internal::bridge::data_type::UUID:
-                return value.operator internal::bridge::uuid().operator ::realm::uuid();
-            case internal::bridge::data_type::ObjectId:
-                return value.operator internal::bridge::object_id().operator ::realm::object_id();
-            case internal::bridge::data_type::Decimal:
-                return value.operator internal::bridge::decimal128().operator ::realm::decimal128();
-            case internal::bridge::data_type::TypedLink:
-                throw std::runtime_error("Objects stored in mixed properties must be accessed via `get_object_value()`");
-            default:
-                throw std::runtime_error("Unknown datatype while deserializing mixed property.");
-        }
-    }
+//    template <typename T>
+//    static inline typename std::enable_if_t<internal::type_info::MixedPersistableConcept<T>::value, T>
+//            deserialize(const internal::bridge::mixed& value) {
+//        if (value.is_null()) {
+//            return std::monostate();
+//        }
+//
+//        switch (value.type()) {
+//            case internal::bridge::data_type::Int:
+//                return value.operator int64_t();
+//            case internal::bridge::data_type::Bool:
+//                return value.operator bool();
+//            case internal::bridge::data_type::String:
+//                return static_cast<std::string>(value);
+//            case internal::bridge::data_type::Binary:
+//                return static_cast<std::vector<uint8_t>>(static_cast<internal::bridge::binary>(value));
+//            case internal::bridge::data_type::Timestamp:
+//                return static_cast<internal::bridge::timestamp>(value);
+//            case internal::bridge::data_type::Float:
+//            case internal::bridge::data_type::Double:
+//                return static_cast<double>(value);
+//            case internal::bridge::data_type::UUID:
+//                return value.operator internal::bridge::uuid().operator ::realm::uuid();
+//            case internal::bridge::data_type::ObjectId:
+//                return value.operator internal::bridge::object_id().operator ::realm::object_id();
+//            case internal::bridge::data_type::Decimal:
+//                return value.operator internal::bridge::decimal128().operator ::realm::decimal128();
+//            case internal::bridge::data_type::TypedLink:
+//                throw std::runtime_error("Objects stored in mixed properties must be accessed via `get_object_value()`");
+//            default:
+//                throw std::runtime_error("Unknown datatype while deserializing mixed property.");
+//        }
+//    }
 
 } // namespace realm
 

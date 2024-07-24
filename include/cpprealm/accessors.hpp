@@ -128,8 +128,7 @@ namespace realm {
         }
     };
 
-    template <typename T>
-    struct accessor<T, std::enable_if_t<internal::type_info::MixedPersistableConcept<T>::value>> {
+    struct accessor<realm::mixed> {
         static inline void set(internal::bridge::obj& obj,
                                const internal::bridge::col_key& key,
                                const internal::bridge::realm&,

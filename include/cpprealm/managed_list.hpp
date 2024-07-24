@@ -338,10 +338,10 @@ namespace realm {
             return token;
         }
 
-        results<T> where(const std::string &query, const std::vector<realm::mixed> &arguments) {
+        results<T> where(const std::string &query, const std::vector<realm::mixed> &/*arguments*/) {
             std::vector<internal::bridge::mixed> mixed_args;
-            for(auto& a : arguments)
-                mixed_args.push_back(serialize(a));
+//            for(auto& a : arguments)
+//                mixed_args.push_back(serialize(a));
             return results<T>(internal::bridge::results(*m_realm, m_obj->get_target_table(m_key).query(query, std::move(mixed_args))));
         }
 

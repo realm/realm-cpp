@@ -24,9 +24,69 @@
 #include <cpprealm/types.hpp>
 
 namespace realm {
-    template <typename T>
-    struct managed<T, std::enable_if_t<realm::internal::type_info::MixedPersistableConcept<T>::value>> : public managed_base {
-        using managed<T>::managed_base::operator=;
+
+//    using mixed = std::variant<
+//            std::monostate,
+//            int64_t,
+//            bool,
+//            std::string,
+//            double,
+//            std::vector<uint8_t>,
+//            std::chrono::time_point<std::chrono::system_clock>,
+//            uuid,
+//            object_id,
+//            decimal128>;
+
+    struct mixed {
+        mixed() = default;
+        mixed(const mixed&) = default;
+        mixed(mixed&&) = default;
+        mixed& operator=(const mixed&) = default;
+        mixed& operator=(mixed&&) = default;
+
+        mixed(std::monostate) { }
+        mixed(int64_t) { }
+        mixed(bool) { }
+        mixed(std::string) { }
+        mixed(double) { }
+        mixed(std::vector<uint8_t>) { }
+        mixed(std::chrono::time_point<std::chrono::system_clock>) { }
+        mixed(uuid) { }
+        mixed(object_id) { }
+        mixed(decimal128) { }
+        // Links
+        // unmanaged
+        template<typename T>
+        mixed(const T&) {
+            static_assert(sizeof(managed<T>), "Must declare schema for T");
+        }
+        // managed with pointer
+        template<typename T, typename ManagedObject = managed<T>>
+        mixed(const ManagedObject*&) {
+            static_assert(sizeof(managed<T>), "Must declare schema for T");
+        }
+        template<typename T, typename ManagedObject = managed<T>>
+        mixed(std::unique_ptr<ManagedObject>&&) {
+            static_assert(sizeof(managed<T>), "Must declare schema for T");
+        }
+        template<typename T, typename ManagedObject = managed<T>>
+        mixed(const std::shared_ptr<ManagedObject>&) {
+            static_assert(sizeof(managed<T>), "Must declare schema for T");
+        }
+        // managed with const ref
+        template<typename T, typename ManagedObject = managed<T>>
+        mixed(const ManagedObject&) {
+            static_assert(sizeof(managed<T>), "Must declare schema for T");
+        }
+
+        mixed(std::vector<mixed>) { }
+        mixed(std::map<std::string, mixed>) { }
+    };
+
+
+    template<>
+    struct managed<mixed> : public managed_base {
+        using managed<mixed>::managed_base::operator=;
 
         enum stored_type {
             Int = 0,
@@ -46,17 +106,11 @@ namespace realm {
             Null = 18,
         };
 
-        managed& operator =(const T& v) {
-            m_obj->set(m_key, std::visit([](auto&& arg) {
-                           using M = typename internal::type_info::type_info<std::decay_t<decltype(arg)>>::internal_type;
-                           return internal::bridge::mixed(M(arg));
-                       }, v));
-            return *this;
-        }
-
-        template<typename U>
-        managed& operator =(const U& v) {
-            m_obj->set(m_key, internal::bridge::mixed(v));
+        managed& operator =(const mixed&) {
+//            m_obj->set(m_key, std::visit([](auto&& arg) {
+//                           using M = typename internal::type_info::type_info<std::decay_t<decltype(arg)>>::internal_type;
+//                           return internal::bridge::mixed(M(arg));
+//                       }, v));
             return *this;
         }
 
@@ -69,41 +123,46 @@ namespace realm {
             }
         }
 
-        [[nodiscard]] T detach() const {
-            return deserialize<T>(m_obj->get<realm::internal::bridge::mixed>(m_key));
+        [[nodiscard]] mixed detach() const {
+            return mixed();
+//            return deserialize<T>(m_obj->get<realm::internal::bridge::mixed>(m_key));
         }
 
-        [[nodiscard]] T operator *() const {
+        [[nodiscard]] mixed operator *() const {
             return detach();
         }
 
         //MARK: -   comparison operators
-        rbool operator==(const T& rhs) const noexcept {
-            if (this->m_rbool_query) {
-                return this->m_rbool_query->mixed_equal(m_key, serialize(rhs));
-            }
-            return detach() == rhs;
+        rbool operator==(const mixed&) const noexcept {
+//            if (this->m_rbool_query) {
+//                return this->m_rbool_query->mixed_equal(m_key, serialize(rhs));
+//            }
+//            return detach() == rhs;
+            return true;
         }
 
-        rbool operator!=(const T& rhs) const noexcept {
-            if (this->m_rbool_query) {
-                return this->m_rbool_query->mixed_not_equal(m_key, serialize(rhs));
-            }
-            return detach() != rhs;
+        rbool operator!=(const mixed&) const noexcept {
+//            if (this->m_rbool_query) {
+//                return this->m_rbool_query->mixed_not_equal(m_key, serialize(rhs));
+//            }
+//            return detach() != rhs;
+            return true;
         }
 
         rbool operator==(const std::nullopt_t&) const noexcept {
-            if (this->m_rbool_query) {
-                return this->m_rbool_query->mixed_equal(m_key, internal::bridge::mixed(std::monostate()));
-            }
-            return detach() == T(std::monostate());
+//            if (this->m_rbool_query) {
+//                return this->m_rbool_query->mixed_equal(m_key, internal::bridge::mixed(std::monostate()));
+//            }
+//            return detach() == T(std::monostate());
+            return true;
         }
 
         rbool operator!=(const std::nullopt_t&) const noexcept {
-            if (this->m_rbool_query) {
-                return this->m_rbool_query->mixed_not_equal(m_key, internal::bridge::mixed(std::monostate()));
-            }
-            return detach() != T(std::monostate());
+//            if (this->m_rbool_query) {
+//                return this->m_rbool_query->mixed_not_equal(m_key, internal::bridge::mixed(std::monostate()));
+//            }
+//            return detach() != T(std::monostate());
+            return true;
         }
 
         bool has_link() const {
@@ -112,44 +171,45 @@ namespace realm {
 
         template<typename U>
         typename managed<U>::ref_type get_stored_link() const {
-            m_realm->read_group();
-            realm::internal::bridge::mixed m = m_obj->get<realm::internal::bridge::mixed>(m_key);
-
-            auto obj = internal::bridge::object(*m_realm, m.operator internal::bridge::obj_link());
-            uint32_t alternative_key = m_realm->table_for_object_type(managed<std::remove_pointer_t<U>>::schema.name).get_key();
-            uint32_t stored_table = obj.get_obj().get_table().get_key();
-
-            if (alternative_key != stored_table) {
-                throw std::runtime_error("Different link type stored in mixed type. Stored type: " + obj.get_object_schema().get_name());
-            }
-            return typename managed<U>::ref_type(managed<std::remove_pointer_t<U>>(obj.get_obj(), *m_realm));
+            std::terminate();
+//            m_realm->read_group();
+//            realm::internal::bridge::mixed m = m_obj->get<realm::internal::bridge::mixed>(m_key);
+//
+//            auto obj = internal::bridge::object(*m_realm, m.operator internal::bridge::obj_link());
+//            uint32_t alternative_key = m_realm->table_for_object_type(managed<std::remove_pointer_t<U>>::schema.name).get_key();
+//            uint32_t stored_table = obj.get_obj().get_table().get_key();
+//
+//            if (alternative_key != stored_table) {
+//                throw std::runtime_error("Different link type stored in mixed type. Stored type: " + obj.get_object_schema().get_name());
+//            }
+//            return typename managed<U>::ref_type(managed<std::remove_pointer_t<U>>(obj.get_obj(), *m_realm));
         }
 
         template <typename U>
-        void set_link(U &&v) {
-            static_assert(sizeof(managed<U>), "Must declare schema for T");
-            static_assert(managed<U>::object_type == ObjectType::TopLevel, "Mixed properties can only store Top Level objects.");
-            auto table = m_realm->table_for_object_type(managed<U>::schema.name);
-            internal::bridge::obj o;
-            if constexpr (managed<U>::schema.HasPrimaryKeyProperty) {
-                auto pk = v.*(managed<U>::schema.primary_key().ptr);
-                o = table.create_object_with_primary_key(realm::internal::bridge::mixed(serialize(pk.value)));
-            } else {
-                o = table.create_object();
-            }
-
-            std::apply([&o, &v, this](auto && ...p) {
-                (accessor<typename std::decay_t<decltype(p)>::Result>::set(
-                         o, o.get_table().get_column_key(p.name), *this->m_realm, v.*(std::decay_t<decltype(p)>::ptr)
-                                 ), ...);
-            }, managed<U>::schema.ps);
-            m_obj->set(m_key, internal::bridge::mixed(o.get_link()));
+        void set_link(U &&) {
+//            static_assert(sizeof(managed<U>), "Must declare schema for T");
+//            static_assert(managed<U>::object_type == ObjectType::TopLevel, "Mixed properties can only store Top Level objects.");
+//            auto table = m_realm->table_for_object_type(managed<U>::schema.name);
+//            internal::bridge::obj o;
+//            if constexpr (managed<U>::schema.HasPrimaryKeyProperty) {
+//                auto pk = v.*(managed<U>::schema.primary_key().ptr);
+//                o = table.create_object_with_primary_key(realm::internal::bridge::mixed(serialize(pk.value)));
+//            } else {
+//                o = table.create_object();
+//            }
+//
+//            std::apply([&o, &v, this](auto && ...p) {
+//                (accessor<typename std::decay_t<decltype(p)>::Result>::set(
+//                         o, o.get_table().get_column_key(p.name), *this->m_realm, v.*(std::decay_t<decltype(p)>::ptr)
+//                                 ), ...);
+//            }, managed<U>::schema.ps);
+//            m_obj->set(m_key, internal::bridge::mixed(o.get_link()));
         }
 
         template<typename U>
         std::enable_if_t<managed<U>::is_object && managed<U>::object_type == ObjectType::TopLevel, void>
-        set_link(managed<U>& link) {
-            m_obj->set(m_key, internal::bridge::mixed(internal::bridge::obj_link(link.m_obj.get_table().get_key(), link.m_obj.get_key())));
+        set_link(managed<U>&) {
+//            m_obj->set(m_key, internal::bridge::mixed(internal::bridge::obj_link(link.m_obj.get_table().get_key(), link.m_obj.get_key())));
         }
 
     private:

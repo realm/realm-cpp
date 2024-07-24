@@ -28,6 +28,9 @@
 #include <cpprealm/schema.hpp>
 #include <cpprealm/rbool.hpp>
 
+#include <cpprealm/managed_mixed.hpp>
+
+
 namespace realm {
     struct mutable_sync_subscription_set;
 }
@@ -70,10 +73,10 @@ namespace realm {
         }
 
         virtual ~results_common_base() = default;
-        Derived where(const std::string &query, const std::vector<realm::mixed>& arguments) {
+        Derived where(const std::string &query, const std::vector<realm::mixed>& /*arguments*/) {
             std::vector<internal::bridge::mixed> mixed_args;
-            for(auto& a : arguments)
-                mixed_args.push_back(serialize(a));
+//            for(auto& a : arguments)
+//                mixed_args.push_back(serialize(a));
             return Derived(internal::bridge::results(m_parent.get_realm(),
                                                      m_parent.get_table().query(query, std::move(mixed_args))));
         }

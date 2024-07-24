@@ -88,35 +88,35 @@ namespace realm::internal::type_info {
                 std::is_same<typename type_info<T>::internal_type, bridge::dictionary>
                 >>;
 
-        template <typename T, typename = void>
-        struct is_variant_t : std::false_type {};
-        template <template <typename ...> typename Variant, typename ...Ts>
-        struct is_variant_t<Variant<Ts...>, std::enable_if_t<std::is_same_v<std::variant<Ts...>, Variant<Ts...>>>>
-            : std::true_type {
-        };
+//        template <typename T, typename = void>
+//        struct is_variant_t : std::false_type {};
+//        template <template <typename ...> typename Variant, typename ...Ts>
+//        struct is_variant_t<Variant<Ts...>, std::enable_if_t<std::is_same_v<std::variant<Ts...>, Variant<Ts...>>>>
+//            : std::true_type {
+//        };
+//
+//        template<size_t N, typename Variant>
+//        constexpr bool check_variant_types() {
+//            if constexpr (!is_variant_t<Variant>::value) {
+//                return false;
+//            } else if constexpr (N >= std::variant_size_v<Variant>) {
+//                return true;
+//            } else {
+//                if constexpr (std::is_same_v<std::variant_alternative_t<N, Variant>, std::monostate>) {
+//                    return check_variant_types<N + 1, Variant>();
+//                } else if constexpr (is_primitive<std::variant_alternative_t<N, Variant>>::value) {
+//                    return check_variant_types<N + 1, Variant>();
+//                } else {
+//                    return false;
+//                }
+//            }
+//        }
 
-        template<size_t N, typename Variant>
-        constexpr bool check_variant_types() {
-            if constexpr (!is_variant_t<Variant>::value) {
-                return false;
-            } else if constexpr (N >= std::variant_size_v<Variant>) {
-                return true;
-            } else {
-                if constexpr (std::is_same_v<std::variant_alternative_t<N, Variant>, std::monostate>) {
-                    return check_variant_types<N + 1, Variant>();
-                } else if constexpr (is_primitive<std::variant_alternative_t<N, Variant>>::value) {
-                    return check_variant_types<N + 1, Variant>();
-                } else {
-                    return false;
-                }
-            }
-        }
-
-        template<typename T>
-        using MixedPersistableConcept =
-                std::conjunction<is_variant_t<T>,
-                                 std::conditional_t<check_variant_types<0, T>(), std::true_type, std::false_type>
-                                 >;
+//        template<typename T>
+//        using MixedPersistableConcept =
+//                std::conjunction<is_variant_t<T>,
+//                                 std::conditional_t<check_variant_types<0, T>(), std::true_type, std::false_type>
+//                                 >;
 
         namespace {
             static_assert(std::conjunction<
@@ -263,14 +263,14 @@ namespace realm::internal::type_info {
             return bridge::property::type::Set | type_info<ValueType>::type();
         }
     };
-    template <typename T>
-    struct type_info<T, std::enable_if_t<MixedPersistableConcept<T>::value>> {
-        using internal_type = bridge::mixed;
-
-        static constexpr auto type() {
-            return bridge::property::type::Mixed | bridge::property::type::Nullable;
-        }
-    };
+//    template <typename T>
+//    struct type_info<T, std::enable_if_t<MixedPersistableConcept<T>::value>> {
+//        using internal_type = bridge::mixed;
+//
+//        static constexpr auto type() {
+//            return bridge::property::type::Mixed | bridge::property::type::Nullable;
+//        }
+//    };
     template <typename T>
     struct type_info<std::optional<T>> {
         using internal_type = std::optional<typename type_info<T>::internal_type>;

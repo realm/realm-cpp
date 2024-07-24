@@ -32,18 +32,6 @@
 
 namespace realm {
     class Mixed;
-
-    using mixed = std::variant<
-            std::monostate,
-            int64_t,
-            bool,
-            std::string,
-            double,
-            std::vector<uint8_t>,
-            std::chrono::time_point<std::chrono::system_clock>,
-            uuid,
-            object_id,
-            decimal128>;
 }
 
 namespace realm::internal::bridge {
