@@ -63,9 +63,17 @@ namespace realm {
         };
     }
 
-
     // MARK: schema
     namespace schemagen {
+        /**
+         * @brief Internal use only, for use with automatic schema discovery.
+         *
+         * @param schema Optionally append a new object schema to the
+         * registered schemas if it does not already exist.
+         * @return A vector of object schemas
+         */
+        std::vector<internal::bridge::object_schema> registered_schemas(const std::optional<internal::bridge::object_schema>& schema = std::nullopt);
+
         template <auto Ptr, bool IsPrimaryKey = false>
         struct property {
             using Result = typename internal::persisted_type_extractor<typename internal::ptr_type_extractor<Ptr>::member_type>::Result;

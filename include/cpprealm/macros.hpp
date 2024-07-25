@@ -594,10 +594,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
     };                                                                                              \
     struct meta_schema_##cls {                                                                      \
         meta_schema_##cls() {                                                                       \
-            auto s = managed<cls>::schema.to_core_schema();                                         \
-            auto it = std::find(std::begin(realm::db::schemas), std::end(realm::db::schemas), s);   \
-            if (it == std::end(realm::db::schemas))                                                 \
-                realm::db::schemas.push_back(s);                                                    \
+            realm::schemagen::registered_schemas(managed<cls>::schema.to_core_schema());            \
         }                                                                                           \
     };                                                                                              \
     static inline meta_schema_##cls _meta_schema_##cls{};
