@@ -168,7 +168,7 @@ You can then link to your library with `-lcpprealm`.
 <b>Note:</b> If your target is Windows make sure to add the `MSVC_RUNTIME_LIBRARY` property to your target like so:
 ```
 set_property(TARGET My_Target PROPERTY
-      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>") # If building in release use `CONFIG:Release>:Release`
+      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>") # If building in release use "MultiThreaded" instead "MultiThreaded$<$<CONFIG:Debug>:Debug>"
 ```
 
 <img style="width: 0px; height: 0px;" src="https://3eaz4mshcd.execute-api.us-east-1.amazonaws.com/prod?s=https://github.com/realm/realm-cocoa#README.md">
