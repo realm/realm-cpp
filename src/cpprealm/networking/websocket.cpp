@@ -65,7 +65,7 @@ namespace realm::networking {
         auto user_agent_binding_info = std::string("RealmCpp/") + std::string(REALMCXX_VERSION_STRING);
         auto user_agent = util::format("RealmSync/%1 (%2) %3", REALM_VERSION_STRING, util::get_platform_info(),
                                        user_agent_binding_info);
-        m_provider = std::make_unique<::realm::sync::websocket::DefaultSocketProvider>(util::Logger::get_default_logger(), user_agent);
+        m_provider = std::make_shared<::realm::sync::websocket::DefaultSocketProvider>(util::Logger::get_default_logger(), user_agent);
     }
 
     std::unique_ptr<websocket_interface> default_socket_provider::connect(std::unique_ptr<websocket_observer> o, websocket_endpoint&& ep) {
