@@ -305,7 +305,7 @@ namespace realm::networking {
         configuration m_configuration;
     private:
         void initialize();
-        std::unique_ptr<::realm::sync::SyncSocketProvider> m_provider;
+        std::shared_ptr<::realm::sync::SyncSocketProvider> m_provider;
     };
 }
 

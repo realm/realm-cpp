@@ -309,6 +309,10 @@ namespace realm::internal::bridge {
         get_config()->should_compact_on_launch_function = std::move(fn);
     }
 
+    void realm::config::enable_forced_sync_history() {
+        get_config()->force_sync_history = true;
+    }
+
     enum ::realm::client_reset_mode realm::config::get_client_reset_mode() const {
         return static_cast<enum ::realm::client_reset_mode>(get_config()->sync_config->client_resync_mode);
     }

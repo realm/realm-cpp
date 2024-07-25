@@ -199,6 +199,10 @@ namespace realm::internal::bridge {
             void set_schema_version(uint64_t version);
             void set_encryption_key(const std::array<char, 64>&);
             void should_compact_on_launch(std::function<bool(uint64_t total_bytes, uint64_t unused_bytes)>&& fn);
+            /// Open the Realm using the sync history mode even if a sync configuration is not supplied.
+            /// This mode is used for opening a synced realm with a local realm config in the scenario
+            /// that you do not have a valid sync user object.
+            void enable_forced_sync_history();
             std::optional<schema> get_schema();
 
             template<typename T>
