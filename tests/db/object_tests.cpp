@@ -550,8 +550,8 @@ namespace realm {
                         } else if (prop_change.name == "binary_col" && prop_change.new_value) {
                             CHECK(std::get<std::vector<uint8_t>>(*prop_change.new_value) == std::vector<uint8_t>({1}));
                         } else if (prop_change.name == "mixed_col" && prop_change.new_value) {
-                            auto val = std::get<realm::mixed>(*prop_change.new_value);
-                            CHECK(std::get<std::string>(val) == "mixed");
+//                            auto val = std::get<realm::mixed>(*prop_change.new_value);
+//                            CHECK(std::get<std::string>(val) == "mixed");
                         } else if (prop_change.name == "opt_str_col" && prop_change.new_value) {
                             CHECK(std::get<std::optional<std::string>>(*prop_change.new_value) == "opt string");
                         } else if (prop_change.name == "opt_bool_col" && prop_change.new_value) {

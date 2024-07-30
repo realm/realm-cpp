@@ -12,37 +12,70 @@ TEST_CASE("mixed", "[mixed]") {
         obj.mixed_col = (int64_t)42;
         CHECK(obj.mixed_col == realm::mixed((int64_t)42));
         auto realm = db(std::move(config));
+//        auto managed_obj = realm.write([&realm, &obj] {
+//            return realm.add(std::move(obj));
+//        });
+//        CHECK(managed_obj.mixed_col == static_cast<int64_t>(42));
+//
+//
+//        realm.write([&managed_obj] {
+//            managed_obj.mixed_col = std::string("hello world");
+//        });
+//        CHECK(managed_obj.mixed_col == std::string("hello world"));
+//        realm.write([&managed_obj] {
+//            managed_obj.mixed_col = true;
+//        });
+//        CHECK(managed_obj.mixed_col == true);
+//        auto time_point = std::chrono::time_point<std::chrono::system_clock>();
+//        realm.write([&managed_obj, &time_point] {
+//            managed_obj.mixed_col = time_point;
+//        });
+//        CHECK(managed_obj.mixed_col == time_point);
+//        auto bin = std::vector<uint8_t>{0,1,2};
+//        realm.write([&managed_obj, &bin] {
+//            managed_obj.mixed_col = bin;
+//        });
+//        CHECK(managed_obj.mixed_col == bin);
+//        realm.write([&managed_obj] {
+//            managed_obj.mixed_col = 42.42;
+//        });
+//        CHECK(managed_obj.mixed_col == 42.42);
+//        auto u = uuid();
+//        realm.write([&managed_obj, u] {
+//            managed_obj.mixed_col = u;
+//        });
+//        CHECK(managed_obj.mixed_col == u);
+
+        auto obj2 = AllTypesObject();
+
+        auto xx = realm::mixed(obj2);
+
+//        auto x = realm::mixed(managed_obj);
+
+
+        obj.mixed_col = std::map<std::string, realm::mixed>({
+                                                                {"foo", realm::mixed("bar")},
+//                                                                {"foo2", realm::mixed(std::map<std::string, realm::mixed>({ {"nested", 123.456} }))},
+//                                                                {"bar", realm::mixed(std::map<std::string, realm::mixed>({ {"nested", realm::mixed(obj2)} }))}
+                                                            });
+
         auto managed_obj = realm.write([&realm, &obj] {
             return realm.add(std::move(obj));
         });
-        CHECK(managed_obj.mixed_col == static_cast<int64_t>(42));
-        realm.write([&managed_obj] {
-            managed_obj.mixed_col = std::string("hello world");
-        });
-        CHECK(managed_obj.mixed_col == std::string("hello world"));
-        realm.write([&managed_obj] {
-            managed_obj.mixed_col = true;
-        });
-        CHECK(managed_obj.mixed_col == true);
-        auto time_point = std::chrono::time_point<std::chrono::system_clock>();
-        realm.write([&managed_obj, &time_point] {
-            managed_obj.mixed_col = time_point;
-        });
-        CHECK(managed_obj.mixed_col == time_point);
-        auto bin = std::vector<uint8_t>{0,1,2};
-        realm.write([&managed_obj, &bin] {
-            managed_obj.mixed_col = bin;
-        });
-        CHECK(managed_obj.mixed_col == bin);
-        realm.write([&managed_obj] {
-            managed_obj.mixed_col = 42.42;
-        });
-        CHECK(managed_obj.mixed_col == 42.42);
-        auto u = uuid();
-        realm.write([&managed_obj, u] {
-            managed_obj.mixed_col = u;
-        });
-        CHECK(managed_obj.mixed_col == u);
+
+        std::map<std::string, realm::mixed> d = realm::mixed_cast<std::map<std::string, realm::mixed>>(*managed_obj.mixed_col);
+        realm::mixed::map e = realm::mixed_cast<realm::mixed::map>(*managed_obj.mixed_col);
+
+        auto xxx = realm::mixed_cast<std::string>(*e["foo"]);
+
+        e["foo"] = realm::mixed("dog");
+
+        auto x = realm::mixed_cast<std::string>(d["foo"]);
+        d["bar"] = realm::mixed(managed_obj);
+
+        std::string a = realm::mixed_cast<std::string>(d["foo"]);
+//        managed<AllTypesObject> a = d["bar"]->get<managed<AllTypesObject>>();
+
     }
 
     SECTION("holds_alternative") {

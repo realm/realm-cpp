@@ -28,9 +28,6 @@
 #include <cpprealm/schema.hpp>
 #include <cpprealm/rbool.hpp>
 
-#include <cpprealm/managed_mixed.hpp>
-
-
 namespace realm {
     struct mutable_sync_subscription_set;
 }
@@ -169,11 +166,11 @@ namespace realm {
     };
 
     template<typename T>
-    using results_is_primitive = std::enable_if_t<!managed<T>::is_object && !std::is_enum_v<T> && !internal::type_info::is_variant_t<T>::value>;
+    using results_is_primitive = std::enable_if_t<!managed<T>::is_object && !std::is_enum_v<T>>;
     template<typename T>
-    using results_is_enum = std::enable_if_t<!managed<T>::is_object && std::is_enum_v<T> && !internal::type_info::is_variant_t<T>::value>;
+    using results_is_enum = std::enable_if_t<!managed<T>::is_object && std::is_enum_v<T>>;
     template<typename T>
-    using results_is_mixed = std::enable_if_t<!managed<T>::is_object && !std::is_enum_v<T> && internal::type_info::is_variant_t<T>::value>;
+    using results_is_mixed = std::enable_if_t<std::is_same_v<T, realm::mixed>>;
 
     template<typename T, typename Derived>
     struct results_base<T, Derived, results_is_primitive<T>> : public results_common_base<T, Derived> {
@@ -238,10 +235,11 @@ namespace realm {
             : results_common_base<T, Derived>(std::move(parent)) {
         }
 
-        T operator[](size_t index) {
-            if (index >= this->m_parent.size())
-                throw std::out_of_range("Index out of range.");
-            return deserialize<T>(internal::bridge::get<internal::bridge::mixed>(this->m_parent, index));
+        T operator[](size_t /*index*/) {
+            std::terminate();
+//            if (index >= this->m_parent.size())
+//                throw std::out_of_range("Index out of range.");
+//            return deserialize<T>(internal::bridge::get<internal::bridge::mixed>(this->m_parent, index));
         }
 
         // TODO: The current impl of realm::mixed does not allow managed object types,

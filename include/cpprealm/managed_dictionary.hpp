@@ -48,75 +48,77 @@ namespace realm {
             m_backing_map.insert(m_key, internal::bridge::mixed(std::move(o)));
             return *this;
         }
-        box_base &operator=(mapped_type &&o) {
-            if constexpr (internal::type_info::is_link<mapped_type>::value) {
-                if (o) {
-                    if constexpr (o->is_managed) {
-                        m_backing_map.insert(m_key, o->m_managed.m_obj.get_key());
-                    } else {
-                        internal::bridge::obj m_obj;
-                        if constexpr (managed<typename mapped_type::value_type::value_type>::schema.HasPrimaryKeyProperty) {
-                            auto pk = (*o->unmanaged).*(managed<typename mapped_type::value_type::value_type>::schema.primary_key().ptr);
-                            m_obj = m_backing_map.create_and_insert_linked_object(m_key, pk.value);
-                        } else {
-                            m_obj = m_backing_map.create_and_insert_linked_object(m_key);
-                        }
-
-                        std::apply([&m_obj, &o](auto && ...p) {
-                            (accessor<typename std::decay_t<decltype(p)>::Result>::set(
-                                     m_obj, m_obj.get_table().get_column_key(p.name),
-                                     (*o->unmanaged).*(std::decay_t<decltype(p)>::ptr)), ...);
-                        }, managed<typename mapped_type::value_type::value_type>::schema.ps);
-                    }
-                } else {
-                    m_backing_map.insert(m_key, internal::bridge::mixed());
-                }
-            } else {
-                if constexpr (internal::type_info::is_primitive<mapped_type>::value) {
-                    m_backing_map.insert(m_key, serialize(std::move(o)));
-                } else {
-                   if (o.is_managed) {
-                        m_backing_map.insert(m_key, o.managed.m_obj.get_key());
-                   } else {
-                        internal::bridge::obj m_obj;
-                        if constexpr (managed<typename mapped_type::value_type>::schema.HasPrimaryKeyProperty) {
-                            auto pk = (*o->unmanaged).*(managed<typename mapped_type::value_type>::schema.primary_key().ptr);
-                            m_obj = m_backing_map.create_and_insert_linked_object(m_key, pk.value);
-                        } else {
-                            m_obj = m_backing_map.create_and_insert_linked_object(m_key);
-                        }
-
-                        std::apply([&m_obj, &o](auto && ...p) {
-                            (accessor<typename std::decay_t<decltype(p)>::Result>::set(
-                                     m_obj, m_obj.get_table().get_column_key(p.name),
-                                     o.unmanaged.*(std::decay_t<decltype(p)>::ptr)), ...);
-                        }, managed<typename mapped_type::value_type>::schema.ps);
-                   }
-                }
-            }
+        box_base &operator=(mapped_type &&/*o*/) {
+//            if constexpr (internal::type_info::is_link<mapped_type>::value) {
+//                if (o) {
+//                    if constexpr (o->is_managed) {
+//                        m_backing_map.insert(m_key, o->m_managed.m_obj.get_key());
+//                    } else {
+//                        internal::bridge::obj m_obj;
+//                        if constexpr (managed<typename mapped_type::value_type::value_type>::schema.HasPrimaryKeyProperty) {
+//                            auto pk = (*o->unmanaged).*(managed<typename mapped_type::value_type::value_type>::schema.primary_key().ptr);
+//                            m_obj = m_backing_map.create_and_insert_linked_object(m_key, pk.value);
+//                        } else {
+//                            m_obj = m_backing_map.create_and_insert_linked_object(m_key);
+//                        }
+//
+//                        std::apply([&m_obj, &o](auto && ...p) {
+//                            (accessor<typename std::decay_t<decltype(p)>::Result>::set(
+//                                     m_obj, m_obj.get_table().get_column_key(p.name),
+//                                     (*o->unmanaged).*(std::decay_t<decltype(p)>::ptr)), ...);
+//                        }, managed<typename mapped_type::value_type::value_type>::schema.ps);
+//                    }
+//                } else {
+//                    m_backing_map.insert(m_key, internal::bridge::mixed());
+//                }
+//            } else {
+//                if constexpr (internal::type_info::is_primitive<mapped_type>::value) {
+//                    m_backing_map.insert(m_key, serialize(std::move(o)));
+//                } else {
+//                   if (o.is_managed) {
+//                        m_backing_map.insert(m_key, o.managed.m_obj.get_key());
+//                   } else {
+//                        internal::bridge::obj m_obj;
+//                        if constexpr (managed<typename mapped_type::value_type>::schema.HasPrimaryKeyProperty) {
+//                            auto pk = (*o->unmanaged).*(managed<typename mapped_type::value_type>::schema.primary_key().ptr);
+//                            m_obj = m_backing_map.create_and_insert_linked_object(m_key, pk.value);
+//                        } else {
+//                            m_obj = m_backing_map.create_and_insert_linked_object(m_key);
+//                        }
+//
+//                        std::apply([&m_obj, &o](auto && ...p) {
+//                            (accessor<typename std::decay_t<decltype(p)>::Result>::set(
+//                                     m_obj, m_obj.get_table().get_column_key(p.name),
+//                                     o.unmanaged.*(std::decay_t<decltype(p)>::ptr)), ...);
+//                        }, managed<typename mapped_type::value_type>::schema.ps);
+//                   }
+//                }
+//            }
             return *this;
         }
 
-        rbool operator==(const mapped_type &rhs) const {
-            if constexpr (realm::internal::type_info::MixedPersistableConcept<mapped_type>::value) {
-                if (this->m_rbool_query) {
-                    return this->m_rbool_query->dictionary_has_value_for_key_equals(this->m_col_key, m_key, serialize(rhs, m_realm));
-                }
-                return m_backing_map.get(m_key) == serialize(rhs, m_realm);
-            } else {
-                if (this->m_rbool_query) {
-                    return this->m_rbool_query->dictionary_has_value_for_key_equals(this->m_col_key, m_key, internal::bridge::mixed(serialize(rhs)));
-                }
-                return m_backing_map.get(m_key) == internal::bridge::mixed(serialize(rhs));
-            }
+        rbool operator==(const mapped_type &/*rhs*/) const {
+//            if constexpr (realm::internal::type_info::MixedPersistableConcept<mapped_type>::value) {
+//                if (this->m_rbool_query) {
+//                    return this->m_rbool_query->dictionary_has_value_for_key_equals(this->m_col_key, m_key, serialize(rhs, m_realm));
+//                }
+//                return m_backing_map.get(m_key) == serialize(rhs, m_realm);
+//            } else {
+//                if (this->m_rbool_query) {
+//                    return this->m_rbool_query->dictionary_has_value_for_key_equals(this->m_col_key, m_key, internal::bridge::mixed(serialize(rhs)));
+//                }
+//                return m_backing_map.get(m_key) == internal::bridge::mixed(serialize(rhs));
+//            }
+            std::terminate();
         }
 
-        rbool operator!=(const mapped_type &rhs) const {
-            if (this->m_rbool_query) {
-                return this->m_rbool_query->dictionary_has_value_for_key_not_equals(this->m_col_key, m_key, internal::bridge::mixed(serialize(rhs, m_realm)));
-            } else {
-                return !operator==(rhs);
-            }
+        rbool operator!=(const mapped_type &/*rhs*/) const {
+            std::terminate();
+//            if (this->m_rbool_query) {
+//                return this->m_rbool_query->dictionary_has_value_for_key_not_equals(this->m_col_key, m_key, internal::bridge::mixed(serialize(rhs, m_realm)));
+//            } else {
+//                return !operator==(rhs);
+//            }
         }
 
         internal::bridge::core_dictionary m_backing_map;
@@ -224,38 +226,18 @@ namespace realm {
             return this->m_backing_map.get(this->m_key).operator internal::bridge::uuid().operator ::realm::uuid();
         }
     };
-    template<typename Mixed>
-    struct box<Mixed, std::enable_if_t<internal::type_info::MixedPersistableConcept<Mixed>::value>> : public box_base<Mixed> {
-        using box_base<Mixed>::box_base;
-        using box_base<Mixed>::operator=;
+    template<>
+    struct box<realm::mixed> : public box_base<realm::mixed> {
+        using box_base<realm::mixed>::box_base;
+        using box_base<realm::mixed>::operator=;
 
-        rbool operator>(Mixed rhs) const {
-            if (this->m_rbool_query) {
-                return this->m_rbool_query->dictionary_has_value_for_key_greater_than(this->m_col_key, this->m_key, serialize(rhs, this->m_realm));
-            }
-            return this->m_backing_map.get(this->m_key) > serialize(rhs, this->m_realm);
-        }
+        rbool operator>(realm::mixed /*rhs*/) const;
 
-        rbool operator>=(Mixed rhs) const {
-            if (this->m_rbool_query) {
-                return this->m_rbool_query->dictionary_has_value_for_key_greater_than_equals(this->m_col_key, this->m_key, serialize(rhs, this->m_realm));
-            }
-            return this->m_backing_map.get(this->m_key) >= serialize(rhs, this->m_realm);
-        }
+        rbool operator>=(realm::mixed /*rhs*/) const;
 
-        rbool operator<(Mixed rhs) const {
-            if (this->m_rbool_query) {
-                return this->m_rbool_query->dictionary_has_value_for_key_less_than(this->m_col_key, this->m_key, serialize(rhs, this->m_realm));
-            }
-            return this->m_backing_map.get(this->m_key) < serialize(rhs, this->m_realm);
-        }
+        rbool operator<(realm::mixed /*rhs*/) const;
 
-        rbool operator<=(Mixed rhs) const {
-            if (this->m_rbool_query) {
-                return this->m_rbool_query->dictionary_has_value_for_key_less_than_equals(this->m_col_key, this->m_key, serialize(rhs, this->m_realm));
-            }
-            return this->m_backing_map.get(this->m_key) <= serialize(rhs, this->m_realm);
-        }
+        rbool operator<=(realm::mixed /*rhs*/) const;
     };
     template<>
     struct box<object_id> : public box_base<object_id> {
@@ -526,9 +508,9 @@ namespace realm {
                 return ret;
             }
             auto ret = std::map<std::string, T>();
-            for (auto [k, v] : *this) {
-                ret[k] = v;
-            }
+//            for (auto [k, v] : *this) {
+//                ret[k] = v;
+//            }
             return ret;
         }
 
@@ -556,8 +538,9 @@ namespace realm {
 
             std::pair<std::string, T> operator*() noexcept
             {
-                auto pair = m_parent->m_obj->get_dictionary(m_parent->m_key).get_pair(m_i);
-                return { pair.first, deserialize<T>(pair.second) };
+                std::terminate();
+//                auto pair = m_parent->m_obj->get_dictionary(m_parent->m_key).get_pair(m_i);
+//                return { pair.first, deserialize<T>(pair.second) };
             }
 
             iterator& operator++()

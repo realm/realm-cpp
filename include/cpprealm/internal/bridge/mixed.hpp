@@ -55,6 +55,11 @@ namespace realm::internal::bridge {
     };
 
     struct mixed {
+        enum class collection_type {
+            dictionary,
+            list
+        };
+
         mixed();
         mixed(const mixed& other) ;
         mixed& operator=(const mixed& other) ;
@@ -62,6 +67,7 @@ namespace realm::internal::bridge {
         mixed& operator=(mixed&& other);
         ~mixed();
 
+        mixed(collection_type);
         explicit mixed(const std::string&);
         mixed(const std::monostate&); //NOLINT(google-explicit-constructor)
         mixed(const int&); //NOLINT(google-explicit-constructor)

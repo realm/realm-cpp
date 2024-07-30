@@ -27,6 +27,7 @@
 #include <cpprealm/internal/bridge/realm.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
 #include <cpprealm/internal/type_info.hpp>
+#include <cpprealm/mixed.hpp>
 
 namespace realm {
 
@@ -277,14 +278,9 @@ namespace realm {
         }
     }
 
-//    template <typename T>
-//    static inline typename std::enable_if_t<internal::type_info::MixedPersistableConcept<T>::value, internal::bridge::mixed> serialize(const T& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
-//        return std::visit([&](auto&& arg) {
-//            using StoredType = std::decay_t<decltype(arg)>;
-//            using M = typename internal::type_info::type_info<StoredType>::internal_type;
-//            return internal::bridge::mixed(M(arg));
-//        }, v);
-//    }
+    static inline internal::bridge::mixed serialize(const mixed& v, const std::optional<internal::bridge::realm>& = std::nullopt) {
+            return internal::get_mixed_bridge(v);
+    }
 
 //    template <typename T>
 //    static inline typename std::enable_if_t<!internal::type_info::MixedPersistableConcept<T>::value, T>

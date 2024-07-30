@@ -43,6 +43,7 @@ namespace realm::internal::bridge {
     struct decimal128;
     struct uuid;
     struct mixed;
+    struct query;
 
     struct subexpr {
         subexpr(subexpr&& other) = default;

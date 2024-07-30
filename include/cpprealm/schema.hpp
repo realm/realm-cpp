@@ -63,7 +63,6 @@ namespace realm {
         };
     }
 
-
     // MARK: schema
     namespace schemagen {
         template <auto Ptr, bool IsPrimaryKey = false>

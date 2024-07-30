@@ -238,6 +238,11 @@ namespace realm::internal::bridge {
     lnklst obj::get_linklist(const col_key &col_key) {
         return get_obj()->get_linklist(col_key);
     }
+
+    void obj::set_dictionary(const col_key& col_key) {
+        get_obj()->set_collection(col_key, CollectionType::Dictionary);
+    }
+
     core_dictionary obj::get_dictionary(const col_key& col_key) {
         return get_obj()->get_dictionary(col_key);
     }

@@ -82,7 +82,7 @@ namespace realm {
         }
         [[nodiscard]] std::vector<T> detach() const {
             auto list = realm::internal::bridge::list(*m_realm, *m_obj, m_key);
-            using U = typename internal::type_info::type_info<T>::internal_type;
+//            using U = typename internal::type_info::type_info<T>::internal_type;
 
             size_t count = list.size();
             if (count == 0)
@@ -91,12 +91,13 @@ namespace realm {
             auto ret = std::vector<T>();
             ret.reserve(count);
             for(size_t i = 0; i < count; i++) {
-                if constexpr (internal::type_info::MixedPersistableConcept<T>::value) {
-                    ret.push_back(deserialize<T>(realm::internal::bridge::get<U>(list, i)));
-                } else if constexpr (std::is_enum_v<T>) {
-                    ret.push_back(deserialize<T>(realm::internal::bridge::get<U>(list, i)));
+//                if constexpr (internal::type_info::MixedPersistableConcept<T>::value) {
+//                    ret.push_back(deserialize<T>(realm::internal::bridge::get<U>(list, i)));
+//                } else
+                if constexpr (std::is_enum_v<T>) {
+//                    ret.push_back(deserialize<T>(realm::internal::bridge::get<U>(list, i)));
                 } else {
-                    ret.push_back(deserialize(realm::internal::bridge::get<U>(list, i)));
+//                    ret.push_back(deserialize(realm::internal::bridge::get<U>(list, i)));
                 }
             }
 
@@ -118,13 +119,10 @@ namespace realm {
             return token;
         }
 
-        // TODO: emulate a reference to the value.
         T operator[](size_t idx) const {
             auto list = realm::internal::bridge::list(*m_realm, *m_obj, m_key);
             using U = typename internal::type_info::type_info<T>::internal_type;
-            if constexpr (internal::type_info::MixedPersistableConcept<T>::value) {
-                return deserialize<T>(realm::internal::bridge::get<U>(list, idx));
-            } else if constexpr (std::is_enum_v<T>) {
+            if constexpr (std::is_enum_v<T>) {
                 return static_cast<T>(deserialize<T>(realm::internal::bridge::get<U>(list, idx)));
             } else {
                 return deserialize(realm::internal::bridge::get<U>(list, idx));
@@ -377,6 +375,164 @@ namespace realm {
         template<typename, typename>
         friend struct managed;
     };
+
+
+
+    template<>
+    struct managed<std::vector<realm::mixed>> : managed_base {
+        using managed<std::vector<realm::mixed>>::managed_base::operator=;
+
+        class iterator {
+        public:
+            using iterator_category = std::input_iterator_tag;
+
+            bool operator!=(const iterator& other) const
+            {
+                return !(*this == other);
+            }
+
+            bool operator==(const iterator& other) const
+            {
+                return (m_parent == other.m_parent) && (m_i == other.m_i);
+            }
+
+            realm::mixed operator*() const noexcept;
+//            {
+//                return (*m_parent)[m_i];
+//            }
+
+            iterator& operator++()
+            {
+                this->m_i++;
+                return *this;
+            }
+
+            const iterator& operator++(int i)
+            {
+                this->m_i += i;
+                return *this;
+            }
+        private:
+            template<typename, typename>
+            friend struct managed;
+
+            iterator(size_t i, managed<std::vector<realm::mixed>>* parent)
+                    : m_i(i), m_parent(parent)
+            {
+            }
+            size_t m_i;
+            managed<std::vector<realm::mixed>>* m_parent;
+        };
+        iterator begin()
+        {
+            return iterator(0, this);
+        }
+
+        iterator end()
+        {
+            return iterator(size(), this);
+        }
+        [[nodiscard]] std::vector<realm::mixed> detach() const;
+//        {
+//            auto list = realm::internal::bridge::list(*m_realm, *m_obj, m_key);
+////            using U = typename internal::type_info::type_info<T>::internal_type;
+//
+//            size_t count = list.size();
+//            if (count == 0)
+//                return std::vector<realm::mixed>();
+//
+//            auto ret = std::vector<realm::mixed>();
+//            ret.reserve(count);
+//            for(size_t i = 0; i < count; i++) {
+////                if constexpr (internal::type_info::MixedPersistableConcept<T>::value) {
+////                    ret.push_back(deserialize<T>(realm::internal::bridge::get<U>(list, i)));
+////                } else
+////                if constexpr (std::is_enum_v<realm::mixed>) {
+////                    ret.push_back(deserialize<realm::mixed>(realm::internal::bridge::get<U>(list, i)));
+////                } else {
+////                    ret.push_back(deserialize(realm::internal::bridge::get<U>(list, i)));
+////                }
+//            }
+//
+//            return ret;
+//        }
+
+        [[nodiscard]] results<realm::mixed> as_results() const {
+            std::terminate();
+//            return results<realm::mixed>(realm::internal::bridge::list(*m_realm, *m_obj, m_key).as_results());
+        }
+
+        realm::notification_token observe(std::function<void(realm::collection_change)>&& fn) {
+            auto list = std::make_shared<realm::internal::bridge::list>(*m_realm, *m_obj, m_key);
+            realm::notification_token token = list->add_notification_callback(
+                    std::make_shared<realm::collection_callback_wrapper>(
+                            std::move(fn),
+                            false));
+            token.m_realm = *m_realm;
+            token.m_list = list;
+            return token;
+        }
+
+        // TODO: emulate a reference to the value.
+        realm::mixed operator[](size_t /*idx*/) const;
+//        {
+//            auto list = realm::internal::bridge::list(*m_realm, *m_obj, m_key);
+//            using U = typename internal::type_info::type_info<T>::internal_type;
+//            if constexpr (internal::type_info::MixedPersistableConcept<T>::value) {
+//                return deserialize<T>(realm::internal::bridge::get<U>(list, idx));
+//            } else
+
+//                return deserialize(realm::internal::bridge::get<U>(list, idx));
+ //           std::terminate();
+//        }
+
+        void pop_back() {
+            internal::bridge::list(*m_realm, *m_obj, m_key).remove(size() - 1);
+        }
+        void erase(size_t idx) {
+            internal::bridge::list(*m_realm, *m_obj, m_key).remove(idx);
+        }
+        void clear() {
+            internal::bridge::list(*m_realm, *m_obj, m_key).remove_all();
+        }
+        void push_back(const realm::mixed&) {
+//            auto list = internal::bridge::list(*m_realm, *m_obj, m_key);
+//            list.add(serialize(value));
+        }
+        size_t size() {
+            return internal::bridge::list(*m_realm, *m_obj, m_key).size();
+        }
+        size_t find(const realm::mixed&) {
+//            if constexpr (std::is_enum_v<T>) {
+//                return internal::bridge::list(*m_realm, *m_obj, m_key).find(static_cast<int64_t>(a));
+//            } else {
+//                return internal::bridge::list(*m_realm, *m_obj, m_key).find(a);
+//            }
+            std::terminate();
+        }
+        void set(size_t /*pos*/, const realm::mixed& /*a*/) {
+//            internal::bridge::list(*m_realm, *m_obj, m_key).set(pos, a);
+        }
+
+        results<realm::mixed> sort(bool ascending) {
+            return results<realm::mixed>(internal::bridge::list(*m_realm, *m_obj, m_key)
+                                            .sort(std::vector<internal::bridge::sort_descriptor>({{"self", ascending}})));
+        }
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
+    };
+
+
+
+
+
 } // namespace realm
 
 #endif//CPPREALM_MANAGED_LIST_HPP

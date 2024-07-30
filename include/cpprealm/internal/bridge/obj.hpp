@@ -213,7 +213,7 @@ namespace realm::internal::bridge {
                     }, managed<std::remove_pointer_t<ValueType>, void>::schema.ps);
                     v2.push_back(m_obj.get_key());
                 } else {
-                    v2.push_back(::realm::serialize(v));
+//                    v2.push_back(::realm::serialize(v));
                 }
             }
             set_list_values(col_key, v2);
@@ -222,6 +222,7 @@ namespace realm::internal::bridge {
         [[nodiscard]] obj_key get_key() const;
         [[nodiscard]] obj_link get_link() const;
         lnklst get_linklist(const col_key& col_key);
+        void set_dictionary(const col_key& col_key);
         core_dictionary get_dictionary(const col_key& col_key);
         void set_null(const col_key&);
         obj create_and_set_linked_object(const col_key&);

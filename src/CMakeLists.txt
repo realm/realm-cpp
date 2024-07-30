@@ -22,6 +22,7 @@ set(SOURCES
     cpprealm/managed_string.cpp
     cpprealm/managed_timestamp.cpp
     cpprealm/managed_uuid.cpp
+    cpprealm/mixed.cpp
     cpprealm/types.cpp
     cpprealm/flex_sync.cpp
     cpprealm/internal/bridge/async_open_task.cpp
@@ -82,6 +83,7 @@ set(HEADERS
     ../include/cpprealm/managed_string.hpp
     ../include/cpprealm/managed_timestamp.hpp
     ../include/cpprealm/managed_uuid.hpp
+    ../include/cpprealm/mixed.hpp
     ../include/cpprealm/observation.hpp
     ../include/cpprealm/results.hpp
     ../include/cpprealm/types.hpp

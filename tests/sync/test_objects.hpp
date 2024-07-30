@@ -34,21 +34,7 @@ namespace realm {
         object_id object_id_col;
         decimal128 decimal_col;
         std::vector<std::uint8_t> binary_col;
-        using my_mixed = std::variant<
-                std::monostate,
-                int64_t,
-                bool,
-                std::string,
-                double,
-                std::chrono::time_point<std::chrono::system_clock>,
-                uuid,
-                object_id,
-                decimal128,
-                std::vector<uint8_t>
-                >;
         mixed mixed_col;
-        my_mixed my_mixed_col;
-
         std::optional<int64_t> opt_int_col;
         std::optional<double> opt_double_col;
         std::optional<std::string> opt_str_col;
@@ -104,7 +90,7 @@ namespace realm {
     };
 
     REALM_SCHEMA(AllTypesObject,
-                 _id, double_col, bool_col, str_col, enum_col, date_col, uuid_col, object_id_col, decimal_col, binary_col, mixed_col, my_mixed_col,
+                 _id, double_col, bool_col, str_col, enum_col, date_col, uuid_col, object_id_col, decimal_col, binary_col, mixed_col,
                  opt_int_col, opt_double_col, opt_str_col, opt_bool_col, opt_enum_col,
                  opt_date_col, opt_uuid_col, opt_object_id_col, opt_decimal_col, opt_binary_col, opt_obj_col, opt_embedded_obj_col,
                  list_int_col, list_double_col, list_bool_col, list_str_col, list_uuid_col, list_object_id_col, list_decimal_col, list_binary_col,
@@ -132,20 +118,7 @@ namespace realm {
         std::chrono::time_point<std::chrono::system_clock> date_col;
         uuid uuid_col;
         std::vector<std::uint8_t> binary_col;
-        using my_mixed = std::variant<
-                std::monostate,
-                int64_t,
-                bool,
-                std::string,
-                double,
-                std::chrono::time_point<std::chrono::system_clock>,
-                uuid,
-                object_id,
-                decimal128,
-                std::vector<uint8_t>
-                >;
-        my_mixed mixed_col;
-
+        realm::mixed mixed_col;
         std::optional<int64_t> opt_int_col;
         std::optional<std::string> opt_str_col;
         std::optional<bool> opt_bool_col;

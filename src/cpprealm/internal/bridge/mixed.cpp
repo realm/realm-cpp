@@ -5,6 +5,15 @@
 
 namespace realm::internal::bridge {
 
+    inline CollectionType to_core_collection_type(mixed::collection_type t) {
+        switch (t) {
+            case mixed::collection_type::dictionary:
+                return CollectionType::Dictionary;
+            case mixed::collection_type::list:
+                return CollectionType::List;
+        }
+    }
+
 #define CPPREALM_OPTIONAL_MIXED(type) \
     template<> \
     mixed::mixed(const std::optional<type>& o) { \
@@ -101,6 +110,14 @@ namespace realm::internal::bridge {
         new (&m_mixed) Mixed(std::nullopt);
 #else
         m_mixed = std::make_shared<Mixed>(std::nullopt);
+#endif
+    }
+
+    mixed::mixed(mixed::collection_type t) {
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+        new (&m_mixed) Mixed(0, to_core_collection_type(t));
+#else
+        m_mixed = std::make_shared<Mixed>(0, to_core_collection_type);
 #endif
     }
 

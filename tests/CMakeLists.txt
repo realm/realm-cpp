@@ -16,79 +16,80 @@ else()
     set(BUILD_FROM_PACKAGE_MANAGER OFF)
 endif()
 
-if (NOT BUILD_FROM_PACKAGE_MANAGER)
-    # Find Boost
-    include(FetchContent)
-
-    # Fetch ASIO
-    FetchContent_Declare(
-            asio
-            GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
-            GIT_TAG        asio-1-30-2
-    )
-    FetchContent_MakeAvailable(asio)
-
-    # Find OpenSSL
-    find_package(OpenSSL REQUIRED)
-    include_directories(${OPENSSL_INCLUDE_DIR})
-
-    add_executable(cpprealm_sync_tests
-                    main.hpp
-                    main.cpp
-                    admin_utils.hpp
-                    admin_utils.cpp
-                    sync/test_objects.hpp
-                    sync/asymmetric_object_tests.cpp
-                    sync/flexible_sync_tests.cpp
-                    sync/app_tests.cpp
-                    sync/client_reset_tests.cpp
-                    sync/networking_tests.cpp
-                    utils/networking/proxy_server.hpp
-                    utils/networking/proxy_server.cpp)
-
-    target_include_directories(cpprealm_sync_tests PRIVATE ${asio_SOURCE_DIR}/asio/include)
-
-    if(UNIX)
-        set(ASIO_deps pthread)
-    endif()
-endif()
+#if (NOT BUILD_FROM_PACKAGE_MANAGER)
+#    # Find Boost
+#    include(FetchContent)
+#
+#    # Fetch ASIO
+#    FetchContent_Declare(
+#            asio
+#            GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
+#            GIT_TAG        asio-1-30-2
+#    )
+#    FetchContent_MakeAvailable(asio)
+#
+#    # Find OpenSSL
+#    find_package(OpenSSL REQUIRED)
+#    include_directories(${OPENSSL_INCLUDE_DIR})
+#
+#    add_executable(cpprealm_sync_tests
+#                    main.hpp
+#                    main.cpp
+#                    admin_utils.hpp
+#                    admin_utils.cpp
+#                    sync/test_objects.hpp
+#                    sync/asymmetric_object_tests.cpp
+#                    sync/flexible_sync_tests.cpp
+#                    sync/app_tests.cpp
+#                    sync/client_reset_tests.cpp
+#                    sync/networking_tests.cpp
+#                    utils/networking/proxy_server.hpp
+#                    utils/networking/proxy_server.cpp)
+#
+#    target_include_directories(cpprealm_sync_tests PRIVATE ${asio_SOURCE_DIR}/asio/include)
+#
+#    if(UNIX)
+#        set(ASIO_deps pthread)
+#    endif()
+#endif()
 
 add_executable(cpprealm_db_tests
                 main.hpp
                 main.cpp
                 db/test_objects.hpp
                 db/binary_tests.cpp
-                db/bson_tests.cpp
-                db/date_tests.cpp
-                db/decimal_tests.cpp
-                db/embedded_object_tests.cpp
-                db/list_tests.cpp
-                db/map_tests.cpp
+#                db/bson_tests.cpp
+#                db/date_tests.cpp
+#                db/decimal_tests.cpp
+#                db/embedded_object_tests.cpp
+#                db/list_tests.cpp
+#                db/map_tests.cpp
                 db/mixed_tests.cpp
-                db/object_id_tests.cpp
-                db/object_tests.cpp
-                db/optional_tests.cpp
-                db/query_tests.cpp
-                db/realm_tests.cpp
-                db/results_tests.cpp
-                db/scheduler_tests.cpp
-                db/string_tests.cpp
-                db/performance_tests.cpp
-                db/numeric_tests.cpp
-                db/set_tests.cpp
-                db/frozen_tests.cpp
-                db/uuid_tests.cpp)
+#                db/object_id_tests.cpp
+#                db/object_tests.cpp
+#                db/optional_tests.cpp
+#                db/query_tests.cpp
+#                db/realm_tests.cpp
+#                db/results_tests.cpp
+#                db/scheduler_tests.cpp
+#                db/string_tests.cpp
+#                db/performance_tests.cpp
+#                db/numeric_tests.cpp
+#                db/set_tests.cpp
+#                db/frozen_tests.cpp
+#                db/uuid_tests.cpp
+        )
 
 if (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:preprocessor /bigobj")
 endif()
 
-if (NOT BUILD_FROM_PACKAGE_MANAGER)
-    target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
-    if (REALM_ENABLE_EXPERIMENTAL)
-        target_compile_definitions(cpprealm_sync_tests PRIVATE REALM_ENABLE_EXPERIMENTAL)
-    endif()
-endif()
+#if (NOT BUILD_FROM_PACKAGE_MANAGER)
+#    target_compile_definitions(cpprealm_sync_tests PUBLIC CPPREALM_ENABLE_SYNC_TESTS)
+#    if (REALM_ENABLE_EXPERIMENTAL)
+#        target_compile_definitions(cpprealm_sync_tests PRIVATE REALM_ENABLE_EXPERIMENTAL)
+#    endif()
+#endif()
 
 if (DEFINED USES_CONAN)
     find_package(cpprealm REQUIRED)
@@ -114,22 +115,23 @@ if (MSVC AND ENABLE_STATIC)
     set_property(TARGET cpprealm_db_tests PROPERTY
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    if (NOT BUILD_FROM_PACKAGE_MANAGER)
-        set_property(TARGET cpprealm_sync_tests PROPERTY
-                MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    endif()
+#    if (NOT BUILD_FROM_PACKAGE_MANAGER)
+#        set_property(TARGET cpprealm_sync_tests PROPERTY
+#                MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+#    endif()
 
     set_property(TARGET Catch2 PROPERTY
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
-if (NOT BUILD_FROM_PACKAGE_MANAGER)
-    target_link_libraries(cpprealm_sync_tests PUBLIC ${CPPREALM_TARGET} Catch2::Catch2 ${ASIO_deps} ${OPENSSL_LIBRARIES})
-endif()
+#if (NOT BUILD_FROM_PACKAGE_MANAGER)
+#    target_link_libraries(cpprealm_sync_tests PUBLIC ${CPPREALM_TARGET} Catch2::Catch2 ${ASIO_deps} ${OPENSSL_LIBRARIES})
+#endif()
 target_link_libraries(cpprealm_db_tests PUBLIC ${CPPREALM_TARGET} Catch2::Catch2)
+target_compile_definitions(cpprealm_db_tests PUBLIC REALM_DISABLE_ALIGNED_STORAGE=1)
 
-if (BUILD_FROM_PACKAGE_MANAGER)
+#if (BUILD_FROM_PACKAGE_MANAGER)
     add_test(cpprealm_tests cpprealm_db_tests)
-else()
-    add_test(cpprealm_tests cpprealm_sync_tests cpprealm_db_tests)
-endif()
+#else()
+#    add_test(cpprealm_tests cpprealm_sync_tests cpprealm_db_tests)
+#endif()

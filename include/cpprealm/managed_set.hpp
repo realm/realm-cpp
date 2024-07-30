@@ -54,8 +54,9 @@ namespace realm {
 
             T operator*() const noexcept
             {
-                auto s = realm::internal::bridge::set(*m_parent->m_realm, *m_parent->m_obj, m_parent->m_key);
-                return deserialize<T>(s.get_any(m_i));
+//                auto s = realm::internal::bridge::set(*m_parent->m_realm, *m_parent->m_obj, m_parent->m_key);
+//                return deserialize<T>(s.get_any(m_i));
+                std::terminate();
             }
 
             iterator& operator++()
@@ -92,9 +93,9 @@ namespace realm {
         [[nodiscard]] std::set<T> detach() const {
             auto set = realm::internal::bridge::set(*m_realm, *m_obj, m_key);
             auto ret = std::set<T>();
-            for(size_t i = 0; i < set.size(); i++) {
-                ret.insert(deserialize<T>(set.get_any(i)));
-            }
+//            for(size_t i = 0; i < set.size(); i++) {
+//                ret.insert(deserialize<T>(set.get_any(i)));
+//            }
             return ret;
         }
 
@@ -118,13 +119,13 @@ namespace realm {
         std::pair<iterator, bool> insert(const T& v)
         {
             auto set = internal::bridge::set(*m_realm, *m_obj, m_key);
-            if constexpr (internal::type_info::MixedPersistableConcept<T>::value) {
-                std::pair<size_t, bool> res = set.insert(serialize<T>(v));
-                return std::pair<iterator, bool>(iterator(res.first, this), res.second);
-            } else {
+//            if constexpr (internal::type_info::MixedPersistableConcept<T>::value) {
+//                std::pair<size_t, bool> res = set.insert(serialize<T>(v));
+//                return std::pair<iterator, bool>(iterator(res.first, this), res.second);
+//            } else {
                 std::pair<size_t, bool> res = set.insert(v);
                 return std::pair<iterator, bool>(iterator(res.first, this), res.second);
-            }
+//            }
         }
 
         iterator insert(const iterator&, const T& v)
@@ -370,6 +371,146 @@ namespace realm {
         template<typename, typename>
         friend struct managed;
     };
+
+
+    template<>
+    struct managed<std::set<realm::mixed>> : managed_base {
+        using managed<std::set<realm::mixed>>::managed_base::operator=;
+        using value_type = realm::mixed;
+
+        class iterator {
+        public:
+            using value_type = realm::mixed;
+
+            using difference_type = std::ptrdiff_t;
+            using pointer = realm::mixed*;
+            using reference = realm::mixed&;
+            using iterator_category = std::forward_iterator_tag;
+
+            bool operator!=(const iterator& other) const
+            {
+                return !(*this == other);
+            }
+
+            bool operator==(const iterator& other) const
+            {
+                return (m_parent == other.m_parent) && (m_i == other.m_i);
+            }
+
+            realm::mixed operator*() const noexcept;
+//            {
+//                std::terminate();
+////                auto s = realm::internal::bridge::set(*m_parent->m_realm, *m_parent->m_obj, m_parent->m_key);
+////                return deserialize<realm::mixed>(s.get_any(m_i));
+//            }
+
+            iterator& operator++()
+            {
+                this->m_i++;
+                return *this;
+            }
+
+            const iterator& operator++(int i)
+            {
+                this->m_i += i;
+                return *this;
+            }
+        private:
+            template<typename, typename>
+            friend struct managed;
+
+            iterator(size_t i, managed<std::set<realm::mixed>>* parent)
+                    : m_i(i), m_parent(parent)
+            {
+            }
+            size_t m_i;
+            managed<std::set<realm::mixed>>* m_parent;
+        };
+        iterator begin()
+        {
+            return iterator(0, this);
+        }
+
+        iterator end()
+        {
+            return iterator(size(), this);
+        }
+        [[nodiscard]] std::set<realm::mixed> detach() const;
+//        {
+//            auto set = realm::internal::bridge::set(*m_realm, *m_obj, m_key);
+//            auto ret = std::set<realm::mixed>();
+////            for(size_t i = 0; i < set.size(); i++) {
+////                ret.insert(deserialize<realm::mixed>(set.get_any(i)));
+////            }
+//            return ret;
+//        }
+
+        realm::notification_token observe(std::function<void(realm::collection_change)>&& fn) {
+            auto set = std::make_shared<realm::internal::bridge::set>(*m_realm, *m_obj, m_key);
+            realm::notification_token token = set->add_notification_callback(
+                    std::make_shared<realm::collection_callback_wrapper>(
+                            std::move(fn),
+                            false));
+            token.m_realm = *m_realm;
+            token.m_set = set;
+            return token;
+        }
+
+        void erase(const iterator& /*it*/)
+        {
+//            auto set = internal::bridge::set(*m_realm, *m_obj, m_key);
+//            set.remove(serialize(*it));
+        }
+
+        std::pair<iterator, bool> insert(const realm::mixed& /*v*/)
+        {
+//            auto set = internal::bridge::set(*m_realm, *m_obj, m_key);
+//            if constexpr (internal::type_info::MixedPersistableConcept<T>::value) {
+//                std::pair<size_t, bool> res = set.insert(serialize<T>(v));
+//                return std::pair<iterator, bool>(iterator(res.first, this), res.second);
+//            } else {
+//            std::pair<size_t, bool> res = set.insert(v);
+//            return std::pair<iterator, bool>(iterator(res.first, this), res.second);
+            std::terminate();
+//            }
+        }
+
+        iterator insert(const iterator&, const realm::mixed& /*v*/)
+        {
+            std::terminate();
+//            auto set = internal::bridge::set(*m_realm, *m_obj, m_key);
+//            std::pair<size_t, bool> res = set.insert(v);
+//            return iterator(res.first, this);
+        }
+
+        iterator find(const realm::mixed& /*v*/)
+        {
+            std::terminate();
+//            auto set = internal::bridge::set(*m_realm, *m_obj, m_key);
+//            size_t idx = set.find(serialize(v));
+//            if (idx == realm::not_in_collection)
+//                return iterator(size(), this);
+//            return iterator(idx, this);
+        }
+        void clear() {
+            internal::bridge::set(*m_realm, *m_obj, m_key).remove_all();
+        }
+
+        size_t size()
+        {
+            return internal::bridge::set(*m_realm, *m_obj, m_key).size();
+        }
+
+    private:
+        managed() = default;
+        managed(const managed&) = delete;
+        managed(managed &&) = delete;
+        managed& operator=(const managed&) = delete;
+        managed& operator=(managed&&) = delete;
+        template<typename, typename>
+        friend struct managed;
+    };
+
 } // namespace realm
 
 #endif//CPPREALM_MANAGED_SET_HPP

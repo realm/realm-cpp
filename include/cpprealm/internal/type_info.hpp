@@ -39,6 +39,7 @@ namespace realm {
     struct linking_objects;
     template <typename>
     struct primary_key;
+    struct mixed;
 }
 namespace realm::internal::type_info {
     template <typename T, typename = void>
@@ -271,6 +272,13 @@ namespace realm::internal::type_info {
 //            return bridge::property::type::Mixed | bridge::property::type::Nullable;
 //        }
 //    };
+    template <>
+    struct type_info<mixed> {
+        using internal_type = bridge::mixed;
+        static constexpr bridge::property::type type() {
+            return bridge::property::type::Mixed | bridge::property::type::Nullable;
+        }
+    };
     template <typename T>
     struct type_info<std::optional<T>> {
         using internal_type = std::optional<typename type_info<T>::internal_type>;

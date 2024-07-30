@@ -128,12 +128,27 @@ namespace realm {
         }
     };
 
+    template<>
     struct accessor<realm::mixed> {
         static inline void set(internal::bridge::obj& obj,
                                const internal::bridge::col_key& key,
                                const internal::bridge::realm&,
-                               const T& value) {
-            obj.set(key, serialize(value));
+                               const realm::mixed& value) {
+
+            if (value.m_storage_mode == realm::mixed::storage_mode::dictionary) {
+                obj.set_dictionary(key);
+                auto d = obj.get_dictionary(key);
+                for(auto [key, value] : value.get_dictionary()) {
+
+                    if (value.operator*().m_storage_mode == mixed::storage_mode::dictionary) {
+                        std::terminate();
+                    }
+
+                    d.insert(key, serialize(*value));
+                }
+            } else {
+                obj.set(key, serialize(value));
+            }
         }
     };
 
@@ -366,28 +381,29 @@ namespace realm {
                         const std::map<std::string, T>& value) {
             auto d = obj.get_dictionary(key);
             for (auto& [k, v] : value) {
-                if constexpr (internal::type_info::MixedPersistableConcept<T>::value) {
-                    d.insert(k, std::visit([](auto&& arg) {
-                                 using M = typename internal::type_info::type_info<std::decay_t<decltype(arg)>>::internal_type;
-                                 return internal::bridge::mixed(M(arg));
-                             }, v));
-                } else {
-                    if constexpr (internal::type_info::is_optional<T>::value) {
-                        if constexpr (std::is_enum_v<typename T::value_type>) {
-                            if (v) {
-                                d.insert(k, static_cast<typename std::underlying_type<typename T::value_type>::type>(*v));
-                            } else {
-                                d.insert(k, internal::bridge::mixed());
-                            }
-                        } else {
-                            using U = typename internal::type_info::type_info<T, void>::internal_type;
-                            d.insert(k, U(v));
-                        }
-                    } else {
-                        using U = typename internal::type_info::type_info<T, void>::internal_type;
-                        d.insert(k, U(v));
-                    }
-                }
+                std::terminate();
+//                if constexpr (internal::type_info::MixedPersistableConcept<T>::value) {
+//                    d.insert(k, std::visit([](auto&& arg) {
+//                                 using M = typename internal::type_info::type_info<std::decay_t<decltype(arg)>>::internal_type;
+//                                 return internal::bridge::mixed(M(arg));
+//                             }, v));
+//                } else {
+//                    if constexpr (internal::type_info::is_optional<T>::value) {
+//                        if constexpr (std::is_enum_v<typename T::value_type>) {
+//                            if (v) {
+//                                d.insert(k, static_cast<typename std::underlying_type<typename T::value_type>::type>(*v));
+//                            } else {
+//                                d.insert(k, internal::bridge::mixed());
+//                            }
+//                        } else {
+//                            using U = typename internal::type_info::type_info<T, void>::internal_type;
+//                            d.insert(k, U(v));
+//                        }
+//                    } else {
+//                        using U = typename internal::type_info::type_info<T, void>::internal_type;
+//                        d.insert(k, U(v));
+//                    }
+//                }
             }
         }
     };
