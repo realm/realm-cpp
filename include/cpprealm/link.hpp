@@ -187,7 +187,7 @@ namespace realm {
         }
 
     private:
-        managed<T*>() = default;
+        managed() = default;
         template<typename, typename>
         friend struct managed;
     };
