@@ -348,6 +348,26 @@ namespace realm::internal::bridge {
         return m_mixed->is_null();
 #endif
     }
+
+    bool mixed::is_collection_type(mixed::collection_type t) const noexcept {
+        switch (t) {
+            case mixed::collection_type::dictionary:
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+                return reinterpret_cast<const Mixed *>(&m_mixed)->is_type(realm::type_Dictionary);
+#else
+                return m_mixed->is_type(realm::type_Dictionary);
+#endif
+            case mixed::collection_type::list:
+#ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
+                return reinterpret_cast<const Mixed *>(&m_mixed)->is_type(realm::type_List);
+#else
+                return m_mixed->is_type(realm::type_List);
+#endif
+        }
+
+        return false;
+    }
+
 #define __cpp_realm_gen_mixed_op(op) \
     bool operator op(const mixed& a, const mixed& b) { \
         return a.operator Mixed() op b.operator Mixed(); \

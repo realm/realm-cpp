@@ -41,38 +41,98 @@ namespace realm {
         internal::bridge::mixed get_mixed_bridge(const mixed&);
     }
 
+    struct context {
+        internal::bridge::dictionary create_nested_dictionary(internal::bridge::dictionary& d, const std::string& key);
+
+        void insert_dictionary_value(internal::bridge::dictionary& d, const std::string& key,  const mixed& values);
+        void insert_dictionary_values(internal::bridge::dictionary& d, const std::map<std::string, mixed>& values);
+
+        void set_managed(internal::bridge::obj& obj,
+                         const internal::bridge::col_key& key,
+                         const internal::bridge::realm& realm,
+                         const realm::mixed& value);
+    };
+
+
     struct mixed {
 
         struct map {
 
             struct box {
-                box(const std::shared_ptr<mixed>& m) {
-                    m_mixed = m;
+                box(std::optional<std::map<std::string, mixed>> map, const std::string& key) {
+                    m_unmanaged_map = map;
+                    m_key = key;
+                    m_is_managed = false;
+                }
+
+                box(std::optional<internal::bridge::dictionary> map, const std::string& key, internal::bridge::col_key c) {
+                    m_managed_map = map;
+                    m_key = key;
+                    m_origin_col_key = c;
+                    m_is_managed = true;
                 }
 
                 box& operator=(const mixed&) {
                     std::terminate();
                 }
 
-                box& operator=(mixed&&) {
-                    // set new value on managed object
-                    std::terminate();
+                box& operator=(mixed&& m) {
+
+                    if (m_is_managed) {
+                        context ctx;
+                        ctx.insert_dictionary_value(*m_managed_map, m_key, std::move(m));
+                    } else {
+                        std::terminate();
+                    }
+
+
+                    return *this;
                 }
 
                 mixed operator *() {
-                    return *m_mixed;
+                    if (m_is_managed) {
+                        if (m_managed_map->get(m_key).is_collection_type(internal::bridge::mixed::collection_type::dictionary)) {
+                            auto m = mixed();
+                            m.m_nested_dictionary_key = m_key;
+                            m.m_nested_managed_map = m_managed_map->get_dictionary(m_key);
+                            m.m_storage_mode = storage_mode::managed;
+                            return m;
+                        } else if (m_managed_map->get(m_key).is_collection_type(internal::bridge::mixed::collection_type::list)) {
+                            std::terminate();
+                        } else {
+                            return m_managed_map->get(m_key);
+                        }
+                    } else {
+                        return m_unmanaged_map->at(m_key);
+                    }
                 }
             private:
-                std::shared_ptr<mixed> m_mixed;
+//                std::shared_ptr<mixed> m_mixed;
+
+                bool m_is_managed = false;
+                std::string m_key;
+                std::optional<std::map<std::string, mixed>> m_unmanaged_map;
+                std::optional<internal::bridge::dictionary> m_managed_map;
+                std::optional<internal::bridge::col_key> m_origin_col_key;
+
             };
 
             map(const std::map<std::string, mixed>& o) {
                 new (&m_unmanaged_map) std::map<std::string, mixed>(o);
                 m_is_managed = false;
             }
-            map(const internal::bridge::dictionary& o) {
+            map(const internal::bridge::dictionary& o, std::optional<internal::bridge::col_key> ck = std::nullopt) {
                 new (&m_managed_map) internal::bridge::dictionary(o);
+                m_col_key = ck;
                 m_is_managed = true;
+            }
+
+            map& operator=(const std::map<std::string, mixed>& o) {
+                m_managed_map.clear();
+                context ctx;
+                ctx.insert_dictionary_values(m_managed_map, o);
+
+                return *this;
             }
 
             class iterator {
@@ -93,11 +153,11 @@ namespace realm {
                 {
                     if (m_is_managed) {
                         auto pair = m_managed_map.get_pair(m_i);
-                        return { pair.first, std::make_shared<mixed>(mixed(pair.second)) };
+                        return { pair.first, box(m_managed_map, pair.first, *m_col_key) };
                     } else {
                         auto it = m_unmanaged_map.begin();
                         std::advance(it, m_i);
-                        return std::pair { it->first, std::make_shared<mixed>(it->second) };
+                        return std::pair { it->first, box(m_unmanaged_map, it->first) };
                     }
                 }
 
@@ -118,9 +178,10 @@ namespace realm {
                     new (&m_unmanaged_map) std::map<std::string, mixed>(o);
                     m_is_managed = false;
                 }
-                iterator(size_t i, const internal::bridge::dictionary& o) {
+                iterator(size_t i, const internal::bridge::dictionary& o, internal::bridge::col_key ck) {
                     m_i = i;
                     new (&m_managed_map) internal::bridge::dictionary(o);
+                    m_col_key = ck;
                     m_is_managed = true;
                 }
 
@@ -134,14 +195,13 @@ namespace realm {
                     std::map<std::string, mixed> m_unmanaged_map;
                     internal::bridge::dictionary m_managed_map;
                 };
+                std::optional<internal::bridge::col_key> m_col_key;
                 bool m_is_managed = false;
 
-                iterator(size_t i/*, const managed<std::map<std::string, T>>* parent*/)
-                        : m_i(i)/*, m_parent(parent)*/
+                iterator(size_t i) : m_i(i)
                 {
                 }
                 size_t m_i;
-//                const managed<std::map<std::string, T>>* m_parent;
             };
 
             size_t size() const
@@ -156,7 +216,7 @@ namespace realm {
             iterator begin() const
             {
                 if (m_is_managed) {
-                    return iterator(0, m_managed_map);
+                    return iterator(0, m_managed_map, *m_col_key);
                 } else {
                     return iterator(0, m_unmanaged_map);
                 }
@@ -165,7 +225,7 @@ namespace realm {
             iterator end() const
             {
                 if (m_is_managed) {
-                    return iterator(size(), m_managed_map);
+                    return iterator(size(), m_managed_map, *m_col_key);
                 } else {
                     return iterator(size(), m_unmanaged_map);
                 }
@@ -173,10 +233,9 @@ namespace realm {
 
             box operator[] (const std::string& k) {
                 if (m_is_managed) {
-                    auto key_index = m_managed_map.get_key_index(k); // TODO: dont use index
-                    return std::make_shared<mixed>(m_managed_map.get_pair(key_index).second);
+                    return box(m_managed_map, k, *m_col_key);
                 } else {
-                    return std::make_shared<mixed>(m_unmanaged_map[k]);
+                    return box(m_unmanaged_map, k);
                 }
             }
 
@@ -202,6 +261,7 @@ namespace realm {
                 std::map<std::string, mixed> m_unmanaged_map;
                 internal::bridge::dictionary m_managed_map;
             };
+            std::optional<internal::bridge::col_key> m_col_key;
             bool m_is_managed = false;
         };
 
@@ -234,7 +294,7 @@ namespace realm {
                 case storage_mode::unmanaged_object:
                     new (&m_unmanaged_object) std::shared_ptr<void>(other.m_unmanaged_object);
                     break;
-                case storage_mode::dictionary:
+                case storage_mode::unmanaged_dictionary:
                     new (&m_unmanaged_map) std::map<std::string, mixed>(other.m_unmanaged_map);
                     break;
                 case storage_mode::vector:
@@ -257,7 +317,7 @@ namespace realm {
                 case storage_mode::unmanaged_object:
                     new (&m_unmanaged_object) std::shared_ptr<void>(std::move(other.m_unmanaged_object));
                     break;
-                case storage_mode::dictionary:
+                case storage_mode::unmanaged_dictionary:
                     new (&m_unmanaged_map) std::map<std::string, mixed>(std::move(other.m_unmanaged_map));
                     break;
                 case storage_mode::vector:
@@ -280,7 +340,7 @@ namespace realm {
                 case storage_mode::unmanaged_object:
                     new (&m_unmanaged_object) std::shared_ptr<void>(other.m_unmanaged_object);
                     break;
-                case storage_mode::dictionary:
+                case storage_mode::unmanaged_dictionary:
                     new (&m_unmanaged_map) std::map<std::string, mixed>(other.m_unmanaged_map);
                     break;
                 case storage_mode::vector:
@@ -305,7 +365,7 @@ namespace realm {
                 case storage_mode::unmanaged_object:
                     new (&m_unmanaged_object) std::shared_ptr<void>(std::move(other.m_unmanaged_object));
                     break;
-                case storage_mode::dictionary:
+                case storage_mode::unmanaged_dictionary:
                     new (&m_unmanaged_map) std::map<std::string, mixed>(std::move(other.m_unmanaged_map));
                     break;
                 case storage_mode::vector:
@@ -339,7 +399,7 @@ namespace realm {
 
         mixed(const std::map<std::string, mixed>& o) {
             new (&m_unmanaged_map) std::map<std::string, mixed>(o);
-            m_storage_mode = storage_mode::dictionary;
+            m_storage_mode = storage_mode::unmanaged_dictionary;
         }
 
         // unmanaged
@@ -351,23 +411,24 @@ namespace realm {
 
         // managed
         template <typename T>
-        mixed(const managed<T, void>&) {
+        mixed(const managed<T, void>& link) {
+            m_mixed = internal::bridge::mixed(internal::bridge::obj_link(link.m_obj.get_table().get_key(), link.m_obj.get_key()));
+            m_storage_mode = storage_mode::mixed_bridge;
         }
 
         template <typename T>
-        mixed(const managed<T*, void>&) {
+        mixed(const managed<T*, void>& link) {
+            m_mixed = internal::bridge::mixed(internal::bridge::obj_link(link.m_obj.get_table().get_key(), link.m_obj.get_key()));
+            m_storage_mode = storage_mode::mixed_bridge;
         }
 
-//        template <typename T>
-//        mixed(const T*) {
-//        }
-        map get_dictionary() const;
+        map get_dictionary() const; // TODO: Make private
 
         enum class storage_mode {
             uninitialized,
             mixed_bridge,
             unmanaged_object,
-            dictionary,
+            unmanaged_dictionary,
             vector,
             managed
         };
@@ -379,6 +440,10 @@ namespace realm {
             std::map<std::string, mixed> m_unmanaged_map;
             std::vector<mixed> m_unmanaged_vector;
         };
+
+
+        std::optional<std::string> m_nested_dictionary_key;
+        std::optional<internal::bridge::dictionary> m_nested_managed_map;
 
     private:
         friend bool operator==(const realm::mixed&, const realm::mixed&);
@@ -406,6 +471,7 @@ namespace realm {
     bool operator<(const realm::mixed&, const realm::mixed&);
     bool operator<=(const realm::mixed&, const realm::mixed&);
 
+
     template <typename T>
     inline T mixed_cast(const mixed&);
 
@@ -419,7 +485,7 @@ namespace realm {
                 return o.m_mixed.operator std::string();
             case mixed::storage_mode::unmanaged_object:
                 break;
-            case mixed::storage_mode::dictionary:
+            case mixed::storage_mode::unmanaged_dictionary:
                 break;
             case mixed::storage_mode::vector:
                 break;

@@ -102,6 +102,7 @@ namespace realm::internal::bridge {
     struct notification_token;
     struct collection_change_callback;
     struct obj;
+    struct col_key;
 
     struct core_dictionary {
         core_dictionary();
@@ -144,6 +145,9 @@ namespace realm::internal::bridge {
         ~dictionary();
         dictionary(const Dictionary& v); //NOLINT(google-explicit-constructor)
         operator Dictionary() const; //NOLINT(google-explicit-constructor)
+        mixed get(const std::string& key) const;
+        void insert_dictionary(const std::string& key);
+        dictionary get_dictionary(const std::string& key);
         void insert(const std::string& key, const mixed& value);
         void insert(const std::string &key, const std::string &value);
         [[nodiscard]] size_t size() const;

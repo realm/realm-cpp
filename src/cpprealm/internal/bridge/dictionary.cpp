@@ -1,4 +1,6 @@
 #include <cpprealm/internal/bridge/dictionary.hpp>
+
+#include <cpprealm/internal/bridge/col_key.hpp>
 #include <cpprealm/internal/bridge/mixed.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
@@ -206,6 +208,18 @@ namespace realm::internal::bridge {
     }
     size_t dictionary::size() const {
         return get_dictionary()->size();
+    }
+
+    mixed dictionary::get(const std::string& key) const {
+        return get_dictionary()->get<Mixed>(key);
+    }
+
+    void dictionary::insert_dictionary(const std::string& key) {
+        get_dictionary()->insert_collection(PathElement(key), CollectionType::Dictionary);
+    }
+
+    dictionary dictionary::get_dictionary(const std::string& key) {
+        return get_dictionary()->get_dictionary(key);
     }
 
     void dictionary::insert(const std::string &key, const mixed &value) {

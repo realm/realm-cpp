@@ -100,6 +100,7 @@ namespace realm::internal::bridge {
 
         [[nodiscard]] data_type type() const noexcept;
         [[nodiscard]] bool is_null() const noexcept;
+        [[nodiscard]] bool is_collection_type(collection_type) const noexcept;
     private:
         std::string m_owned_string;
         binary m_owned_data;

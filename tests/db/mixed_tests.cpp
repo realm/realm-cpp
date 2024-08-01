@@ -9,6 +9,9 @@ TEST_CASE("mixed", "[mixed]") {
     config.set_path(path);
     SECTION("unmanaged_managed_mixed_get_set", "[mixed]") {
         auto obj = AllTypesObject();
+        auto obj2 = AllTypesObject();
+        obj2._id = 2;
+
         obj.mixed_col = (int64_t)42;
         CHECK(obj.mixed_col == realm::mixed((int64_t)42));
         auto realm = db(std::move(config));
@@ -46,9 +49,9 @@ TEST_CASE("mixed", "[mixed]") {
 //        });
 //        CHECK(managed_obj.mixed_col == u);
 
-        auto obj2 = AllTypesObject();
-
-        auto xx = realm::mixed(obj2);
+//        auto obj2 = AllTypesObject();
+//
+//        auto xx = realm::mixed(obj2);
 
 //        auto x = realm::mixed(managed_obj);
 
@@ -63,18 +66,47 @@ TEST_CASE("mixed", "[mixed]") {
             return realm.add(std::move(obj));
         });
 
+        auto managed_obj2 = realm.write([&realm, &obj2] {
+            return realm.add(std::move(obj2));
+        });
+
         std::map<std::string, realm::mixed> d = realm::mixed_cast<std::map<std::string, realm::mixed>>(*managed_obj.mixed_col);
         realm::mixed::map e = realm::mixed_cast<realm::mixed::map>(*managed_obj.mixed_col);
 
         auto xxx = realm::mixed_cast<std::string>(*e["foo"]);
 
-        e["foo"] = realm::mixed("dog");
+        realm.write([&] {
+            e["foo"] = realm::mixed("dog");
+        });
+
+        realm.write([&] {
+            e["foo"] = std::map<std::string, mixed>({{"bar", mixed("dog")}});
+        });
+
+        realm.write([&] {
+            auto x = realm::mixed_cast<realm::mixed::map>(*e["foo"]);
+
+            x = std::map<std::string, mixed>({{"bar", mixed("dog")}});
+        });
+
 
         auto x = realm::mixed_cast<std::string>(d["foo"]);
-        d["bar"] = realm::mixed(managed_obj);
+
+
+        realm.write([&] {
+            e["bar"] = realm::mixed(managed_obj2);
+        });
+
+        realm.write([&] {
+            AllTypesObjectLink link;
+            e["link"] = realm::mixed(link);
+        });
 
         std::string a = realm::mixed_cast<std::string>(d["foo"]);
 //        managed<AllTypesObject> a = d["bar"]->get<managed<AllTypesObject>>();
+
+
+
 
     }
 

@@ -586,6 +586,7 @@ rbool managed<std::optional<type>>::operator op(const std::optional<type>& rhs) 
         internal::bridge::realm m_realm;                                                            \
         rbool* m_rbool_query = nullptr;                                                             \
         friend struct db;                                                                           \
+        friend struct mixed;                                                                        \
         template <typename, typename> friend struct managed;                                        \
         template <typename, typename> friend struct box;                                            \
         template <typename> friend struct ::realm::thread_safe_reference;                           \

@@ -132,23 +132,11 @@ namespace realm {
     struct accessor<realm::mixed> {
         static inline void set(internal::bridge::obj& obj,
                                const internal::bridge::col_key& key,
-                               const internal::bridge::realm&,
-                               const realm::mixed& value) {
+                               const internal::bridge::realm& realm,
+                               realm::mixed& value) {
 
-            if (value.m_storage_mode == realm::mixed::storage_mode::dictionary) {
-                obj.set_dictionary(key);
-                auto d = obj.get_dictionary(key);
-                for(auto [key, value] : value.get_dictionary()) {
-
-                    if (value.operator*().m_storage_mode == mixed::storage_mode::dictionary) {
-                        std::terminate();
-                    }
-
-                    d.insert(key, serialize(*value));
-                }
-            } else {
-                obj.set(key, serialize(value));
-            }
+            context ctx;
+            ctx.set_managed(obj, key, realm, value);
         }
     };
 
