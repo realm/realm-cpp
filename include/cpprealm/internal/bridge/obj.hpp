@@ -223,6 +223,7 @@ namespace realm::internal::bridge {
         [[nodiscard]] obj_link get_link() const;
         lnklst get_linklist(const col_key& col_key);
         void set_dictionary(const col_key& col_key);
+        void set_list(const col_key& col_key);
         core_dictionary get_dictionary(const col_key& col_key);
         void set_null(const col_key&);
         obj create_and_set_linked_object(const col_key&);

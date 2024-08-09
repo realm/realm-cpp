@@ -55,7 +55,8 @@ namespace realm {
         }
 
         managed& operator =(const mixed& v) {
-            m_obj->set(m_key, internal::get_mixed_bridge(v));
+            context ctx;
+            ctx.set_managed(*m_obj, m_key, *m_realm, v);
             return *this;
         }
 

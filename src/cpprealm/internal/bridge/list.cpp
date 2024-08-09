@@ -1,6 +1,7 @@
 #include <cpprealm/internal/bridge/list.hpp>
 
 #include <cpprealm/internal/bridge/col_key.hpp>
+#include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/mixed.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/results.hpp>
@@ -137,6 +138,23 @@ namespace realm::internal::bridge {
     table list::get_table() const {
         return get_list()->get_table();
     }
+
+    void list::create_nested_dictionary(size_t idx) {
+        get_list()->insert_collection(idx, CollectionType::Dictionary);
+    }
+
+    dictionary list::get_dictionary(size_t idx) {
+        return get_list()->get_dictionary(idx);
+    }
+
+    list list::get_list(size_t idx) {
+        return get_list()->get_list(idx);
+    }
+
+    void list::create_nested_list(size_t idx) {
+        get_list()->insert_collection(idx, CollectionType::List);
+    }
+
     size_t list::size() const {
         return get_list()->size();
     }

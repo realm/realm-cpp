@@ -30,6 +30,7 @@ namespace realm {
 }
 
 namespace realm::internal::bridge {
+    struct dictionary;
     struct realm;
     struct obj;
     struct obj_key;
@@ -60,6 +61,11 @@ namespace realm::internal::bridge {
         [[nodiscard]] size_t size() const;
         void remove(size_t idx);
         void remove_all();
+
+        void create_nested_dictionary(size_t idx);
+        void create_nested_list(size_t idx);
+        dictionary get_dictionary(size_t idx);
+        list get_list(size_t idx);
 
         table get_table() const;
 

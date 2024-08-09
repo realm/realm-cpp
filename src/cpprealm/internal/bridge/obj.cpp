@@ -243,6 +243,10 @@ namespace realm::internal::bridge {
         get_obj()->set_collection(col_key, CollectionType::Dictionary);
     }
 
+    void obj::set_list(const col_key& col_key) {
+        get_obj()->set_collection(col_key, CollectionType::List);
+    }
+
     core_dictionary obj::get_dictionary(const col_key& col_key) {
         return get_obj()->get_dictionary(col_key);
     }

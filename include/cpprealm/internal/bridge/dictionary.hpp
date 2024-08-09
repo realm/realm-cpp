@@ -103,6 +103,7 @@ namespace realm::internal::bridge {
     struct collection_change_callback;
     struct obj;
     struct col_key;
+    struct list;
 
     struct core_dictionary {
         core_dictionary();
@@ -148,6 +149,8 @@ namespace realm::internal::bridge {
         mixed get(const std::string& key) const;
         void insert_dictionary(const std::string& key);
         dictionary get_dictionary(const std::string& key);
+        void insert_list(const std::string& key);
+        list get_list(const std::string& key);
         void insert(const std::string& key, const mixed& value);
         void insert(const std::string &key, const std::string &value);
         [[nodiscard]] size_t size() const;
