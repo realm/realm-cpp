@@ -25,16 +25,12 @@
 
 #include <utility>
 
-#include <cpprealm/bson.hpp>
 #include <cpprealm/schema.hpp>
 #include <cpprealm/notifications.hpp>
-#include <cpprealm/app.hpp>
-#include <cpprealm/flex_sync.hpp>
 #include <cpprealm/thread_safe_reference.hpp>
 #include <cpprealm/rbool.hpp>
 
 #include <cpprealm/db.hpp>
-#include <cpprealm/client_reset.hpp>
 #include <cpprealm/link.hpp>
 #include <cpprealm/macros.hpp>
 #include <cpprealm/managed_binary.hpp>

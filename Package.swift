@@ -120,8 +120,7 @@ let package = Package(
                 "db/results_tests.cpp",
                 "db/run_loop_tests.cpp",
                 "db/set_tests.cpp",
-                "db/string_tests.cpp",
-                "db/bson_tests.cpp"
+                "db/string_tests.cpp"
             ],
             resources: [
                 .copy("setup_baas.rb"),

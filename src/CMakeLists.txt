@@ -9,11 +9,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpprealm/version_numbers.hpp
         COMPONENT devel)
 
 set(SOURCES
-    cpprealm/analytics.cpp
-    cpprealm/app.cpp
-    cpprealm/bson.cpp
     cpprealm/db.cpp
-    cpprealm/client_reset.cpp
     cpprealm/managed_binary.cpp
     cpprealm/managed_decimal.cpp
     cpprealm/managed_numeric.cpp
@@ -23,7 +19,6 @@ set(SOURCES
     cpprealm/managed_timestamp.cpp
     cpprealm/managed_uuid.cpp
     cpprealm/types.cpp
-    cpprealm/flex_sync.cpp
     cpprealm/internal/bridge/async_open_task.cpp
     cpprealm/internal/bridge/binary.cpp
     cpprealm/internal/bridge/col_key.cpp
@@ -44,30 +39,18 @@ set(SOURCES
     cpprealm/internal/bridge/schema.cpp
     cpprealm/internal/bridge/set.cpp
     cpprealm/internal/bridge/status.cpp
-    cpprealm/internal/bridge/sync_error.cpp
-    cpprealm/internal/bridge/sync_manager.cpp
-    cpprealm/internal/bridge/sync_session.cpp
     cpprealm/internal/bridge/table.cpp
     cpprealm/internal/bridge/thread_safe_reference.cpp
     cpprealm/internal/bridge/timestamp.cpp
     cpprealm/internal/bridge/uuid.cpp
-    cpprealm/internal/networking/network_transport.cpp
-    cpprealm/internal/networking/shims.cpp
-    cpprealm/internal/networking/utils.cpp
     cpprealm/internal/scheduler/realm_core_scheduler.cpp
-    cpprealm/networking/http.cpp
-    cpprealm/networking/websocket.cpp
     cpprealm/schedulers/default_scheduler.cpp
     cpprealm/logger.cpp
     cpprealm/sdk.cpp) # REALM_SOURCES
 
 set(HEADERS
-    ../include/cpprealm/analytics.hpp
-    ../include/cpprealm/app.hpp
     ../include/cpprealm/accessors.hpp
-    ../include/cpprealm/bson.hpp
     ../include/cpprealm/db.hpp
-    ../include/cpprealm/client_reset.hpp
     ../include/cpprealm/link.hpp
     ../include/cpprealm/macros.hpp
     ../include/cpprealm/managed_binary.hpp
@@ -85,7 +68,6 @@ set(HEADERS
     ../include/cpprealm/observation.hpp
     ../include/cpprealm/results.hpp
     ../include/cpprealm/types.hpp
-    ../include/cpprealm/flex_sync.hpp
     ../include/cpprealm/internal/bridge/async_open_task.hpp
     ../include/cpprealm/internal/bridge/binary.hpp
     ../include/cpprealm/internal/bridge/col_key.hpp
@@ -106,21 +88,14 @@ set(HEADERS
     ../include/cpprealm/internal/bridge/schema.hpp
     ../include/cpprealm/internal/bridge/set.hpp
     ../include/cpprealm/internal/bridge/status.hpp
-    ../include/cpprealm/internal/bridge/sync_error.hpp
-    ../include/cpprealm/internal/bridge/sync_manager.hpp
-    ../include/cpprealm/internal/bridge/sync_session.hpp
     ../include/cpprealm/internal/bridge/table.hpp
     ../include/cpprealm/internal/bridge/thread_safe_reference.hpp
     ../include/cpprealm/internal/bridge/timestamp.hpp
     ../include/cpprealm/internal/bridge/utils.hpp
     ../include/cpprealm/internal/bridge/uuid.hpp
     ../include/cpprealm/internal/type_info.hpp
-    ../include/cpprealm/internal/networking/shims.hpp
-    ../include/cpprealm/internal/networking/utils.hpp
     ../include/cpprealm/internal/scheduler/realm_core_scheduler.hpp
     ../include/cpprealm/schedulers/default_scheduler.hpp
-    ../include/cpprealm/networking/http.hpp
-    ../include/cpprealm/networking/websocket.hpp
     ../include/cpprealm/logger.hpp
     ../include/cpprealm/notifications.hpp
     ../include/cpprealm/rbool.hpp

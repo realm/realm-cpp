@@ -31,23 +31,7 @@
 namespace realm {
     class Realm;
     struct RealmConfig;
-    struct SyncConfig;
     struct scheduler;
-    class SyncUser;
-    namespace app {
-        class User;
-    }
-
-    enum class client_reset_mode: uint8_t {
-        // Fire a client reset error
-        manual,
-        // Discard unsynced local changes, without disrupting accessors or closing the Realm
-        discard_unsynced,
-        // Attempt to recover unsynchronized but committed changes.
-        recover,
-        // Attempt recovery and if that fails, discard local.
-        recover_or_discard,
-    };
 }
 
 namespace realm::internal::bridge {
@@ -65,34 +49,6 @@ namespace realm::internal::bridge {
     struct sync_error;
 
     struct realm {
-        enum class sync_session_stop_policy: uint8_t {
-            immediately,          // Immediately stop the session as soon as all Realms/Sessions go out of scope.
-            live_indefinitely,     // Never stop the session.
-            after_changes_uploaded, // Once all Realms/Sessions go out of scope, wait for uploads to complete and stop.
-        };
-
-        struct sync_config {
-
-            struct proxy_config {
-                using port_type = std::uint_fast16_t;
-                std::string address;
-                port_type port;
-                // For basic authorization.
-                std::optional<std::pair<std::string, std::string>> username_password;
-            };
-
-            struct flx_sync_enabled {};
-            sync_config() {}
-            sync_config(const std::shared_ptr<SyncUser> &user);
-            sync_config(const std::shared_ptr<SyncConfig> &);//NOLINT(google-explicit-constructor)
-            operator std::shared_ptr<SyncConfig>() const;    //NOLINT(google-explicit-constructor)
-            void set_stop_policy(sync_session_stop_policy &&);
-            void set_error_handler(std::function<void(const sync_session &, const sync_error &)> &&fn);
-
-        private:
-            std::shared_ptr<SyncConfig> m_config;
-        };
-
         struct config {
             // How to handle update_schema() being called on a file which has
             // already been initialized with a different schema
@@ -193,29 +149,11 @@ namespace realm::internal::bridge {
             void set_schema(const std::vector<object_schema>&);
             void set_schema_mode(schema_mode);
             void set_scheduler(const std::shared_ptr<struct scheduler>&);
-            void set_sync_config(const std::optional<struct sync_config>&);
-            void set_custom_http_headers(const std::map<std::string, std::string>& headers);
-            void set_proxy_config(const sync_config::proxy_config&);
             void set_schema_version(uint64_t version);
             void set_encryption_key(const std::array<char, 64>&);
             void should_compact_on_launch(std::function<bool(uint64_t total_bytes, uint64_t unused_bytes)>&& fn);
             std::optional<schema> get_schema();
-
-            template<typename T>
-            void set_client_reset_handler(const client_reset_mode_base<T>& handler) {
-                before_client_reset([fn = std::move(handler.m_before)](realm local_realm) {
-                    fn(local_realm.freeze());
-                });
-                after_client_reset([fn = std::move(handler.m_after)](realm local_realm, realm remote_realm) {
-                    fn(local_realm.freeze(), remote_realm);
-                });
-                set_client_reset_mode(handler.m_mode);
-            }
-            enum client_reset_mode get_client_reset_mode() const;
         private:
-            void set_client_reset_mode(enum client_reset_mode mode);
-            void before_client_reset(std::function<void(realm old_realm)> callback);
-            void after_client_reset(std::function<void(realm local_realm, realm remote_realm)> callback);
             inline RealmConfig* get_config();
             inline const RealmConfig* get_config() const;
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
@@ -251,15 +189,6 @@ namespace realm::internal::bridge {
     private:
         std::shared_ptr<Realm> m_realm;
         friend struct group;
-    };
-
-    template<typename T>
-    struct client_reset_mode_base {
-    protected:
-        std::function<void(T local)> m_before;
-        std::function<void(T local, T remote)> m_after;
-        ::realm::client_reset_mode m_mode;
-        friend struct internal::bridge::realm::config;
     };
 
     template <typename T>

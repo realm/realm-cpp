@@ -1,10 +1,6 @@
 #include <cpprealm/db.hpp>
-#include <cpprealm/flex_sync.hpp>
 
 namespace realm {
-    ::realm::sync_subscription_set db::subscriptions() {
-        return ::realm::sync_subscription_set(m_realm);
-    }
 
     bool db::is_frozen() const {
         return m_realm.is_frozen();

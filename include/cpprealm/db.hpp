@@ -26,9 +26,7 @@
 #include <cpprealm/schema.hpp>
 #include <cpprealm/types.hpp>
 
-#include <cpprealm/internal/bridge/sync_session.hpp>
 #include <cpprealm/internal/bridge/thread_safe_reference.hpp>
-#include <cpprealm/internal/bridge/sync_session.hpp>
 
 #include <filesystem>
 #include <optional>
@@ -47,13 +45,7 @@ namespace realm {
         struct property;
     }
 
-    using sync_config = internal::bridge::realm::sync_config;
     using db_config = internal::bridge::realm::config;
-    using sync_session = internal::bridge::sync_session;
-    using sync_error = internal::bridge::sync_error;
-
-    struct sync_subscription_set;
-
     template <typename T>
     struct thread_safe_reference;
 }
@@ -158,12 +150,6 @@ namespace realm {
             return m_realm.refresh();
         }
 
-        ::realm::sync_subscription_set subscriptions();
-
-        std::optional<sync_session> get_sync_session() const {
-            return m_realm.get_sync_session();
-        }
-
         template <typename T>
         managed<T> resolve(thread_safe_reference<T>&& tsr)
         {
@@ -180,8 +166,6 @@ namespace realm {
         bool is_closed();
         friend struct ::realm::thread_safe_reference<db>;
         template <typename, typename> friend struct managed;
-        template<typename T>
-        friend void internal::bridge::realm::config::set_client_reset_handler(const client_reset_mode_base<T>&);
     private:
         db(internal::bridge::realm&& r)
         {

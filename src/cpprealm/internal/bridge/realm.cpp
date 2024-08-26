@@ -1,7 +1,5 @@
 #include <cpprealm/internal/bridge/realm.hpp>
 
-#include <cpprealm/analytics.hpp>
-#include <cpprealm/app.hpp>
 #include <cpprealm/logger.hpp>
 #include <cpprealm/internal/bridge/async_open_task.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
@@ -9,8 +7,6 @@
 #include <cpprealm/internal/bridge/object.hpp>
 #include <cpprealm/internal/bridge/object_schema.hpp>
 #include <cpprealm/internal/bridge/schema.hpp>
-#include <cpprealm/internal/bridge/sync_error.hpp>
-#include <cpprealm/internal/bridge/sync_session.hpp>
 #include <cpprealm/internal/bridge/table.hpp>
 #include <cpprealm/internal/bridge/thread_safe_reference.hpp>
 #include <cpprealm/internal/scheduler/realm_core_scheduler.hpp>
@@ -21,8 +17,6 @@
 
 #include <realm/object-store/schema.hpp>
 #include <realm/object-store/shared_realm.hpp>
-#include <realm/object-store/sync/sync_session.hpp>
-#include <realm/object-store/sync/sync_user.hpp>
 #include <realm/object-store/thread_safe_reference.hpp>
 #include <realm/object-store/util/scheduler.hpp>
 #include <realm/sync/config.hpp>
@@ -42,11 +36,6 @@ namespace realm::internal::bridge {
     static_assert((uint8_t)realm::config::schema_mode::additive_discovered == (uint8_t)::realm::SchemaMode::AdditiveDiscovered);
     static_assert((uint8_t)realm::config::schema_mode::additive_explicit == (uint8_t)::realm::SchemaMode::AdditiveExplicit);
     static_assert((uint8_t)realm::config::schema_mode::manual == (uint8_t)::realm::SchemaMode::Manual);
-
-    static_assert((uint8_t)client_reset_mode::discard_unsynced == (uint8_t)::realm::ClientResyncMode::DiscardLocal);
-    static_assert((uint8_t)client_reset_mode::manual == (uint8_t)::realm::ClientResyncMode::Manual);
-    static_assert((uint8_t)client_reset_mode::recover == (uint8_t)::realm::ClientResyncMode::Recover);
-    static_assert((uint8_t)client_reset_mode::recover_or_discard == (uint8_t)::realm::ClientResyncMode::RecoverOrDiscard);
 
     class null_logger : public ::realm::logger {
     public:
@@ -164,13 +153,6 @@ namespace realm::internal::bridge {
 #endif
     }
 
-    realm::sync_config::sync_config(const std::shared_ptr<SyncConfig> &v) {
-        m_config = v;
-    }
-    realm::sync_config::operator std::shared_ptr<SyncConfig>() const {
-        return m_config;
-    }
-
     inline RealmConfig* realm::config::get_config() {
 #ifdef CPPREALM_HAVE_GENERATED_BRIDGE_TYPES
         return reinterpret_cast<RealmConfig*>(&m_config);
@@ -233,7 +215,6 @@ namespace realm::internal::bridge {
             auto logger = std::make_shared<null_logger>();
             logger->set_level_threshold(logger::level::off);
             set_default_logger(logger);
-            realm_analytics::send();
             initialized = true;
         }
         m_realm = Realm::get_shared_realm(static_cast<RealmConfig>(v));
@@ -267,32 +248,6 @@ namespace realm::internal::bridge {
         }
         get_config()->scheduler = create_scheduler_shim(s);
     }
-    void realm::config::set_sync_config(const std::optional<struct sync_config> &s) {
-        if (s)
-            get_config()->sync_config = static_cast<std::shared_ptr<SyncConfig>>(*s);
-        else
-            get_config()->sync_config = nullptr;
-    }
-
-    void realm::config::set_custom_http_headers(const std::map<std::string, std::string>& headers) {
-        if (get_config()->sync_config) {
-            get_config()->sync_config->custom_http_headers = headers;
-        } else {
-            throw std::logic_error("HTTP headers can only be set on a config for a synced Realm.");
-        }
-    }
-
-    void realm::config::set_proxy_config(const sync_config::proxy_config& config) {
-        if (get_config()->sync_config) {
-            SyncConfig::ProxyConfig core_config;
-            core_config.address = config.address;
-            core_config.port = config.port;
-            core_config.type = SyncConfig::ProxyConfig::Type::HTTP;
-            get_config()->sync_config->proxy_config = std::move(core_config);
-        } else {
-            throw std::logic_error("Proxy configuration can only be set on a config for a synced Realm.");
-        }
-    }
 
     void realm::config::set_schema_version(uint64_t version) {
         get_config()->schema_version = version;
@@ -309,30 +264,6 @@ namespace realm::internal::bridge {
         get_config()->should_compact_on_launch_function = std::move(fn);
     }
 
-    enum ::realm::client_reset_mode realm::config::get_client_reset_mode() const {
-        return static_cast<enum ::realm::client_reset_mode>(get_config()->sync_config->client_resync_mode);
-    }
-
-    void realm::config::set_client_reset_mode(enum client_reset_mode mode) {
-        get_config()->sync_config->client_resync_mode = static_cast<ClientResyncMode>(mode);
-    }
-
-    void realm::config::before_client_reset(std::function<void(realm old_realm)> callback) {
-        get_config()->sync_config->notify_before_client_reset = [cb = std::move(callback)](::realm::SharedRealm old) {
-            cb(realm(old));
-        };
-    }
-    void realm::config::after_client_reset(std::function<void(realm local_realm, realm remote_realm)> callback) {
-        get_config()->sync_config->notify_after_client_reset = [cb = std::move(callback)](::realm::SharedRealm local,
-                                                                                          ::realm::ThreadSafeReference remote, bool) {
-            cb(realm(local), realm(::realm::Realm::get_shared_realm(std::move(remote), create_scheduler_shim(default_scheduler::make_default()))));
-        };
-    }
-
-    realm::sync_config realm::config::sync_config() const {
-        return get_config()->sync_config;
-    }
-
     struct std::shared_ptr<scheduler> realm::config::scheduler() const {
         return std::make_shared<realm_core_scheduler>(realm_core_scheduler(get_config()->scheduler));
     }
@@ -343,21 +274,6 @@ namespace realm::internal::bridge {
 
     async_open_task realm::get_synchronized_realm(const config &c) {
         return Realm::get_synchronized_realm(c);
-    }
-
-    void realm::sync_config::set_error_handler(std::function<void(const sync_session &, const sync_error &)> &&fn) {
-        m_config->error_handler = [fn = std::move(fn)](const std::shared_ptr<SyncSession>& session,
-                                                       SyncError&& error) {
-            fn(session, std::move(error));
-        };
-    }
-
-    void realm::sync_config::set_stop_policy(realm::sync_session_stop_policy &&v) {
-        m_config->stop_policy = static_cast<SyncSessionStopPolicy>(v);
-    }
-
-    realm::sync_config::sync_config(const std::shared_ptr<SyncUser> &user) {
-        m_config = std::make_shared<SyncConfig>(user, SyncConfig::FLXSyncEnabled{});
     }
 
     void realm::config::set_path(const std::string &path) {
@@ -407,15 +323,6 @@ namespace realm::internal::bridge {
 
     obj realm::import_copy_of(const obj& o) const {
         return m_realm->import_copy_of(o.operator Obj());
-    }
-
-    [[nodiscard]] std::optional<sync_session> realm::get_sync_session() const {
-        auto& config = m_realm->config().sync_config;
-        if (!config) {
-            return std::nullopt;
-        }
-
-        return sync_session(m_realm->sync_session());
     }
 
     table realm::get_table(const uint32_t &key) {
