@@ -1,7 +1,6 @@
 #include <cpprealm/internal/bridge/realm.hpp>
 
 #include <cpprealm/logger.hpp>
-#include <cpprealm/internal/bridge/async_open_task.hpp>
 #include <cpprealm/internal/bridge/dictionary.hpp>
 #include <cpprealm/internal/bridge/obj.hpp>
 #include <cpprealm/internal/bridge/object.hpp>
@@ -19,7 +18,6 @@
 #include <realm/object-store/shared_realm.hpp>
 #include <realm/object-store/thread_safe_reference.hpp>
 #include <realm/object-store/util/scheduler.hpp>
-#include <realm/sync/config.hpp>
 
 #if defined(REALM_AOSP_VENDOR)
 #include <unistd.h>
@@ -270,10 +268,6 @@ namespace realm::internal::bridge {
 
     struct std::shared_ptr<scheduler> realm::scheduler() const {
         return std::make_shared<realm_core_scheduler>(realm_core_scheduler(m_realm->scheduler()));
-    }
-
-    async_open_task realm::get_synchronized_realm(const config &c) {
-        return Realm::get_synchronized_realm(c);
     }
 
     void realm::config::set_path(const std::string &path) {

@@ -5,10 +5,6 @@ set(BRIDGE_TYPE_REQUIRED_HEADERS
     realm/object-store/list.hpp
     realm/object-store/results.hpp
     realm/object-store/thread_safe_reference.hpp
-    realm/object-store/sync/app.hpp
-    realm/sync/config.hpp
-    realm/sync/subscriptions.hpp
-    realm/util/bson/bson.hpp
 )
 
 set(BRIDGE_TYPES
@@ -37,7 +33,6 @@ set(BRIDGE_TYPES
     Results realm::Results
     Schema realm::Schema
     Set realm::object_store::Set
-    SyncError realm::SyncError
     TableRef realm::TableRef
     TableView realm::TableView
     ThreadSafeReference realm::ThreadSafeReference
@@ -45,13 +40,6 @@ set(BRIDGE_TYPES
     UUID realm::UUID
     Status realm::Status
     ErrorCategory realm::ErrorCategory
-    AppCredentials realm::app::AppCredentials
-    AppError realm::app::AppError
-    SyncSubscriptionSet realm::sync::SubscriptionSet
-    MutableSyncSubscriptionSet realm::sync::MutableSubscriptionSet
-    Bson realm::bson::Bson
-    BsonIndexedMap realm::bson::IndexedMap<realm::bson::Bson>
-    BsonDocument realm::bson::BsonDocument
 )
 
 set(TYPE_INFO_QUERY_DECLS "")

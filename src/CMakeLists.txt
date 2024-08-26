@@ -19,7 +19,6 @@ set(SOURCES
     cpprealm/managed_timestamp.cpp
     cpprealm/managed_uuid.cpp
     cpprealm/types.cpp
-    cpprealm/internal/bridge/async_open_task.cpp
     cpprealm/internal/bridge/binary.cpp
     cpprealm/internal/bridge/col_key.cpp
     cpprealm/internal/bridge/decimal128.cpp
@@ -68,7 +67,6 @@ set(HEADERS
     ../include/cpprealm/observation.hpp
     ../include/cpprealm/results.hpp
     ../include/cpprealm/types.hpp
-    ../include/cpprealm/internal/bridge/async_open_task.hpp
     ../include/cpprealm/internal/bridge/binary.hpp
     ../include/cpprealm/internal/bridge/col_key.hpp
     ../include/cpprealm/internal/bridge/decimal128.hpp
@@ -128,7 +126,7 @@ include(GNUInstallDirs)
 add_library(cpprealm ${SOURCES} ${HEADERS} ${BRIDGING_HEADER})
 
 if (NOT VCPKG_TOOLCHAIN)
-    set(INSTALL_TARGETS ObjectStore Storage QueryParser Sync)
+    set(INSTALL_TARGETS ObjectStore Storage QueryParser)
 endif()
 
 install(TARGETS ${PROJECT_NAME} ${INSTALL_TARGETS}

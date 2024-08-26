@@ -14,28 +14,13 @@ else ()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 endif()
 
-set(REALM_BUILD_LIB_ONLY ON)
-if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(REALM_USE_SYSTEM_OPENSSL ON)
-endif()
-
-
-if (VCPKG_TOOLCHAIN)
-    find_package(Realm REQUIRED)
-else()
-    add_subdirectory(realm-core)
-endif()
+add_subdirectory(realm-core)
 
 set(REALM_NO_CONFIG)
-set(REALM_ENABLE_SYNC)
 set(REALM_NO_TESTS)
 set(REALM_BUILD_LIB_ONLY)
 set(REALM_INSTALL_LIBEXECDIR)
 set(REALM_ENABLE_ENCRYPTION 1)
-option(REALM_ENABLE_EXPERIMENTAL "Enable experimental Realm API's" OFF)
-if(REALM_ENABLE_EXPERIMENTAL)
-    add_compile_definitions(REALM_ENABLE_EXPERIMENTAL)
-endif()
 
 set(CMAKE_DEBUG_POSTFIX "-dbg")
 
@@ -49,7 +34,6 @@ if(NOT DEFINED REALMCXX_VERSION)
 endif()
 
 add_compile_definitions(REALM_NO_CONFIG)
-add_compile_definitions(REALM_ENABLE_SYNC)
 add_compile_definitions(REALM_ENABLE_ENCRYPTION)
 add_compile_definitions(REALM_INSTALL_LIBEXECDIR)
 add_compile_definitions(REALM_BUILD_LIB_ONLY)
