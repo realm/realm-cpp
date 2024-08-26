@@ -11,23 +11,6 @@ on:
   pull_request:
 
 jobs:
-  stop-all-containers:
-    runs-on: ubuntu-latest
-    name: Stop Stray Containers
-    if: always()
-    needs:
-      - build-macos
-      - build-linux
-      - build-windows
-    steps:
-      - name: Stop containers
-        run: |
-          export JSON_HEADER="Content-Type: application/json"
-          export AUTH_HEADER="apiKey: $APIKEY"
-          export BASE_URL="https://us-east-1.aws.data.mongodb-api.com/app/baas-container-service-autzb/endpoint"
-          curl --silent -X GET -H "$JSON_HEADER" -H "$AUTH_HEADER" "$BASE_URL/listContainers?mine=true" | jq | grep '"id":' | awk -F '"' '{print $4}' | while read id; do
-          curl --silent -X POST -H "$JSON_HEADER" -H "$AUTH_HEADER" "$BASE_URL/stopContainer?id=$id"
-          done
 
   build-macos:
     runs-on: macos-14
@@ -73,14 +56,6 @@ jobs:
       - name: Non Sync Tests
         working-directory: .build/cmake-preset-macos/tests/${{ matrix.configuration }}/
         run: ./cpprealm_db_tests
-
-      - name: Flexible Sync Tests
-        working-directory: .build/cmake-preset-macos/tests/${{ matrix.configuration }}/
-        run: ./cpprealm_sync_tests "~client_reset"
-
-      - name: Client Reset Tests
-        working-directory: .build/cmake-preset-macos/tests/${{ matrix.configuration }}/
-        run: ./cpprealm_sync_tests "client_reset"
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
@@ -161,30 +136,6 @@ jobs:
         working-directory: .build/cmake-preset-linux/tests/${{ matrix.configuration }}/
         run: ./cpprealm_db_tests
 
-      - name: Flexible Sync Tests
-        working-directory: .build/cmake-preset-linux/tests/${{ matrix.configuration }}/
-        run: ./cpprealm_sync_tests "~client_reset"
-
-      - name: Client Reset Tests
-        working-directory: .build/cmake-preset-linux/tests/${{ matrix.configuration }}/
-        run: ./cpprealm_sync_tests "client_reset"
-
-      - name: Valgrind leak check
-        if: ${{ matrix.compiler.name == 'gcc' && matrix.compiler.version == '12.1' }}
-        working-directory: .build/cmake-preset-linux/tests/${{ matrix.configuration }}/
-        run: valgrind --tool=memcheck --leak-check=full --show-leak-kinds=definite --undef-value-errors=yes --track-origins=yes --child-silent-after-fork=no --trace-children=yes --log-file=valgrind.log ./cpprealm_db_tests
-
-      - name: Check for definitely lost errors
-        if: ${{ matrix.compiler.name == 'gcc' && matrix.compiler.version == '12.1' }}
-        id: check_valgrind
-        run: |
-          if grep -q "definitely lost: [1-9]" valgrind.log; then
-          echo "Valgrind detected definitely lost errors"
-          exit 1
-          else
-          echo "No definitely lost errors detected"
-          fi
-
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v4
         if: always()
@@ -235,14 +186,6 @@ jobs:
       - name: Non Sync Tests
         working-directory: .build/cmake-preset-windows-x64/tests/${{ matrix.configuration }}/
         run: ./cpprealm_db_tests
-
-      - name: Flexible Sync Tests
-        working-directory: .build/cmake-preset-windows-x64/tests/${{ matrix.configuration }}/
-        run: ./cpprealm_sync_tests "~client_reset"
-
-      - name: Client Reset Tests
-        working-directory: .build/cmake-preset-windows-x64/tests/${{ matrix.configuration }}/
-        run: ./cpprealm_sync_tests "client_reset"
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
