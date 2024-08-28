@@ -143,6 +143,13 @@ namespace realm::networking {
              * is not set.
              */
             std::function<SSLVerifyCallback> ssl_verify_callback;
+
+            /**
+             * Maximum number of subsequent redirect responses from the server to prevent getting stuck
+             * in a redirect loop indefinitely. Set to 0 to disable redirect support or -1 to allow
+             * redirecting indefinitely.
+             */
+            int max_redirect_count = 30;
         };
 
         default_http_transport() = default;
@@ -151,9 +158,16 @@ namespace realm::networking {
         ~default_http_transport() = default;
 
         void send_request_to_server(::realm::networking::request &&request,
-                                    std::function<void(const ::realm::networking::response &)> &&completion);
+                                    std::function<void(const ::realm::networking::response &)> &&completion)
+        {
+            send_request_to_server(std::move(request), std::move(completion), 0);
+        }
 
     protected:
+        void send_request_to_server(::realm::networking::request &&request,
+                                    std::function<void(const ::realm::networking::response &)> &&completion,
+                                    int redirect_count);
+
         configuration m_configuration;
     };
 }

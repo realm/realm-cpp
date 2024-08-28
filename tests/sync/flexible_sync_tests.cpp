@@ -9,7 +9,6 @@ TEST_CASE("flexible_sync", "[sync][flx]") {
     config.app_id = Admin::Session::shared().cached_app_id();
     config.base_url = Admin::Session::shared().base_url();
     auto app = realm::App(config);
-    app.get_sync_manager().set_log_level(logger::level::trace);
     SECTION("all") {
         auto user = app.login(realm::App::credentials::anonymous()).get();
         auto flx_sync_config = user.flexible_sync_configuration();
