@@ -273,7 +273,7 @@ namespace realm {
         std::stringstream json_ss;
         json_ss << post_data;
         auto json_str = json_ss.str();
-        auto transport = std::make_unique<networking::default_http_transport>();
+        auto transport = std::make_shared<networking::default_http_transport>();
 
         std::vector<char> buffer;
         buffer.resize(5000);

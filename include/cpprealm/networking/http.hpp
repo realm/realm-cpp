@@ -105,8 +105,8 @@ namespace realm::networking {
     // Interface for providing http transport
     struct http_transport_client {
         virtual ~http_transport_client() = default;
-        virtual void send_request_to_server(const request& request,
-                                            std::function<void(const response&)>&& completion) = 0;
+        virtual void send_request_to_server(::realm::networking::request &&request,
+                                            std::function<void(const response &)> &&completion) = 0;
     };
 
     /// Produces a http transport client from the factory.
@@ -115,7 +115,7 @@ namespace realm::networking {
     [[maybe_unused]] void set_http_client_factory(std::function<std::shared_ptr<http_transport_client>()>&&);
 
     /// Built in HTTP transport client.
-    struct default_http_transport : public http_transport_client {
+    struct default_http_transport : public http_transport_client, public std::enable_shared_from_this<default_http_transport> {
         struct configuration {
             /**
              * Extra HTTP headers to be set on each request to Atlas Device Sync when using the internal HTTP client.
@@ -150,8 +150,8 @@ namespace realm::networking {
 
         ~default_http_transport() = default;
 
-        void send_request_to_server(const ::realm::networking::request& request,
-                                    std::function<void(const ::realm::networking::response&)>&& completion);
+        void send_request_to_server(::realm::networking::request &&request,
+                                    std::function<void(const ::realm::networking::response &)> &&completion);
 
     protected:
         configuration m_configuration;

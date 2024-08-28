@@ -23,6 +23,8 @@
 #include <cpprealm/networking/http.hpp>
 #include <cpprealm/internal/networking/utils.hpp>
 
+#include <realm/util/basic_system_errors.hpp>
+
 #include "admin_utils.hpp"
 #include "external/json/json.hpp"
 
@@ -30,14 +32,14 @@ namespace Admin {
     Admin::Session *Admin::Session::instance = nullptr;
     std::mutex Admin::Session::mutex;
 
-    static app::Response do_http_request(app::Request &&request) {
-        networking::default_http_transport transport;
+    static app::Response do_http_request(const app::Request &request) {
+        auto transport = std::make_shared<networking::default_http_transport>();
         std::promise<app::Response> p;
         std::future<app::Response> f = p.get_future();
-        transport.send_request_to_server(::realm::internal::networking::to_request(std::move(request)),
-                                         [&p](auto&& response) {
-                                             p.set_value(::realm::internal::networking::to_core_response(std::move(response)));
-                                         });
+        transport->send_request_to_server(std::move(::realm::internal::networking::to_request(request)),
+                                          [&p](const ::realm::networking::response &response) {
+                                              p.set_value(::realm::internal::networking::to_core_response(response));
+                                          });
         return f.get();
     }
 
@@ -52,9 +54,12 @@ namespace Admin {
                 {"Accept", "application/json"}};
         request.body = body.str();
 
-        auto result = do_http_request(std::move(request));
-        if (result.http_status_code != 200) {
-            REALM_TERMINATE(util::format("Unable to authenticate at %1 with provider '%2': %3", baas_url, provider_type, result.body).c_str());
+        auto result = Admin::do_http_request(request);
+        if (result.custom_status_code == util::error::operation_aborted) {
+            REALM_TERMINATE(util::format("Unable to authenticate at %1: operation aborted", request.url).c_str());
+        }
+        if (result.http_status_code < 200 && result.http_status_code >= 300) {
+            REALM_TERMINATE(util::format("Unable to authenticate at %1 with provider '%2'(%3): %4", request.url, provider_type, result.http_status_code, result.body).c_str());
         }
         auto parsed_response = static_cast<bson::BsonDocument>(bson::parse(result.body));
         return {static_cast<std::string>(parsed_response["access_token"]), static_cast<std::string>(parsed_response["refresh_token"])};
@@ -69,10 +74,13 @@ namespace Admin {
                 {"Content-Type", "application/json"},
                 {"apiKey", *m_baasaas_api_key}};
 
-        auto result = Admin::do_http_request(std::move(request));
+        auto result = Admin::do_http_request(request);
 
-        if (result.http_status_code != 200) {
-            REALM_TERMINATE("Unable to start container");
+        if (result.custom_status_code == util::error::operation_aborted) {
+            REALM_TERMINATE("Unable to start container: Operation aborted");
+        }
+        if (result.http_status_code < 200 && result.http_status_code >= 300) {
+            REALM_TERMINATE(util::format("Unable to start container [%1]: %2", result.http_status_code, result.body).c_str());
         }
 
         m_container_id = nlohmann::json::parse(result.body)["id"];
@@ -86,9 +94,12 @@ namespace Admin {
                 {"Content-Type", "application/json"},
                 {"apiKey", *m_baasaas_api_key}};
 
-        auto result = Admin::do_http_request(std::move(request));
-        if (result.http_status_code != 200) {
-            REALM_TERMINATE("Unable to stop container");
+        auto result = Admin::do_http_request(request);
+        if (result.custom_status_code == util::error::operation_aborted) {
+            REALM_TERMINATE("Unable to stop container: Operation aborted");
+        }
+        if (result.http_status_code < 200 && result.http_status_code >= 300) {
+            REALM_TERMINATE(util::format("Unable to stop container [%1]: %2", result.http_status_code, result.body).c_str());
         }
     }
 
@@ -113,7 +124,10 @@ namespace Admin {
                     {"Content-Type", "application/json;charset=utf-8"},
                     {"apiKey", *m_baasaas_api_key}};
 
-            auto result = Admin::do_http_request(std::move(request));
+            auto result = Admin::do_http_request(request);
+            if (result.custom_status_code == util::error::operation_aborted) {
+                REALM_TERMINATE("Error while waiting for container: Operation aborted");
+            }
             auto json = nlohmann::json::parse(result.body);
             if (json.contains("httpUrl")) {
                 url = json["httpUrl"];
@@ -130,7 +144,10 @@ namespace Admin {
             request.method = realm::app::HttpMethod::get;
             request.url = realm::util::format("%1/api/private/v1.0/version", *url);
 
-            auto result = Admin::do_http_request(std::move(request));
+            auto result = Admin::do_http_request(request);
+            if (result.custom_status_code == util::error::operation_aborted) {
+                REALM_TERMINATE("Error while waiting for container: Operation aborted");
+            }
             if (result.http_status_code >= 200 && result.http_status_code < 300) {
                 break;
             }
@@ -161,8 +178,11 @@ namespace Admin {
                 {"Content-Type", "application/json;charset=utf-8"},
                 {"Accept", "application/json"}};
         request.body = std::move(body);
-        auto response = Admin::do_http_request(std::move(request));
+        auto response = Admin::do_http_request(request);
 
+        if (response.custom_status_code == util::error::operation_aborted) {
+            throw std::runtime_error(util::format("An error occurred while calling %1: Operation Aborted", url));
+        }
         if (response.http_status_code >= 400) {
             throw std::runtime_error(util::format("An error occurred while calling %1: %2", url, response.body));
         }
@@ -471,7 +491,13 @@ namespace Admin {
         request.headers = {
                 {"Authorization", "Bearer " + tokens.first}};
 
-        auto result = do_http_request(std::move(request));
+        auto result = Admin::do_http_request(request);
+        if (result.custom_status_code == util::error::operation_aborted) {
+            REALM_TERMINATE(util::format("An error occurred while requesting user profile: Operation Aborted").c_str());
+        }
+        if (result.http_status_code < 200 && result.http_status_code >= 300) {
+            REALM_TERMINATE(util::format("Unable to request user profile [%1]: %2", result.http_status_code, result.body).c_str());
+        }
         auto parsed_response = static_cast<bson::BsonDocument>(bson::parse(result.body));
         auto roles = static_cast<bson::BsonArray>(parsed_response["roles"]);
         auto group_id = static_cast<std::string>(static_cast<bson::BsonDocument>(roles[0])["group_id"]);
@@ -529,9 +555,12 @@ namespace Admin {
                 {"Authorization", util::format("Bearer %1", m_refresh_token)}};
         request.body = body.str();
 
-        auto result = do_http_request(std::move(request));
-        if (result.http_status_code >= 400) {
-            REALM_TERMINATE("Unable to refresh access token");
+        auto result = Admin::do_http_request(request);
+        if (result.custom_status_code == util::error::operation_aborted) {
+            REALM_TERMINATE(util::format("Unable to refresh access token: Operation Aborted").c_str());
+        }
+        if (result.http_status_code < 200 && result.http_status_code >= 300) {
+            REALM_TERMINATE(util::format("Unable to refresh access token [%1]: %2", result.http_status_code, result.body).c_str());
         }
         auto parsed_response = static_cast<bson::BsonDocument>(bson::parse(result.body));
         m_access_token = static_cast<std::string>(parsed_response["access_token"]);
