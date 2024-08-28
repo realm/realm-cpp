@@ -158,8 +158,7 @@ namespace realm::networking {
         ~default_http_transport() = default;
 
         void send_request_to_server(::realm::networking::request &&request,
-                                    std::function<void(const ::realm::networking::response &)> &&completion)
-        {
+                                    std::function<void(const ::realm::networking::response &)> &&completion) {
             send_request_to_server(std::move(request), std::move(completion), 0);
         }
 
