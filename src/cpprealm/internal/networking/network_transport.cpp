@@ -246,7 +246,7 @@ namespace realm::networking {
             socket.ssl_stream->set_logger(logger.get());
         }
 
-        realm::sync::HTTPClient<DefaultSocket> m_http_client = realm::sync::HTTPClient<DefaultSocket>(socket, logger);
+        realm::sync::HTTPClient<DefaultSocket> m_http_client(socket, logger);
         auto convert_method = [](::realm::networking::http_method method) {
             switch (method) {
                 case ::realm::networking::http_method::get:
@@ -300,53 +300,40 @@ namespace realm::networking {
                 if (ec.value() == 0) {
                     // Pass along the original request so it can be resent to the redirected location URL if needed
                     m_http_client.async_request(std::move(http_req),
-                                                [self = weak_from_this(), orig_request = std::move(request), cb = std::move(completion_block), redirect_count](const realm::sync::HTTPResponse &resp, const std::error_code &ec) mutable {
+                                                [this, orig_request = std::move(request), cb = std::move(completion_block), redirect_count](realm::sync::HTTPResponse resp, std::error_code ec) mutable {
                                                     constexpr std::string_view location_header = "location";
-                                                    auto transport = self.lock();
+                                                    constexpr std::string_view authorization_header = "authorization";
                                                     // If an error occurred or the transport has gone away, then send "operation aborted" to callback
-                                                    if (ec || !transport) {
+                                                    if (ec) {
                                                         cb({0, util::error::operation_aborted, {}, {}, std::nullopt});
                                                         return;
                                                     }
                                                     // Was a redirect response (301 or 308) received?
                                                     if (resp.status == realm::sync::HTTPStatus::PermanentRedirect || resp.status == realm::sync::HTTPStatus::MovedPermanently) {
-                                                        auto max_redirects = transport->m_configuration.max_redirect_count;
+                                                        auto max_redirects = m_configuration.max_redirect_count;
                                                         // Are redirects still allowed to continue?
                                                         if (max_redirects < 0 || ++redirect_count < max_redirects) {
                                                             // A possible future enhancement could be to cache the redirect URLs to prevent having
                                                             // to perform redirections every time.
-                                                            std::string redirect_url;
                                                             // Grab the new location from the 'Location' header and retry the request
-                                                            for (auto &[key, value]: resp.headers) {
-                                                                if (key.size() == location_header.size() &&
-                                                                    std::equal(key.begin(), key.end(), location_header.begin(), location_header.end(), [](char a, char b) {
-                                                                        return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
-                                                                    })) {
-                                                                    // If the redirect URL path returned from the server was not empty, save it and exit the loop
-                                                                    if (!value.empty()) {
-                                                                        redirect_url = value;
-                                                                        break;
+                                                            if (auto location = resp.headers.find(location_header); location != resp.headers.end()) {
+                                                                if (!location->second.empty()) {
+                                                                    // Perform the entire operation again, since the remote host is likely changing and
+                                                                    // a new socket will need to be opened,
+                                                                    orig_request.url = location->second;
+                                                                    // Also remove the authorization header before forwarding the request to the new
+                                                                    // location, to prevent leaking the access token to an unauthorized server
+                                                                    if (auto authorization = resp.headers.find(authorization_header); authorization != resp.headers.end()) {
+                                                                        resp.headers.erase(authorization);
                                                                     }
-                                                                    // Otherwise, keep looking, in case there's another 'location' entry
+                                                                    return send_request_to_server(std::move(orig_request), std::move(cb), redirect_count);
                                                                 }
                                                             }
-                                                            // If the redirect URL path wasn't found in headers, then send the response to the client...
-                                                            if (!redirect_url.empty()) {
-                                                                // Otherwise, resend the original request to the new redirect URL path
-                                                                // Perform the entire operation again, since the remote host is likely changing and
-                                                                // a newe socket will need to be opened,
-                                                                orig_request.url = redirect_url;
-                                                                return transport->send_request_to_server(std::move(orig_request), std::move(cb), redirect_count);
-                                                            }
+                                                            // If redirects disabled, max redirect reached or location was missing from response, then pass the
+                                                            // redirect response to the callback function
                                                         }
-                                                        // If redirects disabled, max redirect reached or location was missing from response, then pass the
-                                                        // redirect response to the callback function
                                                     }
-                                                    ::realm::networking::response res{static_cast<int>(resp.status), 0, {}, resp.body ? std::move(*resp.body) : "", std::nullopt};
-                                                    // Copy over all the headers
-                                                    for (auto &[k, v]: resp.headers) {
-                                                        res.headers[k] = v;
-                                                    }
+                                                    ::realm::networking::response res{static_cast<int>(resp.status), 0, {resp.headers.begin(), resp.headers.end()}, resp.body ? std::move(*resp.body) : "", std::nullopt};
                                                     cb(res);
                                                 });
                 } else {

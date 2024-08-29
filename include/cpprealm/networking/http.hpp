@@ -115,7 +115,7 @@ namespace realm::networking {
     [[maybe_unused]] void set_http_client_factory(std::function<std::shared_ptr<http_transport_client>()>&&);
 
     /// Built in HTTP transport client.
-    struct default_http_transport : public http_transport_client, public std::enable_shared_from_this<default_http_transport> {
+    struct default_http_transport : public http_transport_client {
         struct configuration {
             /**
              * Extra HTTP headers to be set on each request to Atlas Device Sync when using the internal HTTP client.
