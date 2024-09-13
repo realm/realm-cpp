@@ -20,6 +20,7 @@ NEXT_RELEASE Release notes (YYYY-MM-DD)
 ### Fixed
 * Using the `==` operator in a type safe query for a nullable string property would return the incorrect result when algined storage was disabled.
 * Fix compilation issue when building with Bionic due to use of std::tuple (since 2.1.0).
+* Archiving on Xcode would fail due to duplicated alias' when aligned storage was enabled.
 
 ### Enhancements
 * Add ability to use `managed<std::map<std::string, T>>` in type safe queries when comparing a value for a key. e.g.
