@@ -29,6 +29,8 @@
 #include "realm/util/base64.hpp"
 #include "realm/util/uri.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <regex>
 
 namespace realm::networking {
@@ -124,8 +126,9 @@ namespace realm::networking {
         }
     }
 
-    void default_http_transport::send_request_to_server(const ::realm::networking::request& request,
-                                                        std::function<void(const ::realm::networking::response&)>&& completion_block) {
+    void default_http_transport::send_request_to_server(::realm::networking::request &&request,
+                                                        std::function<void(const ::realm::networking::response &)> &&completion_block,
+                                                        int redirect_count) {
         const auto uri = realm::util::Uri(request.url);
         std::string userinfo, host, port;
         uri.get_auth(userinfo, host, port);
@@ -170,7 +173,7 @@ namespace realm::networking {
                     auto address = realm::sync::network::make_address(host, e);
                     ep = realm::sync::network::Endpoint(address, stoi(port));
                 } else {
-                    auto resolved = resolver.resolve(sync::network::Resolver::Query(host, is_localhost ? "9090" : "443"));
+                    auto resolved = resolver.resolve(sync::network::Resolver::Query(host, port));
                     ep = *resolved.begin();
                 }
             }
@@ -243,43 +246,43 @@ namespace realm::networking {
             socket.ssl_stream->set_logger(logger.get());
         }
 
-        realm::sync::HTTPHeaders headers;
+        realm::sync::HTTPClient<DefaultSocket> m_http_client(socket, logger);
+        auto convert_method = [](::realm::networking::http_method method) {
+            switch (method) {
+                case ::realm::networking::http_method::get:
+                    return realm::sync::HTTPMethod::Get;
+                case ::realm::networking::http_method::put:
+                    return realm::sync::HTTPMethod::Put;
+                case ::realm::networking::http_method::post:
+                    return realm::sync::HTTPMethod::Post;
+                case ::realm::networking::http_method::patch:
+                    return realm::sync::HTTPMethod::Patch;
+                case ::realm::networking::http_method::del:
+                    return realm::sync::HTTPMethod::Delete;
+                default:
+                    REALM_UNREACHABLE();
+            }
+        };
+
+        realm::sync::HTTPRequest http_req{
+                convert_method(request.method),
+                {},
+                request.url,
+                request.body.empty() ? std::nullopt : std::make_optional<std::string>(request.body)};
         for (auto& [k, v] : request.headers) {
-            headers[k] = v;
+            http_req.headers[k] = v;
         }
-        headers["Host"] = host;
-        headers["User-Agent"] = "Realm C++ SDK";
+        http_req.headers["Host"] = host;
+        http_req.headers["User-Agent"] = "Realm C++ SDK";
 
         if (!request.body.empty()) {
-            headers["Content-Length"] = util::to_string(request.body.size());
+            http_req.headers["Content-Length"] = util::to_string(request.body.size());
         }
 
         if (m_configuration.custom_http_headers) {
             for (auto& header : *m_configuration.custom_http_headers) {
-                headers.emplace(header);
+                http_req.headers.emplace(header);
             }
-        }
-
-        realm::sync::HTTPClient<DefaultSocket> m_http_client = realm::sync::HTTPClient<DefaultSocket>(socket, logger);
-        realm::sync::HTTPMethod method;
-        switch (request.method) {
-            case ::realm::networking::http_method::get:
-                method = realm::sync::HTTPMethod::Get;
-                break;
-            case ::realm::networking::http_method::put:
-                method = realm::sync::HTTPMethod::Put;
-                break;
-            case ::realm::networking::http_method::post:
-                method = realm::sync::HTTPMethod::Post;
-                break;
-            case ::realm::networking::http_method::patch:
-                method = realm::sync::HTTPMethod::Patch;
-                break;
-            case ::realm::networking::http_method::del:
-                method = realm::sync::HTTPMethod::Delete;
-                break;
-            default:
-                REALM_UNREACHABLE();
         }
 
         /*
@@ -295,26 +298,46 @@ namespace realm::networking {
         service.post([&](realm::Status&&){
             auto handler = [&](std::error_code ec) {
                 if (ec.value() == 0) {
-                    realm::sync::HTTPRequest req;
-                    req.method = method;
-                    req.headers = headers;
-                    req.path = request.url;
-                    req.body = request.body.empty() ? std::nullopt : std::optional<std::string>(request.body);
-
-                    m_http_client.async_request(std::move(req), [cb = std::move(completion_block)](const realm::sync::HTTPResponse& r, const std::error_code&) {
-                        ::realm::networking::response res;
-                        res.body = r.body ? *r.body : "";
-                        for (auto& [k, v] : r.headers)  {
-                            res.headers[k] = v;
-                        }
-                        res.http_status_code = static_cast<int>(r.status);
-                        res.custom_status_code = 0;
-                        cb(res);
-                    });
+                    // Pass along the original request so it can be resent to the redirected location URL if needed
+                    m_http_client.async_request(std::move(http_req),
+                                                [this, orig_request = std::move(request), cb = std::move(completion_block), redirect_count](realm::sync::HTTPResponse resp, std::error_code ec) mutable {
+                                                    constexpr std::string_view location_header = "location";
+                                                    constexpr std::string_view authorization_header = "authorization";
+                                                    // If an error occurred or the transport has gone away, then send "operation aborted" to callback
+                                                    if (ec) {
+                                                        cb({0, util::error::operation_aborted, {}, {}, std::nullopt});
+                                                        return;
+                                                    }
+                                                    // Was a redirect response (301 or 308) received?
+                                                    if (resp.status == realm::sync::HTTPStatus::PermanentRedirect || resp.status == realm::sync::HTTPStatus::MovedPermanently) {
+                                                        auto max_redirects = m_configuration.max_redirect_count;
+                                                        // Are redirects still allowed to continue?
+                                                        if (max_redirects < 0 || ++redirect_count < max_redirects) {
+                                                            // A possible future enhancement could be to cache the redirect URLs to prevent having
+                                                            // to perform redirections every time.
+                                                            // Grab the new location from the 'Location' header and retry the request
+                                                            if (auto location = resp.headers.find(location_header); location != resp.headers.end()) {
+                                                                if (!location->second.empty()) {
+                                                                    // Perform the entire operation again, since the remote host is likely changing and
+                                                                    // a new socket will need to be opened,
+                                                                    orig_request.url = location->second;
+                                                                    // Also remove the authorization header before forwarding the request to the new
+                                                                    // location, to prevent leaking the access token to an unauthorized server
+                                                                    if (auto authorization = resp.headers.find(authorization_header); authorization != resp.headers.end()) {
+                                                                        resp.headers.erase(authorization);
+                                                                    }
+                                                                    return send_request_to_server(std::move(orig_request), std::move(cb), redirect_count);
+                                                                }
+                                                            }
+                                                            // If redirects disabled, max redirect reached or location was missing from response, then pass the
+                                                            // redirect response to the callback function
+                                                        }
+                                                    }
+                                                    ::realm::networking::response res{static_cast<int>(resp.status), 0, {resp.headers.begin(), resp.headers.end()}, resp.body ? std::move(*resp.body) : "", std::nullopt};
+                                                    cb(res);
+                                                });
                 } else {
-                    ::realm::networking::response response;
-                    response.custom_status_code = util::error::operation_aborted;
-                    completion_block(std::move(response));
+                    completion_block({0, util::error::operation_aborted, {}, {}, std::nullopt});
                     return;
                 }
             };

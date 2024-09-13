@@ -60,16 +60,17 @@ TEST_CASE("custom transport to proxy", "[proxy]") {
             m_configuration = configuration;
         }
 
-        void send_request_to_server(const ::realm::networking::request& request,
-                                    std::function<void(const ::realm::networking::response&)>&& completion) override {
-            auto req_copy = request;
-            const std::string from = "https:";
-            const std::string to = "http:";
-            if (req_copy.url.find(from) == 0) {
-                req_copy.url.replace(0, from.length(), to);
+        void send_request_to_server(::realm::networking::request &&request,
+                                    std::function<void(const ::realm::networking::response &)> &&completion) override {
+            // We're already working with a copy of the original request that was created
+            // by `to_request()` by `core_http_transport_shim`
+            constexpr std::string_view from = "https:";
+            constexpr std::string_view to = "http:";
+            if (request.url.find(from) == 0) {
+                request.url.replace(0, from.length(), to);
             }
             m_called = true;
-            return ::realm::networking::default_http_transport::send_request_to_server(req_copy, std::move(completion));
+            return ::realm::networking::default_http_transport::send_request_to_server(std::move(request), std::move(completion));
         }
 
         bool was_called() const {

@@ -1,7 +1,10 @@
 .DS_Store
 /.build
+/build.debug
 /Packages
 /*.xcodeproj
+.idea/
+/.vscode
 /.swiftpm
 xcuserdata/
 DerivedData/
@@ -10,5 +13,4 @@ Package.resolved
 examples/*.pro.user
 docs/html
 docs/latex
-.idea/
 realm-core/src/realm/parser/generated/

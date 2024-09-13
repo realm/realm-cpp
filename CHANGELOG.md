@@ -7,6 +7,15 @@ NEXT_RELEASE Release notes (YYYY-MM-DD)
 ### Enhancements
 * Add `realm::db_config::enable_forced_sync_history()` which allows you to open a synced Realm
   even if a sync configuration is not supplied.
+* Added 301/308 http redirect response support to the default HTTP transport, since it has been
+  removed from Core and is the responsibility of the SDKs to handle the redirect operation. A
+  redirect should rarely be received from the server, and typically happens after changing the
+  deployment model for the cloud app or the base URL is configured to connect to the wrong host.
+  If a custom HTTP transport is provided by the developer, it should also support handling
+  redirect responses with a status code of 301 or 308, remove the Authorization header and
+  retain the original HTTP method when re-sending requests after a redirect.
+* Add `managed<std::map<std::string, T>>::contains_key` for conveniently checking if a managed map
+  contains a given key. Use this method in the Type Safe Query API instead of `managed<std::map<std::string, T>>::find`.
 
 ### Compatibility
 * Fileformat: Generates files with format v24. Reads and automatically upgrade from fileformat v10.

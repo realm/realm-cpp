@@ -105,8 +105,8 @@ namespace realm::networking {
     // Interface for providing http transport
     struct http_transport_client {
         virtual ~http_transport_client() = default;
-        virtual void send_request_to_server(const request& request,
-                                            std::function<void(const response&)>&& completion) = 0;
+        virtual void send_request_to_server(::realm::networking::request &&request,
+                                            std::function<void(const response &)> &&completion) = 0;
     };
 
     /// Produces a http transport client from the factory.
@@ -143,6 +143,13 @@ namespace realm::networking {
              * is not set.
              */
             std::function<SSLVerifyCallback> ssl_verify_callback;
+
+            /**
+             * Maximum number of subsequent redirect responses from the server to prevent getting stuck
+             * in a redirect loop indefinitely. Set to 0 to disable redirect support or -1 to allow
+             * redirecting indefinitely.
+             */
+            int max_redirect_count = 30;
         };
 
         default_http_transport() = default;
@@ -150,10 +157,16 @@ namespace realm::networking {
 
         ~default_http_transport() = default;
 
-        void send_request_to_server(const ::realm::networking::request& request,
-                                    std::function<void(const ::realm::networking::response&)>&& completion);
+        void send_request_to_server(::realm::networking::request &&request,
+                                    std::function<void(const ::realm::networking::response &)> &&completion) {
+            send_request_to_server(std::move(request), std::move(completion), 0);
+        }
 
     protected:
+        void send_request_to_server(::realm::networking::request &&request,
+                                    std::function<void(const ::realm::networking::response &)> &&completion,
+                                    int redirect_count);
+
         configuration m_configuration;
     };
 }

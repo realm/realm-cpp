@@ -4,7 +4,7 @@
 
 using namespace realm;
 
-TEST_CASE("flexible_sync", "[sync]") {
+TEST_CASE("flexible_sync", "[sync][flx]") {
     auto config = realm::App::configuration();
     config.app_id = Admin::Session::shared().cached_app_id();
     config.base_url = Admin::Session::shared().base_url();
@@ -181,7 +181,6 @@ TEST_CASE("flexible_sync", "[sync]") {
             CHECK(synced_realm.objects<AllTypesObject>().size() == 2);
         }
     }
-
 }
 
 template<typename T, typename Func>
@@ -245,8 +244,7 @@ TEST_CASE("set collection sync", "[set]") {
         auto time = std::chrono::system_clock::now();
         auto time2 = time + time.time_since_epoch();
         test_set(&managed_obj.set_date_col, scenario, {time, time, time2, std::chrono::time_point<std::chrono::system_clock>()}); // here
-        test_set(&managed_obj.set_mixed_col, scenario, {realm::mixed((int64_t)42), realm::mixed((int64_t)42), realm::mixed("24"), realm::mixed(realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"))});
-
+        test_set(&managed_obj.set_mixed_col, scenario, {realm::mixed((int64_t) 42), realm::mixed((int64_t) 42), realm::mixed("24"), realm::mixed(realm::uuid("18de7916-7f84-11ec-a8a3-0242ac120002"))});
         realm.get_sync_session()->wait_for_upload_completion().get();
         realm.get_sync_session()->wait_for_download_completion().get();
 
@@ -270,7 +268,7 @@ TEST_CASE("set collection sync", "[set]") {
     }
 }
 
-TEST_CASE("pause_resume_sync", "[sync]") {
+TEST_CASE("pause_resume_sync", "[sync][flx]") {
     auto config = realm::App::configuration();
     config.app_id = Admin::Session::shared().cached_app_id();
     config.base_url = Admin::Session::shared().base_url();
@@ -323,4 +321,50 @@ TEST_CASE("pause_resume_sync", "[sync]") {
         });
         CHECK(synced_realm.get_sync_session()->state() == realm::sync_session::state::active);
     }
+}
+
+TEST_CASE("delete created sync objects", "[sync][flx]") {
+    auto config = realm::App::configuration();
+    config.app_id = Admin::Session::shared().cached_app_id();
+    config.base_url = Admin::Session::shared().base_url();
+    auto app = realm::App(config);
+
+    auto user = app.login(realm::App::credentials::anonymous()).get();
+    auto flx_sync_config = user.flexible_sync_configuration();
+    auto synced_realm = db(flx_sync_config);
+    auto update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
+                                                          subs.clear();
+                                                      })
+                                  .get();
+    CHECK(update_success == true);
+    update_success = synced_realm.subscriptions().update([](realm::mutable_sync_subscription_set &subs) {
+                                                     subs.add<AllTypesObject>("foo-strings");
+                                                     subs.add<AllTypesObjectLink>("foo-link");
+                                                 })
+                             .get();
+    CHECK(update_success == true);
+
+    CHECK(synced_realm.subscriptions().size() == 2);
+    synced_realm.get_sync_session()->wait_for_upload_completion().get();
+    synced_realm.get_sync_session()->wait_for_download_completion().get();
+    synced_realm.refresh();
+    auto links = synced_realm.objects<AllTypesObjectLink>();
+    // No links were created during the tests
+    CHECK(links.size() == 0);
+    auto objs = synced_realm.objects<AllTypesObject>();
+    CHECK(objs.size() > 0);
+    synced_realm.write([&synced_realm, &objs]() {
+        while (objs.size() > 0) {
+            auto obj = objs[0];
+            synced_realm.remove(obj);
+        }
+    });
+    synced_realm.get_sync_session()->wait_for_upload_completion().get();
+    synced_realm.get_sync_session()->wait_for_download_completion().get();
+    synced_realm.refresh();
+
+    links = synced_realm.objects<AllTypesObjectLink>();
+    CHECK(objs.size() == 0);
+    objs = synced_realm.objects<AllTypesObject>();
+    CHECK(objs.size() == 0);
 }
