@@ -153,7 +153,10 @@ include(GNUInstallDirs)
 add_library(cpprealm ${SOURCES} ${HEADERS} ${BRIDGING_HEADER})
 
 if (NOT VCPKG_TOOLCHAIN)
-    set(INSTALL_TARGETS ObjectStore Storage QueryParser Sync)
+    set(INSTALL_TARGETS ObjectStore Storage QueryParser)
+    if (REALM_ENABLE_SYNC)
+        list(APPEND INSTALL_TARGETS Sync)
+    endif()
 endif()
 
 install(TARGETS ${PROJECT_NAME} ${INSTALL_TARGETS}
