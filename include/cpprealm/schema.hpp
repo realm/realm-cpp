@@ -253,7 +253,7 @@ namespace realm {
 
                 if constexpr (N + 1 == sizeof...(Properties)) {
                     if (property_name == std::string_view(names[N])) {
-                        auto ptr = managed<Class, void>::template unmanaged_to_managed_pointer(property.ptr);
+                        auto ptr = managed<Class, void>::unmanaged_to_managed_pointer(property.ptr);
                         if constexpr (std::is_pointer_v<typename P::Result>) {
                             return (cls.*ptr);
                         } else {
@@ -263,7 +263,7 @@ namespace realm {
                     return variant_t{};
                 } else {
                     if (property_name == std::string_view(names[N])) {
-                        auto ptr = managed<Class, void>::template unmanaged_to_managed_pointer(property.ptr);
+                        auto ptr = managed<Class, void>::unmanaged_to_managed_pointer(property.ptr);
                         if constexpr (std::is_pointer_v<typename P::Result>) {
                             return (cls.*ptr);
                         } else {
