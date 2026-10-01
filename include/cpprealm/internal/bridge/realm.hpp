@@ -21,6 +21,7 @@
 
 #include <cpprealm/internal/bridge/utils.hpp>
 
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>

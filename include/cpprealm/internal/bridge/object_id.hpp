@@ -21,6 +21,7 @@
 
 #include <cpprealm/internal/bridge/utils.hpp>
 #include <array>
+#include <cstdint>
 
 namespace realm {
     struct object_id;

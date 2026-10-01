@@ -19,6 +19,7 @@
 #ifndef CPPREALM_BRIDGE_BINARY_HPP
 #define CPPREALM_BRIDGE_BINARY_HPP
 
+#include <cstdint>
 #include <vector>
 #include <cpprealm/internal/bridge/utils.hpp>
 
